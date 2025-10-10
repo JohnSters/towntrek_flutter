@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'screens/landing_page.dart';
+import 'theme/app_theme.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const TownTrekApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class TownTrekApp extends StatelessWidget {
+  const TownTrekApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return MaterialApp(
+      title: 'TownTrek',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      home: const LandingPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
