@@ -27,7 +27,6 @@ class AppTheme {
 
   // Dark theme colors
   static const Color _darkSurfaceColor = Color(0xFF0F1419);
-  static const Color _darkBackgroundColor = Color(0xFF0F1419);
   static const Color _darkOnSurfaceColor = Color(0xFFE6E1E5);
   static const Color _darkOnSurfaceVariant = Color(0xFFCAC4D0);
   static const Color _darkOutlineColor = Color(0xFF938F99);
@@ -64,17 +63,11 @@ class AppTheme {
 
         surface: _surfaceColor,
         onSurface: _onSurfaceColor,
-        surfaceVariant: Color(0xFFE7E0EC),
+        surfaceContainerHighest: Color(0xFFE7E0EC),
         onSurfaceVariant: _onSurfaceVariant,
 
         outline: _outlineColor,
         outlineVariant: _outlineVariantColor,
-
-        background: _backgroundColor,
-        onBackground: _onSurfaceColor,
-
-        surfaceContainerHighest: Color(0xFFE7E0EC),
-        onSurfaceContainerHighest: _onSurfaceVariant,
       ),
 
       // Typography
@@ -138,17 +131,11 @@ class AppTheme {
 
         surface: _darkSurfaceColor,
         onSurface: _darkOnSurfaceColor,
-        surfaceVariant: Color(0xFF49454F),
+        surfaceContainerHighest: Color(0xFF49454F),
         onSurfaceVariant: _darkOnSurfaceVariant,
 
         outline: _darkOutlineColor,
         outlineVariant: _darkOutlineVariantColor,
-
-        background: _darkBackgroundColor,
-        onBackground: _darkOnSurfaceColor,
-
-        surfaceContainerHighest: Color(0xFF49454F),
-        onSurfaceContainerHighest: _darkOnSurfaceVariant,
       ),
 
       // Typography
@@ -442,7 +429,7 @@ class AppTheme {
       );
 
   // Dialog
-  static DialogTheme get dialogTheme => const DialogTheme(
+  static DialogThemeData get dialogTheme => const DialogThemeData(
         elevation: 0,
         backgroundColor: _surfaceColor,
         surfaceTintColor: Colors.transparent,
@@ -518,7 +505,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         indicatorColor: _primaryColor,
-        labelTextStyle: MaterialStatePropertyAll(
+        labelTextStyle: WidgetStatePropertyAll(
           TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -533,14 +520,14 @@ class AppTheme {
       );
 
   static SwitchThemeData get switchTheme => SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return _primaryColor;
           }
           return _outlineColor;
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return _primaryColor.withValues(alpha: 0.3);
           }
           return _outlineVariantColor;
