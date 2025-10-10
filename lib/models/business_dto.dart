@@ -64,8 +64,8 @@ class BusinessDto {
       rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
       totalReviews: json['totalReviews'] as int,
       viewCount: json['viewCount'] as int,
-      isFeatured: json['isFeatured'] as bool,
-      isVerified: json['isVerified'] as bool,
+      isFeatured: json['isFeatured'] as bool? ?? false,
+      isVerified: json['isVerified'] as bool? ?? false,
       distanceKm: json['distanceKm'] != null ? (json['distanceKm'] as num).toDouble() : null,
     );
   }

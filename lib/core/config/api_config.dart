@@ -1,7 +1,8 @@
 /// Configuration constants for API communication
 class ApiConfig {
   // Base URLs - these should be configurable for different environments
-  static const String baseUrl = 'https://localhost:7125/'; // TODO: Replace with actual API URL
+  // For external devices, use your machine's IP address instead of localhost
+  static const String baseUrl = 'http://192.168.1.103:5220'; // Your machine's local IP address
   static const String apiVersion = 'api';
 
   // Endpoints

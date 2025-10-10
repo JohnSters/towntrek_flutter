@@ -13,6 +13,18 @@ The API consumption layer provides a clean, maintainable, and testable way to in
 - **Retry Logic**: Automatic retry for failed requests
 - **Logging**: Detailed logging for debugging and monitoring
 
+## ⚠️ Critical Lessons Learned
+
+**Always test API responses BEFORE creating models!** We encountered several critical issues that could have been prevented:
+
+1. **Test endpoints first**: `curl http://localhost:5220/api/towns`
+2. **Match models to reality**: Don't assume fields exist - verify with actual API responses
+3. **Use null-safe boolean parsing**: `json['field'] as bool? ?? false`
+4. **Configure servers properly**: Use `0.0.0.0` for external device testing
+5. **Avoid URL construction issues**: No trailing slashes in baseUrl
+
+See the [Troubleshooting](#troubleshooting) section for detailed solutions to these issues.
+
 ## Architecture
 
 ```
@@ -365,24 +377,121 @@ When migrating from direct API calls:
 
 ## Troubleshooting
 
-### Common Issues
+### 🚨 Critical Issues We Encountered & Fixed
 
-1. **"DioException: Connection failed"**
-   - Check internet connection
-   - Verify API URL in `ApiConfig`
-   - Check CORS settings on backend
+During development, we encountered several critical issues that could have been prevented with proper API testing and model validation. Here's what we learned:
 
-2. **"ApiException: unauthorized"**
-   - Implement authentication if required
-   - Check API key/token configuration
+#### **Issue #1: "Type 'Null' is not a subtype of 'bool' in type cast"**
+- **Problem**: Flutter `TownDto` expected `isActive` field, but ASP.NET API didn't return it
+- **Root Cause**: Created model fields based on assumptions, not actual API responses
+- **Fix**: Test API with `curl` first, then create models to match reality exactly
 
-3. **Timeout errors**
-   - Increase timeout values in `ApiConfig`
-   - Check network speed
+#### **Issue #2: Double Slashes in URLs**
+- **Problem**: `http://192.168.1.103:5220//api/towns` (notice `//api`)
+- **Root Cause**: `baseUrl` had trailing slash: `'http://192.168.1.103:5220/'`
+- **Fix**: Remove trailing slashes from base URLs in `ApiConfig`
+
+#### **Issue #3: External Device Connection Issues**
+- **Problem**: Samsung device couldn't connect despite correct IP address
+- **Root Cause**: ASP.NET server only listened on `localhost`, not network interfaces
+- **Fix**: Configure `launchSettings.json` with `"applicationUrl": "http://0.0.0.0:5220"`
+
+#### **Issue #4: LateInitializationError**
+- **Problem**: Repository accessed before service locator initialization
+- **Root Cause**: Race condition between widget initialization and dependency injection
+- **Fix**: Add safety checks and proper initialization order
+
+### Common Issues & Solutions
+
+#### 1. **"Type 'Null' is not a subtype of 'bool' in type cast"**
+   **Cause**: Boolean fields in Flutter models don't match API response structure
+   **Symptoms**: App crashes when parsing JSON responses
+   **Solutions**:
+   - **Always use null-safe boolean parsing**: `json['field'] as bool? ?? false`
+   - **Verify API responses match model expectations**: Test endpoints with curl/Postman
+   - **Update models to match actual API responses**: Don't assume fields exist
+
+   **Example Fix**:
+   ```dart
+   // ❌ Dangerous - will crash if null
+   isActive: json['isActive'] as bool,
+
+   // ✅ Safe - provides default value
+   isActive: json['isActive'] as bool? ?? false,
+   ```
+
+#### 2. **"LateInitializationError: Field has not been initialized"**
+   **Cause**: Accessing repository before service locator initialization
+   **Symptoms**: Crashes on first repository access
+   **Solutions**:
+   - **Initialize service locator in main()**: Call `serviceLocator.initialize()` early
+   - **Add safety checks**: Verify initialization before use
+   - **Use dependency injection**: Avoid manual instantiation
+
+#### 3. **"DioException: Connection failed" / "XMLHttpRequest onError"**
+   **Cause**: Network connectivity or server configuration issues
+   **Symptoms**: Timeout or connection refused errors
+   **Solutions**:
+   - **Check server status**: Verify ASP.NET server is running
+   - **Verify network interfaces**: Ensure server listens on `0.0.0.0` not just `localhost`
+   - **Use correct IP addresses**: Don't use `localhost` for external devices
+   - **Test with curl**: `curl http://YOUR_IP:PORT/api/endpoint`
+
+#### 4. **Double Slashes in URLs (`//api/endpoint`)**
+   **Cause**: Incorrect URL construction with trailing slashes
+   **Symptoms**: `http://192.168.1.103:5220//api/towns`
+   **Solutions**:
+   - **Remove trailing slashes from baseUrl**: `'http://192.168.1.103:5220'` not `'http://192.168.1.103:5220/'`
+   - **Verify URL construction**: Check `ApiConfig.buildUrl()` method
+
+#### 5. **Model-Response Mismatches**
+   **Cause**: Flutter models don't match actual API response structure
+   **Symptoms**: Missing fields or unexpected null values
+   **Solutions**:
+   - **Always test API responses first**: Use curl/Postman to inspect actual responses
+   - **Update models to match reality**: Don't create fields that don't exist in API
+   - **Document API contracts**: Keep models synchronized with backend
+
+### ASP.NET Server Configuration
+
+#### For External Device Testing:
+1. **Update launchSettings.json**:
+   ```json
+   "applicationUrl": "http://0.0.0.0:5220"
+   ```
+2. **Use HTTP profile**: Run with `dotnet run --launch-profile http`
+3. **Verify listening**: `netstat -ano | findstr :5220` should show `0.0.0.0:5220`
+
+#### Network Debugging:
+- **Test locally**: `curl http://localhost:5220/api/towns`
+- **Test from network**: `curl http://192.168.1.103:5220/api/towns`
+- **Check firewall**: Ensure port is not blocked
+- **Same WiFi**: External devices must be on same network
+
+### Flutter-Specific Issues
+
+#### Boolean Field Handling:
+```dart
+// Always use null-safe parsing for booleans
+isFeatured: json['isFeatured'] as bool? ?? false,
+isVerified: json['isVerified'] as bool? ?? false,
+hasNextPage: json['hasNextPage'] as bool? ?? false,
+```
+
+#### Model Synchronization:
+```dart
+// Before adding fields, verify they exist in API response
+// Test with: curl http://YOUR_API_URL/api/endpoint | jq .
+```
 
 ### Debug Logging
 
-Enable detailed logging by checking the console output. All API requests and responses are logged automatically.
+Enable detailed logging by checking the console output. All API requests and responses are logged automatically with emojis for easy identification:
+
+- 🌐 **API Request**: Outgoing HTTP requests
+- ✅ **API Response**: Successful responses
+- ❌ **API Error**: Failed requests with error details
+- 🐛 **Debug Info**: Request headers and response data
 
 ## Contributing
 
@@ -394,19 +503,71 @@ When adding new API endpoints:
 4. Update service locator
 5. Add to demo screen for testing
 
-## Dependencies
+## Dependencies & Architecture Decisions
 
-Required packages added to `pubspec.yaml`:
+### Core Dependencies
 
 ```yaml
 dependencies:
-  dio: ^5.3.2                    # HTTP client
-  connectivity_plus: ^5.0.2      # Network connectivity
-  provider: ^6.0.5               # State management
-  logger: ^2.0.2                 # Logging
-  shared_preferences: ^2.2.2     # Local storage
+  dio: ^5.3.2                    # HTTP client with interceptors
+  connectivity_plus: ^5.0.2      # Network connectivity detection
+  provider: ^6.0.5               # State management (planned for future use)
+  logger: ^2.0.2                 # Structured logging with emojis
+  shared_preferences: ^2.2.2     # Local storage (planned for caching)
+```
+
+### Architecture Decisions
+
+#### **Why Dio over HTTP package?**
+- **Interceptors**: Automatic retry logic, logging, error transformation
+- **Better error handling**: Detailed DioException types vs generic exceptions
+- **Request/Response logging**: Built-in debugging capabilities
+- **Timeout management**: Granular control over connect/receive/send timeouts
+
+#### **Why Repository Pattern?**
+- **Testability**: Easy to mock repositories for unit testing
+- **Separation of concerns**: Business logic separated from API implementation
+- **Caching potential**: Easy to add caching layer between service and repository
+- **Error transformation**: Centralized error handling and transformation
+
+#### **Why Service Locator over GetIt/Provider?**
+- **Simplicity**: Single point of dependency management
+- **Transparency**: Clear initialization and access patterns
+- **No external dependencies**: Built with core Dart/Flutter features
+- **Easy debugging**: Direct access to all services for troubleshooting
+
+### Development Workflow
+
+#### **Always test API responses first**:
+```bash
+# Test endpoint before creating models
+curl http://localhost:5220/api/towns
+curl http://localhost:5220/api/businesses/categories
+```
+
+#### **Update models to match reality, not assumptions**:
+```dart
+// ❌ Don't assume fields exist
+final bool isActive;  // Crashes if field doesn't exist
+
+// ✅ Check API response first, then create matching model
+// API returns: {"id":1,"name":"Town","businessCount":5}
+// Model should match exactly what API provides
+```
+
+#### **Use null-safe boolean parsing**:
+```dart
+// Always protect against null boolean values
+isFeatured: json['isFeatured'] as bool? ?? false,
+isVerified: json['isVerified'] as bool? ?? false,
 ```
 
 ---
 
+## Version History
+
+- **v1.0**: Initial implementation with repository pattern, Dio client, and error handling
+- **v1.1**: Added null-safe boolean parsing, fixed model-response mismatches, improved troubleshooting documentation
+
+**Last Updated**: October 10, 2025
 **Note**: This API consumption layer is designed to be production-ready and follows Flutter best practices. Update the API URL in `ApiConfig` before deploying to production.

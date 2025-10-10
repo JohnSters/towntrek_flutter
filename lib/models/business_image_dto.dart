@@ -21,7 +21,7 @@ class BusinessImageDto {
       url: json['url'] as String,
       altText: json['altText'] as String?,
       sortOrder: json['sortOrder'] as int?,
-      isPrimary: json['isPrimary'] as bool,
+      isPrimary: json['isPrimary'] as bool? ?? false,
     );
   }
 

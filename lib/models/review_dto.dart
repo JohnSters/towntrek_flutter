@@ -24,7 +24,7 @@ class ReviewDto {
       comment: json['comment'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       userName: json['userName'] as String,
-      isVerified: json['isVerified'] as bool,
+      isVerified: json['isVerified'] as bool? ?? false,
     );
   }
 

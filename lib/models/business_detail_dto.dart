@@ -81,8 +81,8 @@ class BusinessDetailDto {
       rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
       totalReviews: json['totalReviews'] as int,
       viewCount: json['viewCount'] as int,
-      isFeatured: json['isFeatured'] as bool,
-      isVerified: json['isVerified'] as bool,
+      isFeatured: json['isFeatured'] as bool? ?? false,
+      isVerified: json['isVerified'] as bool? ?? false,
       operatingHours: (json['operatingHours'] as List<dynamic>?)
           ?.map((e) => OperatingHourDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],

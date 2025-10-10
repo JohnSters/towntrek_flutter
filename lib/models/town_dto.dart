@@ -2,18 +2,24 @@
 class TownDto {
   final int id;
   final String name;
+  final String province;
+  final String? postalCode;
   final String? description;
+  final int? population;
   final double? latitude;
   final double? longitude;
-  final bool isActive;
+  final int businessCount;
 
   const TownDto({
     required this.id,
     required this.name,
+    required this.province,
+    this.postalCode,
     this.description,
+    this.population,
     this.latitude,
     this.longitude,
-    required this.isActive,
+    required this.businessCount,
   });
 
   /// Creates a TownDto from JSON
@@ -21,10 +27,13 @@ class TownDto {
     return TownDto(
       id: json['id'] as int,
       name: json['name'] as String,
+      province: json['province'] as String,
+      postalCode: json['postalCode'] as String?,
       description: json['description'] as String?,
+      population: json['population'] as int?,
       latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
       longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
-      isActive: json['isActive'] as bool,
+      businessCount: json['businessCount'] as int,
     );
   }
 
@@ -33,10 +42,13 @@ class TownDto {
     return {
       'id': id,
       'name': name,
+      'province': province,
+      'postalCode': postalCode,
       'description': description,
+      'population': population,
       'latitude': latitude,
       'longitude': longitude,
-      'isActive': isActive,
+      'businessCount': businessCount,
     };
   }
 
@@ -44,24 +56,30 @@ class TownDto {
   TownDto copyWith({
     int? id,
     String? name,
+    String? province,
+    String? postalCode,
     String? description,
+    int? population,
     double? latitude,
     double? longitude,
-    bool? isActive,
+    int? businessCount,
   }) {
     return TownDto(
       id: id ?? this.id,
       name: name ?? this.name,
+      province: province ?? this.province,
+      postalCode: postalCode ?? this.postalCode,
       description: description ?? this.description,
+      population: population ?? this.population,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
-      isActive: isActive ?? this.isActive,
+      businessCount: businessCount ?? this.businessCount,
     );
   }
 
   @override
   String toString() {
-    return 'TownDto(id: $id, name: $name, isActive: $isActive)';
+    return 'TownDto(id: $id, name: $name, province: $province, businessCount: $businessCount)';
   }
 
   @override
@@ -71,11 +89,11 @@ class TownDto {
     return other is TownDto &&
         other.id == id &&
         other.name == name &&
-        other.isActive == isActive;
+        other.province == province;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ name.hashCode ^ isActive.hashCode;
+    return id.hashCode ^ name.hashCode ^ province.hashCode;
   }
 }

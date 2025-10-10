@@ -14,7 +14,7 @@ class BusinessServiceDto {
   factory BusinessServiceDto.fromJson(Map<String, dynamic> json) {
     return BusinessServiceDto(
       serviceType: json['serviceType'] as String,
-      isAvailable: json['isAvailable'] as bool,
+      isAvailable: json['isAvailable'] as bool? ?? false,
       description: json['description'] as String?,
     );
   }

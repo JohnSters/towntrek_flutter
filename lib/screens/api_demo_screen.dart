@@ -188,10 +188,15 @@ class _ApiDemoScreenState extends State<ApiDemoScreen> {
             ..._towns!.map((town) => Card(
               child: ListTile(
                 title: Text(town.name),
-                subtitle: town.description != null ? Text(town.description!) : null,
-                trailing: town.isActive
-                    ? const Icon(Icons.check_circle, color: Colors.green)
-                    : const Icon(Icons.cancel, color: Colors.red),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (town.description != null) Text(town.description!),
+                    Text('${town.businessCount} businesses • ${town.province}',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+                trailing: const Icon(Icons.location_city, color: Colors.blue),
                 onTap: () => _loadBusinessesForTown(town.id),
               ),
             )),

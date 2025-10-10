@@ -22,8 +22,8 @@ class OperatingHourDto {
       dayOfWeek: json['dayOfWeek'] as String,
       openTime: json['openTime'] as String?,
       closeTime: json['closeTime'] as String?,
-      isOpen: json['isOpen'] as bool,
-      isSpecialHours: json['isSpecialHours'] as bool,
+      isOpen: json['isOpen'] as bool? ?? false,
+      isSpecialHours: json['isSpecialHours'] as bool? ?? false,
       specialHoursNote: json['specialHoursNote'] as String?,
     );
   }
