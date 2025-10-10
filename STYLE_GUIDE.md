@@ -16,7 +16,7 @@ This style guide establishes the visual design principles and standards for the 
 ### Key Restrictions
 - ❌ **No Shadows**: Zero elevation on all components
 - ❌ **No Drop Shadows**: Flat design approach
-- ❌ **No Decorative Elements**: Functional design only
+- ✅ **Subtle Gradients**: Acceptable for backgrounds and branding elements (e.g., logo containers, hero sections)
 - ✅ **Material Icons**: Only use Material Design Icons
 - ✅ **Rounded Corners**: 8px for buttons, 12px for cards, 16px for dialogs
 

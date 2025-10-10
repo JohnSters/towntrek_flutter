@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'core/core.dart';
 import 'screens/landing_page.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize service locator and dependencies
+  serviceLocator.initialize();
+
   runApp(const TownTrekApp());
 }
 
