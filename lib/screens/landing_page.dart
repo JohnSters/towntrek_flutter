@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'api_demo_screen.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -146,24 +145,6 @@ class _LandingPageState extends State<LandingPage>
                     ),
 
                     const SizedBox(height: 48),
-
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ApiDemoScreen()),
-                            ),
-                            icon: const Icon(Icons.api),
-                            label: const Text('API Demo'),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
 
                     Row(
                       children: [

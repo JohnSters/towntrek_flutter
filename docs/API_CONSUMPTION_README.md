@@ -362,10 +362,6 @@ class _MyWidgetState extends State<MyWidget> {
 }
 ```
 
-## Demo Screen
-
-The app includes an `ApiDemoScreen` that demonstrates all API endpoints. Access it from the landing page to see the API consumption layer in action.
-
 ## Migration Guide
 
 When migrating from direct API calls:
