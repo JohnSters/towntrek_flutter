@@ -15,6 +15,7 @@ class ServiceLocator {
   late final ApiClient _apiClient;
   late final BusinessApiService _businessApiService;
   late final TownApiService _townApiService;
+  late final GeolocationService _geolocationService;
 
   // Repository dependencies
   late final BusinessRepository _businessRepository;
@@ -30,6 +31,7 @@ class ServiceLocator {
     // Initialize API services
     _businessApiService = BusinessApiService(_apiClient);
     _townApiService = TownApiService(_apiClient);
+    _geolocationService = GeolocationServiceImpl();
 
     // Initialize repositories
     _businessRepository = BusinessRepositoryImpl(_businessApiService);
@@ -71,6 +73,12 @@ class ServiceLocator {
   TownRepository get townRepository {
     _ensureInitialized();
     return _townRepository;
+  }
+
+  /// Get the geolocation service
+  GeolocationService get geolocationService {
+    _ensureInitialized();
+    return _geolocationService;
   }
 
   void _ensureInitialized() {

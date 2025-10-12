@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'business_category_page.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -100,11 +101,9 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      // TODO: Navigate to main app experience
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Starting your exploration journey!'),
-                          duration: Duration(seconds: 2),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const BusinessCategoryPage(),
                         ),
                       );
                     },

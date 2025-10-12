@@ -23,6 +23,9 @@ dependencies:
   # Local Storage (as planned in technical specs)
   shared_preferences: ^2.2.2
 
+  # Geolocation
+  geolocator: ^12.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
