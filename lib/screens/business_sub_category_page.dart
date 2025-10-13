@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../core/config/business_category_config.dart';
+import 'business_card_page.dart';
 
 /// Page for displaying business sub-categories for a selected category
 class BusinessSubCategoryPage extends StatefulWidget {
@@ -225,11 +226,13 @@ class _BusinessSubCategoryPageState extends State<BusinessSubCategoryPage> {
         opacity: isDisabled ? 0.6 : 1.0,
         child: InkWell(
           onTap: isDisabled ? null : () {
-            // TODO: Navigate to business list for this sub-category
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Opening ${subCategory.name} businesses...'),
-                duration: const Duration(seconds: 2),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => BusinessCardPage(
+                  category: widget.category,
+                  subCategory: subCategory,
+                  town: widget.town,
+                ),
               ),
             );
           },
