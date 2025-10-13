@@ -3,6 +3,9 @@ import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
 import '../services/services.dart';
+import '../core/widgets/error_view.dart';
+import '../core/errors/app_error.dart';
+import '../core/errors/error_handler.dart';
 import 'town_selection_screen.dart';
 
 /// Page for displaying business categories for a selected town
@@ -17,12 +20,13 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   TownDto? _selectedTown;
   List<CategoryWithCountDto> _categories = [];
   bool _isLoading = true;
-  String? _errorMessage;
+  AppError? _error;
   bool _isLocationLoading = true;
 
   final BusinessRepository _businessRepository = serviceLocator.businessRepository;
   final TownRepository _townRepository = serviceLocator.townRepository;
   final GeolocationService _geolocationService = serviceLocator.geolocationService;
+  final ErrorHandler _errorHandler = serviceLocator.errorHandler;
 
   @override
   void initState() {
@@ -37,7 +41,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   Future<void> _detectLocationAndLoadTown() async {
     setState(() {
       _isLocationLoading = true;
-      _errorMessage = null;
+      _error = null;
     });
 
     try {
@@ -45,8 +49,9 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
       final townsResult = await _townRepository.getTowns();
 
       if (townsResult.isEmpty) {
+        final noDataError = AppErrors.noDataAvailable(_initializePage);
         setState(() {
-          _errorMessage = 'No towns available';
+          _error = noDataError;
           _isLocationLoading = false;
           _isLoading = false;
         });
@@ -79,11 +84,14 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
         }
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to load towns: $e';
-        _isLocationLoading = false;
-        _isLoading = false;
-      });
+      final appError = await _errorHandler.handleError(e, retryAction: _initializePage);
+      if (mounted) {
+        setState(() {
+          _error = appError;
+          _isLocationLoading = false;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -91,7 +99,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
     setState(() {
       _selectedTown = town;
       _isLoading = true;
-      _errorMessage = null;
+      _error = null;
     });
 
     try {
@@ -102,11 +110,14 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
         _isLocationLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to load categories: $e';
-        _isLoading = false;
-        _isLocationLoading = false;
-      });
+      final appError = await _errorHandler.handleError(e, retryAction: () => _loadCategoriesForTown(town));
+      if (mounted) {
+        setState(() {
+          _error = appError;
+          _isLoading = false;
+          _isLocationLoading = false;
+        });
+      }
     }
   }
 
@@ -151,7 +162,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
       return _buildLoadingView();
     }
 
-    if (_errorMessage != null) {
+    if (_error != null) {
       return _buildErrorView();
     }
 
@@ -313,41 +324,10 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   }
 
   Widget _buildErrorView() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Oops! Something went wrong',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _errorMessage ?? 'An unknown error occurred',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _initializePage,
-            child: const Text('Try Again'),
-          ),
-        ],
-      ),
-    );
+    if (_error == null) {
+      return ErrorView(error: AppErrors.unknown());
+    }
+    return ErrorView(error: _error!);
   }
 
   Widget _buildCategoriesView() {

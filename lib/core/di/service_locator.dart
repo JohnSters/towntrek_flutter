@@ -1,6 +1,7 @@
 import '../../repositories/repositories.dart';
 import '../../services/services.dart';
 import '../network/api_client.dart';
+import '../errors/error_handler.dart';
 
 /// Service Locator for dependency injection
 /// This provides a centralized way to access all services and repositories
@@ -16,6 +17,7 @@ class ServiceLocator {
   late final BusinessApiService _businessApiService;
   late final TownApiService _townApiService;
   late final GeolocationService _geolocationService;
+  late final ErrorHandler _errorHandler;
 
   // Repository dependencies
   late final BusinessRepository _businessRepository;
@@ -27,6 +29,7 @@ class ServiceLocator {
 
     // Initialize core services
     _apiClient = ApiClient.instance;
+    _errorHandler = ErrorHandler();
 
     // Initialize API services
     _businessApiService = BusinessApiService(_apiClient);
@@ -79,6 +82,12 @@ class ServiceLocator {
   GeolocationService get geolocationService {
     _ensureInitialized();
     return _geolocationService;
+  }
+
+  /// Get the error handler
+  ErrorHandler get errorHandler {
+    _ensureInitialized();
+    return _errorHandler;
   }
 
   void _ensureInitialized() {

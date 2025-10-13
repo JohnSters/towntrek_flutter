@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
+import '../core/widgets/error_view.dart';
+import '../core/errors/app_error.dart';
+import '../core/errors/error_handler.dart';
 
 /// Dedicated screen for town selection with search functionality
 class TownSelectionScreen extends StatefulWidget {
@@ -13,11 +16,12 @@ class TownSelectionScreen extends StatefulWidget {
 
 class _TownSelectionScreenState extends State<TownSelectionScreen> {
   final TownRepository _townRepository = serviceLocator.townRepository;
+  final ErrorHandler _errorHandler = serviceLocator.errorHandler;
 
   List<TownDto> _allTowns = [];
   List<TownDto> _filteredTowns = [];
   bool _isLoading = true;
-  String? _errorMessage;
+  AppError? _error;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -36,7 +40,7 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
   Future<void> _loadTowns() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
+      _error = null;
     });
 
     try {
@@ -49,9 +53,10 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
         });
       }
     } catch (e) {
+      final appError = await _errorHandler.handleError(e, retryAction: _loadTowns);
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to load towns: ${e.toString()}';
+          _error = appError;
           _isLoading = false;
         });
       }
@@ -163,39 +168,12 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
       );
     }
 
-    if (_errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to Load Towns',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _errorMessage!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _loadTowns,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-            ),
-          ],
-        ),
+    if (_error != null) {
+      return ErrorView(
+        error: _error!,
+        showIcon: true,
+        padding: const EdgeInsets.all(32.0),
+        iconSize: 64.0,
       );
     }
 
