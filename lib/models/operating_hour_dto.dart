@@ -19,7 +19,7 @@ class OperatingHourDto {
   /// Creates an OperatingHourDto from JSON
   factory OperatingHourDto.fromJson(Map<String, dynamic> json) {
     return OperatingHourDto(
-      dayOfWeek: json['dayOfWeek'] as String,
+      dayOfWeek: json['dayOfWeek'].toString(), // Handle both int and String
       openTime: json['openTime'] as String?,
       closeTime: json['closeTime'] as String?,
       isOpen: json['isOpen'] as bool? ?? false,

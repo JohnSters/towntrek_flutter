@@ -7,6 +7,7 @@ import '../repositories/repositories.dart';
 import '../core/widgets/error_view.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
+import '../core/utils/url_utils.dart';
 
 /// Comprehensive business details page with gallery, hours, reviews, and contact options
 class BusinessDetailsPage extends StatefulWidget {
@@ -350,7 +351,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Image.network(
-        image.url,
+        UrlUtils.resolveImageUrl(image.url),
         fit: BoxFit.cover,
         width: double.infinity,
         errorBuilder: (context, error, stackTrace) {
@@ -379,7 +380,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Image.network(
-              images[index].url,
+              UrlUtils.resolveImageUrl(images[index].url),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
@@ -789,7 +790,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
 
     // Find today's operating hours
     final todayHours = operatingHours.firstWhere(
-      (hour) => hour.dayOfWeek == currentDay && !hour.isSpecialHours,
+      (hour) => _formatDayOfWeek(hour.dayOfWeek) == currentDay && !hour.isSpecialHours,
       orElse: () => OperatingHourDto(
         dayOfWeek: currentDay,
         isOpen: false,
@@ -807,8 +808,31 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   }
 
   String _formatDayOfWeek(String dayOfWeek) {
-    // Capitalize first letter
-    return dayOfWeek.substring(0, 1).toUpperCase() + dayOfWeek.substring(1, 3);
+    // Handle numeric day values (1-7) from API
+    final dayNames = [
+      '', // 0-indexed, not used
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+
+    // If it's a numeric string, convert to day name
+    final dayNumber = int.tryParse(dayOfWeek);
+    if (dayNumber != null && dayNumber >= 1 && dayNumber <= 7) {
+      return dayNames[dayNumber];
+    }
+
+    // Fallback: if it's already a full day name, just capitalize first letter
+    if (dayOfWeek.length > 3) {
+      return dayOfWeek.substring(0, 1).toUpperCase() + dayOfWeek.substring(1).toLowerCase();
+    }
+
+    // Unknown format, return as-is
+    return dayOfWeek;
   }
 
   String _formatTime(String time) {

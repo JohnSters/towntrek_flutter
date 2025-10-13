@@ -23,6 +23,11 @@ class ErrorHandler {
       return _handleLocationError(error, retryAction);
     }
 
+    // Handle JSON parsing errors (TypeError, CastError, etc.)
+    if (error is TypeError || error.toString().contains('type') || error.toString().contains('cast')) {
+      return AppErrors.invalidData(retryAction);
+    }
+
     // Handle other exceptions
     return AppErrors.unknown(retryAction);
   }

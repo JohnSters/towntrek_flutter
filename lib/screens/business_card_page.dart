@@ -6,6 +6,7 @@ import '../core/widgets/error_view.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/config/business_category_config.dart';
+import '../core/utils/url_utils.dart';
 import 'business_details_page.dart';
 
 /// Page for displaying businesses in a beautiful card layout for a selected sub-category
@@ -359,7 +360,7 @@ class _BusinessCardPageState extends State<BusinessCardPage> {
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
-                              business.logoUrl!,
+                              UrlUtils.resolveImageUrl(business.logoUrl!),
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Icon(
