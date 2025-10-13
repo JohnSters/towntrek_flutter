@@ -10,6 +10,7 @@ import '../core/config/business_category_config.dart';
 import '../core/widgets/event_notification_banner.dart';
 import 'town_selection_screen.dart';
 import 'current_events_screen.dart';
+import 'business_sub_category_page.dart';
 
 /// Page for displaying business categories for a selected town
 class BusinessCategoryPage extends StatefulWidget {
@@ -28,6 +29,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
 
   // Event-related state
   int _currentEventCount = 0;
+  bool _categoriesLoaded = false; // Flag to ensure categories are fully loaded before checking events
 
   final BusinessRepository _businessRepository = serviceLocator.businessRepository;
   final TownRepository _townRepository = serviceLocator.townRepository;
@@ -108,18 +110,37 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
       _isLoading = true;
       _error = null;
       _currentEventCount = 0; // Reset event count when changing towns
+      _categoriesLoaded = false; // Reset categories loaded flag
     });
 
     try {
+      // Step 1: Load categories first
       final categories = await _businessRepository.getCategoriesWithCounts(town.id);
-      setState(() {
-        _categories = categories;
-        _isLoading = false;
-        _isLocationLoading = false;
-      });
 
-      // Check for current events after loading categories
-      await _checkCurrentEvents(town.id);
+      // Step 2: Update UI with categories and mark as loaded
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _categoriesLoaded = true; // Mark categories as loaded
+        });
+      }
+
+      // Step 3: Wait for UI to settle before checking events
+      // This ensures the categories view is fully rendered before starting event loading
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Step 4: Now load events sequentially after categories are done
+      if (mounted && _categoriesLoaded) {
+        await _checkCurrentEvents(town.id);
+      }
+
+      // Step 5: Mark loading as complete
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLocationLoading = false;
+        });
+      }
     } catch (e) {
       final appError = await _errorHandler.handleError(e, retryAction: () => _loadCategoriesForTown(town));
       if (mounted) {
@@ -127,6 +148,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
           _error = appError;
           _isLoading = false;
           _isLocationLoading = false;
+          _categoriesLoaded = false;
         });
       }
     }
@@ -137,7 +159,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   }
 
   Future<void> _checkCurrentEvents(int townId) async {
-    if (!mounted) return;
+    if (!mounted || !_categoriesLoaded) return;
 
     try {
       final eventsResponse = await _eventRepository.getCurrentEvents(
@@ -145,7 +167,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
         pageSize: 1, // Just need to know if there are any events
       );
 
-      if (mounted) {
+      if (mounted && _categoriesLoaded) {
         setState(() {
           _currentEventCount = eventsResponse.totalCount;
         });
@@ -485,8 +507,8 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
 
           const SizedBox(height: 24),
 
-          // Event notification banner (if there are current events)
-          if (_currentEventCount > 0)
+          // Event notification banner (only show when categories are loaded and there are current events)
+          if (_categoriesLoaded && _currentEventCount > 0 && !_isLoading)
             EventNotificationBanner(
               eventCount: _currentEventCount,
               onTap: _onEventBannerTap,
@@ -539,6 +561,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   Widget _buildCategoryCard(CategoryWithCountDto category) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final bool isDisabled = category.businessCount == 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -549,79 +572,91 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
           color: colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
-      child: InkWell(
-        onTap: () {
-          // TODO: Navigate to business list for this category
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Opening ${category.name} businesses...'),
-              duration: const Duration(seconds: 2),
+      child: Opacity(
+        opacity: isDisabled ? 0.6 : 1.0,
+        child: InkWell(
+          onTap: isDisabled ? null : () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => BusinessSubCategoryPage(
+                  category: category,
+                  town: _selectedTown!,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                // Icon Container
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: BusinessCategoryConfig.getCategoryColor(category.key, colorScheme),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    BusinessCategoryConfig.getCategoryIcon(category.key),
+                    size: 24,
+                    color: BusinessCategoryConfig.getCategoryIconColor(category.key, colorScheme),
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                // Title and Description
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Title
+                      Text(
+                        category.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isDisabled
+                              ? colorScheme.onSurface.withValues(alpha: 0.5)
+                              : colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      const SizedBox(height: 2),
+
+                      // Description
+                      Text(
+                        category.businessCount == 0
+                            ? 'No businesses yet'
+                            : '${category.businessCount} businesses',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDisabled
+                              ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Arrow Icon
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: isDisabled
+                      ? colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ],
             ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Row(
-            children: [
-              // Icon Container
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: BusinessCategoryConfig.getCategoryColor(category.key, colorScheme),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  BusinessCategoryConfig.getCategoryIcon(category.key),
-                  size: 24,
-                  color: BusinessCategoryConfig.getCategoryIconColor(category.key, colorScheme),
-                ),
-              ),
-
-              const SizedBox(width: 16),
-
-              // Title and Description
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title
-                    Text(
-                      category.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    // Description
-                    Text(
-                      '${category.businessCount} businesses',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Arrow Icon
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ],
           ),
         ),
       ),
