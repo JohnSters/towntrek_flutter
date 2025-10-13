@@ -1,18 +1,24 @@
 /// Configuration constants for API communication
 class ApiConfig {
+  // Static variable to allow dynamic switching between environments
+  static String _currentBaseUrl = localNetworkUrl;
   // Base URLs - these should be configurable for different environments
   // For external devices, use your machine's IP address instead of localhost
-  static const String baseUrl = 'http://192.168.1.103:5220'; // Your machine's local IP address
+  static const String localhostUrl = 'http://localhost:5220';
+  static const String localNetworkUrl = 'http://192.168.1.103:5220'; // Your machine's local IP address
+
+  // Dynamic base URL that can be switched between environments
+  static String get baseUrl => _currentBaseUrl;
   static const String apiVersion = 'api';
 
   // Endpoints
   static const String businessesEndpoint = 'businesses';
   static const String townsEndpoint = 'towns';
 
-  // Timeout configurations
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
-  static const Duration sendTimeout = Duration(seconds: 30);
+  // Timeout configurations - reduced for development
+  static const Duration connectTimeout = Duration(seconds: 10);
+  static const Duration receiveTimeout = Duration(seconds: 10);
+  static const Duration sendTimeout = Duration(seconds: 10);
 
   // Retry configuration
   static const int maxRetries = 3;
@@ -81,4 +87,30 @@ class ApiConfig {
   static String townDetailUrl(int townId, [Map<String, dynamic>? queryParams]) {
     return buildUrl('$townsEndpoint/$townId', queryParams);
   }
+
+  /// Get the appropriate base URL for the current environment
+  /// This can be modified to read from environment variables or app settings
+  static String getBaseUrlForEnvironment([String? environment]) {
+    // You can implement logic here to detect environment
+    // For now, return the configured baseUrl
+    return baseUrl;
+  }
+
+  /// Switch to localhost for emulator/simulator development
+  static void useLocalhost() {
+    _currentBaseUrl = localhostUrl;
+  }
+
+  /// Switch to network IP for external device testing
+  static void useNetworkUrl() {
+    _currentBaseUrl = localNetworkUrl;
+  }
+
+  /// Set a custom base URL
+  static void setCustomBaseUrl(String url) {
+    _currentBaseUrl = url;
+  }
+
+  /// Get the current base URL being used
+  static String getCurrentBaseUrl() => _currentBaseUrl;
 }

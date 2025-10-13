@@ -3,6 +3,7 @@ import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
 import '../services/services.dart';
+import 'town_selection_screen.dart';
 
 /// Page for displaying business categories for a selected town
 class BusinessCategoryPage extends StatefulWidget {
@@ -247,15 +248,38 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            'We\'re detecting your town to show relevant businesses',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: 0.7),
+          Container(
+            constraints: const BoxConstraints(maxWidth: 280),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(25), // Pill shape
             ),
-            textAlign: TextAlign.center,
+            child: Text(
+              'We\'re detecting your town to show relevant businesses',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 32),
           const CircularProgressIndicator(),
+          const SizedBox(height: 24),
+          TextButton.icon(
+            onPressed: () {
+              // Skip location detection and show town selection
+              setState(() {
+                _isLocationLoading = false;
+              });
+            },
+            icon: const Icon(Icons.location_off),
+            label: const Text('Skip Location Detection'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+          ),
         ],
       ),
     );
@@ -317,9 +341,18 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
           const SizedBox(height: 16),
           TextButton(
             onPressed: () async {
-              final towns = await _townRepository.getTowns();
-              if (towns.isNotEmpty) {
-                _showTownPicker(towns);
+              // Navigate to dedicated town selection screen
+              if (mounted) {
+                final selectedTown = await Navigator.of(context).push<TownDto>(
+                  MaterialPageRoute(
+                    builder: (context) => const TownSelectionScreen(),
+                  ),
+                );
+
+                // If a town was selected, load its categories
+                if (selectedTown != null && mounted) {
+                  await _loadCategoriesForTown(selectedTown);
+                }
               }
             },
             child: const Text('Select Manually'),

@@ -65,8 +65,10 @@ class GeolocationServiceImpl implements GeolocationService {
 
       // Get current position with high accuracy
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
       );
 
       return Result.success(position);
