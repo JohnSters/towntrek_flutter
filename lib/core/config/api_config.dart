@@ -14,6 +14,7 @@ class ApiConfig {
   // Endpoints
   static const String businessesEndpoint = 'businesses';
   static const String townsEndpoint = 'towns';
+  static const String eventsEndpoint = 'events';
 
   // Timeout configurations - reduced for development
   static const Duration connectTimeout = Duration(seconds: 10);
@@ -86,6 +87,31 @@ class ApiConfig {
   /// Builds specific town endpoint URL
   static String townDetailUrl(int townId, [Map<String, dynamic>? queryParams]) {
     return buildUrl('$townsEndpoint/$townId', queryParams);
+  }
+
+  /// Builds events endpoint URL
+  static String eventsUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(eventsEndpoint, queryParams);
+  }
+
+  /// Builds event search endpoint URL
+  static String eventSearchUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$eventsEndpoint/search', queryParams);
+  }
+
+  /// Builds current events endpoint URL
+  static String currentEventsUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$eventsEndpoint/current', queryParams);
+  }
+
+  /// Builds event types endpoint URL
+  static String eventTypesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$eventsEndpoint/types', queryParams);
+  }
+
+  /// Builds specific event endpoint URL
+  static String eventDetailUrl(int eventId, [Map<String, dynamic>? queryParams]) {
+    return buildUrl('$eventsEndpoint/$eventId', queryParams);
   }
 
   /// Get the appropriate base URL for the current environment

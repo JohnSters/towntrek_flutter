@@ -7,7 +7,9 @@ import '../core/widgets/error_view.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/config/business_category_config.dart';
+import '../core/widgets/event_notification_banner.dart';
 import 'town_selection_screen.dart';
+import 'current_events_screen.dart';
 
 /// Page for displaying business categories for a selected town
 class BusinessCategoryPage extends StatefulWidget {
@@ -24,8 +26,12 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   AppError? _error;
   bool _isLocationLoading = true;
 
+  // Event-related state
+  int _currentEventCount = 0;
+
   final BusinessRepository _businessRepository = serviceLocator.businessRepository;
   final TownRepository _townRepository = serviceLocator.townRepository;
+  final EventRepository _eventRepository = serviceLocator.eventRepository;
   final GeolocationService _geolocationService = serviceLocator.geolocationService;
   final ErrorHandler _errorHandler = serviceLocator.errorHandler;
 
@@ -101,6 +107,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
       _selectedTown = town;
       _isLoading = true;
       _error = null;
+      _currentEventCount = 0; // Reset event count when changing towns
     });
 
     try {
@@ -110,6 +117,9 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
         _isLoading = false;
         _isLocationLoading = false;
       });
+
+      // Check for current events after loading categories
+      await _checkCurrentEvents(town.id);
     } catch (e) {
       final appError = await _errorHandler.handleError(e, retryAction: () => _loadCategoriesForTown(town));
       if (mounted) {
@@ -124,6 +134,44 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
 
   void _changeTown() {
     _initializePage();
+  }
+
+  Future<void> _checkCurrentEvents(int townId) async {
+    if (!mounted) return;
+
+    try {
+      final eventsResponse = await _eventRepository.getCurrentEvents(
+        townId: townId,
+        pageSize: 1, // Just need to know if there are any events
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentEventCount = eventsResponse.totalCount;
+        });
+      }
+    } catch (e) {
+      // Silently fail for event checking - don't show error to user
+      // Events are secondary feature, don't interrupt main flow
+      if (mounted) {
+        setState(() {
+          _currentEventCount = 0;
+        });
+      }
+    }
+  }
+
+  void _onEventBannerTap() {
+    if (_selectedTown != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => CurrentEventsScreen(
+            townId: _selectedTown!.id,
+            townName: _selectedTown!.name,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -435,7 +483,17 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          // Event notification banner (if there are current events)
+          if (_currentEventCount > 0)
+            EventNotificationBanner(
+              eventCount: _currentEventCount,
+              onTap: _onEventBannerTap,
+              townName: _selectedTown!.name,
+            ),
+
+          const SizedBox(height: 24),
 
           // Categories grid
           if (_categories.isEmpty)

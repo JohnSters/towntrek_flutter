@@ -46,27 +46,31 @@ class EventDto {
 
   /// Creates an EventDto from JSON
   factory EventDto.fromJson(Map<String, dynamic> json) {
+    // Handle both PascalCase (backend) and camelCase (our DTO) field names
     return EventDto(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      eventType: json['eventType'] as String,
-      startDate: DateTime.parse(json['startDate'] as String),
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate'] as String) : null,
-      startTime: json['startTime'] as String?,
-      endTime: json['endTime'] as String?,
-      venue: json['venue'] as String?,
-      physicalAddress: json['physicalAddress'] as String,
-      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
-      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
-      isFreeEvent: json['isFreeEvent'] as bool? ?? true,
-      entryFeeAmount: json['entryFeeAmount'] != null ? (json['entryFeeAmount'] as num).toDouble() : null,
-      entryFeeCurrency: json['entryFeeCurrency'] as String?,
-      logoUrl: json['logoUrl'] as String?,
-      rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
-      totalReviews: json['totalReviews'] as int,
-      viewCount: json['viewCount'] as int,
-      isPriorityListing: json['isPriorityListing'] as bool? ?? false,
+      id: json['Id'] as int? ?? json['id'] as int,
+      name: json['Name'] as String? ?? json['name'] as String,
+      description: json['ShortDescription'] as String? ?? json['Description'] as String? ?? json['description'] as String?,
+      eventType: json['EventType'] as String? ?? json['eventType'] as String,
+      startDate: DateTime.parse(json['StartDate'] as String? ?? json['startDate'] as String),
+      endDate: json['EndDate'] != null ? DateTime.parse(json['EndDate'] as String) :
+               json['endDate'] != null ? DateTime.parse(json['endDate'] as String) : null,
+      startTime: json['StartTime']?.toString() ?? json['startTime'] as String?,
+      endTime: json['EndTime']?.toString() ?? json['endTime'] as String?,
+      venue: json['Venue'] as String? ?? json['venue'] as String?,
+      physicalAddress: json['TownName'] as String? ?? json['townName'] as String? ?? 'Location TBA',
+      latitude: null, // Not provided by EventCardViewModel
+      longitude: null, // Not provided by EventCardViewModel
+      isFreeEvent: json['IsFreeEvent'] as bool? ?? json['isFreeEvent'] as bool? ?? true,
+      entryFeeAmount: json['EntryFeeAmount'] != null ? (json['EntryFeeAmount'] as num).toDouble() :
+                      json['entryFeeAmount'] != null ? (json['entryFeeAmount'] as num).toDouble() : null,
+      entryFeeCurrency: json['EntryFeeCurrency'] as String? ?? json['entryFeeCurrency'] as String?,
+      logoUrl: json['LogoUrl'] as String? ?? json['logoUrl'] as String?,
+      rating: json['AverageRating'] != null ? (json['AverageRating'] as num).toDouble() :
+               json['rating'] != null ? (json['rating'] as num).toDouble() : null,
+      totalReviews: json['TotalReviews'] as int? ?? json['totalReviews'] as int? ?? 0,
+      viewCount: json['ViewCount'] as int? ?? json['viewCount'] as int? ?? 0,
+      isPriorityListing: false, // Not provided by EventCardViewModel, default to false
     );
   }
 
@@ -160,6 +164,41 @@ class EventDto {
       return '${entryFeeAmount!.toStringAsFixed(2)} ${entryFeeCurrency ?? 'ZAR'}';
     }
     return 'Price TBA';
+  }
+
+  /// Get the effective end date/time of the event
+  DateTime get effectiveEndDateTime {
+    final end = endDate ?? startDate;
+    // If there's a start time, assume the event ends at that time
+    // Otherwise, assume it ends at the end of the day
+    return DateTime(
+      end.year,
+      end.month,
+      end.day,
+      startTime != null ? int.parse(startTime!.split(':')[0]) : 23,
+      startTime != null ? int.parse(startTime!.split(':')[1]) : 59,
+    );
+  }
+
+  /// Check if the event has finished
+  bool get isFinished {
+    return DateTime.now().isAfter(effectiveEndDateTime);
+  }
+
+  /// Get the number of days since the event finished (negative if not finished)
+  int get daysSinceFinished {
+    if (!isFinished) return -1;
+    return DateTime.now().difference(effectiveEndDateTime).inDays;
+  }
+
+  /// Check if the event should be hidden (finished more than 2 days ago)
+  bool get shouldHide {
+    return daysSinceFinished > 2;
+  }
+
+  /// Check if the event should be greyed out (finished within the last 24 hours)
+  bool get shouldGreyOut {
+    return daysSinceFinished >= 0 && daysSinceFinished <= 1;
   }
 
   @override
