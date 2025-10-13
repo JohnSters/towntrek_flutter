@@ -64,7 +64,19 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
           _isLocationLoading = false;
           _isLoading = false;
         });
-        _showTownSelectionDialog(townsResult);
+        // Navigate to dedicated town selection screen
+        if (mounted) {
+          Navigator.of(context).push<TownDto>(
+            MaterialPageRoute(
+              builder: (context) => const TownSelectionScreen(),
+            ),
+          ).then((selectedTown) {
+            // If a town was selected, load its categories
+            if (selectedTown != null && mounted) {
+              _loadCategoriesForTown(selectedTown);
+            }
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -96,74 +108,6 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
         _isLocationLoading = false;
       });
     }
-  }
-
-  void _showTownSelectionDialog(List<TownDto> towns) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Your Town'),
-        content: const Text(
-          'We couldn\'t detect your location. Please select your town to continue.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showTownPicker(towns);
-            },
-            child: const Text('Select Town'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showTownPicker(List<TownDto> towns) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              const Text(
-                'Choose Your Town',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: towns.length,
-                  itemBuilder: (context, index) {
-                    final town = towns[index];
-                    return ListTile(
-                      leading: const Icon(Icons.location_city),
-                      title: Text(town.name),
-                      subtitle: Text('${town.province} • ${town.businessCount} businesses'),
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        _loadCategoriesForTown(town);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _changeTown() {
