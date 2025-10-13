@@ -173,18 +173,32 @@ class _BusinessSubCategoryPageState extends State<BusinessSubCategoryPage> {
               ),
             )
           else
-            SizedBox(
-              width: double.infinity,
-              child: ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                itemCount: widget.category.subCategories.length,
-                itemBuilder: (context, index) {
-                  final subCategory = widget.category.subCategories[index];
-                  return _buildSubCategoryCard(subCategory);
-                },
-              ),
+            Builder(
+              builder: (context) {
+                // Sort subcategories: active ones (with businesses) first, then inactive ones
+                final sortedSubCategories = [...widget.category.subCategories]
+                  ..sort((a, b) {
+                    // Primary sort: businesses with count > 0 come first
+                    if (a.businessCount > 0 && b.businessCount == 0) return -1;
+                    if (a.businessCount == 0 && b.businessCount > 0) return 1;
+                    // Secondary sort: alphabetical by name for same business count
+                    return a.name.compareTo(b.name);
+                  });
+
+                return SizedBox(
+                  width: double.infinity,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    itemCount: sortedSubCategories.length,
+                    itemBuilder: (context, index) {
+                      final subCategory = sortedSubCategories[index];
+                      return _buildSubCategoryCard(subCategory);
+                    },
+                  ),
+                );
+              },
             ),
 
           const SizedBox(height: 32),
