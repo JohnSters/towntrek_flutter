@@ -26,6 +26,12 @@ dependencies:
   # Geolocation
   geolocator: ^14.0.2
 
+  # URL Launcher for external links, calls, emails
+  url_launcher: ^6.2.5
+
+  # Internationalization for date formatting
+  intl: ^0.19.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

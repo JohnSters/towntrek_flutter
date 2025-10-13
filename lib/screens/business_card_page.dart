@@ -6,6 +6,7 @@ import '../core/widgets/error_view.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/config/business_category_config.dart';
+import 'business_details_page.dart';
 
 /// Page for displaying businesses in a beautiful card layout for a selected sub-category
 class BusinessCardPage extends StatefulWidget {
@@ -477,11 +478,12 @@ class _BusinessCardPageState extends State<BusinessCardPage> {
   }
 
   void _onBusinessDetailsTap(BusinessDto business) {
-    // TODO: Navigate to business details page
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening ${business.name} details...'),
-        duration: const Duration(seconds: 2),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BusinessDetailsPage(
+          businessId: business.id,
+          businessName: business.name,
+        ),
       ),
     );
   }
