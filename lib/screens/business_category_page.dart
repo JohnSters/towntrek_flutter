@@ -6,6 +6,7 @@ import '../services/services.dart';
 import '../core/widgets/error_view.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
+import '../core/config/business_category_config.dart';
 import 'town_selection_screen.dart';
 
 /// Page for displaying business categories for a selected town
@@ -510,13 +511,13 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _getCategoryColor(category.key, colorScheme),
+                  color: BusinessCategoryConfig.getCategoryColor(category.key, colorScheme),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  _getCategoryIcon(category.key),
+                  BusinessCategoryConfig.getCategoryIcon(category.key),
                   size: 24,
-                  color: _getCategoryIconColor(category.key, colorScheme),
+                  color: BusinessCategoryConfig.getCategoryIconColor(category.key, colorScheme),
                 ),
               ),
 
@@ -569,108 +570,4 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
     );
   }
 
-  IconData _getCategoryIcon(String categoryKey) {
-    // Map category keys to appropriate icons
-    final iconMap = {
-      'restaurants': Icons.restaurant,
-      'hotels': Icons.hotel,
-      'shopping': Icons.shopping_bag,
-      'entertainment': Icons.movie,
-      'healthcare': Icons.local_hospital,
-      'automotive': Icons.car_repair,
-      'finance': Icons.account_balance,
-      'education': Icons.school,
-      'services': Icons.build,
-      'sports': Icons.sports_soccer,
-      'food': Icons.restaurant,
-      'dining': Icons.restaurant,
-      'accommodation': Icons.hotel,
-      'retail': Icons.shopping_bag,
-      'leisure': Icons.movie,
-      'medical': Icons.local_hospital,
-      'banking': Icons.account_balance,
-      'learning': Icons.school,
-      'maintenance': Icons.build,
-      'fitness': Icons.sports_soccer,
-      'beauty': Icons.spa,
-      'travel': Icons.flight,
-      'technology': Icons.computer,
-      'pets': Icons.pets,
-      'real estate': Icons.home,
-      'legal': Icons.gavel,
-      'transportation': Icons.directions_car,
-    };
-
-    return iconMap[categoryKey.toLowerCase()] ?? Icons.business;
-  }
-
-  Color _getCategoryColor(String categoryKey, ColorScheme colorScheme) {
-    // Material Design 3 color palette for different categories
-    final colorMap = {
-      'restaurants': colorScheme.primaryContainer,
-      'hotels': colorScheme.secondaryContainer,
-      'shopping': colorScheme.tertiaryContainer,
-      'entertainment': colorScheme.primaryContainer,
-      'healthcare': colorScheme.errorContainer,
-      'automotive': colorScheme.secondaryContainer,
-      'finance': colorScheme.tertiaryContainer,
-      'education': colorScheme.primaryContainer,
-      'services': colorScheme.secondaryContainer,
-      'sports': colorScheme.tertiaryContainer,
-      'food': colorScheme.primaryContainer,
-      'dining': colorScheme.primaryContainer,
-      'accommodation': colorScheme.secondaryContainer,
-      'retail': colorScheme.tertiaryContainer,
-      'leisure': colorScheme.primaryContainer,
-      'medical': colorScheme.errorContainer,
-      'banking': colorScheme.tertiaryContainer,
-      'learning': colorScheme.primaryContainer,
-      'maintenance': colorScheme.secondaryContainer,
-      'fitness': colorScheme.tertiaryContainer,
-      'beauty': colorScheme.primaryContainer,
-      'travel': colorScheme.secondaryContainer,
-      'technology': colorScheme.tertiaryContainer,
-      'pets': colorScheme.primaryContainer,
-      'real estate': colorScheme.secondaryContainer,
-      'legal': colorScheme.tertiaryContainer,
-      'transportation': colorScheme.secondaryContainer,
-    };
-
-    return colorMap[categoryKey.toLowerCase()] ?? colorScheme.surfaceContainerHighest;
-  }
-
-  Color _getCategoryIconColor(String categoryKey, ColorScheme colorScheme) {
-    // Return appropriate on-color for the container
-    final colorMap = {
-      'restaurants': colorScheme.onPrimaryContainer,
-      'hotels': colorScheme.onSecondaryContainer,
-      'shopping': colorScheme.onTertiaryContainer,
-      'entertainment': colorScheme.onPrimaryContainer,
-      'healthcare': colorScheme.onErrorContainer,
-      'automotive': colorScheme.onSecondaryContainer,
-      'finance': colorScheme.onTertiaryContainer,
-      'education': colorScheme.onPrimaryContainer,
-      'services': colorScheme.onSecondaryContainer,
-      'sports': colorScheme.onTertiaryContainer,
-      'food': colorScheme.onPrimaryContainer,
-      'dining': colorScheme.onPrimaryContainer,
-      'accommodation': colorScheme.onSecondaryContainer,
-      'retail': colorScheme.onTertiaryContainer,
-      'leisure': colorScheme.onPrimaryContainer,
-      'medical': colorScheme.onErrorContainer,
-      'banking': colorScheme.onTertiaryContainer,
-      'learning': colorScheme.onPrimaryContainer,
-      'maintenance': colorScheme.onSecondaryContainer,
-      'fitness': colorScheme.onTertiaryContainer,
-      'beauty': colorScheme.onPrimaryContainer,
-      'travel': colorScheme.onSecondaryContainer,
-      'technology': colorScheme.onTertiaryContainer,
-      'pets': colorScheme.onPrimaryContainer,
-      'real estate': colorScheme.onSecondaryContainer,
-      'legal': colorScheme.onTertiaryContainer,
-      'transportation': colorScheme.onSecondaryContainer,
-    };
-
-    return colorMap[categoryKey.toLowerCase()] ?? colorScheme.onSurfaceVariant;
-  }
 }
