@@ -29,6 +29,9 @@ dependencies:
   # URL Launcher for external links, calls, emails
   url_launcher: ^6.2.5
 
+  # Mapbox Maps SDK
+  mapbox_maps_flutter: ^2.11.0
+
   # Internationalization for date formatting
   intl: ^0.20.2
 

@@ -7,6 +7,10 @@ class ApiConfig {
   static const String localhostUrl = 'http://localhost:5220';
   static const String localNetworkUrl = 'http://192.168.1.103:5220'; // Your machine's local IP address
 
+  // Mapbox configuration
+  // TODO: Move to secure configuration (environment variables, secure storage)
+  static const String mapboxAccessToken = 'pk.eyJ1Ijoiam9obnN0ZXJzIiwiYSI6ImNtZ2oxeXp2MzBjcTYybHNscDNrYnBuZmoifQ.sRTsjeym9YHrR1cxjHPmXw';
+
   // Dynamic base URL that can be switched between environments
   static String get baseUrl => _currentBaseUrl;
   static const String apiVersion = 'api';

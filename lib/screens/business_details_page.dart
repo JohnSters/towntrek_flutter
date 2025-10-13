@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
+import '../services/navigation_service.dart';
 import '../core/widgets/error_view.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
@@ -30,6 +31,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   AppError? _error;
 
   final BusinessRepository _businessRepository = serviceLocator.businessRepository;
+  final NavigationService _navigationService = serviceLocator.navigationService;
   final ErrorHandler _errorHandler = serviceLocator.errorHandler;
 
   @override
@@ -878,12 +880,29 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   // ===== ACTION METHODS =====
 
   Future<void> _launchDirections(BusinessDetailDto business) async {
-    if (business.latitude == null || business.longitude == null) return;
-
-    // TODO: Implement Mapbox integration
-    // For now, use Google Maps as fallback
-    final url = 'https://www.google.com/maps/dir/?api=1&destination=${business.latitude},${business.longitude}';
-    await _launchUrl(url);
+    try {
+      final result = await _navigationService.navigateToBusiness(business);
+      if (result.isFailure) {
+        // Show error message to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.error ?? 'Navigation failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to start navigation'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _launchPhone(String phoneNumber) async {
