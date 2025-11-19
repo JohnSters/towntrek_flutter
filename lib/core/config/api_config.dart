@@ -4,8 +4,8 @@ class ApiConfig {
   static String _currentBaseUrl = localNetworkUrl;
   // Base URLs - these should be configurable for different environments
   // For external devices, use your machine's IP address instead of localhost
-  static const String localhostUrl = 'http://localhost:5220';
-  static const String localNetworkUrl = 'http://192.168.1.103:5220'; // Your machine's local IP address
+  static const String localhostUrl = 'http://localhost:7125';
+  static const String localNetworkUrl = 'https://192.168.1.104:7125'; // Your machine's local IP address
 
   // Mapbox configuration
   // TODO: Move to secure configuration (environment variables, secure storage)

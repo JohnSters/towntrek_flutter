@@ -66,7 +66,7 @@ class NavigationServiceImpl implements NavigationService {
         return Result.failure(currentLocationResult.error!);
       }
 
-      final currentLocation = currentLocationResult.data!;
+      final currentLocation = currentLocationResult.data;
 
       // Get directions from Mapbox
       return await _mapboxService.getDirections(
