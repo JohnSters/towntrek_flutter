@@ -4,6 +4,8 @@ import '../models/models.dart';
 import '../repositories/repositories.dart';
 import '../services/services.dart';
 import '../core/widgets/error_view.dart';
+import '../core/widgets/navigation_footer.dart';
+import '../core/widgets/page_header.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/config/business_category_config.dart';
@@ -198,24 +200,18 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.primary.withValues(alpha: 0.1),
-              colorScheme.surface,
-            ],
+      body: Column(
+        children: [
+          // Main content area
+          Expanded(
+            child: _buildContent(),
           ),
-        ),
-        child: SafeArea(
-          child: _buildContent(),
-        ),
+
+          // Navigation footer (only show when we have content to navigate back from)
+          if (_selectedTown != null && !_isLoading)
+            BackNavigationFooter(),
+        ],
       ),
     );
   }
@@ -405,38 +401,25 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Modern Header Design
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+    return Column(
+      children: [
+        // Page Header
+        PageHeader(
+          title: 'Explore ${_selectedTown!.name}',
+          subtitle: 'Discover amazing businesses in your area',
+          height: 140,
+        ),
+
+        // Scrollable content
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Centered Title with Pill Background
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(25), // Pill shape
-                    ),
-                    child: Text(
-                      'Explore ${_selectedTown!.name}',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Full Width Action Button - Larger
-                SizedBox(
+                // Change Town Button
+                Container(
+                  margin: const EdgeInsets.only(bottom: 24),
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: _changeTown,
@@ -449,9 +432,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
                   ),
                 ),
 
-                const SizedBox(height: 12),
-
-                // Subtitle with Pill Background
+                // Province and category count info
                 Center(
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 320), // Prevent excessive width
@@ -501,60 +482,60 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 24),
+
+                // Event notification banner (only show when categories are loaded and there are current events)
+                if (_categoriesLoaded && _currentEventCount > 0 && !_isLoading)
+                  EventNotificationBanner(
+                    eventCount: _currentEventCount,
+                    onTap: _onEventBannerTap,
+                    townName: _selectedTown!.name,
+                  ),
+
+                const SizedBox(height: 24),
+
+                // Categories grid
+                if (_categories.isEmpty)
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.business,
+                          size: 64,
+                          color: colorScheme.onSurface.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No business categories found',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        final category = _categories[index];
+                        return _buildCategoryCard(category);
+                      },
+                    ),
+                  ),
+
+                const SizedBox(height: 32),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          // Event notification banner (only show when categories are loaded and there are current events)
-          if (_categoriesLoaded && _currentEventCount > 0 && !_isLoading)
-            EventNotificationBanner(
-              eventCount: _currentEventCount,
-              onTap: _onEventBannerTap,
-              townName: _selectedTown!.name,
-            ),
-
-          const SizedBox(height: 24),
-
-          // Categories grid
-          if (_categories.isEmpty)
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.business,
-                    size: 64,
-                    color: colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No business categories found',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            SizedBox(
-              width: double.infinity,
-              child: ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final category = _categories[index];
-                  return _buildCategoryCard(category);
-                },
-              ),
-            ),
-
-          const SizedBox(height: 32),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

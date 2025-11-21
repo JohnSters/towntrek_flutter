@@ -3,6 +3,8 @@ import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
 import '../core/widgets/error_view.dart';
+import '../core/widgets/navigation_footer.dart';
+import '../core/widgets/page_header.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/config/business_category_config.dart';
@@ -97,24 +99,17 @@ class _BusinessCardPageState extends State<BusinessCardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.primary.withValues(alpha: 0.1),
-              colorScheme.surface,
-            ],
+      body: Column(
+        children: [
+          // Main content area
+          Expanded(
+            child: _buildContent(),
           ),
-        ),
-        child: SafeArea(
-          child: _buildContent(),
-        ),
+
+          // Navigation footer
+          BackNavigationFooter(),
+        ],
       ),
     );
   }
@@ -132,28 +127,29 @@ class _BusinessCardPageState extends State<BusinessCardPage> {
   }
 
   Widget _buildLoadingView() {
-    return const Center(
-      child: CircularProgressIndicator(),
+    return Column(
+      children: [
+        PageHeader(
+          title: widget.subCategory.name,
+          subtitle: '${widget.category.name} in ${widget.town.name}',
+          height: 120,
+        ),
+        const Expanded(
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildErrorView() {
     return Column(
       children: [
-        // Header with back button
-        Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.arrow_back),
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ),
+        PageHeader(
+          title: widget.subCategory.name,
+          subtitle: '${widget.category.name} in ${widget.town.name}',
+          height: 120,
         ),
         Expanded(
           child: ErrorView(error: _error!),
@@ -168,77 +164,37 @@ class _BusinessCardPageState extends State<BusinessCardPage> {
 
     return Column(
       children: [
-        // Modern Header Design
+        // Page Header
+        PageHeader(
+          title: widget.subCategory.name,
+          subtitle: '${widget.category.name} in ${widget.town.name}',
+          height: 140,
+        ),
+
+        // Business count info
         Container(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
+          margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Back button and title
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back),
-                    style: IconButton.styleFrom(
-                      backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.subCategory.name,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        Text(
-                          widget.town.name,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Icon(
+                BusinessCategoryConfig.getCategoryIcon(widget.category.key),
+                size: 16,
+                color: colorScheme.onSurfaceVariant,
               ),
-
-              const SizedBox(height: 20),
-
-              // Subtitle with category info
-              Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(20),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  '${widget.subCategory.businessCount} businesses • ${widget.category.name}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        BusinessCategoryConfig.getCategoryIcon(widget.category.key),
-                        size: 16,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          '${widget.subCategory.businessCount} businesses • ${widget.category.name}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

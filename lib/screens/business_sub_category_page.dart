@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../core/config/business_category_config.dart';
+import '../core/widgets/navigation_footer.dart';
+import '../core/widgets/page_header.dart';
 import 'business_card_page.dart';
 
 /// Page for displaying business sub-categories for a selected category
@@ -29,24 +31,17 @@ class _BusinessSubCategoryPageState extends State<BusinessSubCategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.primary.withValues(alpha: 0.1),
-              colorScheme.surface,
-            ],
+      body: Column(
+        children: [
+          // Main content area
+          Expanded(
+            child: _buildContent(),
           ),
-        ),
-        child: SafeArea(
-          child: _buildContent(),
-        ),
+
+          // Navigation footer
+          BackNavigationFooter(),
+        ],
       ),
     );
   }
@@ -69,53 +64,22 @@ class _BusinessSubCategoryPageState extends State<BusinessSubCategoryPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Modern Header Design
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+    return Column(
+      children: [
+        // Page Header
+        PageHeader(
+          title: widget.category.name,
+          subtitle: 'Choose a specific type in ${widget.town.name}',
+          height: 120,
+        ),
+
+        // Scrollable content
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Back button and title
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back),
-                      style: IconButton.styleFrom(
-                        backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.category.name,
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          Text(
-                            widget.town.name,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
                 // Subtitle with category info
                 Center(
                   child: Container(
@@ -147,64 +111,64 @@ class _BusinessSubCategoryPageState extends State<BusinessSubCategoryPage> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 24),
+
+                // Sub-categories grid
+                if (widget.category.subCategories.isEmpty)
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.category,
+                          size: 64,
+                          color: colorScheme.onSurface.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No sub-categories found',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Builder(
+                    builder: (context) {
+                      // Sort subcategories: active ones (with businesses) first, then inactive ones
+                      final sortedSubCategories = [...widget.category.subCategories]
+                        ..sort((a, b) {
+                          // Primary sort: businesses with count > 0 come first
+                          if (a.businessCount > 0 && b.businessCount == 0) return -1;
+                          if (a.businessCount == 0 && b.businessCount > 0) return 1;
+                          // Secondary sort: alphabetical by name for same business count
+                          return a.name.compareTo(b.name);
+                        });
+
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          itemCount: sortedSubCategories.length,
+                          itemBuilder: (context, index) {
+                            final subCategory = sortedSubCategories[index];
+                            return _buildSubCategoryCard(subCategory);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+
+                const SizedBox(height: 32),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          // Sub-categories grid
-          if (widget.category.subCategories.isEmpty)
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.category,
-                    size: 64,
-                    color: colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No sub-categories found',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Builder(
-              builder: (context) {
-                // Sort subcategories: active ones (with businesses) first, then inactive ones
-                final sortedSubCategories = [...widget.category.subCategories]
-                  ..sort((a, b) {
-                    // Primary sort: businesses with count > 0 come first
-                    if (a.businessCount > 0 && b.businessCount == 0) return -1;
-                    if (a.businessCount == 0 && b.businessCount > 0) return 1;
-                    // Secondary sort: alphabetical by name for same business count
-                    return a.name.compareTo(b.name);
-                  });
-
-                return SizedBox(
-                  width: double.infinity,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    itemCount: sortedSubCategories.length,
-                    itemBuilder: (context, index) {
-                      final subCategory = sortedSubCategories[index];
-                      return _buildSubCategoryCard(subCategory);
-                    },
-                  ),
-                );
-              },
-            ),
-
-          const SizedBox(height: 32),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

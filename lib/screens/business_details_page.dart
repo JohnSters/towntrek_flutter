@@ -6,6 +6,8 @@ import '../models/models.dart';
 import '../repositories/repositories.dart';
 import '../services/navigation_service.dart';
 import '../core/widgets/error_view.dart';
+import '../core/widgets/navigation_footer.dart';
+import '../core/widgets/page_header.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/utils/url_utils.dart';
@@ -70,24 +72,18 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.primary.withValues(alpha: 0.1),
-              colorScheme.surface,
-            ],
+      body: Column(
+        children: [
+          // Main content area
+          Expanded(
+            child: _buildContent(),
           ),
-        ),
-        child: SafeArea(
-          child: _buildContent(),
-        ),
+
+          // Navigation footer
+          if (_businessDetails != null)
+            BackNavigationFooter(),
+        ],
       ),
     );
   }
@@ -111,7 +107,10 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   Widget _buildLoadingView() {
     return Column(
       children: [
-        _buildHeader(title: widget.businessName),
+        BusinessHeader(
+          businessName: widget.businessName,
+          tagline: 'Loading business details...',
+        ),
         const Expanded(
           child: Center(
             child: CircularProgressIndicator(),
@@ -124,7 +123,10 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   Widget _buildErrorView() {
     return Column(
       children: [
-        _buildHeader(title: widget.businessName),
+        BusinessHeader(
+          businessName: widget.businessName,
+          tagline: 'Unable to load business details',
+        ),
         Expanded(
           child: ErrorView(error: _error!),
         ),
@@ -137,29 +139,16 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back),
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(24.0, 48.0, 24.0, 16.0),
+      child: Text(
+        title,
+        style: theme.textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: colorScheme.onSurface,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -167,167 +156,179 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   Widget _buildBusinessDetailsView() {
     final business = _businessDetails!;
 
-    return CustomScrollView(
-      slivers: [
-        // Header with business name and status
-        SliverToBoxAdapter(
-          child: _buildBusinessHeader(business),
+    return Column(
+      children: [
+        // Business Header with status
+        BusinessHeader(
+          businessName: business.name,
+          statusIndicator: _buildStatusIndicator(business),
         ),
 
-        // Image Gallery
-        if (business.images.isNotEmpty)
-          SliverToBoxAdapter(
-            child: _buildImageGallery(business.images),
+        // Scrollable content
+        Expanded(
+          child: CustomScrollView(
+            slivers: [
+              // Business Info Card (Description and Address)
+              SliverToBoxAdapter(
+                child: _buildBusinessInfoCard(business),
+              ),
+
+              // Image Gallery
+              if (business.images.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _buildImageGallery(business.images),
+                ),
+
+              // Operating Hours
+              SliverToBoxAdapter(
+                child: _buildOperatingHoursSection(business.operatingHours),
+              ),
+
+              // Reviews Section
+              if (business.reviews.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _buildReviewsSection(business.reviews),
+                ),
+
+              // Contact & Actions
+              SliverToBoxAdapter(
+                child: _buildContactActionsSection(business),
+              ),
+
+              // Bottom padding
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 24),
+              ),
+            ],
           ),
-
-        // Operating Hours
-        SliverToBoxAdapter(
-          child: _buildOperatingHoursSection(business.operatingHours),
-        ),
-
-        // Reviews Section
-        if (business.reviews.isNotEmpty)
-          SliverToBoxAdapter(
-            child: _buildReviewsSection(business.reviews),
-          ),
-
-        // Contact & Actions
-        SliverToBoxAdapter(
-          child: _buildContactActionsSection(business),
-        ),
-
-        // Bottom padding
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 32),
         ),
       ],
     );
   }
 
-  Widget _buildBusinessHeader(BusinessDetailDto business) {
+  Widget _buildStatusIndicator(BusinessDetailDto business) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isCurrentlyOpen = _isBusinessCurrentlyOpen(business.operatingHours);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isCurrentlyOpen
+            ? const Color(0xFFE8F5E8)
+            : const Color(0xFFFFEBEE),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isCurrentlyOpen
+              ? const Color(0xFF4CAF50)
+              : const Color(0xFFF44336),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Business Name
+          Icon(
+            Icons.access_time,
+            size: 16,
+            color: isCurrentlyOpen
+                ? const Color(0xFF4CAF50)
+                : const Color(0xFFF44336),
+          ),
+          const SizedBox(width: 6),
           Text(
-            business.name,
-            style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-              height: 1.2,
+            isCurrentlyOpen ? 'Open Now' : 'Closed',
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: isCurrentlyOpen
+                  ? const Color(0xFF2E7D32)
+                  : const Color(0xFFC62828),
             ),
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 12),
+  Widget _buildBusinessInfoCard(BusinessDetailDto business) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-          // Status Pill and Rating Row
-          Row(
+    // Only show if there's description or address
+    if (business.description.isEmpty && business.physicalAddress == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Open/Closed Status Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isCurrentlyOpen
-                      ? const Color(0xFFE8F5E8) // Light green
-                      : const Color(0xFFFFEBEE), // Light red
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isCurrentlyOpen
-                        ? const Color(0xFF4CAF50) // Green
-                        : const Color(0xFFF44336), // Red
-                    width: 1,
+              // Description
+              if (business.description.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    business.description,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.6,
+                    ),
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isCurrentlyOpen ? Icons.circle : Icons.circle,
-                      size: 8,
-                      color: isCurrentlyOpen
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFF44336),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isCurrentlyOpen ? 'Open' : 'Closed',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isCurrentlyOpen
-                            ? const Color(0xFF2E7D32)
-                            : const Color(0xFFC62828),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
-              const SizedBox(width: 16),
+              if (business.description.isNotEmpty && business.physicalAddress != null)
+                const SizedBox(height: 16),
 
-              // Rating
-              if (business.rating != null) ...[
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star,
-                      size: 18,
-                      color: Colors.amber,
+              // Address
+              if (business.physicalAddress != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.2),
+                      width: 1,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${business.rating!.toStringAsFixed(1)} (${business.totalReviews})',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurfaceVariant,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 20,
+                        color: colorScheme.primary,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          business.physicalAddress!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
             ],
           ),
-
-          const SizedBox(height: 16),
-
-          // Description
-          if (business.description.isNotEmpty)
-            Text(
-              business.description,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.6,
-              ),
-            ),
-
-          const SizedBox(height: 16),
-
-          // Address
-          if (business.physicalAddress != null)
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on,
-                  size: 20,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    business.physicalAddress!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -413,40 +414,69 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     final specialHours = operatingHours.where((h) => h.isSpecialHours).toList();
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Title
-          Text(
-            'Operating Hours',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.1),
           ),
-
-          const SizedBox(height: 16),
-
-          // Regular Hours
-          if (regularHours.isNotEmpty) ...[
-            ...regularHours.map((hour) => _buildHourRow(hour)),
-            const SizedBox(height: 16),
-          ],
-
-          // Special Hours
-          if (specialHours.isNotEmpty) ...[
-            Text(
-              'Special Hours',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.primary,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Section Title
+              Row(
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    size: 24,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Operating Hours',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            ...specialHours.map((hour) => _buildHourRow(hour, isSpecial: true)),
-          ],
-        ],
+
+              const SizedBox(height: 20),
+
+              // Regular Hours
+              if (regularHours.isNotEmpty) ...[
+                ...regularHours.map((hour) => _buildHourRow(hour)),
+                if (specialHours.isNotEmpty) const SizedBox(height: 20),
+              ],
+
+              // Special Hours
+              if (specialHours.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Special Hours',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...specialHours.map((hour) => _buildHourRow(hour, isSpecial: true)),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -495,58 +525,86 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Title
-          Row(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Reviews',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
+              // Section Title
+              Row(
+                children: [
+                  Icon(
+                    Icons.star,
+                    size: 24,
+                    color: Colors.amber,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Reviews',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${reviews.length}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${reviews.length}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurfaceVariant,
+
+              const SizedBox(height: 20),
+
+              // Reviews List
+              ...reviews.take(3).map((review) => _buildReviewCard(review)),
+
+              // Show more button if there are more reviews
+              if (reviews.length > 3)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // TODO: Navigate to full reviews page
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('View all reviews - Coming soon!')),
+                        );
+                      },
+                      icon: const Icon(Icons.expand_more),
+                      label: const Text('View All Reviews'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
-
-          const SizedBox(height: 16),
-
-          // Reviews List
-          ...reviews.take(3).map((review) => _buildReviewCard(review)),
-
-          // Show more button if there are more reviews
-          if (reviews.length > 3)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: TextButton(
-                onPressed: () {
-                  // TODO: Navigate to full reviews page
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('View all reviews - Coming soon!')),
-                  );
-                },
-                child: const Text('View All Reviews'),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -651,100 +709,137 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Title
-          Text(
-            'Contact & Actions',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.1),
           ),
-
-          const SizedBox(height: 16),
-
-          // Action Buttons
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Take Me There Button
-              if (business.latitude != null && business.longitude != null)
-                _buildActionButton(
-                  icon: Icons.directions,
-                  label: 'Take Me There',
-                  onPressed: () => _launchDirections(business),
-                ),
-
-              // Contact Us Button
-              if (business.phoneNumber != null)
-                _buildActionButton(
-                  icon: Icons.phone,
-                  label: 'Call',
-                  onPressed: () => _launchPhone(business.phoneNumber!),
-                ),
-
-              // Email Us Button
-              if (business.emailAddress != null)
-                _buildActionButton(
-                  icon: Icons.email,
-                  label: 'Email',
-                  onPressed: () => _launchEmail(business.emailAddress!),
-                ),
-
-              // Website Button
-              if (business.website != null)
-                _buildActionButton(
-                  icon: Icons.web,
-                  label: 'Website',
-                  onPressed: () => _launchWebsite(business.website!),
-                ),
-
-              // Rate Business Button
-              _buildActionButton(
-                icon: Icons.star_border,
-                label: 'Rate Business',
-                onPressed: () => _rateBusiness(business),
+              // Section Title
+              Row(
+                children: [
+                  Icon(
+                    Icons.contact_phone,
+                    size: 24,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Contact & Actions',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
+
+              const SizedBox(height: 20),
+
+              // Action Buttons - Full Width Rows
+              Column(
+                children: [
+                  // Take Me There Button
+                  if (business.latitude != null && business.longitude != null)
+                    _buildFullWidthActionButton(
+                      icon: Icons.directions,
+                      label: 'Take Me There',
+                      onPressed: () => _launchDirections(business),
+                    ),
+
+                  // Contact Us Button
+                  if (business.phoneNumber != null)
+                    _buildFullWidthActionButton(
+                      icon: Icons.phone,
+                      label: 'Call',
+                      onPressed: () => _launchPhone(business.phoneNumber!),
+                    ),
+
+                  // Email Us Button
+                  if (business.emailAddress != null)
+                    _buildFullWidthActionButton(
+                      icon: Icons.email,
+                      label: 'Email',
+                      onPressed: () => _launchEmail(business.emailAddress!),
+                    ),
+
+                  // Website Button
+                  if (business.website != null)
+                    _buildFullWidthActionButton(
+                      icon: Icons.web,
+                      label: 'Website',
+                      onPressed: () => _launchWebsite(business.website!),
+                    ),
+
+                  // Rate Business Button
+                  _buildFullWidthActionButton(
+                    icon: Icons.star_border,
+                    label: 'Rate Business',
+                    onPressed: () => _rateBusiness(business),
+                  ),
+                ],
+              ),
+
+              // Social Media Links
+              if (_hasSocialMedia(business)) ...[
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.share,
+                        size: 20,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Follow Us',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (business.facebook != null)
+                      _buildSocialButton(
+                        icon: Icons.facebook,
+                        onPressed: () => _launchUrl(business.facebook!),
+                      ),
+                    if (business.instagram != null)
+                      _buildSocialButton(
+                        icon: Icons.camera_alt, // Instagram-like icon
+                        onPressed: () => _launchUrl(business.instagram!),
+                      ),
+                    if (business.whatsApp != null)
+                      _buildSocialButton(
+                        icon: Icons.message,
+                        onPressed: () => _launchUrl(business.whatsApp!),
+                      ),
+                  ],
+                ),
+              ],
             ],
           ),
-
-          // Social Media Links
-          if (_hasSocialMedia(business)) ...[
-            const SizedBox(height: 24),
-            Text(
-              'Follow Us',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: [
-                if (business.facebook != null)
-                  _buildSocialButton(
-                    icon: Icons.facebook,
-                    onPressed: () => _launchUrl(business.facebook!),
-                  ),
-                if (business.instagram != null)
-                  _buildSocialButton(
-                    icon: Icons.camera_alt, // Instagram-like icon
-                    onPressed: () => _launchUrl(business.instagram!),
-                  ),
-                if (business.whatsApp != null)
-                  _buildSocialButton(
-                    icon: Icons.message,
-                    onPressed: () => _launchUrl(business.whatsApp!),
-                  ),
-              ],
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -762,6 +857,38 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullWidthActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 22, color: Colors.white),
+        label: Text(
+          label,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.centerLeft,
         ),
       ),
     );
