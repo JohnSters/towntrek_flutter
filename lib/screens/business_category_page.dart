@@ -9,7 +9,6 @@ import '../core/widgets/page_header.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/config/business_category_config.dart';
-import '../core/widgets/event_notification_banner.dart';
 import 'town_selection_screen.dart';
 import 'current_events_screen.dart';
 import 'business_sub_category_page.dart';
@@ -157,7 +156,17 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   }
 
   void _changeTown() {
-    _initializePage();
+    // Navigate to town selection screen
+    Navigator.of(context).push<TownDto>(
+      MaterialPageRoute(
+        builder: (context) => const TownSelectionScreen(),
+      ),
+    ).then((selectedTown) {
+      // If a town was selected, load its categories
+      if (selectedTown != null && mounted) {
+        _loadCategoriesForTown(selectedTown);
+      }
+    });
   }
 
   Future<void> _checkCurrentEvents(int townId) async {
@@ -185,7 +194,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
     }
   }
 
-  void _onEventBannerTap() {
+  void _onEventButtonTap() {
     if (_selectedTown != null) {
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -405,9 +414,9 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
       children: [
         // Page Header
         PageHeader(
-          title: 'Explore ${_selectedTown!.name}',
-          subtitle: 'Discover amazing businesses in your area',
-          height: 140,
+          title: _selectedTown!.name,
+          subtitle: '${_selectedTown!.province} • ${_categories.length} Categories',
+          height: 120,
         ),
 
         // Scrollable content
@@ -417,81 +426,8 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Change Town Button
-                Container(
-                  margin: const EdgeInsets.only(bottom: 24),
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _changeTown,
-                    icon: const Icon(Icons.location_on, size: 20),
-                    label: const Text('Change Town'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-
-                // Province and category count info
-                Center(
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 320), // Prevent excessive width
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20), // Pill shape
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.location_city,
-                          size: 16,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            _selectedTown!.province,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Flexible(
-                          child: Text(
-                            '${_categories.length} categories',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Event notification banner (only show when categories are loaded and there are current events)
-                if (_categoriesLoaded && _currentEventCount > 0 && !_isLoading)
-                  EventNotificationBanner(
-                    eventCount: _currentEventCount,
-                    onTap: _onEventBannerTap,
-                    townName: _selectedTown!.name,
-                  ),
+                // Action Buttons (Change Town & Events)
+                _buildActionButtons(),
 
                 const SizedBox(height: 24),
 
@@ -533,6 +469,34 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
                 const SizedBox(height: 32),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    final bool hasEvents = _categoriesLoaded && _currentEventCount > 0;
+
+    return Row(
+      children: [
+        // Change Town Button
+        Expanded(
+          child: _CategoryActionButton(
+            icon: Icons.location_on,
+            label: 'Change Town',
+            onTap: _changeTown,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        const SizedBox(width: 16),
+        // Events Button
+        Expanded(
+          child: _PulsatingActionButton(
+            icon: Icons.event,
+            label: hasEvents ? '$_currentEventCount Events' : 'No Events',
+            onTap: hasEvents ? _onEventButtonTap : null,
+            isActive: hasEvents,
           ),
         ),
       ],
@@ -644,4 +608,186 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
     );
   }
 
+}
+
+class _CategoryActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _CategoryActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 100,
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: color),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PulsatingActionButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool isActive;
+
+  const _PulsatingActionButton({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    required this.isActive,
+  });
+
+  @override
+  State<_PulsatingActionButton> createState() => _PulsatingActionButtonState();
+}
+
+class _PulsatingActionButtonState extends State<_PulsatingActionButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    if (widget.isActive) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_PulsatingActionButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (widget.isActive) {
+        _controller.repeat(reverse: true);
+      } else {
+        _controller.stop();
+        _controller.reset();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    // Active colors (Events found)
+    final activeBgColor = const Color(0xFFFF6B6B).withValues(alpha: 0.1); // Light red tint
+    final activeIconColor = const Color(0xFFFF4757); // Vibrant red
+    
+    // Inactive colors (No events)
+    final inactiveBgColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
+    final inactiveIconColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: widget.isActive ? _scaleAnimation.value : 1.0,
+          child: Material(
+            color: widget.isActive ? activeBgColor : inactiveBgColor,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                height: 100,
+                padding: const EdgeInsets.all(12),
+                decoration: widget.isActive ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: activeIconColor.withValues(alpha: _fadeAnimation.value * 0.5),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: activeIconColor.withValues(alpha: 0.15),
+                      blurRadius: 8 * _scaleAnimation.value,
+                      spreadRadius: 1,
+                    )
+                  ],
+                ) : null,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      widget.icon, 
+                      size: 32, 
+                      color: widget.isActive ? activeIconColor : inactiveIconColor
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.label,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: widget.isActive ? activeIconColor : inactiveIconColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
