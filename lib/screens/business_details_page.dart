@@ -208,46 +208,77 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
 
   Widget _buildStatusIndicator(BusinessDetailDto business) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isCurrentlyOpen = _isBusinessCurrentlyOpen(business.operatingHours);
 
+    // Modern full-width status banner
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isCurrentlyOpen
-            ? const Color(0xFFE8F5E8)
-            : const Color(0xFFFFEBEE),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isCurrentlyOpen
-              ? const Color(0xFF4CAF50)
-              : const Color(0xFFF44336),
-          width: 1.5,
-        ),
-      ),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+      color: isCurrentlyOpen 
+          ? const Color(0xFFE8F5E9) // Light green background
+          : const Color(0xFFFFEBEE), // Light red background
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.access_time,
-            size: 16,
+            Icons.access_time_filled,
+            size: 18,
             color: isCurrentlyOpen
-                ? const Color(0xFF4CAF50)
-                : const Color(0xFFF44336),
+                ? const Color(0xFF2E7D32) // Dark green
+                : const Color(0xFFC62828), // Dark red
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Text(
             isCurrentlyOpen ? 'Open Now' : 'Closed',
             style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.bold,
               color: isCurrentlyOpen
-                  ? const Color(0xFF2E7D32)
-                  : const Color(0xFFC62828),
+                  ? const Color(0xFF1B5E20) // Darker green text
+                  : const Color(0xFFB71C1C), // Darker red text
+              letterSpacing: 0.5,
             ),
           ),
+          if (isCurrentlyOpen && business.operatingHours.isNotEmpty) ...[
+             const SizedBox(width: 8),
+             Container(
+               width: 4,
+               height: 4,
+               decoration: BoxDecoration(
+                 color: const Color(0xFF1B5E20).withValues(alpha: 0.4),
+                 shape: BoxShape.circle,
+               ),
+             ),
+             const SizedBox(width: 8),
+             Text(
+               _getClosingTime(business.operatingHours),
+               style: theme.textTheme.labelMedium?.copyWith(
+                 fontWeight: FontWeight.w600,
+                 color: const Color(0xFF2E7D32),
+               ),
+             ),
+          ],
         ],
       ),
     );
+  }
+
+  String _getClosingTime(List<OperatingHourDto> operatingHours) {
+    try {
+      final now = DateTime.now();
+      final currentDay = _formatDayOfWeek(DateFormat('EEEE').format(now));
+      
+      final todayHours = operatingHours.firstWhere(
+        (h) => _formatDayOfWeek(h.dayOfWeek) == currentDay && !h.isSpecialHours,
+        orElse: () => OperatingHourDto(dayOfWeek: '', isOpen: false, isSpecialHours: false),
+      );
+      
+      if (todayHours.isOpen && todayHours.closeTime != null) {
+        return 'Closes at ${_formatTime(todayHours.closeTime!)}';
+      }
+      return '';
+    } catch (e) {
+      return '';
+    }
   }
 
   Widget _buildBusinessInfoCard(BusinessDetailDto business) {

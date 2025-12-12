@@ -639,12 +639,12 @@ class _CategoryActionButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 32, color: color),
+              Icon(icon, size: 40, color: color),
               const SizedBox(height: 8),
               Text(
                 label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
@@ -727,8 +727,8 @@ class _PulsatingActionButtonState extends State<_PulsatingActionButton> with Sin
     final colorScheme = theme.colorScheme;
     
     // Active colors (Events found)
-    final activeBgColor = const Color(0xFFFF6B6B).withValues(alpha: 0.1); // Light red tint
-    final activeIconColor = const Color(0xFFFF4757); // Vibrant red
+    final activeBgColor = const Color(0xFF00E676).withValues(alpha: 0.15); // Light green tint
+    final activeIconColor = const Color(0xFF00C853); // Vibrant green
     
     // Inactive colors (No events)
     final inactiveBgColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
@@ -767,14 +767,14 @@ class _PulsatingActionButtonState extends State<_PulsatingActionButton> with Sin
                   children: [
                     Icon(
                       widget.icon, 
-                      size: 32, 
+                      size: 40, 
                       color: widget.isActive ? activeIconColor : inactiveIconColor
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.label,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: widget.isActive ? activeIconColor : inactiveIconColor,
                       ),
                       textAlign: TextAlign.center,
