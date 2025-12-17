@@ -17,3 +17,7 @@ export 'review_dto.dart';
 export 'sub_category_dto.dart';
 export 'sub_category_with_count_dto.dart';
 export 'town_dto.dart';
+export 'service_dto.dart';
+export 'service_detail_dto.dart';
+export 'service_category_dto.dart';
+export 'service_list_response.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'business_category_page.dart';
+import 'town_loader_screen.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -103,7 +103,7 @@ class _LandingPageState extends State<LandingPage> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const BusinessCategoryPage(),
+                          builder: (context) => const TownLoaderScreen(),
                         ),
                       );
                     },

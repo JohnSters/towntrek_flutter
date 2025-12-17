@@ -18,6 +18,7 @@ class ApiConfig {
 
   // Endpoints
   static const String businessesEndpoint = 'businesses';
+  static const String servicesEndpoint = 'services';
   static const String townsEndpoint = 'towns';
   static const String eventsEndpoint = 'events';
 
@@ -67,6 +68,36 @@ class ApiConfig {
   /// Builds business search endpoint URL
   static String businessSearchUrl([Map<String, dynamic>? queryParams]) {
     return buildUrl('$businessesEndpoint/search', queryParams);
+  }
+
+  /// Builds services endpoint URL
+  static String servicesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(servicesEndpoint, queryParams);
+  }
+
+  /// Builds services search endpoint URL
+  static String serviceSearchUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$servicesEndpoint/search', queryParams);
+  }
+
+  /// Builds services categories endpoint URL
+  static String serviceCategoriesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$servicesEndpoint/categories', queryParams);
+  }
+
+  /// Builds specific service endpoint URL
+  static String serviceDetailUrl(int serviceId, [Map<String, dynamic>? queryParams]) {
+    return buildUrl('$servicesEndpoint/$serviceId', queryParams);
+  }
+
+  /// Builds service subcategories endpoint URL
+  static String serviceSubCategoriesUrl(int categoryId, [Map<String, dynamic>? queryParams]) {
+    return buildUrl('$servicesEndpoint/categories/$categoryId/subcategories', queryParams);
+  }
+
+  /// Builds services categories with counts for town endpoint URL
+  static String serviceCategoriesWithCountsUrl(int townId, [Map<String, dynamic>? queryParams]) {
+    return buildUrl('$servicesEndpoint/categories/town/$townId', queryParams);
   }
 
   /// Builds business categories endpoint URL

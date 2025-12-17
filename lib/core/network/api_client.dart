@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import '../config/api_config.dart';
@@ -39,7 +40,8 @@ class ApiClient {
     );
 
     // Configure SSL certificate handling for development
-    (_dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final client = HttpClient();
       client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
       return client;
     };
@@ -221,6 +223,44 @@ class _ErrorInterceptor extends Interceptor {
     handler.reject(dioException);
   }
 
+  String? _tryExtractErrorMessage(dynamic responseData) {
+    if (responseData == null) return null;
+
+    // Most common case: JSON object
+    if (responseData is Map) {
+      final dynamic direct =
+          responseData['error'] ?? responseData['message'] ?? responseData['Error'] ?? responseData['Message'];
+
+      if (direct != null) return direct.toString();
+
+      // Handle GlobalExceptionMiddleware shape: { "Error": { "Message": "..." } }
+      final dynamic nestedError = responseData['Error'] ?? responseData['error'];
+      if (nestedError is Map) {
+        final dynamic nestedMessage = nestedError['Message'] ?? nestedError['message'];
+        if (nestedMessage != null) return nestedMessage.toString();
+      }
+
+      return null;
+    }
+
+    // Sometimes Dio gives us a JSON string (or an HTML error page string)
+    if (responseData is String) {
+      final trimmed = responseData.trim();
+      if (trimmed.isEmpty) return null;
+
+      // Try decode JSON string
+      try {
+        final decoded = jsonDecode(trimmed);
+        return _tryExtractErrorMessage(decoded);
+      } catch (_) {
+        // Not JSON. Avoid surfacing raw HTML to users.
+        return null;
+      }
+    }
+
+    return null;
+  }
+
   ApiException _mapDioExceptionToApiException(DioException dioException) {
     switch (dioException.type) {
       case DioExceptionType.connectionTimeout:
@@ -244,11 +284,12 @@ class _ErrorInterceptor extends Interceptor {
         final responseData = dioException.response?.data;
 
         String message = 'An error occurred while processing your request.';
+        final extracted = _tryExtractErrorMessage(responseData);
 
         if (statusCode != null) {
           switch (statusCode) {
             case 400:
-              message = responseData?['error'] ?? 'Bad request. Please check your input.';
+              message = extracted ?? 'Bad request. Please check your input.';
               return ApiException(
                 type: ApiExceptionType.badRequest,
                 message: message,
@@ -275,7 +316,7 @@ class _ErrorInterceptor extends Interceptor {
               );
 
             case 404:
-              message = responseData?['error'] ?? 'The requested resource was not found.';
+              message = extracted ?? 'The requested resource was not found.';
               return ApiException(
                 type: ApiExceptionType.notFound,
                 message: message,
@@ -297,7 +338,7 @@ class _ErrorInterceptor extends Interceptor {
 
             default:
               if (statusCode >= 400 && statusCode < 500) {
-                message = responseData?['error'] ?? 'Client error occurred.';
+                message = extracted ?? 'Client error occurred.';
                 return ApiException(
                   type: ApiExceptionType.client,
                   message: message,

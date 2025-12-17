@@ -17,6 +17,7 @@ class ServiceLocator {
   late final BusinessApiService _businessApiService;
   late final TownApiService _townApiService;
   late final EventApiService _eventApiService;
+  late final ServiceApiService _serviceApiService;
   late final GeolocationService _geolocationService;
   late final MapboxService _mapboxService;
   late final NavigationService _navigationService;
@@ -26,6 +27,7 @@ class ServiceLocator {
   late final BusinessRepository _businessRepository;
   late final TownRepository _townRepository;
   late final EventRepository _eventRepository;
+  late final ServiceRepository _serviceRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -39,6 +41,7 @@ class ServiceLocator {
     _businessApiService = BusinessApiService(_apiClient);
     _townApiService = TownApiService(_apiClient);
     _eventApiService = EventApiService(_apiClient);
+    _serviceApiService = ServiceApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _mapboxService = MapboxServiceImpl();
     _navigationService = NavigationServiceImpl(_geolocationService, _mapboxService);
@@ -47,6 +50,7 @@ class ServiceLocator {
     _businessRepository = BusinessRepositoryImpl(_businessApiService);
     _townRepository = TownRepositoryImpl(_townApiService);
     _eventRepository = EventRepositoryImpl(_eventApiService);
+    _serviceRepository = ServiceRepositoryImpl(_serviceApiService);
 
     _isInitialized = true;
   }
@@ -74,6 +78,12 @@ class ServiceLocator {
     return _townApiService;
   }
 
+  /// Get the service API service
+  ServiceApiService get serviceApiService {
+    _ensureInitialized();
+    return _serviceApiService;
+  }
+
   /// Get the business repository
   BusinessRepository get businessRepository {
     _ensureInitialized();
@@ -90,6 +100,12 @@ class ServiceLocator {
   EventRepository get eventRepository {
     _ensureInitialized();
     return _eventRepository;
+  }
+
+  /// Get the service repository
+  ServiceRepository get serviceRepository {
+    _ensureInitialized();
+    return _serviceRepository;
   }
 
   /// Get the geolocation service

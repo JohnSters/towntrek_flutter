@@ -12,10 +12,16 @@ import '../core/config/business_category_config.dart';
 import 'town_selection_screen.dart';
 import 'current_events_screen.dart';
 import 'business_sub_category_page.dart';
+import 'town_feature_selection_screen.dart';
 
 /// Page for displaying business categories for a selected town
 class BusinessCategoryPage extends StatefulWidget {
-  const BusinessCategoryPage({super.key});
+  final TownDto? town;
+  
+  const BusinessCategoryPage({
+    super.key,
+    this.town,
+  });
 
   @override
   State<BusinessCategoryPage> createState() => _BusinessCategoryPageState();
@@ -45,7 +51,12 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
   }
 
   Future<void> _initializePage() async {
-    await _detectLocationAndLoadTown();
+    if (widget.town != null) {
+      _isLocationLoading = false;
+      await _loadCategoriesForTown(widget.town!);
+    } else {
+      await _detectLocationAndLoadTown();
+    }
   }
 
   Future<void> _detectLocationAndLoadTown() async {
@@ -162,9 +173,14 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
         builder: (context) => const TownSelectionScreen(),
       ),
     ).then((selectedTown) {
-      // If a town was selected, load its categories
+      // If a town was selected, navigate to TownFeatureSelectionScreen with new town
+      // This resets the flow to the "Hub" for the new town
       if (selectedTown != null && mounted) {
-        _loadCategoriesForTown(selectedTown);
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => TownFeatureSelectionScreen(town: selectedTown),
+          ),
+        );
       }
     });
   }
@@ -382,7 +398,7 @@ class _BusinessCategoryPageState extends State<BusinessCategoryPage> {
 
                 // If a town was selected, load its categories
                 if (selectedTown != null && mounted) {
-                  await _loadCategoriesForTown(selectedTown);
+                  _loadCategoriesForTown(selectedTown);
                 }
               }
             },
@@ -724,7 +740,7 @@ class _PulsatingActionButtonState extends State<_PulsatingActionButton> with Sin
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    // colorScheme was unused
     
     // Active colors (Events found)
     final activeBgColor = const Color(0xFF00E676).withValues(alpha: 0.15); // Light green tint

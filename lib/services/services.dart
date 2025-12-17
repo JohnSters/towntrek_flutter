@@ -5,3 +5,4 @@ export 'event_api_service.dart';
 export 'geolocation_service.dart';
 export 'mapbox_service.dart';
 export 'navigation_service.dart';
+export 'service_api_service.dart';

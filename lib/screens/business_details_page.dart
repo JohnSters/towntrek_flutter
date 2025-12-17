@@ -134,24 +134,8 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     );
   }
 
-  Widget _buildHeader({required String title}) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24.0, 48.0, 24.0, 16.0),
-      child: Text(
-        title,
-        style: theme.textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: colorScheme.onSurface,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
+  // Widget _buildHeader({required String title}) { ... } - Removed unused method
+  // Widget _buildActionButton(...) { ... } - Removed unused method
 
   Widget _buildBusinessDetailsView() {
     final business = _businessDetails!;
@@ -875,23 +859,6 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return FilledButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
-  }
 
   Widget _buildFullWidthActionButton({
     required IconData icon,

@@ -139,6 +139,28 @@ List<CategoryWithCountDto> categoriesWithCounts =
     await serviceLocator.businessRepository.getCategoriesWithCounts(1);
 ```
 
+### Service Endpoints
+
+```dart
+// Get services with filtering (requires at least one filter)
+ServiceListResponse services = await serviceLocator.serviceRepository.getServices(
+  townId: 1,
+  categoryId: 1,
+  subCategoryId: 1,
+  page: 1,
+  pageSize: 20,
+);
+
+// Get service categories (no counts)
+List<ServiceCategoryDto> serviceCategories =
+    await serviceLocator.serviceRepository.getCategories();
+
+// Get service categories with counts (used to disable empty categories/subcategories)
+// Note: the UI falls back to getCategories() if this endpoint is not available yet.
+List<ServiceCategoryDto> serviceCategoriesWithCounts =
+    await serviceLocator.serviceRepository.getCategoriesWithCounts(1);
+```
+
 ### Town Endpoints
 
 ```dart

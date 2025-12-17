@@ -85,6 +85,14 @@ TownTrek is a cross-platform mobile application built with Flutter that provides
 - `GET /api/businesses/categories` - Get business categories
 - `GET /api/businesses/categories/town/{townId}` - Get categories with business counts
 
+#### Services API (`/api/services`)
+- `GET /api/services` - Get services with filtering (requires at least one of: `townId`, `categoryId`, `subCategoryId`, `search`)
+- `GET /api/services/{id}` - Get detailed service information
+- `GET /api/services/search` - Search services
+- `GET /api/services/categories` - Get service categories
+- `GET /api/services/categories/town/{townId}` - Get service categories with service counts (used to disable empty categories/subcategories)
+- `GET /api/services/categories/{categoryId}/subcategories` - Get service subcategories for a category
+
 #### Events API (`/api/events`)
 - `GET /api/events` - Get events for a town
   - Query parameters: `townId`, `eventType`, `page`, `pageSize`
