@@ -1,11 +1,12 @@
 /// Configuration constants for API communication
 class ApiConfig {
   // Static variable to allow dynamic switching between environments
-  static String _currentBaseUrl = localNetworkUrl;
+  static String _currentBaseUrl = azureUrl;
   // Base URLs - these should be configurable for different environments
   // For external devices, use your machine's IP address instead of localhost
-  static const String localhostUrl = 'http://localhost:7125';
-  static const String localNetworkUrl = 'https://192.168.1.102:7125'; // Your machine's local IP address
+  static const String localhostUrl = 'http://towntrek.co.za';
+  static const String localNetworkUrl = 'https://102.133.250.161'; // Your machine's local IP address
+  static const String azureUrl = 'https://towntrek-hedwejadesagbaf6.southafricanorth-01.azurewebsites.net'; // Azure App Service URL
 
   // Mapbox configuration
   // TODO: Move to secure configuration (environment variables, secure storage)
@@ -134,6 +135,11 @@ class ApiConfig {
   /// Switch to network IP for external device testing
   static void useNetworkUrl() {
     _currentBaseUrl = localNetworkUrl;
+  }
+
+  /// Switch to Azure App Service for production
+  static void useAzureUrl() {
+    _currentBaseUrl = azureUrl;
   }
 
   /// Set a custom base URL
