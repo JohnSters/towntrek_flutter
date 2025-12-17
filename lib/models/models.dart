@@ -14,6 +14,7 @@ export 'event_review_dto.dart';
 export 'event_type_dto.dart';
 export 'operating_hour_dto.dart';
 export 'review_dto.dart';
+export 'special_operating_hour_dto.dart';
 export 'sub_category_dto.dart';
 export 'sub_category_with_count_dto.dart';
 export 'town_dto.dart';

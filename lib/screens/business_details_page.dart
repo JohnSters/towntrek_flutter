@@ -165,7 +165,10 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
 
               // Operating Hours
               SliverToBoxAdapter(
-                child: _buildOperatingHoursSection(business.operatingHours),
+                child: _buildOperatingHoursSection(
+                  business.operatingHours,
+                  business.specialOperatingHours,
+                ),
               ),
 
               // Reviews Section
@@ -192,7 +195,8 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
 
   Widget _buildStatusIndicator(BusinessDetailDto business) {
     final theme = Theme.of(context);
-    final isCurrentlyOpen = _isBusinessCurrentlyOpen(business.operatingHours);
+    final isCurrentlyOpen = business.isOpenNow ?? _isBusinessCurrentlyOpen(business.operatingHours);
+    final openNowText = business.openNowText;
 
     // Modern full-width status banner
     return Container(
@@ -222,7 +226,25 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
               letterSpacing: 0.5,
             ),
           ),
-          if (isCurrentlyOpen && business.operatingHours.isNotEmpty) ...[
+          if (isCurrentlyOpen && (openNowText?.isNotEmpty ?? false)) ...[
+             const SizedBox(width: 8),
+             Container(
+               width: 4,
+               height: 4,
+               decoration: BoxDecoration(
+                 color: const Color(0xFF1B5E20).withValues(alpha: 0.4),
+                 shape: BoxShape.circle,
+               ),
+             ),
+             const SizedBox(width: 8),
+             Text(
+               openNowText!,
+               style: theme.textTheme.labelMedium?.copyWith(
+                 fontWeight: FontWeight.w600,
+                 color: const Color(0xFF2E7D32),
+               ),
+             ),
+          ] else if (isCurrentlyOpen && business.operatingHours.isNotEmpty) ...[
              const SizedBox(width: 8),
              Container(
                width: 4,
@@ -420,13 +442,17 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     );
   }
 
-  Widget _buildOperatingHoursSection(List<OperatingHourDto> operatingHours) {
+  Widget _buildOperatingHoursSection(
+    List<OperatingHourDto> operatingHours,
+    List<SpecialOperatingHourDto> specialOperatingHours,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     // Group hours by regular and special
     final regularHours = operatingHours.where((h) => !h.isSpecialHours).toList();
     final specialHours = operatingHours.where((h) => h.isSpecialHours).toList();
+    final upcomingSpecialOperatingHours = _getUpcomingSpecialOperatingHours(specialOperatingHours);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -443,6 +469,11 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+                // Date-based Special Operating Hours (e.g. holiday closures)
+                if (upcomingSpecialOperatingHours.isNotEmpty) ...[
+                  _buildSpecialOperatingHoursBanners(upcomingSpecialOperatingHours),
+                  const SizedBox(height: 20),
+                ],
               // Section Title
               Row(
                 children: [
@@ -532,6 +563,105 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  List<SpecialOperatingHourDto> _getUpcomingSpecialOperatingHours(List<SpecialOperatingHourDto> all) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final upcoming = all
+        .where((s) {
+          final d = DateTime(s.date.year, s.date.month, s.date.day);
+          return d.isAtSameMomentAs(today) || d.isAfter(today);
+        })
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    // Keep it readable on mobile; show next 3.
+    return upcoming.take(3).toList();
+  }
+
+  Widget _buildSpecialOperatingHoursBanners(List<SpecialOperatingHourDto> items) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items.map((s) {
+        final dateText = DateFormat('MMM d, yyyy').format(s.date);
+        final hasRange = (s.openTime?.isNotEmpty ?? false) && (s.closeTime?.isNotEmpty ?? false);
+        final timeText = hasRange ? '${_formatTime(s.openTime!)} - ${_formatTime(s.closeTime!)}' : null;
+        final reason = (s.reason?.trim().isNotEmpty ?? false) ? s.reason!.trim() : 'Special hours';
+        final notes = (s.notes?.trim().isNotEmpty ?? false) ? s.notes!.trim() : null;
+
+        final isClosed = s.isClosed;
+        final bg = isClosed
+            ? colorScheme.errorContainer.withValues(alpha: 0.65)
+            : colorScheme.primaryContainer.withValues(alpha: 0.45);
+        final border = (isClosed ? colorScheme.error : colorScheme.primary).withValues(alpha: 0.25);
+        final fg = isClosed ? colorScheme.onErrorContainer : colorScheme.onPrimaryContainer;
+        final icon = isClosed ? Icons.event_busy : Icons.event;
+
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: border.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: fg, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isClosed
+                          ? (timeText != null ? 'Closed on $dateText ($timeText)' : 'Closed on $dateText')
+                          : (timeText != null ? 'Special hours on $dateText: $timeText' : 'Special hours on $dateText'),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: fg,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Reason: $reason',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: fg.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (notes != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Notes: $notes',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: fg.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -949,6 +1079,10 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
 
     // If it's a numeric string, convert to day name
     final dayNumber = int.tryParse(dayOfWeek);
+    if (dayNumber == 0) {
+      // Backend (C#) uses 0=Sunday..6=Saturday
+      return 'Sunday';
+    }
     if (dayNumber != null && dayNumber >= 1 && dayNumber <= 7) {
       return dayNames[dayNumber];
     }

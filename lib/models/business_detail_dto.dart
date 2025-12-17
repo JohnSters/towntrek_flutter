@@ -2,6 +2,7 @@ import 'business_image_dto.dart';
 import 'business_service_dto.dart';
 import 'operating_hour_dto.dart';
 import 'review_dto.dart';
+import 'special_operating_hour_dto.dart';
 
 /// Detailed business information for individual business pages
 class BusinessDetailDto {
@@ -26,7 +27,13 @@ class BusinessDetailDto {
   final int viewCount;
   final bool isFeatured;
   final bool isVerified;
+
+  /// Optional server-calculated status (preferred for production consistency)
+  final bool? isOpenNow;
+  final String? openNowText;
+
   final List<OperatingHourDto> operatingHours;
+  final List<SpecialOperatingHourDto> specialOperatingHours;
   final List<BusinessServiceDto> services;
   final List<BusinessImageDto> images;
   final List<ReviewDto> reviews;
@@ -53,7 +60,10 @@ class BusinessDetailDto {
     required this.viewCount,
     required this.isFeatured,
     required this.isVerified,
+    this.isOpenNow,
+    this.openNowText,
     required this.operatingHours,
+    required this.specialOperatingHours,
     required this.services,
     required this.images,
     required this.reviews,
@@ -83,8 +93,13 @@ class BusinessDetailDto {
       viewCount: json['viewCount'] as int,
       isFeatured: json['isFeatured'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
+      isOpenNow: json['isOpenNow'] as bool?,
+      openNowText: json['openNowText'] as String?,
       operatingHours: (json['operatingHours'] as List<dynamic>?)
           ?.map((e) => OperatingHourDto.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
+      specialOperatingHours: (json['specialOperatingHours'] as List<dynamic>?)
+          ?.map((e) => SpecialOperatingHourDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
       services: (json['services'] as List<dynamic>?)
           ?.map((e) => BusinessServiceDto.fromJson(e as Map<String, dynamic>))
@@ -122,7 +137,10 @@ class BusinessDetailDto {
       'viewCount': viewCount,
       'isFeatured': isFeatured,
       'isVerified': isVerified,
+      'isOpenNow': isOpenNow,
+      'openNowText': openNowText,
       'operatingHours': operatingHours.map((e) => e.toJson()).toList(),
+      'specialOperatingHours': specialOperatingHours.map((e) => e.toJson()).toList(),
       'services': services.map((e) => e.toJson()).toList(),
       'images': images.map((e) => e.toJson()).toList(),
       'reviews': reviews.map((e) => e.toJson()).toList(),
@@ -152,7 +170,10 @@ class BusinessDetailDto {
     int? viewCount,
     bool? isFeatured,
     bool? isVerified,
+    bool? isOpenNow,
+    String? openNowText,
     List<OperatingHourDto>? operatingHours,
+    List<SpecialOperatingHourDto>? specialOperatingHours,
     List<BusinessServiceDto>? services,
     List<BusinessImageDto>? images,
     List<ReviewDto>? reviews,
@@ -179,7 +200,10 @@ class BusinessDetailDto {
       viewCount: viewCount ?? this.viewCount,
       isFeatured: isFeatured ?? this.isFeatured,
       isVerified: isVerified ?? this.isVerified,
+      isOpenNow: isOpenNow ?? this.isOpenNow,
+      openNowText: openNowText ?? this.openNowText,
       operatingHours: operatingHours ?? this.operatingHours,
+      specialOperatingHours: specialOperatingHours ?? this.specialOperatingHours,
       services: services ?? this.services,
       images: images ?? this.images,
       reviews: reviews ?? this.reviews,
