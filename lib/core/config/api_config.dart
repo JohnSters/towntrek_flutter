@@ -1,19 +1,48 @@
+/// Environments available for the application
+enum AppEnvironment {
+  production,
+  localHost,   // For Emulator (10.0.2.2) or iOS Simulator (localhost)
+  localNetwork // For Physical Devices on same network
+}
+
 /// Configuration constants for API communication
 class ApiConfig {
-  // Static variable to allow dynamic switching between environments
-  static String _currentBaseUrl = azureUrl;
-  // Base URLs - these should be configurable for different environments
-  // For external devices, use your machine's IP address instead of localhost
-  static const String localhostUrl = 'http://towntrek.co.za';
-  static const String localNetworkUrl = 'https://102.133.250.161'; // Your machine's local IP address
-  static const String azureUrl = 'https://towntrek-hedwejadesagbaf6.southafricanorth-01.azurewebsites.net'; // Azure App Service URL
+  // Current Environment Configuration
+  // CHANGE THIS to switch between environments
+  static AppEnvironment _currentEnvironment = AppEnvironment.localHost;
+
+  // Base URLs
+  static const String azureUrl = 'https://towntrek-hedwejadesagbaf6.southafricanorth-01.azurewebsites.net'; 
+  
+  // Local Development URLs
+  // VS Studio typically runs on port 7125 for HTTPS
+  // Android Emulator uses 10.0.2.2 to access host localhost
+  static const String _androidEmulatorUrl = 'https://10.0.2.2:7125';
+  // iOS Simulator uses localhost
+  static const String _iosSimulatorUrl = 'https://localhost:7125';
+  // Physical device needs your LAN IP
+  static const String _localNetworkUrl = 'https://192.168.1.102:7125'; 
 
   // Mapbox configuration
-  // TODO: Move to secure configuration (environment variables, secure storage)
   static const String mapboxAccessToken = 'pk.eyJ1Ijoiam9obnN0ZXJzIiwiYSI6ImNtZ2oxeXp2MzBjcTYybHNscDNrYnBuZmoifQ.sRTsjeym9YHrR1cxjHPmXw';
 
-  // Dynamic base URL that can be switched between environments
-  static String get baseUrl => _currentBaseUrl;
+  // Dynamic base URL getter
+  static String get baseUrl {
+    switch (_currentEnvironment) {
+      case AppEnvironment.production:
+        return azureUrl;
+      case AppEnvironment.localHost:
+        // Simple platform check could be added here if needed, 
+        // but typically 10.0.2.2 works for Android and localhost for iOS
+        // defaulting to the Android emulator friendly one for general "localhost" 
+        // usage in mixed envs, or use Platform.isAndroid check if dart:io is imported.
+        // For now, returning the one most likely to work on Android Emulator.
+        return _androidEmulatorUrl; 
+      case AppEnvironment.localNetwork:
+        return _localNetworkUrl;
+    }
+  }
+
   static const String apiVersion = 'api';
 
   // Endpoints
@@ -151,33 +180,18 @@ class ApiConfig {
   }
 
   /// Get the appropriate base URL for the current environment
-  /// This can be modified to read from environment variables or app settings
-  static String getBaseUrlForEnvironment([String? environment]) {
-    // You can implement logic here to detect environment
-    // For now, return the configured baseUrl
+  static String getBaseUrlForEnvironment([AppEnvironment? environment]) {
+    if (environment != null) {
+      _currentEnvironment = environment;
+    }
     return baseUrl;
   }
 
-  /// Switch to localhost for emulator/simulator development
-  static void useLocalhost() {
-    _currentBaseUrl = localhostUrl;
+  /// Switch environment
+  static void setEnvironment(AppEnvironment environment) {
+    _currentEnvironment = environment;
   }
 
-  /// Switch to network IP for external device testing
-  static void useNetworkUrl() {
-    _currentBaseUrl = localNetworkUrl;
-  }
-
-  /// Switch to Azure App Service for production
-  static void useAzureUrl() {
-    _currentBaseUrl = azureUrl;
-  }
-
-  /// Set a custom base URL
-  static void setCustomBaseUrl(String url) {
-    _currentBaseUrl = url;
-  }
-
-  /// Get the current base URL being used
-  static String getCurrentBaseUrl() => _currentBaseUrl;
+  /// Get current environment
+  static AppEnvironment get environment => _currentEnvironment;
 }

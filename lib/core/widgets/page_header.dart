@@ -28,7 +28,9 @@ class PageHeader extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      height: height,
+      // Removed fixed height constraint
+      // height: height,
+      constraints: BoxConstraints(minHeight: height),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -45,6 +47,7 @@ class PageHeader extends StatelessWidget {
           padding: padding ?? const EdgeInsets.fromLTRB(24, 16, 24, 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min, // Allow column to shrink to content
             children: [
               // Leading widget (optional)
               if (leading != null) ...[

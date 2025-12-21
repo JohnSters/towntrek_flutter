@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'core/core.dart';
+import 'core/config/http_overrides.dart';
 import 'screens/landing_page.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Setup HTTP overrides for local development if not in production
+  if (ApiConfig.environment != AppEnvironment.production) {
+    HttpOverrides.global = LocalDevHttpOverrides();
+  }
 
   // Initialize service locator and dependencies
   serviceLocator.initialize();
