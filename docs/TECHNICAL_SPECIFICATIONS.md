@@ -26,7 +26,9 @@ TownTrek is a cross-platform mobile application built with Flutter that provides
 - **Maps Integration**: [Google Maps/Mapbox - TBD]
 
 #### Backend Integration
-- **API Base URL**: [TownTrek Web API]
+- **API Base URL**: Centralized in `lib/core/config/api_config.dart` and selected via build mode / `--dart-define`
+  - Debug defaults to **local**
+  - Profile/Release defaults to **production (Azure Web App)**
 - **Authentication**: [JWT/Token-based - TBD]
 - **Data Format**: JSON
 - **Real-time Updates**: [WebSocket/SSE - TBD]

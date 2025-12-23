@@ -10,6 +10,7 @@ class PageHeader extends StatelessWidget {
   final bool centerTitle;
   final double height;
   final EdgeInsetsGeometry? padding;
+  final String? backgroundImage; // Added missing parameter
 
   const PageHeader({
     super.key,
@@ -20,6 +21,7 @@ class PageHeader extends StatelessWidget {
     this.centerTitle = true,
     this.height = 120,
     this.padding,
+    this.backgroundImage,
   });
 
   @override
@@ -32,14 +34,26 @@ class PageHeader extends StatelessWidget {
       // height: height,
       constraints: BoxConstraints(minHeight: height),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            colorScheme.primary.withValues(alpha: 0.1),
-            colorScheme.surface,
-          ],
-        ),
+        image: backgroundImage != null
+            ? DecorationImage(
+                image: NetworkImage(backgroundImage!),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withValues(alpha: 0.5),
+                  BlendMode.darken,
+                ),
+              )
+            : null,
+        gradient: backgroundImage == null
+            ? LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  colorScheme.primary.withValues(alpha: 0.1),
+                  colorScheme.surface,
+                ],
+              )
+            : null,
       ),
       child: SafeArea(
         bottom: false,
@@ -74,7 +88,7 @@ class PageHeader extends StatelessWidget {
                           title,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+                            color: backgroundImage != null ? Colors.white : colorScheme.onSurface,
                             height: 1.2,
                           ),
                           maxLines: 1,
@@ -88,7 +102,9 @@ class PageHeader extends StatelessWidget {
                           Text(
                             subtitle!,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                              color: backgroundImage != null 
+                                  ? Colors.white.withValues(alpha: 0.9)
+                                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                               height: 1.3,
                             ),
                             maxLines: 2,

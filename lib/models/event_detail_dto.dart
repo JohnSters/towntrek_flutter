@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'event_image_dto.dart';
 import 'event_review_dto.dart';
 
@@ -264,6 +265,27 @@ class EventDetailDto {
       images: images ?? this.images,
       reviews: reviews ?? this.reviews,
     );
+  }
+
+  // Getters for display
+  String get displayDate {
+    final formatter = DateFormat('MMM d, yyyy');
+    if (endDate != null && 
+        endDate!.year != 1 && 
+        (startDate.year != endDate!.year || startDate.month != endDate!.month || startDate.day != endDate!.day)) {
+       return '${formatter.format(startDate)} - ${formatter.format(endDate!)}';
+    }
+    return formatter.format(startDate);
+  }
+
+  String get displayPrice {
+    if (isFreeEvent) {
+      return 'Free';
+    }
+    if (entryFeeAmount != null) {
+      return '${entryFeeAmount!.toStringAsFixed(2)} ${entryFeeCurrency ?? 'ZAR'}';
+    }
+    return 'Price TBA';
   }
 
   @override

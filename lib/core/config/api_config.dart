@@ -1,47 +1,95 @@
-/// Environments available for the application
+import 'package:flutter/foundation.dart';
+
+/// Environments available for the application.
 enum AppEnvironment {
   production,
-  localHost,   // For Emulator (10.0.2.2) or iOS Simulator (localhost)
-  localNetwork // For Physical Devices on same network
+  localHost, // For Emulator (10.0.2.2) or iOS Simulator (localhost)
+  localNetwork, // For Physical Devices on same network
 }
 
-/// Configuration constants for API communication
+/// Configuration constants for API communication.
+///
+/// ### Environment selection
+/// - **Default**: `production` for **profile/release**, `localHost` for **debug**
+/// - **Override**:
+///   - `--dart-define=TT_ENV=production|localHost|localNetwork`
+///   - `--dart-define=TT_API_BASE_URL=https://your-api-host` (highest priority)
 class ApiConfig {
-  // Current Environment Configuration
-  // CHANGE THIS to switch between environments
-  static AppEnvironment _currentEnvironment = AppEnvironment.localHost;
+  static const String _dartDefineEnv = String.fromEnvironment('TT_ENV', defaultValue: '');
+  static const String _dartDefineBaseUrl = String.fromEnvironment('TT_API_BASE_URL', defaultValue: '');
+
+  // Current Environment Configuration (runtime switchable)
+  static AppEnvironment _currentEnvironment = _resolveInitialEnvironment();
 
   // Base URLs
-  static const String azureUrl = 'https://towntrek-hedwejadesagbaf6.southafricanorth-01.azurewebsites.net'; 
-  
+  static const String azureUrl = 'https://towntrek-hedwejadesagbaf6.southafricanorth-01.azurewebsites.net';
+
   // Local Development URLs
   // VS Studio typically runs on port 7125 for HTTPS
   // Android Emulator uses 10.0.2.2 to access host localhost
   static const String _androidEmulatorUrl = 'https://10.0.2.2:7125';
   // iOS Simulator uses localhost
-  static const String _iosSimulatorUrl = 'https://localhost:7125';
+  // static const String _iosSimulatorUrl = 'https://localhost:7125';
   // Physical device needs your LAN IP
-  static const String _localNetworkUrl = 'https://192.168.1.102:7125'; 
+  static const String _localNetworkUrl = 'https://192.168.1.102:7125';
 
   // Mapbox configuration
-  // WARNING: This key is exposed in the client app. 
+  // WARNING: This key is exposed in the client app.
   // Ensure your Mapbox token is restricted to your application bundle ID/package name in the Mapbox dashboard.
-  static const String mapboxAccessToken = 'pk.eyJ1Ijoiam9obnN0ZXJzIiwiYSI6ImNtZ2oxeXp2MzBjcTYybHNscDNrYnBuZmoifQ.sRTsjeym9YHrR1cxjHPmXw';
+  static const String mapboxAccessToken =
+      'pk.eyJ1Ijoiam9obnN0ZXJzIiwiYSI6ImNtZ2oxeXp2MzBjcTYybHNscDNrYnBuZmoifQ.sRTsjeym9YHrR1cxjHPmXw';
 
   // Dynamic base URL getter
   static String get baseUrl {
+    // Highest priority: explicit base URL override at build/run time.
+    final override = _dartDefineBaseUrl.trim();
+    if (override.isNotEmpty) return override;
+
     switch (_currentEnvironment) {
       case AppEnvironment.production:
         return azureUrl;
       case AppEnvironment.localHost:
-        // Simple platform check could be added here if needed, 
+        // Simple platform check could be added here if needed,
         // but typically 10.0.2.2 works for Android and localhost for iOS
-        // defaulting to the Android emulator friendly one for general "localhost" 
+        // defaulting to the Android emulator friendly one for general "localhost"
         // usage in mixed envs, or use Platform.isAndroid check if dart:io is imported.
         // For now, returning the one most likely to work on Android Emulator.
-        return _androidEmulatorUrl; 
+        return _androidEmulatorUrl;
       case AppEnvironment.localNetwork:
         return _localNetworkUrl;
+    }
+  }
+
+  static AppEnvironment _resolveInitialEnvironment() {
+    final parsed = _tryParseEnvironment(_dartDefineEnv);
+    if (parsed != null) return parsed;
+
+    // Default behavior: ship builds use Azure unless explicitly overridden.
+    if (kReleaseMode || kProfileMode) return AppEnvironment.production;
+    return AppEnvironment.localHost;
+  }
+
+  static AppEnvironment? _tryParseEnvironment(String raw) {
+    final value = raw.trim().toLowerCase();
+    if (value.isEmpty) return null;
+
+    switch (value) {
+      case 'prod':
+      case 'production':
+        return AppEnvironment.production;
+      case 'localhost':
+      case 'local_host':
+      case 'local':
+      case 'dev':
+      case 'debug':
+        return AppEnvironment.localHost;
+      case 'localnetwork':
+      case 'local_network':
+      case 'lan':
+      case 'network':
+        return AppEnvironment.localNetwork;
+      default:
+        return null;
     }
   }
 
@@ -86,7 +134,9 @@ class ApiConfig {
   static String buildUrl(String endpoint, [Map<String, dynamic>? queryParams]) {
     final uri = Uri.parse('$baseUrl/$apiVersion/$endpoint');
     if (queryParams != null && queryParams.isNotEmpty) {
-      return uri.replace(queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString()))).toString();
+      return uri
+          .replace(queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString())))
+          .toString();
     }
     return uri.toString();
   }
@@ -197,3 +247,5 @@ class ApiConfig {
   /// Get current environment
   static AppEnvironment get environment => _currentEnvironment;
 }
+
+

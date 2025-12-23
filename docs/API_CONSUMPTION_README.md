@@ -241,14 +241,24 @@ try {
 
 ### API Configuration
 
-Update `lib/core/config/api_config.dart` with your API details:
+The app uses a centralized config in `lib/core/config/api_config.dart`.
 
-```dart
-class ApiConfig {
-  static const String baseUrl = 'https://your-api-domain.com';
-  // ... other configurations
-}
-```
+**Default behavior:**
+- **Debug** builds default to **local** (`localHost`)
+- **Profile/Release** builds default to **production (Azure)**
+
+**Recommended overrides (no code changes):**
+- Set an environment:
+  - `--dart-define=TT_ENV=production|localHost|localNetwork`
+- Or force a specific API base URL (highest priority):
+  - `--dart-define=TT_API_BASE_URL=https://your-api-host`
+
+**Android Studio / IntelliJ:**
+1. Run → Edit Configurations…
+2. Select your Flutter run config
+3. Add to **Additional run args**:
+   - Dev local: `--dart-define=TT_ENV=localHost`
+   - Production: `--dart-define=TT_ENV=production`
 
 ### Timeouts and Retries
 
@@ -588,4 +598,4 @@ isVerified: json['isVerified'] as bool? ?? false,
 - **v1.1**: Added null-safe boolean parsing, fixed model-response mismatches, improved troubleshooting documentation
 
 **Last Updated**: October 10, 2025
-**Note**: This API consumption layer is designed to be production-ready and follows Flutter best practices. Update the API URL in `ApiConfig` before deploying to production.
+**Note**: This API consumption layer is designed to be production-ready and follows Flutter best practices. Prefer `--dart-define` overrides over editing `ApiConfig` when switching between local and production.

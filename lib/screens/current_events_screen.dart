@@ -3,6 +3,7 @@ import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
 import '../core/errors/app_error.dart';
+import 'event_details/event_details_screen.dart';
 
 /// Screen displaying current/nearby events for a town
 class CurrentEventsScreen extends StatefulWidget {
@@ -451,12 +452,13 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
   }
 
   void _showEventDetails(EventDto event) {
-    // TODO: Navigate to event details screen
-    // For now, just show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Event details for "${event.name}" coming soon!'),
-        duration: const Duration(seconds: 2),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EventDetailsScreen(
+          eventId: event.id,
+          eventName: event.name,
+        ),
       ),
     );
   }
