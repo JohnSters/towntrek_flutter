@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
@@ -106,20 +107,12 @@ class _TownLoaderScreenState extends State<TownLoaderScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.secondary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.location_searching,
-              size: 40,
-              color: Colors.white,
+            width: 120,
+            height: 120,
+            alignment: Alignment.center,
+            child: Image.asset(
+              'assets/images/icons/android-chrome-192x192.png',
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(height: 24),
@@ -177,20 +170,12 @@ class _TownLoaderScreenState extends State<TownLoaderScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.secondary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.location_city,
-              size: 40,
-              color: Colors.white,
+            width: 120,
+            height: 120,
+            alignment: Alignment.center,
+            child: Image.asset(
+              'assets/images/icons/android-chrome-192x192.png',
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(height: 24),

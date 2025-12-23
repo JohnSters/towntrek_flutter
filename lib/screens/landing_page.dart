@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'town_loader_screen.dart';
 
 class LandingPage extends StatefulWidget {
@@ -36,36 +37,22 @@ class _LandingPageState extends State<LandingPage> {
               children: [
                 const SizedBox(height: 40),
 
-                // App Logo/Icon
+                // App Logo
                 Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [colorScheme.primary, colorScheme.secondary],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.location_city,
-                    size: 60,
-                    color: colorScheme.onPrimary,
+                  width: double.infinity,
+                  height: 180,
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: SvgPicture.asset(
+                    'assets/images/logos/towntrek_starter_logo2.svg',
+                    fit: BoxFit.contain,
                   ),
                 ),
 
                 const SizedBox(height: 32),
 
-                // Welcome Title
-                Text(
-                  'Welcome to Towntrek',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                // Removed "Welcome to Towntrek" text as it is part of the logo or redundant
+                // Welcome Title was here
 
                 const SizedBox(height: 16),
 

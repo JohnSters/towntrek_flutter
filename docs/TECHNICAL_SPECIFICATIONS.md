@@ -220,6 +220,12 @@ dependencies:
   uuid: ^4.2.1
   url_launcher: ^6.2.2
   share_plus: ^7.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 ```
 
 ## Platform-Specific Configurations
