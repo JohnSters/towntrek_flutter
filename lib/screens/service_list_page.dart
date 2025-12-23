@@ -312,18 +312,38 @@ class _ServiceListPageState extends State<ServiceListPage> {
                                ),
                                const SizedBox(width: 8),
                              ],
-                             // You can add rating here if ServiceDto has it.
-                             // ServiceDto does have Rating.
-                             if (service.rating != null) ...[
-                               Icon(Icons.star, size: 16, color: Colors.amber),
-                               const SizedBox(width: 4),
-                               Text(
-                                 service.rating!.toStringAsFixed(1),
-                                 style: theme.textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                 ),
-                               ),
-                             ]
+                             
+                             // Rating Row
+                            Row(
+                              children: List.generate(5, (starIndex) {
+                                final rating = service.rating ?? 0.0;
+                                final starValue = starIndex + 1;
+                                return Icon(
+                                  starValue <= rating
+                                      ? Icons.star
+                                      : starValue - 0.5 <= rating
+                                          ? Icons.star_half
+                                          : Icons.star_outline,
+                                  size: 16,
+                                  color: starValue <= rating + 0.5
+                                      ? Colors.amber
+                                      : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                                );
+                              }),
+                            ),
+
+                            const SizedBox(width: 6),
+
+                            // Rating Text
+                            Text(
+                              service.rating != null
+                                  ? '${service.rating!.toStringAsFixed(1)} (${service.totalReviews})'
+                                  : 'No reviews',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
                       ],

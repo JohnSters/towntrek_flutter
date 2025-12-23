@@ -274,7 +274,7 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
           ),
         ),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
+          child: InkWell(
           onTap: event.shouldGreyOut ? null : () => _showEventDetails(event),
           child: Stack(
             children: [
@@ -319,23 +319,33 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Event Name
-                          Text(
-                            event.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                              color: event.shouldGreyOut
-                                  ? colorScheme.onSurface.withValues(alpha: 0.5)
-                                  : colorScheme.onSurface,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          // Header Row: Title and Price
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  event.name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.2,
+                                    color: event.shouldGreyOut
+                                        ? colorScheme.onSurface.withValues(alpha: 0.5)
+                                        : colorScheme.onSurface,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildPricePill(context, event),
+                            ],
                           ),
                           
                           // Short Description
                           if (event.shortDescription != null && event.shortDescription!.isNotEmpty) ...[
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             Text(
                               event.shortDescription!,
                               style: theme.textTheme.bodyMedium?.copyWith(
@@ -356,17 +366,17 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
                             spacing: 8,
                             runSpacing: 4,
                             children: [
-                              _buildMetadataItem(
+                              _buildInfoPill(
                                 context, 
-                                Icons.category_outlined, 
                                 event.eventType,
-                                event.shouldGreyOut,
+                                colorScheme.secondaryContainer,
+                                colorScheme.onSecondaryContainer,
                               ),
-                              _buildMetadataItem(
+                              _buildInfoPill(
                                 context, 
-                                Icons.calendar_today_outlined, 
                                 event.displayDate,
-                                event.shouldGreyOut,
+                                colorScheme.tertiaryContainer,
+                                colorScheme.onTertiaryContainer,
                               ),
                             ],
                           ),
@@ -374,34 +384,6 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
                       ),
                     ),
                   ],
-                ),
-              ),
-              
-              // Price Badge (Top Right Overlay or inside content)
-              // Moving it to bottom right of content area or distinct position
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: Container(
-                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                   decoration: BoxDecoration(
-                     color: event.isFreeEvent 
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : colorScheme.primary.withValues(alpha: 0.1),
-                     borderRadius: BorderRadius.circular(20),
-                     border: Border.all(
-                       color: event.isFreeEvent
-                          ? Colors.green.withValues(alpha: 0.2)
-                          : colorScheme.primary.withValues(alpha: 0.2),
-                     ),
-                   ),
-                   child: Text(
-                     event.displayPrice,
-                     style: theme.textTheme.bodySmall?.copyWith(
-                       color: event.isFreeEvent ? Colors.green : colorScheme.primary,
-                       fontWeight: FontWeight.bold,
-                     ),
-                   ),
                 ),
               ),
 
@@ -461,28 +443,51 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
     );
   }
   
-  Widget _buildMetadataItem(BuildContext context, IconData icon, String label, bool isGreyedOut) {
+  Widget _buildPricePill(BuildContext context, EventDto event) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final color = isGreyedOut 
-        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5) 
-        : colorScheme.onSurfaceVariant;
-        
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: color,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
+    final isFree = event.isFreeEvent;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isFree
+            ? Colors.green.withValues(alpha: 0.1)
+            : colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isFree
+              ? Colors.green.withValues(alpha: 0.2)
+              : colorScheme.primary.withValues(alpha: 0.2),
         ),
-      ],
+      ),
+      child: Text(
+        'Entry Fee: ${event.displayPrice}',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: isFree ? Colors.green : colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoPill(BuildContext context, String text, Color bgColor, Color textColor) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: textColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 
@@ -493,6 +498,8 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
         builder: (context) => EventDetailsScreen(
           eventId: event.id,
           eventName: event.name,
+          eventType: event.eventType,
+          initialImageUrl: event.logoUrl,
         ),
       ),
     );

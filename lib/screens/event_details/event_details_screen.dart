@@ -16,11 +16,15 @@ import 'widgets/event_reviews_section.dart';
 class EventDetailsScreen extends StatefulWidget {
   final int eventId;
   final String eventName;
+  final String? eventType;
+  final String? initialImageUrl;
 
   const EventDetailsScreen({
     super.key,
     required this.eventId,
     required this.eventName,
+    this.eventType,
+    this.initialImageUrl,
   });
 
   @override
@@ -101,14 +105,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Widget _buildLoadingView() {
-    return Column(
-      children: [
-        PageHeader(
-          title: widget.eventName,
-          subtitle: 'Loading event details...',
-          backgroundImage: null, // Could use a hero image if available passed from list
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: PageHeader(
+            title: widget.eventName,
+            subtitle: widget.eventType ?? 'Loading event details...',
+            backgroundImage: widget.initialImageUrl, 
+          ),
         ),
-        const Expanded(
+        const SliverFillRemaining(
           child: Center(
             child: CircularProgressIndicator(),
           ),

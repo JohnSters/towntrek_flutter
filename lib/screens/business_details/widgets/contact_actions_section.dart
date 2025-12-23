@@ -66,6 +66,7 @@ class ContactActionsSection extends StatelessWidget {
                       icon: Icons.directions,
                       label: 'Take Me There',
                       onPressed: onTakeMeThere,
+                      backgroundColor: Colors.teal,
                     ),
 
                   // Contact Us Button
@@ -75,6 +76,7 @@ class ContactActionsSection extends StatelessWidget {
                       icon: Icons.phone,
                       label: 'Call',
                       onPressed: () => _launchPhone(context, business.phoneNumber!),
+                      backgroundColor: Colors.green,
                     ),
 
                   // Email Us Button
@@ -84,6 +86,7 @@ class ContactActionsSection extends StatelessWidget {
                       icon: Icons.email,
                       label: 'Email',
                       onPressed: () => _launchEmail(context, business.emailAddress!),
+                      backgroundColor: Colors.blue,
                     ),
 
                   // Website Button
@@ -93,6 +96,7 @@ class ContactActionsSection extends StatelessWidget {
                       icon: Icons.web,
                       label: 'Website',
                       onPressed: () => _launchWebsite(context, business.website!),
+                      backgroundColor: Colors.purple,
                     ),
 
                   // Rate Business Button
@@ -101,6 +105,7 @@ class ContactActionsSection extends StatelessWidget {
                     icon: Icons.star_border,
                     label: 'Rate Business',
                     onPressed: onRateBusiness,
+                    backgroundColor: Colors.orange,
                   ),
                 ],
               ),
@@ -169,6 +174,7 @@ class ContactActionsSection extends StatelessWidget {
     required IconData icon,
     required String label,
     required VoidCallback onPressed,
+    required Color backgroundColor,
   }) {
     final theme = Theme.of(context);
 
@@ -187,11 +193,12 @@ class ContactActionsSection extends StatelessWidget {
           ),
         ),
         style: FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.center,
         ),
       ),
     );

@@ -139,20 +139,10 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
         // BusinessDetailsPage used BusinessHeader. I'll stick to PageHeader for now or create a ServiceHeader if needed.
         // PageHeader doesn't support status indicator easily. I'll recreate the header part manually or reuse PageHeader and add content below.
         
-        Stack(
-          children: [
-            PageHeader(
-              title: service.name,
-              subtitle: service.townName,
-              height: 160,
-            ),
-            Positioned(
-              bottom: 16,
-              left: 24,
-              right: 24,
-              child: _buildStatusIndicator(service),
-            ),
-          ],
+        BusinessHeader(
+          businessName: service.name,
+          tagline: service.townName,
+          statusIndicator: _buildStatusIndicator(service),
         ),
 
         Expanded(
@@ -194,27 +184,17 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
     final isCurrentlyOpen = _isServiceCurrentlyOpen(service.operatingHours);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      decoration: BoxDecoration(
-        color: isCurrentlyOpen 
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+      color: isCurrentlyOpen 
           ? const Color(0xFFE8F5E9) 
           : const Color(0xFFFFEBEE),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.access_time_filled,
-            size: 16,
+            size: 18,
             color: isCurrentlyOpen
                 ? const Color(0xFF2E7D32)
                 : const Color(0xFFC62828),
@@ -222,11 +202,12 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
           const SizedBox(width: 8),
           Text(
             isCurrentlyOpen ? 'Open Now' : 'Closed',
-            style: theme.textTheme.labelMedium?.copyWith(
+            style: theme.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: isCurrentlyOpen
                   ? const Color(0xFF1B5E20)
                   : const Color(0xFFB71C1C),
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -429,14 +410,14 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
           if (service.phoneNumber.isNotEmpty)
             _buildFullWidthActionButton(
               icon: Icons.phone,
-              label: 'Call ${service.phoneNumber}',
+              label: 'Call',
               onPressed: () => _launchUrl('tel:${service.phoneNumber}'),
               color: Colors.green,
             ),
           if (service.phoneNumber2 != null && service.phoneNumber2!.isNotEmpty)
              _buildFullWidthActionButton(
               icon: Icons.phone,
-              label: 'Call ${service.phoneNumber2}',
+              label: 'Call Alternative',
               onPressed: () => _launchUrl('tel:${service.phoneNumber2}'),
               color: Colors.green.shade700,
             ),
@@ -470,15 +451,22 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
       margin: const EdgeInsets.only(bottom: 12),
       child: FilledButton.icon(
         onPressed: onPressed,
-        icon: Icon(icon, size: 22),
-        label: Text(label),
+        icon: Icon(icon, size: 22, color: Colors.white),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
         style: FilledButton.styleFrom(
           backgroundColor: color,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.center,
         ),
       ),
     );

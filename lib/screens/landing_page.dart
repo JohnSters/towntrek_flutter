@@ -78,8 +78,8 @@ class _LandingPageState extends State<LandingPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildFeatureItem(context, Icons.location_city, 'Towns'),
-                        _buildFeatureItem(context, Icons.store, 'Businesses'),
+                        _buildFeatureItem(context, Icons.location_city, 'Businesses'),
+                        _buildFeatureItem(context, Icons.build, 'Services'),
                         _buildFeatureItem(context, Icons.calendar_month, 'Events'),
                       ],
                     ),
