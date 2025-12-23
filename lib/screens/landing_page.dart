@@ -18,75 +18,84 @@ class _LandingPageState extends State<LandingPage> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.primary.withValues(alpha: 0.1),
-              colorScheme.surface,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 40),
+      backgroundColor: colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
 
-                // App Logo
-                Container(
-                  width: double.infinity,
-                  height: 180,
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SvgPicture.asset(
-                    'assets/images/logos/towntrek_starter_logo2.svg',
-                    fit: BoxFit.contain,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Removed "Welcome to Towntrek" text as it is part of the logo or redundant
-                // Welcome Title was here
-
-                const SizedBox(height: 16),
-
-                // Subtitle
-                Text(
-                  'Explore South Africa\'s small towns like never before. Discover hidden gems, local favorites, and authentic experiences—all at the click of a button.',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 48),
-
-                // Start Exploring Button
-                Container(
-                  width: double.infinity,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [colorScheme.primary, colorScheme.secondary],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
+                    // App Logo with Card for emphasis
+                    Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: ElevatedButton(
+                      padding: const EdgeInsets.all(32.0),
+                      child: SvgPicture.asset(
+                        'assets/images/logos/towntrek_starter_logo2.svg',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // Subtitle
+                    Text(
+                      'Explore South Africa\'s small towns like never before.',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                        height: 1.3,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Text(
+                      'Discover hidden gems, local favorites, and authentic experiences—all at the click of a button.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    // Feature Icons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildFeatureItem(context, Icons.location_city, 'Towns'),
+                        _buildFeatureItem(context, Icons.store, 'Businesses'),
+                        _buildFeatureItem(context, Icons.calendar_month, 'Events'),
+                      ],
+                    ),
+
+                    const SizedBox(height: 48),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom Action Section
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  FilledButton(
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -94,76 +103,73 @@ class _LandingPageState extends State<LandingPage> {
                         ),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.explore,
-                          size: 32,
-                          color: colorScheme.onPrimary,
-                        ),
-                        const SizedBox(width: 16),
+                        const Icon(Icons.explore),
+                        const SizedBox(width: 12),
                         Text(
                           'Start Exploring',
-                          style: theme.textTheme.headlineSmall?.copyWith(
+                          style: theme.textTheme.titleMedium?.copyWith(
                             color: colorScheme.onPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Icon(
-                          Icons.arrow_forward,
-                          size: 28,
-                          color: colorScheme.onPrimary,
-                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
                       ],
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 48),
-
-                // Footer
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: colorScheme.outline.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
+                  const SizedBox(height: 24),
+                  Text(
                     'TownTrek - Your Local Discovery Companion',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.w500,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-
-                const SizedBox(height: 16),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFeatureItem(BuildContext context, IconData icon, String label) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: colorScheme.primary,
+            size: 28,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }
