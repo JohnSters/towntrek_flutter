@@ -24,6 +24,8 @@ class ApiConfig {
   static const String _localNetworkUrl = 'https://192.168.1.102:7125'; 
 
   // Mapbox configuration
+  // WARNING: This key is exposed in the client app. 
+  // Ensure your Mapbox token is restricted to your application bundle ID/package name in the Mapbox dashboard.
   static const String mapboxAccessToken = 'pk.eyJ1Ijoiam9obnN0ZXJzIiwiYSI6ImNtZ2oxeXp2MzBjcTYybHNscDNrYnBuZmoifQ.sRTsjeym9YHrR1cxjHPmXw';
 
   // Dynamic base URL getter
