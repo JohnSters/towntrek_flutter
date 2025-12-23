@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/config/api_config.dart';
 
 /// Reusable page header component with proper mobile design
 /// Features background, centered title, and proper spacing for longer titles
@@ -10,7 +11,7 @@ class PageHeader extends StatelessWidget {
   final bool centerTitle;
   final double height;
   final EdgeInsetsGeometry? padding;
-  final String? backgroundImage; // Added missing parameter
+  final String? backgroundImage;
 
   const PageHeader({
     super.key,
@@ -29,14 +30,24 @@ class PageHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    ImageProvider? bgImage;
+    if (backgroundImage != null) {
+      if (backgroundImage!.startsWith('http')) {
+        bgImage = NetworkImage(backgroundImage!);
+      } else {
+        // Construct full URL if it's a relative path
+        bgImage = NetworkImage('${ApiConfig.baseUrl}$backgroundImage');
+      }
+    }
+
     return Container(
       // Removed fixed height constraint
       // height: height,
       constraints: BoxConstraints(minHeight: height),
       decoration: BoxDecoration(
-        image: backgroundImage != null
+        image: bgImage != null
             ? DecorationImage(
-                image: NetworkImage(backgroundImage!),
+                image: bgImage,
                 fit: BoxFit.cover,
                 colorFilter: ColorFilter.mode(
                   Colors.black.withValues(alpha: 0.5),
@@ -44,7 +55,7 @@ class PageHeader extends StatelessWidget {
                 ),
               )
             : null,
-        gradient: backgroundImage == null
+        gradient: bgImage == null
             ? LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -88,7 +99,7 @@ class PageHeader extends StatelessWidget {
                           title,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: backgroundImage != null ? Colors.white : colorScheme.onSurface,
+                            color: bgImage != null ? Colors.white : colorScheme.onSurface,
                             height: 1.2,
                           ),
                           maxLines: 1,
@@ -102,7 +113,7 @@ class PageHeader extends StatelessWidget {
                           Text(
                             subtitle!,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: backgroundImage != null 
+                              color: bgImage != null 
                                   ? Colors.white.withValues(alpha: 0.9)
                                   : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                               height: 1.3,

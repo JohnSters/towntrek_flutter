@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
+import '../core/config/api_config.dart';
 import '../core/errors/app_error.dart';
 import 'event_details/event_details_screen.dart';
 
@@ -218,7 +219,7 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
     return RefreshIndicator(
       onRefresh: () => _loadEvents(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: _events.length + (_hasNextPage ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _events.length) {
@@ -251,203 +252,237 @@ class _CurrentEventsScreenState extends State<CurrentEventsScreen> {
   Widget _buildEventCard(EventDto event) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    
+    // Construct image URL if available
+    ImageProvider? logoImage;
+    if (event.logoUrl != null && event.logoUrl!.isNotEmpty) {
+      if (event.logoUrl!.startsWith('http')) {
+        logoImage = NetworkImage(event.logoUrl!);
+      } else {
+        logoImage = NetworkImage('${ApiConfig.baseUrl}${event.logoUrl}');
+      }
+    }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Stack(
-        children: [
-          InkWell(
-            onTap: event.shouldGreyOut ? null : () => _showEventDetails(event),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Event name and status
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event.name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: event.shouldGreyOut
-                                ? colorScheme.onSurface.withValues(alpha: 0.5)
-                                : colorScheme.onSurface,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        elevation: 0, // Using 0 for modern flat look with border
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.2),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: event.shouldGreyOut ? null : () => _showEventDetails(event),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Logo/Image (Left Side)
+                    if (logoImage != null)
+                      Container(
+                        width: 80,
+                        height: 80,
+                        margin: const EdgeInsets.only(right: 16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(12),
+                          image: DecorationImage(
+                            image: logoImage,
+                            fit: BoxFit.cover,
                           ),
                         ),
+                      )
+                    else
+                      Container(
+                        width: 80,
+                        height: 80,
+                        margin: const EdgeInsets.only(right: 16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.event,
+                          size: 32,
+                          color: colorScheme.primary,
+                        ),
                       ),
-                      if (event.isPriorityListing)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: event.shouldGreyOut
-                                ? colorScheme.primary.withValues(alpha: 0.05)
-                                : colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Featured',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: event.shouldGreyOut
-                                  ? colorScheme.primary.withValues(alpha: 0.5)
-                                  : colorScheme.primary,
+                      
+                    // Content (Right Side)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Event Name
+                          Text(
+                            event.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
+                              height: 1.2,
+                              color: event.shouldGreyOut
+                                  ? colorScheme.onSurface.withValues(alpha: 0.5)
+                                  : colorScheme.onSurface,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Event type and date
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.category,
-                        size: 16,
-                        color: event.shouldGreyOut
-                            ? colorScheme.onSurface.withValues(alpha: 0.3)
-                            : colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        event.eventType,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: event.shouldGreyOut
-                              ? colorScheme.onSurface.withValues(alpha: 0.3)
-                              : colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(
-                        Icons.calendar_today,
-                        size: 16,
-                        color: event.shouldGreyOut
-                            ? colorScheme.onSurface.withValues(alpha: 0.3)
-                            : colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        event.displayDate,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: event.shouldGreyOut
-                              ? colorScheme.onSurface.withValues(alpha: 0.3)
-                              : colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Description
-                  if (event.description != null && event.description!.isNotEmpty)
-                    Text(
-                      event.description!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: event.shouldGreyOut
-                            ? colorScheme.onSurface.withValues(alpha: 0.4)
-                            : colorScheme.onSurface.withValues(alpha: 0.8),
+                          
+                          // Short Description
+                          if (event.shortDescription != null && event.shortDescription!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              event.shortDescription!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: event.shouldGreyOut
+                                    ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
+                                    : colorScheme.onSurfaceVariant,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          
+                          const SizedBox(height: 12),
+                          
+                          // Metadata Row (Type | Date)
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              _buildMetadataItem(
+                                context, 
+                                Icons.category_outlined, 
+                                event.eventType,
+                                event.shouldGreyOut,
+                              ),
+                              _buildMetadataItem(
+                                context, 
+                                Icons.calendar_today_outlined, 
+                                event.displayDate,
+                                event.shouldGreyOut,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-
-                  const SizedBox(height: 12),
-
-                  // Price and reviews
-                  Row(
-                    children: [
-                      // Price
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: event.shouldGreyOut
-                              ? (event.isFreeEvent
-                                  ? Colors.green.withValues(alpha: 0.05)
-                                  : colorScheme.primary.withValues(alpha: 0.05))
-                              : (event.isFreeEvent
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : colorScheme.primary.withValues(alpha: 0.1)),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          event.displayPrice,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: event.shouldGreyOut
-                                ? (event.isFreeEvent
-                                    ? Colors.green.withValues(alpha: 0.5)
-                                    : colorScheme.primary.withValues(alpha: 0.5))
-                                : (event.isFreeEvent
-                                    ? Colors.green
-                                    : colorScheme.primary),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      // Reviews
-                      if (event.totalReviews > 0) ...[
-                        Icon(
-                          Icons.star,
-                          size: 16,
-                          color: event.shouldGreyOut
-                              ? Colors.amber.withValues(alpha: 0.5)
-                              : Colors.amber,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${event.rating?.toStringAsFixed(1) ?? '0.0'} (${event.totalReviews})',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: event.shouldGreyOut
-                                ? colorScheme.onSurface.withValues(alpha: 0.3)
-                                : colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Overlay for finished events
-          if (event.shouldGreyOut)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surface.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(12),
+                  ],
                 ),
-                child: Center(
+              ),
+              
+              // Price Badge (Top Right Overlay or inside content)
+              // Moving it to bottom right of content area or distinct position
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                   decoration: BoxDecoration(
+                     color: event.isFreeEvent 
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : colorScheme.primary.withValues(alpha: 0.1),
+                     borderRadius: BorderRadius.circular(20),
+                     border: Border.all(
+                       color: event.isFreeEvent
+                          ? Colors.green.withValues(alpha: 0.2)
+                          : colorScheme.primary.withValues(alpha: 0.2),
+                     ),
+                   ),
+                   child: Text(
+                     event.displayPrice,
+                     style: theme.textTheme.bodySmall?.copyWith(
+                       color: event.isFreeEvent ? Colors.green : colorScheme.primary,
+                       fontWeight: FontWeight.bold,
+                     ),
+                   ),
+                ),
+              ),
+
+              // Priority/Featured Badge (Top Left)
+              if (event.isPriorityListing && !event.shouldGreyOut)
+                Positioned(
+                  top: 0,
+                  left: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: colorScheme.onSurface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(8),
+                      color: colorScheme.tertiary,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
+                      ),
                     ),
                     child: Text(
-                      'Event Finished',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.surface,
+                      'Featured',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onTertiary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-        ],
+                
+              // Finished Overlay
+              if (event.shouldGreyOut)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Finished',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+  
+  Widget _buildMetadataItem(BuildContext context, IconData icon, String label, bool isGreyedOut) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final color = isGreyedOut 
+        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5) 
+        : colorScheme.onSurfaceVariant;
+        
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: color,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 

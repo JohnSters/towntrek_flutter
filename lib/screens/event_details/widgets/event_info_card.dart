@@ -29,60 +29,75 @@ class EventInfoCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-               // Date and Time Chips
-               Wrap(
-                 spacing: 8,
-                 runSpacing: 8,
-                 children: [
-                   _buildChip(
-                     context,
-                     Icons.calendar_today,
-                     event.displayDate,
-                     colorScheme.primary,
-                     colorScheme.primaryContainer,
-                   ),
-                   if (event.startTime != null)
-                     _buildChip(
-                       context,
-                       Icons.access_time,
-                       '${event.startTime} ${event.endTime != null ? '- ${event.endTime}' : ''}',
-                       colorScheme.secondary,
-                       colorScheme.secondaryContainer,
-                     ),
-                   _buildChip(
-                     context,
-                     Icons.attach_money,
-                     event.displayPrice,
-                     event.isFreeEvent ? Colors.green : colorScheme.tertiary,
-                     event.isFreeEvent ? Colors.green.withValues(alpha: 0.1) : colorScheme.tertiaryContainer,
-                   ),
-                   if (event.ageRestrictions != null && event.ageRestrictions!.isNotEmpty)
-                      _buildChip(
-                       context,
-                       Icons.warning_amber_rounded,
-                       event.ageRestrictions!,
-                       Colors.orange,
-                       Colors.orange.withValues(alpha: 0.1),
-                     ),
-                 ],
-               ),
+              // Event Name
+              Text(
+                event.name,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              
+              // Short Description
+              if (event.shortDescription != null && event.shortDescription!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  event.shortDescription!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 16),
+
+              // Date and Time Chips
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildChip(
+                    context,
+                    Icons.calendar_today,
+                    event.displayDate,
+                    colorScheme.primary,
+                    colorScheme.primaryContainer,
+                  ),
+                  if (event.startTime != null)
+                    _buildChip(
+                      context,
+                      Icons.access_time,
+                      '${event.startTime} ${event.endTime != null ? '- ${event.endTime}' : ''}',
+                      colorScheme.secondary,
+                      colorScheme.secondaryContainer,
+                    ),
+                  _buildChip(
+                    context,
+                    Icons.attach_money,
+                    event.displayPrice,
+                    event.isFreeEvent ? Colors.green : colorScheme.tertiary,
+                    event.isFreeEvent ? Colors.green.withValues(alpha: 0.1) : colorScheme.tertiaryContainer,
+                  ),
+                  if (event.ageRestrictions != null && event.ageRestrictions!.isNotEmpty)
+                    _buildChip(
+                      context,
+                      Icons.warning_amber_rounded,
+                      event.ageRestrictions!,
+                      Colors.orange,
+                      Colors.orange.withValues(alpha: 0.1),
+                    ),
+                ],
+              ),
               
               const SizedBox(height: 20),
               
               // Features Grid (Outdoor, Parking, etc)
               if (_hasFeatures(event)) ...[
-                 _buildFeaturesGrid(context, event),
-                 const SizedBox(height: 20),
+                _buildFeaturesGrid(context, event),
+                const SizedBox(height: 20),
               ],
 
-              Text(
-                'About',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              
+              // Full Description (About)
               if (event.description?.isNotEmpty == true)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -99,35 +114,35 @@ class EventInfoCard extends StatelessWidget {
                   ),
                 ),
 
-               if (event.ticketInfo != null && event.ticketInfo!.isNotEmpty) ...[
-                 const SizedBox(height: 16),
-                  Text(
-                    'Ticket Info',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+              if (event.ticketInfo != null && event.ticketInfo!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Ticket Info',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    event.ticketInfo!,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-               ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  event.ticketInfo!,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
                
-               if (event.eventProgram != null && event.eventProgram!.isNotEmpty) ...[
-                 const SizedBox(height: 16),
-                  Text(
-                    'Program',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+              if (event.eventProgram != null && event.eventProgram!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Program',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    event.eventProgram!,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-               ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  event.eventProgram!,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
             ],
           ),
         ),
@@ -217,4 +232,3 @@ class EventInfoCard extends StatelessWidget {
     );
   }
 }
-

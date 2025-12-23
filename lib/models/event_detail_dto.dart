@@ -7,6 +7,7 @@ class EventDetailDto {
   final int id;
   final String name;
   final String? description;
+  final String? shortDescription;
   final String eventType;
   final DateTime startDate;
   final DateTime? endDate;
@@ -50,6 +51,7 @@ class EventDetailDto {
     required this.id,
     required this.name,
     this.description,
+    this.shortDescription,
     required this.eventType,
     required this.startDate,
     this.endDate,
@@ -94,6 +96,7 @@ class EventDetailDto {
       id: json['id'] as int,
       name: json['name'] as String,
       description: json['description'] as String?,
+      shortDescription: json['shortDescription'] as String? ?? json['ShortDescription'] as String?,
       eventType: json['eventType'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate'] as String) : null,
@@ -143,6 +146,7 @@ class EventDetailDto {
       'id': id,
       'name': name,
       'description': description,
+      'shortDescription': shortDescription,
       'eventType': eventType,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate?.toIso8601String(),
@@ -187,6 +191,7 @@ class EventDetailDto {
     int? id,
     String? name,
     String? description,
+    String? shortDescription,
     String? eventType,
     DateTime? startDate,
     DateTime? endDate,
@@ -228,6 +233,7 @@ class EventDetailDto {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      shortDescription: shortDescription ?? this.shortDescription,
       eventType: eventType ?? this.eventType,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,

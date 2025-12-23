@@ -3,6 +3,7 @@ class EventDto {
   final int id;
   final String name;
   final String? description;
+  final String? shortDescription;
   final String eventType;
   final DateTime startDate;
   final DateTime? endDate;
@@ -25,6 +26,7 @@ class EventDto {
     required this.id,
     required this.name,
     this.description,
+    this.shortDescription,
     required this.eventType,
     required this.startDate,
     this.endDate,
@@ -50,7 +52,10 @@ class EventDto {
     return EventDto(
       id: json['Id'] as int? ?? json['id'] as int,
       name: json['Name'] as String? ?? json['name'] as String,
-      description: json['ShortDescription'] as String? ?? json['Description'] as String? ?? json['description'] as String?,
+      // Map Description if available (from detail view)
+      description: json['Description'] as String? ?? json['description'] as String?,
+      // Map ShortDescription explicitly
+      shortDescription: json['ShortDescription'] as String? ?? json['shortDescription'] as String?,
       eventType: json['EventType'] as String? ?? json['eventType'] as String,
       startDate: DateTime.parse(json['StartDate'] as String? ?? json['startDate'] as String),
       endDate: json['EndDate'] != null ? DateTime.parse(json['EndDate'] as String) :
@@ -80,6 +85,7 @@ class EventDto {
       'id': id,
       'name': name,
       'description': description,
+      'shortDescription': shortDescription,
       'eventType': eventType,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate?.toIso8601String(),
@@ -105,6 +111,7 @@ class EventDto {
     int? id,
     String? name,
     String? description,
+    String? shortDescription,
     String? eventType,
     DateTime? startDate,
     DateTime? endDate,
@@ -127,6 +134,7 @@ class EventDto {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      shortDescription: shortDescription ?? this.shortDescription,
       eventType: eventType ?? this.eventType,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
