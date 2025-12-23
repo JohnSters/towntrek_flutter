@@ -1,4 +1,4 @@
-package com.example.towntrek_flutter
+package za.co.towntrek.app
 
 import io.flutter.embedding.android.FlutterActivity
 

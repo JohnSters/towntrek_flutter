@@ -22,3 +22,4 @@ export 'service_dto.dart';
 export 'service_detail_dto.dart';
 export 'service_category_dto.dart';
 export 'service_list_response.dart';
+export 'landing_stats_dto.dart';

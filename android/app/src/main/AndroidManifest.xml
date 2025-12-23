@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for API calls in release builds (Google Play) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Towntrek"
         android:name="${applicationName}"

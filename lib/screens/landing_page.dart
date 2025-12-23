@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../core/core.dart';
+import '../repositories/repositories.dart';
 import 'town_loader_screen.dart';
 
 class LandingPage extends StatefulWidget {
@@ -10,7 +12,40 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
-  // Removed animations for better performance on older devices
+  int _businessCount = 0;
+  int _serviceCount = 0;
+  int _eventCount = 0;
+  bool _isLoadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final statsRepo = serviceLocator.statsRepository;
+      final stats = await statsRepo.getLandingStats();
+
+      if (mounted) {
+        setState(() {
+          _businessCount = stats.businessCount;
+          _serviceCount = stats.serviceCount;
+          _eventCount = stats.eventCount;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      // Silently fail or log error, keep counts at 0
+      debugPrint('Error loading stats: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingStats = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,14 +109,76 @@ class _LandingPageState extends State<LandingPage> {
 
                     const SizedBox(height: 48),
 
-                    // Feature Icons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildFeatureItem(context, Icons.location_city, 'Businesses'),
-                        _buildFeatureItem(context, Icons.build, 'Services'),
-                        _buildFeatureItem(context, Icons.calendar_month, 'Events'),
-                      ],
+                    // Feature Grid (2x2)
+                    AspectRatio(
+                      aspectRatio: 1.0, // Make the whole grid square
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _buildFeatureTile(
+                                    context,
+                                    icon: Icons.store_mall_directory,
+                                    label: 'Businesses',
+                                    count: _businessCount,
+                                    color: const Color(0xFF42B0D5), // Blue
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(24),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: _buildFeatureTile(
+                                    context,
+                                    icon: Icons.handyman,
+                                    label: 'Services',
+                                    count: _serviceCount,
+                                    color: const Color(0xFFFDB750), // Yellow/Orange
+                                    borderRadius: const BorderRadius.only(
+                                      topRight: Radius.circular(24),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _buildFeatureTile(
+                                    context,
+                                    icon: Icons.calendar_month,
+                                    label: 'Events',
+                                    count: _eventCount,
+                                    color: const Color(0xFFFF6F61), // Red/Coral
+                                    borderRadius: const BorderRadius.only(
+                                      bottomLeft: Radius.circular(24),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: _buildFeatureTile(
+                                    context,
+                                    icon: Icons.more_horiz,
+                                    label: 'And More',
+                                    count: null, // No count for "More"
+                                    color: const Color(0xFF6BBF59), // Green
+                                    borderRadius: const BorderRadius.only(
+                                      bottomRight: Radius.circular(24),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     const SizedBox(height: 48),
@@ -143,33 +240,59 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  Widget _buildFeatureItem(BuildContext context, IconData icon, String label) {
+  Widget _buildFeatureTile(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    int? count,
+    BorderRadius? borderRadius,
+  }) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: borderRadius ?? BorderRadius.circular(0),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
             icon,
-            color: colorScheme.primary,
-            size: 28,
+            color: Colors.white,
+            size: 48,
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-        ),
-      ],
+          if (count != null && !_isLoadingStats) ...[
+            const SizedBox(height: 4),
+            Text(
+              '$count+',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+            ),
+          ] else if (count != null && _isLoadingStats) ...[
+            const SizedBox(height: 4),
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

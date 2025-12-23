@@ -10,4 +10,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Updated `CurrentEventsScreen` event card layout to move Entry Fee to the top right and improve content organization to prevent overlapping.
 - Refactored event card metadata into reusable pill widgets.
+- Landing page stats now use the dedicated `GET /api/stats/summary` endpoint (avoids 400 errors before a town is selected).
+- Fixed Android release builds by adding `INTERNET` permission to the main manifest (required for Azure API access).
 

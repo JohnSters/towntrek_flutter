@@ -18,6 +18,7 @@ class ServiceLocator {
   late final TownApiService _townApiService;
   late final EventApiService _eventApiService;
   late final ServiceApiService _serviceApiService;
+  late final StatsApiService _statsApiService;
   late final GeolocationService _geolocationService;
   late final MapboxService _mapboxService;
   late final NavigationService _navigationService;
@@ -28,6 +29,7 @@ class ServiceLocator {
   late final TownRepository _townRepository;
   late final EventRepository _eventRepository;
   late final ServiceRepository _serviceRepository;
+  late final StatsRepository _statsRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -42,6 +44,7 @@ class ServiceLocator {
     _townApiService = TownApiService(_apiClient);
     _eventApiService = EventApiService(_apiClient);
     _serviceApiService = ServiceApiService(_apiClient);
+    _statsApiService = StatsApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _mapboxService = MapboxServiceImpl();
     _navigationService = NavigationServiceImpl(_geolocationService, _mapboxService);
@@ -51,6 +54,7 @@ class ServiceLocator {
     _townRepository = TownRepositoryImpl(_townApiService);
     _eventRepository = EventRepositoryImpl(_eventApiService);
     _serviceRepository = ServiceRepositoryImpl(_serviceApiService);
+    _statsRepository = StatsRepositoryImpl(_statsApiService);
 
     _isInitialized = true;
   }
@@ -106,6 +110,12 @@ class ServiceLocator {
   ServiceRepository get serviceRepository {
     _ensureInitialized();
     return _serviceRepository;
+  }
+
+  /// Get the stats repository
+  StatsRepository get statsRepository {
+    _ensureInitialized();
+    return _statsRepository;
   }
 
   /// Get the geolocation service

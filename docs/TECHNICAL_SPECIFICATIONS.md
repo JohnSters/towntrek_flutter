@@ -236,7 +236,7 @@ dev_dependencies:
 - **Minimum SDK**: API 21 (Android 5.0)
 - **Target SDK**: API 34 (Android 14)
 - **Java Version**: 11
-- **Application ID**: com.example.towntrek_flutter
+- **Application ID**: za.co.towntrek.app
 - **Permissions**:
   - INTERNET
   - ACCESS_FINE_LOCATION
