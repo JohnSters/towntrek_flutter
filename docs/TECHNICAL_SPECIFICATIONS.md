@@ -191,6 +191,8 @@ lib/
 ## Dependencies
 
 ### Core Dependencies (pubspec.yaml)
+Note: `pubspec.yaml` is the source of truth for exact dependency versions. The snippet below is illustrative and may drift over time.
+
 ```yaml
 dependencies:
   flutter:
@@ -209,8 +211,7 @@ dependencies:
   path_provider: ^2.1.2
 
   # Location & Maps
-  geolocator: ^10.1.0
-  geocoding: ^2.1.1
+  geolocator: ^14.0.2
 
   # UI & UX
   flutter_rating_bar: ^4.0.1

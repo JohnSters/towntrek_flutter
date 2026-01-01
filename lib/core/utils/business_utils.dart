@@ -5,7 +5,7 @@ class BusinessUtils {
   static bool isBusinessCurrentlyOpen(List<OperatingHourDto> operatingHours) {
     final now = DateTime.now();
     final currentDay = DateFormat('EEEE').format(now); // Monday, Tuesday, etc.
-    final currentTime = DateFormat('HH:mm').format(now);
+    final nowMinutes = now.hour * 60 + now.minute;
 
     // Find today's operating hours
     final todayHours = operatingHours.firstWhere(
@@ -21,9 +21,17 @@ class BusinessUtils {
       return false;
     }
 
-    // Check if current time is within operating hours
-    return currentTime.compareTo(todayHours.openTime!) >= 0 &&
-           currentTime.compareTo(todayHours.closeTime!) <= 0;
+    final openMinutes = _parseApiTimeToMinutes(todayHours.openTime);
+    final closeMinutes = _parseApiTimeToMinutes(todayHours.closeTime);
+    if (openMinutes == null || closeMinutes == null) return false;
+
+    // Normal case: same-day range
+    if (closeMinutes >= openMinutes) {
+      return nowMinutes >= openMinutes && nowMinutes <= closeMinutes;
+    }
+
+    // Overnight range (e.g. 20:00 - 02:00)
+    return nowMinutes >= openMinutes || nowMinutes <= closeMinutes;
   }
 
   static String formatDayOfWeek(String dayOfWeek) {
@@ -131,6 +139,27 @@ class BusinessUtils {
     return business.facebook != null ||
            business.instagram != null ||
            business.whatsApp != null;
+  }
+
+  static int? _parseApiTimeToMinutes(String? time) {
+    if (time == null) return null;
+    final normalized = _normalizeApiTime(time);
+    final parts = normalized.split(':');
+    if (parts.length < 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return h * 60 + m;
+  }
+
+  static String _normalizeApiTime(String time) {
+    // Accepts: "09:00", "09:00:00", "09:00:00.0000000" and normalizes to "HH:mm"
+    final main = time.trim().split('.').first;
+    final parts = main.split(':');
+    if (parts.length < 2) return time.trim();
+    final hh = (int.tryParse(parts[0]) ?? 0).toString().padLeft(2, '0');
+    final mm = (int.tryParse(parts[1]) ?? 0).toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 }
 

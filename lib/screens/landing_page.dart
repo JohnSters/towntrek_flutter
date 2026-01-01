@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../core/core.dart';
-import '../repositories/repositories.dart';
 import 'town_loader_screen.dart';
 
 class LandingPage extends StatefulWidget {

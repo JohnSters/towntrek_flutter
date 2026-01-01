@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:geolocator/geolocator.dart';
 import '../models/town_dto.dart';
@@ -26,22 +27,29 @@ class GeolocationServiceImpl implements GeolocationService {
   @override
   Future<Result<bool>> requestLocationPermission() async {
     try {
-      final permission = await Geolocator.checkPermission();
+      var permission = await Geolocator.checkPermission();
 
       if (permission == LocationPermission.denied) {
-        final requestedPermission = await Geolocator.requestPermission();
+        permission = await Geolocator.requestPermission();
+      }
 
-        if (requestedPermission == LocationPermission.denied ||
-            requestedPermission == LocationPermission.deniedForever) {
-          return Result.failure('Location permission denied');
-        }
+      if (permission == LocationPermission.denied) {
+        return Result.failure('Location permission denied');
+      }
+
+      if (permission == LocationPermission.unableToDetermine) {
+        return Result.failure(
+          'Unable to determine your location permission status. Please try again or select a town manually.'
+        );
       }
 
       if (permission == LocationPermission.deniedForever) {
-        return Result.failure('Location permission permanently denied. Please enable it in settings.');
+        return Result.failure(
+          'Location permission permanently denied. Please enable it in settings.'
+        );
       }
 
-      return Result.success(true);
+      return Result.success(true); // whileInUse / always
     } catch (e) {
       return Result.failure('Failed to request location permission: $e');
     }
@@ -53,23 +61,54 @@ class GeolocationServiceImpl implements GeolocationService {
       // Check if location services are enabled
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        return Result.failure('Location services are disabled. Please enable them in settings.');
+        return Result.failure(
+          'Location services are disabled. Please enable them in settings.'
+        );
       }
 
       // Check permission
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        final permissionResult = await requestLocationPermission();
+        if (permissionResult.isFailure) {
+          return Result.failure(permissionResult.error!);
+        }
+        permission = await Geolocator.checkPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        return Result.failure(
+          'Location permission permanently denied. Please enable it in settings.'
+        );
+      }
+
+      if (permission == LocationPermission.unableToDetermine) {
+        return Result.failure(
+          'Unable to determine your location permission status. Please try again or select a town manually.'
+        );
+      }
+
+      if (permission == LocationPermission.denied) {
         return Result.failure('Location permission not granted');
       }
 
       // Get current position with high accuracy
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
-      );
+      Position position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } on TimeoutException {
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown != null) {
+          position = lastKnown;
+        } else {
+          return Result.failure('Timed out while trying to get your location.');
+        }
+      }
 
       return Result.success(position);
     } catch (e) {

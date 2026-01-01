@@ -31,6 +31,13 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Help IDEs/tools resolve AndroidManifest.xml placeholders even when they don't load Flutter/Gradle context.
+        manifestPlaceholders["applicationName"] = "android.app.Application"
+        manifestPlaceholders["minSdkVersion"] = flutter.minSdkVersion
+        manifestPlaceholders["targetSdkVersion"] = flutter.targetSdkVersion
+        manifestPlaceholders["versionCode"] = flutter.versionCode
+        manifestPlaceholders["versionName"] = flutter.versionName
     }
 
     // Release signing (required for Google Play uploads)

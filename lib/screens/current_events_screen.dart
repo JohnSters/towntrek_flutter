@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
-import '../core/config/api_config.dart';
 import '../core/errors/app_error.dart';
 import 'event_details/event_details_screen.dart';
 

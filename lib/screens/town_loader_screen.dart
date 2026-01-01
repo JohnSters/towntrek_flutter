@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
@@ -23,6 +24,7 @@ class _TownLoaderScreenState extends State<TownLoaderScreen> {
 
   bool _isLocationLoading = true;
   AppError? _error;
+  String? _locationFailureMessage;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _TownLoaderScreenState extends State<TownLoaderScreen> {
     setState(() {
       _isLocationLoading = true;
       _error = null;
+      _locationFailureMessage = null;
     });
 
     try {
@@ -61,6 +64,7 @@ class _TownLoaderScreenState extends State<TownLoaderScreen> {
         if (mounted) {
           setState(() {
             _isLocationLoading = false;
+            _locationFailureMessage = nearestTownResult.error;
           });
         }
       }
@@ -193,6 +197,66 @@ class _TownLoaderScreenState extends State<TownLoaderScreen> {
             ),
             textAlign: TextAlign.center,
           ),
+          if (_locationFailureMessage != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 320),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.15),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 18,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          _locationFailureMessage!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    children: [
+                      if (_locationFailureMessage!.toLowerCase().contains('disabled'))
+                        TextButton(
+                          onPressed: () async {
+                            await Geolocator.openLocationSettings();
+                          },
+                          child: const Text('Open Location Settings'),
+                        ),
+                      if (_locationFailureMessage!.toLowerCase().contains('permanently denied'))
+                        TextButton(
+                          onPressed: () async {
+                            await Geolocator.openAppSettings();
+                          },
+                          child: const Text('Open App Settings'),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: _detectLocationAndLoadTown,

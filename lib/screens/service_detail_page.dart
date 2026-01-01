@@ -9,6 +9,7 @@ import '../core/widgets/page_header.dart';
 import '../core/errors/app_error.dart';
 import '../core/errors/error_handler.dart';
 import '../core/utils/url_utils.dart';
+import '../core/utils/business_utils.dart';
 
 class ServiceDetailPage extends StatefulWidget {
   final int serviceId;
@@ -182,6 +183,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   Widget _buildStatusIndicator(ServiceDetailDto service) {
     final theme = Theme.of(context);
     final isCurrentlyOpen = _isServiceCurrentlyOpen(service.operatingHours);
+    final closingText = isCurrentlyOpen ? _getServiceClosingTimeText(service.operatingHours) : '';
 
     return Container(
       width: double.infinity,
@@ -210,6 +212,25 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
               letterSpacing: 0.5,
             ),
           ),
+          if (isCurrentlyOpen && closingText.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1B5E20).withValues(alpha: 0.4),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              closingText,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF2E7D32),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -332,13 +353,12 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   }
 
   Widget _buildOperatingHoursSection(List<ServiceOperatingHourDto> operatingHours) {
-    // Reuse similar logic to BusinessDetailsPage but adapted for ServiceOperatingHourDto
-    // Implementation omitted for brevity, similar structure
-    // But I will implement a simple version
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     if (operatingHours.isEmpty) return const SizedBox.shrink();
+
+    final sortedHours = [...operatingHours]..sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -369,7 +389,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              ...operatingHours.map((hour) => Padding(
+              ...sortedHours.map((hour) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
@@ -485,8 +505,29 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   }
 
   bool _isServiceCurrentlyOpen(List<ServiceOperatingHourDto> hours) {
-    // Simplified logic
-    return false; // Placeholder
+    final now = DateTime.now();
+    final todayIndex = _currentServiceDayIndex(now);
+    final nowMinutes = now.hour * 60 + now.minute;
+
+    final todayHours = hours.cast<ServiceOperatingHourDto?>().firstWhere(
+      (h) => h?.dayOfWeek == todayIndex,
+      orElse: () => null,
+    );
+
+    if (todayHours == null) return false;
+    if (!todayHours.isAvailable) return false;
+
+    final startMinutes = _parseApiTimeToMinutes(todayHours.startTime);
+    final endMinutes = _parseApiTimeToMinutes(todayHours.endTime);
+    if (startMinutes == null || endMinutes == null) return false;
+
+    // Normal case: same-day range
+    if (endMinutes >= startMinutes) {
+      return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
+    }
+
+    // Overnight range (e.g. 20:00 - 02:00)
+    return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
   }
 
   String _formatDayOfWeek(int day) {
@@ -496,8 +537,54 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   }
 
   String _formatTime(String time) {
-    // Basic formatting
-    return time;
+    return BusinessUtils.formatTime(_normalizeApiTime(time));
+  }
+
+  String _getServiceClosingTimeText(List<ServiceOperatingHourDto> hours) {
+    try {
+      final now = DateTime.now();
+      final todayIndex = _currentServiceDayIndex(now);
+
+      final todayHours = hours.cast<ServiceOperatingHourDto?>().firstWhere(
+        (h) => h?.dayOfWeek == todayIndex,
+        orElse: () => null,
+      );
+
+      if (todayHours == null) return '';
+      if (!todayHours.isAvailable) return '';
+      if (todayHours.endTime == null || todayHours.endTime!.trim().isEmpty) return '';
+
+      return 'Closes at ${BusinessUtils.formatTime(_normalizeApiTime(todayHours.endTime!))}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  int _currentServiceDayIndex(DateTime now) {
+    // Align with backend convention used elsewhere in the app: 0=Sunday..6=Saturday
+    final weekday = now.weekday; // 1=Mon..7=Sun
+    return weekday == DateTime.sunday ? 0 : weekday; // Mon=1..Sat=6, Sun=0
+  }
+
+  int? _parseApiTimeToMinutes(String? time) {
+    if (time == null) return null;
+    final normalized = _normalizeApiTime(time);
+    final parts = normalized.split(':');
+    if (parts.length < 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return h * 60 + m;
+  }
+
+  String _normalizeApiTime(String time) {
+    // Accepts: "09:00", "09:00:00", "09:00:00.0000000" and normalizes to "HH:mm"
+    final main = time.trim().split('.').first;
+    final parts = main.split(':');
+    if (parts.length < 2) return time.trim();
+    final hh = (int.tryParse(parts[0]) ?? 0).toString().padLeft(2, '0');
+    final mm = (int.tryParse(parts[1]) ?? 0).toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 }
 
