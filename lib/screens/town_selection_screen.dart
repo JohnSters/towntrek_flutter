@@ -322,112 +322,182 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Town icon with background
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [colorScheme.primary, colorScheme.secondary],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.location_city,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-
-              const SizedBox(width: 16),
-
-              // Town details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Town name
-                    Text(
-                      town.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Town icon with background
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [colorScheme.primary, colorScheme.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    child: const Icon(
+                      Icons.location_city,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
 
-                    const SizedBox(height: 4),
+                  const SizedBox(width: 16),
 
-                    // Province and postal code
-                    Row(
+                  // Town details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.map,
-                          size: 14,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
+                        // Town name
                         Text(
-                          town.province,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                          town.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
                           ),
                         ),
-                        if (town.postalCode != null) ...[
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 8),
-                            width: 3,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          Text(
-                            town.postalCode!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
+
+                        const SizedBox(height: 4),
+
+                        // Province and postal code
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.map,
+                              size: 14,
                               color: colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              town.province,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            if (town.postalCode != null) ...[
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 8),
+                                width: 3,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              Text(
+                                town.postalCode!,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ),
+                  ),
 
-                    const SizedBox(height: 4),
+                  // Arrow indicator
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
 
-                    // Business count
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.business,
-                          size: 14,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${town.businessCount} businesses',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+              const SizedBox(height: 12),
+
+              // Stats Pills - Full width below
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildCountPill(
+                      context,
+                      Icons.business_rounded,
+                      '${town.businessCount}',
+                      'Business',
+                      colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCountPill(
+                      context,
+                      Icons.handyman_rounded,
+                      '${town.servicesCount}',
+                      'Services',
+                      colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCountPill(
+                      context,
+                      Icons.event_rounded,
+                      '${town.eventsCount}',
+                      'Active Events',
+                      colorScheme.tertiary,
                     ),
                   ],
                 ),
               ),
-
-              // Arrow indicator
-              Icon(
-                Icons.chevron_right,
-                color: colorScheme.onSurfaceVariant,
-              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCountPill(
+    BuildContext context,
+    IconData icon,
+    String count,
+    String label,
+    Color color,
+  ) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            count,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

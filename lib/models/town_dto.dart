@@ -9,6 +9,8 @@ class TownDto {
   final double? latitude;
   final double? longitude;
   final int businessCount;
+  final int servicesCount;
+  final int eventsCount;
 
   const TownDto({
     required this.id,
@@ -20,6 +22,8 @@ class TownDto {
     this.latitude,
     this.longitude,
     required this.businessCount,
+    this.servicesCount = 0,
+    this.eventsCount = 0,
   });
 
   /// Creates a TownDto from JSON
@@ -34,6 +38,8 @@ class TownDto {
       latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
       longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
       businessCount: json['businessCount'] as int,
+      servicesCount: (json['serviceCount'] as int?) ?? 0,
+      eventsCount: (json['eventCount'] as int?) ?? 0,
     );
   }
 
@@ -49,6 +55,8 @@ class TownDto {
       'latitude': latitude,
       'longitude': longitude,
       'businessCount': businessCount,
+      'serviceCount': servicesCount,
+      'eventCount': eventsCount,
     };
   }
 
@@ -63,6 +71,8 @@ class TownDto {
     double? latitude,
     double? longitude,
     int? businessCount,
+    int? servicesCount,
+    int? eventsCount,
   }) {
     return TownDto(
       id: id ?? this.id,
@@ -74,12 +84,14 @@ class TownDto {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       businessCount: businessCount ?? this.businessCount,
+      servicesCount: servicesCount ?? this.servicesCount,
+      eventsCount: eventsCount ?? this.eventsCount,
     );
   }
 
   @override
   String toString() {
-    return 'TownDto(id: $id, name: $name, province: $province, businessCount: $businessCount)';
+    return 'TownDto(id: $id, name: $name, province: $province, businessCount: $businessCount, servicesCount: $servicesCount, eventsCount: $eventsCount)';
   }
 
   @override

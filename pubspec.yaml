@@ -1,7 +1,7 @@
 name: towntrek_flutter
 description: "Local small town discovery app"
 publish_to: 'none'
-version: 0.1.0+2
+version: 0.1.0+3
 
 environment:
   sdk: ^3.9.2
@@ -30,7 +30,9 @@ dependencies:
   url_launcher: ^6.2.5
 
   # Mapbox Maps SDK
-  mapbox_maps_flutter: ^2.11.0
+  # NOTE: Pinned due to Android build failures with newer versions under current toolchain.
+  # If you want to upgrade later, do so intentionally and validate `flutter build apk`.
+  mapbox_maps_flutter: 2.11.0
 
   # Internationalization for date formatting
   intl: ^0.20.2
@@ -38,12 +40,13 @@ dependencies:
   # SVG Support
   flutter_svg: ^2.0.9
 
-  http: any
+  # Avoid `any` to prevent accidental major upgrades that can break builds at random.
+  http: ^1.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
   android: "launcher_icon"
