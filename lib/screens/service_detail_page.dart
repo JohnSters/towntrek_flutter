@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../core/utils/external_link_launcher.dart';
 import '../core/core.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
@@ -493,15 +493,12 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   }
 
   Future<void> _launchUrl(String urlString) async {
-    // Basic implementation
-    try {
-      final url = Uri.parse(urlString.startsWith('http') || urlString.startsWith('tel') || urlString.startsWith('mailto') 
-          ? urlString 
-          : 'https://$urlString');
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      }
-    } catch (_) {}
+    if (!mounted) return;
+    await ExternalLinkLauncher.openRaw(
+      context,
+      urlString,
+      normalizeHttp: true,
+    );
   }
 
   bool _isServiceCurrentlyOpen(List<ServiceOperatingHourDto> hours) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../models/models.dart';
+import '../../../core/utils/external_link_launcher.dart';
 import '../../../core/utils/business_utils.dart';
 
 class ContactActionsSection extends StatelessWidget {
@@ -222,39 +222,19 @@ class ContactActionsSection extends StatelessWidget {
   }
 
   Future<void> _launchPhone(BuildContext context, String phoneNumber) async {
-    final url = 'tel:$phoneNumber';
-    await _launchUrl(context, url);
+    await ExternalLinkLauncher.callPhone(context, phoneNumber);
   }
 
   Future<void> _launchEmail(BuildContext context, String email) async {
-    final url = 'mailto:$email';
-    await _launchUrl(context, url);
+    await ExternalLinkLauncher.sendEmail(context, email);
   }
 
   Future<void> _launchWebsite(BuildContext context, String website) async {
-    final url = website.startsWith('http') ? website : 'https://$website';
-    await _launchUrl(context, url);
+    await ExternalLinkLauncher.openWebsite(context, website);
   }
 
   Future<void> _launchUrl(BuildContext context, String urlString) async {
-    try {
-      final url = Uri.parse(urlString);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not launch $urlString')),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid URL format')),
-        );
-      }
-    }
+    await ExternalLinkLauncher.openRaw(context, urlString);
   }
 }
 

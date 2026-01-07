@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:url_launcher/url_launcher.dart';
 import '../core/utils/result.dart';
 import '../models/models.dart';
@@ -108,39 +109,37 @@ class NavigationServiceImpl implements NavigationService {
       } else {
         // Desktop/web - Google Maps
         url = 'https://www.google.com/maps/dir/?api=1&destination=$destinationLat,$destinationLng';
-        if (destinationName != null) {
-          url += '&destination_place_id=${Uri.encodeComponent(destinationName)}';
-        }
       }
 
       final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        return Result.success(true);
-      } else {
-        // Fallback to Google Maps web
-        final fallbackUrl = Uri.parse(
-          'https://www.google.com/maps/dir/?api=1&destination=$destinationLat,$destinationLng'
-        );
-        if (await canLaunchUrl(fallbackUrl)) {
-          await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
-          return Result.success(true);
-        } else {
-          return Result.failure('No navigation app available');
-        }
-      }
+
+      // Avoid canLaunchUrl false-negatives (Android 11+ package visibility / scheme queries).
+      // Try launching directly; fall back to Google Maps web if it fails.
+      final primaryLaunched = await _tryLaunchExternal(uri);
+      if (primaryLaunched) return Result.success(true);
+
+      // Fallback to Google Maps web directions
+      final fallbackUri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$destinationLat,$destinationLng',
+      );
+      final fallbackLaunched = await _tryLaunchExternal(fallbackUri);
+      if (fallbackLaunched) return Result.success(true);
+
+      return Result.failure('No navigation app available');
     } catch (e) {
       return Result.failure('Failed to open navigation: $e');
     }
   }
 
-  bool _isIOS() {
-    // This is a simplified check - in real app, use platform detection
-    return false; // TODO: Implement proper platform detection
+  Future<bool> _tryLaunchExternal(Uri uri) async {
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
+    }
   }
 
-  bool _isAndroid() {
-    // This is a simplified check - in real app, use platform detection
-    return false; // TODO: Implement proper platform detection
-  }
+  bool _isIOS() => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  bool _isAndroid() => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 }

@@ -12,6 +12,7 @@ import 'widgets/event_image_gallery.dart';
 import 'widgets/event_location_section.dart';
 import 'widgets/event_contact_section.dart';
 import 'widgets/event_reviews_section.dart';
+import 'event_all_reviews_screen.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final int eventId;
@@ -179,9 +180,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
              child: EventReviewsSection(
                reviews: event.reviews,
                onViewAllPressed: () {
-                 // TODO: Navigate to full reviews list
-                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('View all reviews coming soon')),
+                 Navigator.of(context).push(
+                   MaterialPageRoute(
+                     builder: (_) => EventAllReviewsScreen(
+                       eventName: event.name,
+                       reviews: event.reviews,
+                     ),
+                   ),
                  );
                },
              ),

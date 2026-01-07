@@ -10,24 +10,106 @@ class EventContactSection extends StatelessWidget {
     required this.event,
   });
 
-  Future<void> _launchUrl(String urlString) async {
-    final url = Uri.parse(urlString);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+  Future<void> _launchExternal(BuildContext context, Uri uri) async {
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not launch ${uri.toString()}')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid or unsupported link')),
+        );
+      }
     }
   }
 
-  Future<void> _makeCall(String phoneNumber) async {
-    final url = Uri.parse('tel:$phoneNumber');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    }
+  String? _normalizeWebUrl(String? urlString) {
+    if (urlString == null) return null;
+    final trimmed = urlString.trim();
+    if (trimmed.isEmpty) return null;
+
+    // Already has a scheme (http/https)
+    final parsed = Uri.tryParse(trimmed);
+    if (parsed != null && parsed.hasScheme) return trimmed;
+
+    // Common user-entered formats (e.g. www.example.com)
+    return 'https://$trimmed';
   }
 
-  Future<void> _sendEmail(String email) async {
-    final url = Uri.parse('mailto:$email');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+  bool _looksLikeUrl(String value) {
+    final v = value.trim().toLowerCase();
+    if (v.startsWith('http://') || v.startsWith('https://')) return true;
+    if (v.startsWith('www.')) return true;
+    // Very small heuristic: "domain.tld/..." or "domain.tld"
+    return v.contains('.') && !v.contains(' ');
+  }
+
+  Future<void> _openWebsite(BuildContext context, String website) async {
+    final normalized = _normalizeWebUrl(website);
+    if (normalized == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Website link not available')),
+        );
+      }
+      return;
+    }
+    await _launchExternal(context, Uri.parse(normalized));
+  }
+
+  Future<void> _makeCall(BuildContext context, String phoneNumber) async {
+    final trimmed = phoneNumber.trim();
+    if (trimmed.isEmpty) return;
+    await _launchExternal(context, Uri.parse('tel:$trimmed'));
+  }
+
+  Future<void> _sendEmail(BuildContext context, String email) async {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) return;
+    await _launchExternal(context, Uri.parse('mailto:$trimmed'));
+  }
+
+  Future<void> _handleGetTickets(BuildContext context) async {
+    // Prefer ticketInfo if it looks like a URL; else fall back to website; else show ticketInfo text.
+    final ticketInfo = event.ticketInfo?.trim();
+    final website = event.website?.trim();
+
+    if (ticketInfo != null && ticketInfo.isNotEmpty && _looksLikeUrl(ticketInfo)) {
+      await _openWebsite(context, ticketInfo);
+      return;
+    }
+
+    if (website != null && website.isNotEmpty) {
+      await _openWebsite(context, website);
+      return;
+    }
+
+    if (ticketInfo != null && ticketInfo.isNotEmpty) {
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Ticket Information'),
+          content: Text(ticketInfo),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ticket link not available')),
+      );
     }
   }
 
@@ -86,7 +168,7 @@ class EventContactSection extends StatelessWidget {
                   context, 
                   Icons.phone, 
                   event.phoneNumber!, 
-                  () => _makeCall(event.phoneNumber!),
+                  () => _makeCall(context, event.phoneNumber!),
                 ),
                 
               if (event.emailAddress != null)
@@ -94,7 +176,7 @@ class EventContactSection extends StatelessWidget {
                   context, 
                   Icons.email, 
                   event.emailAddress!, 
-                  () => _sendEmail(event.emailAddress!),
+                  () => _sendEmail(context, event.emailAddress!),
                 ),
                 
               if (event.website != null)
@@ -102,7 +184,7 @@ class EventContactSection extends StatelessWidget {
                   context, 
                   Icons.language, 
                   'Visit Website', 
-                  () => _launchUrl(event.website!),
+                  () => _openWebsite(context, event.website!),
                 ),
 
               if (event.requiresTickets) ...[
@@ -110,16 +192,7 @@ class EventContactSection extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: () {
-                      if (event.website != null) {
-                        _launchUrl(event.website!);
-                      } else {
-                         // Fallback or show dialog info
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(content: Text('Check website or call for tickets')),
-                         );
-                      }
-                    },
+                    onPressed: () => _handleGetTickets(context),
                     icon: const Icon(Icons.confirmation_number),
                     label: const Text('Get Tickets'),
                     style: FilledButton.styleFrom(
@@ -143,6 +216,7 @@ class EventContactSection extends StatelessWidget {
         event.phoneNumber != null ||
         event.emailAddress != null ||
         event.website != null ||
+        (event.ticketInfo?.trim().isNotEmpty ?? false) ||
         event.requiresTickets;
   }
 

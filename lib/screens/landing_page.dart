@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/core.dart';
 import 'town_loader_screen.dart';
 
@@ -46,6 +47,21 @@ class _LandingPageState extends State<LandingPage> {
     }
   }
 
+  Future<void> _launchOwnerUrl() async {
+    final Uri url = Uri.parse('https://towntrek.co.za');
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch website')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -81,6 +97,11 @@ class _LandingPageState extends State<LandingPage> {
                         fit: BoxFit.contain,
                       ),
                     ),
+
+                    const SizedBox(height: 24),
+
+                    // Business Owner CTA
+                    _buildBusinessOwnerCTA(context),
 
                     const SizedBox(height: 40),
 
@@ -234,6 +255,79 @@ class _LandingPageState extends State<LandingPage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBusinessOwnerCTA(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF6A11CB), // Deep Purple
+            Color(0xFF2575FC), // Blue
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2575FC).withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _launchOwnerUrl,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.add_business,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Business not listed?',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
