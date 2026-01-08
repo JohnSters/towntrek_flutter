@@ -1,5 +1,6 @@
 import 'business_image_dto.dart';
 import 'business_service_dto.dart';
+import 'document_dto.dart';
 import 'operating_hour_dto.dart';
 import 'review_dto.dart';
 import 'special_operating_hour_dto.dart';
@@ -37,6 +38,7 @@ class BusinessDetailDto {
   final List<BusinessServiceDto> services;
   final List<BusinessImageDto> images;
   final List<ReviewDto> reviews;
+  final List<DocumentDto> documents;
 
   const BusinessDetailDto({
     required this.id,
@@ -67,6 +69,7 @@ class BusinessDetailDto {
     required this.services,
     required this.images,
     required this.reviews,
+    this.documents = const [],
   });
 
   /// Creates a BusinessDetailDto from JSON
@@ -110,6 +113,10 @@ class BusinessDetailDto {
       reviews: (json['reviews'] as List<dynamic>?)
           ?.map((e) => ReviewDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
+      documents: (json['documents'] as List<dynamic>?)
+              ?.map((e) => DocumentDto.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -144,6 +151,7 @@ class BusinessDetailDto {
       'services': services.map((e) => e.toJson()).toList(),
       'images': images.map((e) => e.toJson()).toList(),
       'reviews': reviews.map((e) => e.toJson()).toList(),
+      'documents': documents.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -177,6 +185,7 @@ class BusinessDetailDto {
     List<BusinessServiceDto>? services,
     List<BusinessImageDto>? images,
     List<ReviewDto>? reviews,
+    List<DocumentDto>? documents,
   }) {
     return BusinessDetailDto(
       id: id ?? this.id,
@@ -207,6 +216,7 @@ class BusinessDetailDto {
       services: services ?? this.services,
       images: images ?? this.images,
       reviews: reviews ?? this.reviews,
+      documents: documents ?? this.documents,
     );
   }
 

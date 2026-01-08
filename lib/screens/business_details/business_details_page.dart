@@ -11,6 +11,7 @@ import '../../core/errors/error_handler.dart';
 import 'widgets/business_status_indicator.dart';
 import 'widgets/business_info_card.dart';
 import 'widgets/business_image_gallery.dart';
+import 'widgets/business_documents_section.dart';
 import 'widgets/operating_hours_section.dart';
 import 'widgets/reviews_section.dart';
 import 'widgets/contact_actions_section.dart';
@@ -161,6 +162,12 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
               if (business.images.isNotEmpty)
                 SliverToBoxAdapter(
                   child: BusinessImageGallery(images: business.images),
+                ),
+
+              // Documents
+              if (business.documents.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: BusinessDocumentsSection(documents: business.documents),
                 ),
 
               // Operating Hours

@@ -1,4 +1,5 @@
 import 'service_dto.dart';
+import 'document_dto.dart';
 
 class ServiceDetailDto extends ServiceDto {
   final String description;
@@ -12,6 +13,7 @@ class ServiceDetailDto extends ServiceDto {
   final DateTime createdAt;
   final List<ServiceImageDto> images;
   final List<ServiceOperatingHourDto> operatingHours;
+  final List<DocumentDto> documents;
 
   const ServiceDetailDto({
     required super.id,
@@ -51,6 +53,7 @@ class ServiceDetailDto extends ServiceDto {
     required this.createdAt,
     this.images = const [],
     this.operatingHours = const [],
+    this.documents = const [],
   });
 
   factory ServiceDetailDto.fromJson(Map<String, dynamic> json) {
@@ -96,6 +99,10 @@ class ServiceDetailDto extends ServiceDto {
           [],
       operatingHours: (json['operatingHours'] as List<dynamic>?)
               ?.map((e) => ServiceOperatingHourDto.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      documents: (json['documents'] as List<dynamic>?)
+              ?.map((e) => DocumentDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );

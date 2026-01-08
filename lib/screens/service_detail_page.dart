@@ -158,6 +158,11 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                   child: _buildImageGallery(service.images),
                 ),
 
+              if (service.documents.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _buildDocumentsSection(service.documents),
+                ),
+
               SliverToBoxAdapter(
                 child: _buildOperatingHoursSection(service.operatingHours),
               ),
@@ -282,6 +287,107 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                   ],
                 ),
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentsSection(List<DocumentDto> documents) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    String formatSize(int bytes) {
+      if (bytes <= 0) return '';
+      const kb = 1024;
+      const mb = 1024 * 1024;
+      if (bytes >= mb) {
+        final v = bytes / mb;
+        return '${v.toStringAsFixed(v >= 10 ? 0 : 1)} MB';
+      }
+      return '${(bytes / kb).toStringAsFixed(0)} KB';
+    }
+
+    IconData iconFor(DocumentDto doc) {
+      final ct = doc.contentType.toLowerCase();
+      if (ct.contains('pdf')) return Icons.picture_as_pdf;
+      if (ct.contains('word') || doc.originalFileName.toLowerCase().endsWith('.doc') || doc.originalFileName.toLowerCase().endsWith('.docx')) {
+        return Icons.description;
+      }
+      return Icons.insert_drive_file;
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.description, color: colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Documents',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...documents.map((doc) {
+                final sizeText = formatSize(doc.fileSize);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    leading: Icon(iconFor(doc), color: colorScheme.primary),
+                    title: Text(
+                      doc.originalFileName.isNotEmpty ? doc.originalFileName : 'Document',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      [
+                        if (doc.documentType.isNotEmpty) doc.documentType,
+                        if (sizeText.isNotEmpty) sizeText,
+                      ].join(' • '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: TextButton.icon(
+                      onPressed: doc.downloadUrl.trim().isEmpty
+                          ? null
+                          : () async {
+                              final url = UrlUtils.resolveApiUrl(doc.downloadUrl);
+                              await ExternalLinkLauncher.openRaw(
+                                context,
+                                url,
+                                normalizeHttp: false,
+                                failureMessage: 'Unable to open document',
+                              );
+                            },
+                      icon: const Icon(Icons.download),
+                      label: const Text('Download'),
+                    ),
+                  ),
+                );
+              }),
             ],
           ),
         ),
