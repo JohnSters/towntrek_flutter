@@ -1,104 +1,161 @@
 import 'package:flutter/material.dart';
-import '../core/core.dart';
-import '../models/models.dart';
-import '../repositories/repositories.dart';
-import '../core/widgets/error_view.dart';
-import '../core/errors/app_error.dart';
-import '../core/errors/error_handler.dart';
+import 'package:provider/provider.dart';
+import '../../core/core.dart';
+import '../../models/models.dart';
+import '../../repositories/repositories.dart';
 
-/// Dedicated screen for town selection with search functionality
-class TownSelectionScreen extends StatefulWidget {
-  const TownSelectionScreen({super.key});
+// State classes for type-safe state management
+sealed class TownSelectionState {}
 
-  @override
-  State<TownSelectionScreen> createState() => _TownSelectionScreenState();
+class TownSelectionLoading extends TownSelectionState {}
+
+class TownSelectionSuccess extends TownSelectionState {
+  final List<TownDto> towns;
+  final List<TownDto> filteredTowns;
+
+  TownSelectionSuccess({
+    required this.towns,
+    required this.filteredTowns,
+  });
 }
 
-class _TownSelectionScreenState extends State<TownSelectionScreen> {
-  final TownRepository _townRepository = serviceLocator.townRepository;
-  final ErrorHandler _errorHandler = serviceLocator.errorHandler;
+class TownSelectionError extends TownSelectionState {
+  final AppError error;
 
-  List<TownDto> _allTowns = [];
-  List<TownDto> _filteredTowns = [];
-  bool _isLoading = true;
-  AppError? _error;
-  final TextEditingController _searchController = TextEditingController();
+  TownSelectionError(this.error);
+}
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTowns();
-    _searchController.addListener(_filterTowns);
+class TownSelectionEmpty extends TownSelectionState {}
+
+// ViewModel for business logic separation
+class TownSelectionViewModel extends ChangeNotifier {
+  TownSelectionState _state = TownSelectionLoading();
+  TownSelectionState get state => _state;
+
+  final TownRepository _townRepository;
+  final ErrorHandler _errorHandler;
+  final TextEditingController searchController = TextEditingController();
+
+  TownSelectionViewModel({
+    required TownRepository townRepository,
+    required ErrorHandler errorHandler,
+  }) : _townRepository = townRepository,
+       _errorHandler = errorHandler {
+    searchController.addListener(_filterTowns);
+    loadTowns();
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadTowns() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  Future<void> loadTowns() async {
+    _state = TownSelectionLoading();
+    notifyListeners();
 
     try {
       final towns = await _townRepository.getTowns();
-      if (mounted) {
-        setState(() {
-          _allTowns = towns;
-          _filteredTowns = towns;
-          _isLoading = false;
-        });
-      }
+      _state = TownSelectionSuccess(
+        towns: towns,
+        filteredTowns: towns,
+      );
+      notifyListeners();
     } catch (e) {
-      final appError = await _errorHandler.handleError(e, retryAction: _loadTowns);
-      if (mounted) {
-        setState(() {
-          _error = appError;
-          _isLoading = false;
-        });
-      }
+      final appError = await _errorHandler.handleError(e, retryAction: loadTowns);
+      _state = TownSelectionError(appError);
+      notifyListeners();
     }
   }
 
   void _filterTowns() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        _filteredTowns = _allTowns;
-      } else {
-        _filteredTowns = _allTowns.where((town) {
-          return town.name.toLowerCase().contains(query) ||
-                 town.province.toLowerCase().contains(query) ||
-                 town.postalCode?.contains(query) == true;
-        }).toList();
-      }
-    });
+    final query = searchController.text.toLowerCase();
+    if (_state is TownSelectionSuccess) {
+      final currentState = _state as TownSelectionSuccess;
+      final filteredTowns = query.isEmpty
+          ? currentState.towns
+          : currentState.towns.where((town) {
+              return town.name.toLowerCase().contains(query) ||
+                     town.province.toLowerCase().contains(query) ||
+                     town.postalCode?.contains(query) == true;
+            }).toList();
+
+      _state = TownSelectionSuccess(
+        towns: currentState.towns,
+        filteredTowns: filteredTowns,
+      );
+      notifyListeners();
+    }
   }
 
-  void _selectTown(TownDto town) {
-    // Return the selected town to the previous screen
+  void selectTown(TownDto town) {
+    // This will be called from the widget with proper context
+  }
+
+  void clearSearch() {
+    searchController.clear();
+  }
+}
+
+class TownSelectionScreen extends StatelessWidget {
+  const TownSelectionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => TownSelectionViewModel(
+        townRepository: serviceLocator.townRepository,
+        errorHandler: serviceLocator.errorHandler,
+      ),
+      child: const _TownSelectionScreenContent(),
+    );
+  }
+}
+
+class _TownSelectionScreenContent extends StatelessWidget {
+  const _TownSelectionScreenContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final viewModel = context.watch<TownSelectionViewModel>();
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildSearchBar(context, viewModel),
+            Expanded(
+              child: _buildTownList(context, viewModel.state, viewModel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _selectTown(BuildContext context, TownDto town) {
     Navigator.of(context).pop(town);
   }
 
-  Widget _buildSearchBar() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  // Build search bar widget inline
+  Widget _buildSearchBar(BuildContext context, TownSelectionViewModel viewModel) {
+    final theme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: theme.surface,
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+          bottomLeft: Radius.circular(TownSelectionConstants.borderRadiusLarge),
+          bottomRight: Radius.circular(TownSelectionConstants.borderRadiusLarge),
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: theme.shadow.withValues(alpha: TownSelectionConstants.shadowAlpha),
+            blurRadius: TownSelectionConstants.shadowBlurRadius,
+            offset: const Offset(0, TownSelectionConstants.shadowOffsetY),
           ),
         ],
       ),
@@ -108,38 +165,43 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
         children: [
           // Header Row with Back Button and Title
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 24, 0),
+            padding: const EdgeInsets.fromLTRB(
+              TownSelectionConstants.horizontalPadding,
+              TownSelectionConstants.headerTopPadding,
+              TownSelectionConstants.horizontalPadding,
+              0,
+            ),
             child: Row(
               children: [
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: Icon(
                     Icons.arrow_back_ios_new_rounded,
-                    color: colorScheme.onSurface,
-                    size: 20,
+                    color: theme.onSurface,
+                    size: TownSelectionConstants.backIconSize,
                   ),
                   style: IconButton.styleFrom(
-                    backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    padding: const EdgeInsets.all(12),
+                    backgroundColor: theme.surfaceContainerHighest.withValues(alpha: TownSelectionConstants.iconButtonBackgroundAlpha),
+                    padding: const EdgeInsets.all(TownSelectionConstants.backButtonPadding),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: TownSelectionConstants.mediumSpacing),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Select Location',
-                        style: theme.textTheme.headlineSmall?.copyWith(
+                        TownSelectionConstants.screenTitle,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: colorScheme.onSurface,
-                          letterSpacing: -0.5,
+                          color: theme.onSurface,
+                          letterSpacing: TownSelectionConstants.titleLetterSpacing,
                         ),
                       ),
                       Text(
-                        'Where would you like to explore?',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                        TownSelectionConstants.screenSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: theme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -149,87 +211,88 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: TownSelectionConstants.verticalSpacingLarge),
 
           // Search Field
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: TownSelectionConstants.horizontalPadding),
             child: Container(
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(20),
+                color: theme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusMedium),
                 border: Border.all(
-                  color: colorScheme.outline.withValues(alpha: 0.1),
-                  width: 1,
+                  color: theme.outline.withValues(alpha: TownSelectionConstants.searchBorderAlpha),
+                  width: TownSelectionConstants.searchBorderWidth,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.shadow.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: theme.shadow.withValues(alpha: TownSelectionConstants.searchShadowAlpha),
+                    blurRadius: TownSelectionConstants.shadowBlurRadius,
+                    offset: const Offset(0, TownSelectionConstants.searchShadowOffsetY),
                   ),
                 ],
               ),
               child: TextField(
-                controller: _searchController,
-                style: theme.textTheme.bodyLarge?.copyWith(
+                controller: viewModel.searchController,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Search towns, provinces, or postal codes',
-                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  hintText: TownSelectionConstants.searchHint,
+                  hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: theme.onSurfaceVariant.withValues(alpha: TownSelectionConstants.searchHintAlpha),
                   ),
                   prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: colorScheme.primary,
-                    size: 24,
+                    color: theme.primary,
+                    size: TownSelectionConstants.searchIconSize,
                   ),
-                  suffixIcon: _searchController.text.isNotEmpty
+                  suffixIcon: viewModel.searchController.text.isNotEmpty
                       ? IconButton(
                           icon: Icon(
                             Icons.close_rounded,
-                            color: colorScheme.onSurfaceVariant,
-                            size: 20,
+                            color: theme.onSurfaceVariant,
+                            size: TownSelectionConstants.closeIconSize,
                           ),
-                          onPressed: () {
-                            _searchController.clear();
-                            // Trigger filter explicitly just in case listener doesn't catch empty quickly enough
-                            _filterTowns(); 
-                          },
+                          onPressed: viewModel.clearSearch,
                         )
                       : null,
                   filled: true,
-                  fillColor: Colors.transparent, // Handled by Container
+                  fillColor: Colors.transparent,
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
+                    horizontal: TownSelectionConstants.searchFieldPaddingHorizontal,
+                    vertical: TownSelectionConstants.searchFieldPaddingVertical,
                   ),
                 ),
               ),
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: TownSelectionConstants.verticalSpacingSmall),
 
           // Results Count / Status
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            padding: const EdgeInsets.fromLTRB(
+              TownSelectionConstants.horizontalPadding,
+              0,
+              TownSelectionConstants.horizontalPadding,
+              TownSelectionConstants.searchBarBottomPadding,
+            ),
             child: Row(
               children: [
                 Icon(
                   Icons.location_on_outlined,
-                  size: 14,
-                  color: colorScheme.primary,
+                  size: TownSelectionConstants.locationIconSize,
+                  color: theme.primary,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: TownSelectionConstants.smallSpacing),
                 Text(
-                  '${_filteredTowns.length} locations available',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: colorScheme.primary,
+                  _getResultsText(viewModel.state),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: theme.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -241,87 +304,32 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
     );
   }
 
-  Widget _buildTownList() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (_error != null) {
-      return ErrorView(
-        error: _error!,
-        showIcon: true,
-        padding: const EdgeInsets.all(32.0),
-        iconSize: 64.0,
-      );
-    }
-
-    if (_filteredTowns.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.location_city,
-              size: 64,
-              color: colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _searchController.text.isEmpty
-                  ? 'No towns available'
-                  : 'No towns match your search',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _searchController.text.isEmpty
-                  ? 'Please check your connection and try again'
-                  : 'Try a different search term',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _filteredTowns.length,
-      itemBuilder: (context, index) {
-        final town = _filteredTowns[index];
-        return _buildTownCard(town);
-      },
-    );
+  String _getResultsText(TownSelectionState state) {
+    return switch (state) {
+      TownSelectionSuccess(filteredTowns: final filteredTowns) =>
+        '${filteredTowns.length} ${TownSelectionConstants.locationsAvailableText}',
+      _ => '0 ${TownSelectionConstants.locationsAvailableText}',
+    };
   }
 
-  Widget _buildTownCard(TownDto town) {
+  Widget _buildTownCard(BuildContext context, TownDto town) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: TownSelectionConstants.verticalSpacingSmall),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusMedium),
         side: BorderSide(
-          color: colorScheme.outline.withValues(alpha: 0.1),
+          color: colorScheme.outline.withValues(alpha: TownSelectionConstants.cardBorderAlpha),
         ),
       ),
       child: InkWell(
-        onTap: () => _selectTown(town),
-        borderRadius: BorderRadius.circular(12),
+        onTap: () => _selectTown(context, town),
+        borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusMedium),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(TownSelectionConstants.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -330,24 +338,24 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
                 children: [
                   // Town icon with background
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: TownSelectionConstants.townIconContainerSize,
+                    height: TownSelectionConstants.townIconContainerSize,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [colorScheme.primary, colorScheme.secondary],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusMedium),
                     ),
                     child: const Icon(
                       Icons.location_city,
                       color: Colors.white,
-                      size: 24,
+                      size: TownSelectionConstants.townIconSize,
                     ),
                   ),
 
-                  const SizedBox(width: 16),
+                  const SizedBox(width: TownSelectionConstants.verticalSpacingSmall),
 
                   // Town details
                   Expanded(
@@ -363,17 +371,17 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 4),
+                        const SizedBox(height: TownSelectionConstants.smallSpacing),
 
                         // Province and postal code
                         Row(
                           children: [
                             Icon(
                               Icons.map,
-                              size: 14,
+                              size: TownSelectionConstants.locationIconSize,
                               color: colorScheme.onSurfaceVariant,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: TownSelectionConstants.smallSpacing),
                             Text(
                               town.province,
                               style: theme.textTheme.bodyMedium?.copyWith(
@@ -382,11 +390,11 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
                             ),
                             if (town.postalCode != null) ...[
                               Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 8),
-                                width: 3,
-                                height: 3,
+                                margin: const EdgeInsets.symmetric(horizontal: TownSelectionConstants.smallSpacing),
+                                width: TownSelectionConstants.dividerDotSize,
+                                height: TownSelectionConstants.dividerDotSize,
                                 decoration: BoxDecoration(
-                                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                  color: colorScheme.onSurfaceVariant.withValues(alpha: TownSelectionConstants.dividerDotAlpha),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -405,16 +413,17 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
 
                   // Arrow indicator
                   Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.only(left: TownSelectionConstants.verticalSpacingSmall),
                     child: Icon(
                       Icons.chevron_right,
                       color: colorScheme.onSurfaceVariant,
+                      size: TownSelectionConstants.chevronIconSize,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: TownSelectionConstants.verticalSpacingMedium),
 
               // Stats Pills - Full width below
               SingleChildScrollView(
@@ -425,23 +434,23 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
                       context,
                       Icons.business_rounded,
                       '${town.businessCount}',
-                      'Business',
+                      TownSelectionConstants.businessLabel,
                       colorScheme.primary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: TownSelectionConstants.verticalSpacingSmall),
                     _buildCountPill(
                       context,
                       Icons.handyman_rounded,
                       '${town.servicesCount}',
-                      'Services',
+                      TownSelectionConstants.servicesLabel,
                       colorScheme.secondary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: TownSelectionConstants.verticalSpacingSmall),
                     _buildCountPill(
                       context,
                       Icons.event_rounded,
                       '${town.eventsCount}',
-                      'Active Events',
+                      TownSelectionConstants.eventsLabel,
                       colorScheme.tertiary,
                     ),
                   ],
@@ -462,15 +471,18 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
     Color color,
   ) {
     final theme = Theme.of(context);
-    
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: TownSelectionConstants.pillPaddingHorizontal,
+        vertical: TownSelectionConstants.pillPaddingVertical,
+      ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withValues(alpha: TownSelectionConstants.pillBackgroundAlpha),
+        borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusLarge),
         border: Border.all(
-          color: color.withValues(alpha: 0.2),
-          width: 1,
+          color: color.withValues(alpha: TownSelectionConstants.pillBorderAlpha),
+          width: TownSelectionConstants.pillBorderWidth,
         ),
       ),
       child: Row(
@@ -478,10 +490,10 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
         children: [
           Icon(
             icon,
-            size: 12,
+            size: TownSelectionConstants.countPillIconSize,
             color: color,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: TownSelectionConstants.smallSpacing),
           Text(
             count,
             style: theme.textTheme.labelSmall?.copyWith(
@@ -489,11 +501,11 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: TownSelectionConstants.smallSpacing - 2),
           Text(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: color.withValues(alpha: 0.8),
+              color: color.withValues(alpha: TownSelectionConstants.pillLabelAlpha),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -502,22 +514,66 @@ class _TownSelectionScreenState extends State<TownSelectionScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildSearchBar(),
-            Expanded(
-              child: _buildTownList(),
-            ),
-          ],
+  // Build town list widget inline
+  Widget _buildTownList(BuildContext context, TownSelectionState state, TownSelectionViewModel viewModel) {
+    return switch (state) {
+      TownSelectionLoading() => const Center(
+          child: CircularProgressIndicator(),
         ),
-      ),
+      TownSelectionError(error: final error) => ErrorView(
+          error: error,
+          showIcon: true,
+          padding: const EdgeInsets.all(TownSelectionConstants.horizontalPadding),
+        ),
+      TownSelectionSuccess(filteredTowns: final filteredTowns) =>
+        filteredTowns.isEmpty
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(TownSelectionConstants.verticalPadding),
+              itemCount: filteredTowns.length,
+              itemBuilder: (context, index) {
+                final town = filteredTowns[index];
+                return _buildTownCard(context, town);
+              },
+            ),
+      TownSelectionEmpty() => _buildEmptyState(),
+    };
+  }
+
+  Widget _buildEmptyState() {
+    return Builder(
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.location_city,
+                size: TownSelectionConstants.emptyStateIconSize,
+                color: colorScheme.onSurface.withValues(alpha: TownSelectionConstants.emptyStateIconAlpha),
+              ),
+              const SizedBox(height: TownSelectionConstants.verticalSpacingMedium),
+              Text(
+                TownSelectionConstants.noTownsAvailable,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: TownSelectionConstants.verticalSpacingSmall),
+              Text(
+                TownSelectionConstants.noTownsAvailableDescription,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
+import '../../../core/constants/business_details_constants.dart';
 
 class BusinessInfoCard extends StatelessWidget {
   final BusinessDetailDto business;
@@ -20,60 +21,63 @@ class BusinessInfoCard extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      margin: EdgeInsets.symmetric(
+        horizontal: BusinessDetailsConstants.cardHorizontalMargin,
+        vertical: BusinessDetailsConstants.cardVerticalMargin,
+      ),
       child: Card(
-        elevation: 0,
+        elevation: BusinessDetailsConstants.cardElevation,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(BusinessDetailsConstants.cardBorderRadius),
           side: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.1),
+            color: colorScheme.outline.withValues(alpha: BusinessDetailsConstants.cardBorderAlpha),
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(BusinessDetailsConstants.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Description
               if (business.description.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(BusinessDetailsConstants.contentPadding),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: BusinessDetailsConstants.highOpacity),
+                    borderRadius: BorderRadius.circular(BusinessDetailsConstants.borderRadiusSmall),
                   ),
                   child: Text(
                     business.description,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurfaceVariant,
-                      height: 1.6,
+                      height: BusinessDetailsConstants.descriptionLineHeight,
                     ),
                   ),
                 ),
 
               if (business.description.isNotEmpty && business.physicalAddress != null)
-                const SizedBox(height: 16),
+                SizedBox(height: BusinessDetailsConstants.sectionVerticalMargin),
 
               // Address
               if (business.physicalAddress != null)
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(BusinessDetailsConstants.smallSpacing),
                   decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: colorScheme.primaryContainer.withValues(alpha: BusinessDetailsConstants.highOpacity),
+                    borderRadius: BorderRadius.circular(BusinessDetailsConstants.borderRadiusSmall),
                     border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.2),
-                      width: 1,
+                      color: colorScheme.primary.withValues(alpha: BusinessDetailsConstants.mediumOpacity),
+                      width: BusinessDetailsConstants.borderWidth,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.location_on,
-                        size: 20,
+                        size: BusinessDetailsConstants.iconSizeSmall,
                         color: colorScheme.primary,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: BusinessDetailsConstants.smallSpacing),
                       Expanded(
                         child: Text(
                           business.physicalAddress!,

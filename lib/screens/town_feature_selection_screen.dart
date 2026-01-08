@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
-import '../models/models.dart';
-import '../core/widgets/page_header.dart';
-import '../core/widgets/navigation_footer.dart';
-import 'business_category_page.dart';
-import 'town_selection_screen.dart';
+import 'package:provider/provider.dart';
+import '../../core/core.dart';
+import '../../models/models.dart';
+import 'business_category/business_category.dart';
 import 'current_events_screen.dart';
 import 'service_category_page.dart';
+import 'town_selection_screen.dart';
+import 'town_feature_selection/widgets/widgets.dart';
 
-class TownFeatureSelectionScreen extends StatelessWidget {
+// State classes for type-safe state management
+sealed class TownFeatureState {}
+
+class TownFeatureLoaded extends TownFeatureState {
   final TownDto town;
 
-  const TownFeatureSelectionScreen({
-    super.key,
-    required this.town,
-  });
+  TownFeatureLoaded(this.town);
+}
 
-  void _changeTown(BuildContext context) async {
+// ViewModel for navigation logic separation
+class TownFeatureViewModel extends ChangeNotifier {
+  final TownFeatureState _state;
+  TownFeatureState get state => _state;
+
+  TownFeatureViewModel(TownDto town) : _state = TownFeatureLoaded(town);
+
+  Future<void> changeTown(BuildContext context) async {
     final selectedTown = await Navigator.of(context).push<TownDto>(
       MaterialPageRoute(
         builder: (context) => const TownSelectionScreen(),
@@ -31,8 +40,61 @@ class TownFeatureSelectionScreen extends StatelessWidget {
     }
   }
 
+  void navigateToBusinesses(BuildContext context, TownDto town) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BusinessCategoryPage(town: town),
+      ),
+    );
+  }
+
+  void navigateToServices(BuildContext context, TownDto town) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ServiceCategoryPage(town: town),
+      ),
+    );
+  }
+
+  void navigateToEvents(BuildContext context, TownDto town) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CurrentEventsScreen(
+          townId: town.id,
+          townName: town.name,
+        ),
+      ),
+    );
+  }
+}
+
+class TownFeatureSelectionScreen extends StatelessWidget {
+  final TownDto town;
+
+  const TownFeatureSelectionScreen({
+    super.key,
+    required this.town,
+  });
+
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => TownFeatureViewModel(town),
+      child: const _TownFeatureSelectionScreenContent(),
+    );
+  }
+}
+
+class _TownFeatureSelectionScreenContent extends StatelessWidget {
+  const _TownFeatureSelectionScreenContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.watch<TownFeatureViewModel>();
+    final town = switch (viewModel.state) {
+      TownFeatureLoaded(town: final town) => town,
+    };
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -42,80 +104,31 @@ class TownFeatureSelectionScreen extends StatelessWidget {
           PageHeader(
             title: town.name,
             subtitle: town.province,
-            height: 120,
+            height: TownFeatureConstants.pageHeaderHeight,
             trailing: IconButton(
               icon: Icon(Icons.location_on, color: colorScheme.primary),
-              onPressed: () => _changeTown(context),
-              tooltip: 'Change Town',
+              onPressed: () => viewModel.changeTown(context),
+              tooltip: TownFeatureConstants.changeTownTooltip,
             ),
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(TownFeatureConstants.pagePadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'What are you looking for?',
+                    TownFeatureConstants.pageTitle,
                     style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: TownFeatureConstants.titleFontWeight,
                       color: colorScheme.onSurface,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Businesses Card
-                  _FeatureCard(
-                    title: 'Businesses',
-                    description: 'Find local shops, restaurants, and more',
-                    icon: Icons.store_mall_directory,
-                    color: Colors.blue.shade600,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => BusinessCategoryPage(town: town),
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Services Card
-                  _FeatureCard(
-                    title: 'Services',
-                    description: 'Plumbers, electricians, and other pros',
-                    icon: Icons.handyman,
-                    color: Colors.orange.shade600,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ServiceCategoryPage(town: town),
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Events Card
-                  _FeatureCard(
-                    title: 'Events',
-                    description: 'Discover what\'s happening in town',
-                    icon: Icons.event,
-                    color: Colors.purple.shade600,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => CurrentEventsScreen(
-                            townId: town.id,
-                            townName: town.name,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  const SizedBox(height: TownFeatureConstants.contentSpacing),
+
+                  // Feature Cards
+                  ..._buildFeatureCards(context, viewModel, town),
                 ],
               ),
             ),
@@ -125,88 +138,39 @@ class TownFeatureSelectionScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-class _FeatureCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _FeatureCard({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 120,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: color, width: 8)),
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.1),
-                theme.colorScheme.surface,
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-              ),
-            ],
-          ),
-        ),
+  List<Widget> _buildFeatureCards(BuildContext context, TownFeatureViewModel viewModel, TownDto town) {
+    final features = [
+      FeatureData(
+        title: TownFeatureConstants.businessesTitle,
+        description: TownFeatureConstants.businessesDescription,
+        icon: Icons.store_mall_directory,
+        color: const Color(TownFeatureConstants.businessesColor),
+        onTap: () => viewModel.navigateToBusinesses(context, town),
       ),
-    );
+      FeatureData(
+        title: TownFeatureConstants.servicesTitle,
+        description: TownFeatureConstants.servicesDescription,
+        icon: Icons.handyman,
+        color: const Color(TownFeatureConstants.servicesColor),
+        onTap: () => viewModel.navigateToServices(context, town),
+      ),
+      FeatureData(
+        title: TownFeatureConstants.eventsTitle,
+        description: TownFeatureConstants.eventsDescription,
+        icon: Icons.event,
+        color: const Color(TownFeatureConstants.eventsColor),
+        onTap: () => viewModel.navigateToEvents(context, town),
+      ),
+    ];
+
+    return features.map((feature) {
+      return Column(
+        children: [
+          FeatureCard(feature: feature),
+          if (feature != features.last) const SizedBox(height: TownFeatureConstants.cardSpacing),
+        ],
+      );
+    }).toList();
   }
 }
-

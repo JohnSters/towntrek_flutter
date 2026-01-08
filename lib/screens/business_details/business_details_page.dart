@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import '../../services/navigation_service.dart';
-import '../../core/widgets/error_view.dart';
-import '../../core/widgets/navigation_footer.dart';
-import '../../core/widgets/page_header.dart';
-import '../../core/errors/app_error.dart';
-import '../../core/errors/error_handler.dart';
+import '../../core/utils/external_link_launcher.dart';
 import 'widgets/business_status_indicator.dart';
 import 'widgets/business_info_card.dart';
 import 'widgets/business_image_gallery.dart';
@@ -16,8 +13,100 @@ import 'widgets/operating_hours_section.dart';
 import 'widgets/reviews_section.dart';
 import 'widgets/contact_actions_section.dart';
 
+/// State classes for Business Details page
+sealed class BusinessDetailsState {}
+
+class BusinessDetailsLoading extends BusinessDetailsState {}
+
+class BusinessDetailsSuccess extends BusinessDetailsState {
+  final BusinessDetailDto business;
+  BusinessDetailsSuccess(this.business);
+}
+
+class BusinessDetailsError extends BusinessDetailsState {
+  final AppError error;
+  BusinessDetailsError(this.error);
+}
+
+/// ViewModel for Business Details page business logic
+class BusinessDetailsViewModel extends ChangeNotifier {
+  final BusinessRepository _businessRepository;
+  final NavigationService _navigationService;
+  final ErrorHandler _errorHandler;
+
+  BusinessDetailsState _state = BusinessDetailsLoading();
+  BusinessDetailsState get state => _state;
+
+  final int businessId;
+  final String businessName;
+
+  BusinessDetailsViewModel({
+    required this.businessId,
+    required this.businessName,
+    required BusinessRepository businessRepository,
+    required NavigationService navigationService,
+    required ErrorHandler errorHandler,
+  })  : _businessRepository = businessRepository,
+        _navigationService = navigationService,
+        _errorHandler = errorHandler {
+    loadBusinessDetails();
+  }
+
+  Future<void> loadBusinessDetails() async {
+    _state = BusinessDetailsLoading();
+    notifyListeners();
+
+    try {
+      final details = await _businessRepository.getBusinessDetails(businessId);
+      _state = BusinessDetailsSuccess(details);
+      notifyListeners();
+    } catch (e) {
+      final appError = await _errorHandler.handleError(
+        e,
+        retryAction: loadBusinessDetails,
+      );
+      _state = BusinessDetailsError(appError);
+      notifyListeners();
+    }
+  }
+
+  Future<void> navigateToBusiness(BuildContext context, BusinessDetailDto business) async {
+    try {
+      final result = await _navigationService.navigateToBusiness(business);
+      if (result.isFailure) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.error ?? BusinessDetailsConstants.navigationFailedMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(BusinessDetailsConstants.navigationErrorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void rateBusiness(BuildContext context, BusinessDetailDto business) {
+    // Link to web application for reviews as requested
+    ExternalLinkLauncher.openWebsite(
+      context,
+      BusinessDetailsConstants.reviewsUrl,
+      failureMessage: 'Unable to open reviews page',
+    );
+  }
+}
+
 /// Comprehensive business details page with gallery, hours, reviews, and contact options
-class BusinessDetailsPage extends StatefulWidget {
+class BusinessDetailsPage extends StatelessWidget {
   final int businessId;
   final String businessName; // For loading state display
 
@@ -28,92 +117,67 @@ class BusinessDetailsPage extends StatefulWidget {
   });
 
   @override
-  State<BusinessDetailsPage> createState() => _BusinessDetailsPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => BusinessDetailsViewModel(
+        businessId: businessId,
+        businessName: businessName,
+        businessRepository: serviceLocator.businessRepository,
+        navigationService: serviceLocator.navigationService,
+        errorHandler: serviceLocator.errorHandler,
+      ),
+      child: const _BusinessDetailsPageContent(),
+    );
+  }
 }
 
-class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
-  BusinessDetailDto? _businessDetails;
-  bool _isLoading = true;
-  AppError? _error;
-
-  final BusinessRepository _businessRepository = serviceLocator.businessRepository;
-  final NavigationService _navigationService = serviceLocator.navigationService;
-  final ErrorHandler _errorHandler = serviceLocator.errorHandler;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBusinessDetails();
-  }
-
-  Future<void> _loadBusinessDetails() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final details = await _businessRepository.getBusinessDetails(widget.businessId);
-      if (mounted) {
-        setState(() {
-          _businessDetails = details;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      final appError = await _errorHandler.handleError(
-        e,
-        retryAction: _loadBusinessDetails,
-      );
-      if (mounted) {
-        setState(() {
-          _error = appError;
-          _isLoading = false;
-        });
-      }
-    }
-  }
+class _BusinessDetailsPageContent extends StatelessWidget {
+  const _BusinessDetailsPageContent();
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<BusinessDetailsViewModel>();
+
     return Scaffold(
       body: Column(
         children: [
           // Main content area
           Expanded(
-            child: _buildContent(),
+            child: _buildContent(context, viewModel),
           ),
 
-          // Navigation footer
-          if (_businessDetails != null)
+          // Navigation footer - only show when we have business data
+          if (viewModel.state is BusinessDetailsSuccess)
             const BackNavigationFooter(),
         ],
       ),
     );
   }
 
-  Widget _buildContent() {
-    if (_isLoading) {
-      return _buildLoadingView();
+  Widget _buildContent(BuildContext context, BusinessDetailsViewModel viewModel) {
+    final state = viewModel.state;
+
+    if (state is BusinessDetailsLoading) {
+      return _buildLoadingView(viewModel);
     }
 
-    if (_error != null) {
-      return _buildErrorView();
+    if (state is BusinessDetailsError) {
+      return _buildErrorView(viewModel, state);
     }
 
-    if (_businessDetails == null) {
-      return _buildErrorView();
+    if (state is BusinessDetailsSuccess) {
+      return _buildBusinessDetailsView(context, viewModel, state);
     }
 
-    return _buildBusinessDetailsView();
+    return const SizedBox();
   }
 
-  Widget _buildLoadingView() {
+  Widget _buildLoadingView(BusinessDetailsViewModel viewModel) {
     return Column(
       children: [
         BusinessHeader(
-          businessName: widget.businessName,
-          tagline: 'Loading business details...',
+          businessName: viewModel.businessName,
+          tagline: BusinessDetailsConstants.loadingTagline,
         ),
         const Expanded(
           child: Center(
@@ -124,22 +188,26 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
     );
   }
 
-  Widget _buildErrorView() {
+  Widget _buildErrorView(BusinessDetailsViewModel viewModel, BusinessDetailsError state) {
     return Column(
       children: [
         BusinessHeader(
-          businessName: widget.businessName,
-          tagline: 'Unable to load business details',
+          businessName: viewModel.businessName,
+          tagline: BusinessDetailsConstants.errorTagline,
         ),
         Expanded(
-          child: ErrorView(error: _error!),
+          child: ErrorView(error: state.error),
         ),
       ],
     );
   }
 
-  Widget _buildBusinessDetailsView() {
-    final business = _businessDetails!;
+  Widget _buildBusinessDetailsView(
+    BuildContext context,
+    BusinessDetailsViewModel viewModel,
+    BusinessDetailsSuccess state,
+  ) {
+    final business = state.business;
 
     return Column(
       children: [
@@ -183,12 +251,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
                 SliverToBoxAdapter(
                   child: ReviewsSection(
                     reviews: business.reviews,
-                    onViewAllPressed: () {
-                      // TODO: Navigate to full reviews page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('View all reviews - Coming soon!')),
-                      );
-                    },
+                    onViewAllPressed: () => viewModel.rateBusiness(context, business),
                   ),
                 ),
 
@@ -196,55 +259,19 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
               SliverToBoxAdapter(
                 child: ContactActionsSection(
                   business: business,
-                  onTakeMeThere: () => _launchDirections(business),
-                  onRateBusiness: () => _rateBusiness(business),
+                  onTakeMeThere: () => viewModel.navigateToBusiness(context, business),
+                  onRateBusiness: () => viewModel.rateBusiness(context, business),
                 ),
               ),
 
               // Bottom padding
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 24),
+              SliverToBoxAdapter(
+                child: SizedBox(height: BusinessDetailsConstants.bottomPadding),
               ),
             ],
           ),
         ),
       ],
-    );
-  }
-
-  Future<void> _launchDirections(BusinessDetailDto business) async {
-    try {
-      final result = await _navigationService.navigateToBusiness(business);
-      if (result.isFailure) {
-        // Show error message to user
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.error ?? 'Navigation failed'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to start navigation'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _rateBusiness(BusinessDetailDto business) async {
-    // TODO: Implement CRM integration for rating
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Rate ${business.name} - CRM integration coming soon!'),
-        duration: const Duration(seconds: 3),
-      ),
     );
   }
 }

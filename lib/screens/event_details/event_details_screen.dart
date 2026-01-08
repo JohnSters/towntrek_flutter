@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/core.dart';
-import '../../models/models.dart';
-import '../../repositories/repositories.dart';
-import '../../core/widgets/error_view.dart';
-import '../../core/widgets/navigation_footer.dart';
-import '../../core/widgets/page_header.dart';
-import '../../core/errors/app_error.dart';
-import '../../core/errors/error_handler.dart';
+import '../../models/event_detail_dto.dart';
 import 'widgets/event_info_card.dart';
 import 'widgets/event_image_gallery.dart';
 import 'widgets/event_location_section.dart';
 import 'widgets/event_contact_section.dart';
 import 'widgets/event_reviews_section.dart';
+import 'event_details_state.dart';
+import 'event_details_view_model.dart';
 import 'event_all_reviews_screen.dart';
 
-class EventDetailsScreen extends StatefulWidget {
+/// Screen displaying detailed information for a specific event
+/// Uses Provider pattern with EventDetailsViewModel for state management
+class EventDetailsScreen extends StatelessWidget {
   final int eventId;
   final String eventName;
   final String? eventType;
@@ -29,90 +28,100 @@ class EventDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<EventDetailsScreen> createState() => _EventDetailsScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => EventDetailsViewModel(
+        eventRepository: serviceLocator.eventRepository,
+        eventId: eventId,
+        eventName: eventName,
+        eventType: eventType,
+        initialImageUrl: initialImageUrl,
+      ),
+      child: const _EventDetailsScreenContent(),
+    );
+  }
 }
 
-class _EventDetailsScreenState extends State<EventDetailsScreen> {
-  EventDetailDto? _eventDetails;
-  bool _isLoading = true;
-  AppError? _error;
-
-  final EventRepository _eventRepository = serviceLocator.eventRepository;
-  final ErrorHandler _errorHandler = serviceLocator.errorHandler;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadEventDetails();
-  }
-
-  Future<void> _loadEventDetails() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final details = await _eventRepository.getEventDetails(widget.eventId);
-      if (mounted) {
-        setState(() {
-          _eventDetails = details;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      final appError = await _errorHandler.handleError(
-        e,
-        retryAction: _loadEventDetails,
-      );
-      if (mounted) {
-        setState(() {
-          _error = appError;
-          _isLoading = false;
-        });
-      }
-    }
-  }
+class _EventDetailsScreenContent extends StatelessWidget {
+  const _EventDetailsScreenContent();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          Expanded(
-            child: _buildContent(),
+          const Expanded(
+            child: _Content(),
           ),
-          if (_eventDetails != null)
-            const BackNavigationFooter(),
+          Consumer<EventDetailsViewModel>(
+            builder: (context, viewModel, child) {
+              return viewModel.state is EventDetailsSuccess
+                  ? const BackNavigationFooter()
+                  : const SizedBox();
+            },
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildContent() {
-    if (_isLoading) {
-      return _buildLoadingView();
-    }
+class _Content extends StatelessWidget {
+  const _Content();
 
-    if (_error != null) {
-      return _buildErrorView();
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<EventDetailsViewModel>(
+      builder: (context, viewModel, child) {
+        final state = viewModel.state;
 
-    if (_eventDetails == null) {
-      return _buildErrorView();
-    }
+        if (state is EventDetailsLoading) {
+          return _LoadingView(
+            eventName: viewModel.eventName,
+            eventType: viewModel.eventType,
+            initialImageUrl: viewModel.initialImageUrl,
+          );
+        }
 
-    return _buildEventDetailsView();
+        if (state is EventDetailsError) {
+          return _ErrorView(
+            eventName: viewModel.eventName,
+            title: state.title,
+            message: state.message,
+            onRetry: viewModel.retryLoadEventDetails,
+          );
+        }
+
+        if (state is EventDetailsSuccess) {
+          return _EventDetailsView(eventDetails: state.eventDetails);
+        }
+
+        return const SizedBox();
+      },
+    );
   }
+}
 
-  Widget _buildLoadingView() {
+class _LoadingView extends StatelessWidget {
+  final String eventName;
+  final String? eventType;
+  final String? initialImageUrl;
+
+  const _LoadingView({
+    required this.eventName,
+    required this.eventType,
+    this.initialImageUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: PageHeader(
-            title: widget.eventName,
-            subtitle: widget.eventType ?? 'Loading event details...',
-            backgroundImage: widget.initialImageUrl, 
+            title: eventName,
+            subtitle: eventType ?? EventDetailsConstants.loadingSubtitle,
+            backgroundImage: initialImageUrl,
           ),
         ),
         const SliverFillRemaining(
@@ -123,78 +132,104 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ],
     );
   }
+}
 
-  Widget _buildErrorView() {
+class _ErrorView extends StatelessWidget {
+  final String eventName;
+  final String title;
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorView({
+    required this.eventName,
+    required this.title,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         PageHeader(
-          title: widget.eventName,
-          subtitle: 'Unable to load event details',
+          title: eventName,
+          subtitle: EventDetailsConstants.errorSubtitle,
         ),
         Expanded(
-          child: ErrorView(error: _error!),
+          child: ErrorView(
+            error: ServerError(
+              title: title,
+              message: message,
+            ),
+          ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildEventDetailsView() {
-    final event = _eventDetails!;
+class _EventDetailsView extends StatelessWidget {
+  final EventDetailDto eventDetails;
 
+  const _EventDetailsView({
+    required this.eventDetails,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
         // Event Header
         SliverToBoxAdapter(
           child: PageHeader(
-            title: event.name,
-            subtitle: event.eventType,
-            backgroundImage: event.coverImageUrl,
-            // We can add specific event header features here or customize PageHeader
+            title: eventDetails.name,
+            subtitle: eventDetails.eventType,
+            backgroundImage: eventDetails.coverImageUrl,
           ),
         ),
 
         // Info Card (Date, Time, Price, Description)
         SliverToBoxAdapter(
-          child: EventInfoCard(event: event),
+          child: EventInfoCard(event: eventDetails),
         ),
 
         // Image Gallery
-        if (event.images.isNotEmpty)
+        if (eventDetails.images.isNotEmpty)
           SliverToBoxAdapter(
-            child: EventImageGallery(images: event.images),
+            child: EventImageGallery(images: eventDetails.images),
           ),
 
         // Location Section
         SliverToBoxAdapter(
-          child: EventLocationSection(event: event),
+          child: EventLocationSection(event: eventDetails),
         ),
-        
+
         // Contact Section
         SliverToBoxAdapter(
-          child: EventContactSection(event: event),
+          child: EventContactSection(event: eventDetails),
         ),
 
         // Reviews Section
-        if (event.reviews.isNotEmpty)
+        if (eventDetails.reviews.isNotEmpty)
           SliverToBoxAdapter(
-             child: EventReviewsSection(
-               reviews: event.reviews,
-               onViewAllPressed: () {
-                 Navigator.of(context).push(
-                   MaterialPageRoute(
-                     builder: (_) => EventAllReviewsScreen(
-                       eventName: event.name,
-                       reviews: event.reviews,
-                     ),
-                   ),
-                 );
-               },
-             ),
+            child: EventReviewsSection(
+              reviews: eventDetails.reviews,
+              onViewAllPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EventAllReviewsScreen(
+                      eventName: eventDetails.name,
+                      reviews: eventDetails.reviews,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
 
         // Bottom padding
         const SliverToBoxAdapter(
-          child: SizedBox(height: 24),
+          child: SizedBox(height: EventDetailsConstants.bottomPadding),
         ),
       ],
     );

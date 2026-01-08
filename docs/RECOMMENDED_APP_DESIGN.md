@@ -1,0 +1,1044 @@
+# Flutter Development Best Practices Guide
+
+## Purpose
+This document outlines architectural and coding standards for Flutter development. Follow these guidelines to create maintainable, testable, and scalable applications.
+
+---
+
+## 1. Architecture & Separation of Concerns
+
+### State Management Layer
+- **Separate UI from business logic**: Never mix data fetching, business rules, or state management directly in Widget classes
+- **Use established patterns**: Implement BLoC, Cubit, Riverpod, or Provider for state management
+- **State classes over flags**: Define explicit state classes (`LoadingState`, `SuccessState`, `ErrorState`) instead of boolean flags
+- **Single responsibility**: Each class should have one clear purpose
+
+### Layer Structure
+```
+Presentation Layer (Widgets)
+    ↓
+Business Logic Layer (BLoC/Cubit/ViewModel)
+    ↓
+Use Case/Interactor Layer (Optional for complex apps)
+    ↓
+Repository Layer
+    ↓
+Data Source Layer (API/Database)
+```
+
+### Example Structure
+### With Provider (Your Current Stack)
+```dart
+// State classes
+class ItemState {}
+class ItemLoading extends ItemState {}
+class ItemSuccess extends ItemState {
+  final List<Item> items;
+  ItemSuccess(this.items);
+}
+class ItemError extends ItemState {
+  final String message;
+  ItemError(this.message);
+}
+
+// ViewModel with ChangeNotifier
+class ItemViewModel extends ChangeNotifier {
+  ItemState _state = ItemLoading();
+  ItemState get state => _state;
+  
+  final ItemRepository repository;
+  
+  ItemViewModel({required this.repository}) {
+    loadItems();
+  }
+  
+  Future<void> loadItems() async {
+    _state = ItemLoading();
+    notifyListeners();
+    
+    try {
+      final items = await repository.getItems();
+      _state = ItemSuccess(items);
+      notifyListeners();
+    } catch (e) {
+      _state = ItemError(e.toString());
+      notifyListeners();
+    }
+  }
+}
+
+// In your widget
+class ItemPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ItemViewModel(repository: getIt<ItemRepository>()),
+      child: Consumer<ItemViewModel>(
+        builder: (context, viewModel, child) {
+          final state = viewModel.state;
+          if (state is ItemLoading) return LoadingView();
+          if (state is ItemError) return ErrorView(message: state.message);
+          if (state is ItemSuccess) return ItemListView(items: state.items);
+          return SizedBox();
+        },
+      ),
+    );
+  }
+}
+```
+
+### With Riverpod (Recommended Upgrade)
+```dart
+// ❌ BAD: Business logic in widget
+class MyPage extends StatefulWidget {
+  @override
+  State<MyPage> createState() => _MyPageState();
+}
+
+class _MyPageState extends State<MyPage> {
+  bool _isLoading = true;
+  List<Item> _items = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadItems(); // API call in widget
+  }
+  
+  Future<void> _loadItems() async {
+    // Business logic here ❌
+  }
+}
+
+// ✅ GOOD: Separated concerns
+class MyPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ItemBloc, ItemState>(
+      builder: (context, state) {
+        return state.when(
+          loading: () => LoadingView(),
+          success: (items) => ItemListView(items: items),
+          error: (error) => ErrorView(error: error),
+        );
+      },
+    );
+  }
+}
+```
+
+---
+
+## 2. State Management Best Practices
+
+### Important Note About Your Current Setup
+Your project uses **Provider** (version 6.0.5), which is perfectly valid for small to medium apps and officially recommended by Flutter. The examples below show modern patterns, but you can achieve similar results with Provider using `ChangeNotifier` and `ChangeNotifierProvider`.
+
+### Avoid Manual setState Management
+- **Problem**: Boolean flags (`_isLoading`, `_hasError`) become hard to maintain
+- **Solution**: Use sealed classes or enums for state (works with Provider, Riverpod, or BLoC)
+
+### Recommended State Pattern
+```dart
+// Define clear states
+sealed class ItemState {}
+class ItemLoading extends ItemState {}
+class ItemSuccess extends ItemState {
+  final List<Item> items;
+  ItemSuccess(this.items);
+}
+class ItemError extends ItemState {
+  final String message;
+  ItemError(this.message);
+}
+
+// Or using freezed
+@freezed
+class ItemState with _$ItemState {
+  const factory ItemState.loading() = _Loading;
+  const factory ItemState.success(List<Item> items) = _Success;
+  const factory ItemState.error(String message) = _Error;
+}
+```
+
+### State Management Libraries
+
+**Based on your current stack (Provider) and 2025 best practices:**
+
+- **provider**: ✅ **Currently in your pubspec.yaml**
+  - Great for small to medium apps
+  - Officially recommended by Flutter team
+  - Lightweight and easy to learn
+  - ⚠️ **Consideration for growth**: As your app scales, you may want to migrate to Riverpod or BLoC
+  
+- **riverpod**: 🌟 **Recommended upgrade path**
+  - Modern evolution of Provider by the same author
+  - Compile-time safety and better performance
+  - No context dependency
+  - Excellent for medium to large apps
+  - Currently the most popular choice in 2025
+  
+- **flutter_bloc**: For enterprise apps with strict architecture
+  - Event-driven architecture with clear separation
+  - Best for complex apps with many state transitions
+  - More boilerplate but highly predictable and testable
+  - Excellent for teams that need strict patterns
+
+**Recommendation**: Provider is fine for your current app size. When you need to scale or add complexity, Riverpod is the most natural upgrade path as it's compatible with Provider's philosophy but more modern.
+
+---
+
+## 3. Widget Organization
+
+### Extract Complex Widgets
+- **Rule**: If a widget builder method exceeds 20 lines, extract it
+- **Benefits**: Reusability, testability, better performance (const constructors)
+
+```dart
+// ❌ BAD: Large build method
+Widget build(BuildContext context) {
+  return Column(
+    children: [
+      Container(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.person),
+            SizedBox(width: 8),
+            Text('User Name'),
+            // ... 50 more lines
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+// ✅ GOOD: Extracted widgets
+Widget build(BuildContext context) {
+  return Column(
+    children: [
+      const UserHeaderCard(),
+      const UserDetailsSection(),
+      const UserActionsPanel(),
+    ],
+  );
+}
+```
+
+### Widget File Structure
+```
+lib/
+  features/
+    feature_name/
+      presentation/
+        pages/
+          feature_page.dart
+        widgets/
+          feature_card.dart
+          feature_list_item.dart
+        bloc/
+          feature_bloc.dart
+          feature_state.dart
+          feature_event.dart
+```
+
+---
+
+## 4. Error Handling
+
+### Use Type-Safe Error Handling
+```dart
+// ✅ GOOD: Using Either type
+Future<Either<Failure, List<Item>>> getItems() async {
+  try {
+    final items = await api.fetchItems();
+    return Right(items);
+  } catch (e) {
+    return Left(ServerFailure(e.toString()));
+  }
+}
+
+// In BLoC/Cubit
+final result = await repository.getItems();
+result.fold(
+  (failure) => emit(ItemError(failure.message)),
+  (items) => emit(ItemSuccess(items)),
+);
+```
+
+### Centralized Error Handler
+- Create an `ErrorHandler` service for consistent error management
+- Map exceptions to user-friendly messages
+- Log errors appropriately
+
+```dart
+abstract class Failure {
+  final String message;
+  Failure(this.message);
+}
+
+class ServerFailure extends Failure {
+  ServerFailure(super.message);
+}
+
+class NetworkFailure extends Failure {
+  NetworkFailure(super.message);
+}
+```
+
+---
+
+## 5. Dependency Injection
+
+### Use Service Locator or DI Framework
+```dart
+// ✅ GOOD: Using get_it
+final getIt = GetIt.instance;
+
+void setupDependencies() {
+  // Repositories
+  getIt.registerLazySingleton<ItemRepository>(
+    () => ItemRepositoryImpl(getIt()),
+  );
+  
+  // Data sources
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(),
+  );
+  
+  // BLoCs (register as factory for new instances)
+  getIt.registerFactory<ItemBloc>(
+    () => ItemBloc(getIt()),
+  );
+}
+```
+
+### Constructor Injection
+```dart
+// ✅ Always inject dependencies through constructor
+class ItemBloc extends Bloc<ItemEvent, ItemState> {
+  final ItemRepository repository;
+  final AnalyticsService analytics;
+  
+  ItemBloc({
+    required this.repository,
+    required this.analytics,
+  }) : super(ItemLoading());
+}
+```
+
+---
+
+## 6. Navigation
+
+### Use Declarative Routing
+```dart
+// ✅ GOOD: Using go_router
+final router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => HomePage(),
+    ),
+    GoRoute(
+      path: '/details/:id',
+      builder: (context, state) => DetailsPage(
+        id: state.pathParameters['id']!,
+      ),
+    ),
+  ],
+);
+
+// Navigate
+context.go('/details/123');
+```
+
+### Benefits
+- Type-safe navigation
+- Deep linking support
+- Easier testing
+- Centralized route management
+
+---
+
+## 7. Code Quality
+
+### Constants and Magic Numbers
+```dart
+// ❌ BAD: Magic numbers
+Container(
+  padding: EdgeInsets.all(16),
+  child: SizedBox(
+    height: 48,
+    // ...
+  ),
+)
+
+// ✅ GOOD: Named constants
+class AppSpacing {
+  static const double small = 8.0;
+  static const double medium = 16.0;
+  static const double large = 24.0;
+}
+
+class AppSizes {
+  static const double buttonHeight = 48.0;
+  static const double iconSize = 24.0;
+}
+
+Container(
+  padding: EdgeInsets.all(AppSpacing.medium),
+  child: SizedBox(
+    height: AppSizes.buttonHeight,
+    // ...
+  ),
+)
+```
+
+### Documentation
+```dart
+/// Displays a list of items with pull-to-refresh functionality.
+///
+/// The list automatically loads more items when scrolling near the bottom.
+/// Supports swipe-to-delete for each item.
+///
+/// Example:
+/// ```dart
+/// ItemListView(
+///   items: myItems,
+///   onItemTap: (item) => print(item.name),
+/// )
+/// ```
+class ItemListView extends StatelessWidget {
+  /// The list of items to display
+  final List<Item> items;
+  
+  /// Callback when an item is tapped
+  final ValueChanged<Item>? onItemTap;
+  
+  const ItemListView({
+    super.key,
+    required this.items,
+    this.onItemTap,
+  });
+}
+```
+
+---
+
+## 8. Performance Optimization
+
+### ListView Best Practices
+```dart
+// ❌ BAD: Nested scrollables with shrinkWrap
+SingleChildScrollView(
+  child: Column(
+    children: [
+      ListView.builder(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: items.length,
+        itemBuilder: (context, index) => ItemCard(items[index]),
+      ),
+    ],
+  ),
+)
+
+// ✅ GOOD: Use CustomScrollView with Slivers
+CustomScrollView(
+  slivers: [
+    SliverToBoxAdapter(
+      child: HeaderWidget(),
+    ),
+    SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => ItemCard(items[index]),
+        childCount: items.length,
+      ),
+    ),
+  ],
+)
+```
+
+### Use Const Constructors
+```dart
+// ✅ Always use const when possible
+const SizedBox(height: 16),
+const Divider(),
+const Text('Static text'),
+```
+
+### Avoid Rebuilds
+```dart
+// ✅ Use BlocBuilder/Selector to rebuild only necessary widgets
+BlocBuilder<ItemBloc, ItemState>(
+  builder: (context, state) {
+    return ItemList(items: state.items);
+  },
+)
+
+// Or with selector for partial rebuilds
+BlocSelector<ItemBloc, ItemState, List<Item>>(
+  selector: (state) => state.items,
+  builder: (context, items) {
+    return ItemList(items: items);
+  },
+)
+```
+
+---
+
+## 9. Testing
+
+### Make Code Testable
+```dart
+// ✅ Injectable dependencies enable mocking
+class ItemBloc extends Bloc<ItemEvent, ItemState> {
+  final ItemRepository repository;
+  
+  ItemBloc({required this.repository}) : super(ItemLoading());
+  
+  // Easy to test with mock repository
+}
+
+// Test example
+void main() {
+  late ItemBloc bloc;
+  late MockItemRepository mockRepository;
+  
+  setUp(() {
+    mockRepository = MockItemRepository();
+    bloc = ItemBloc(repository: mockRepository);
+  });
+  
+  test('emits success state when items loaded', () async {
+    when(() => mockRepository.getItems())
+        .thenAnswer((_) async => Right([Item()]));
+    
+    bloc.add(LoadItems());
+    
+    await expectLater(
+      bloc.stream,
+      emits(isA<ItemSuccess>()),
+    );
+  });
+}
+```
+
+### Test Coverage Goals
+- **Unit tests**: All business logic, repositories, use cases
+- **Widget tests**: All reusable widgets and pages
+- **Integration tests**: Critical user flows
+
+---
+
+## 10. Project Structure Example
+
+```
+lib/
+  core/
+    constants/
+      app_constants.dart
+      app_spacing.dart
+    errors/
+      failures.dart
+      error_handler.dart
+    utils/
+      extensions.dart
+    widgets/
+      loading_view.dart
+      error_view.dart
+  features/
+    authentication/
+      data/
+        datasources/
+          auth_remote_datasource.dart
+        repositories/
+          auth_repository_impl.dart
+      domain/
+        entities/
+          user.dart
+        repositories/
+          auth_repository.dart
+        usecases/
+          login_usecase.dart
+      presentation/
+        bloc/
+          auth_bloc.dart
+          auth_event.dart
+          auth_state.dart
+        pages/
+          login_page.dart
+        widgets/
+          login_form.dart
+    items/
+      data/
+      domain/
+      presentation/
+  main.dart
+  app.dart
+  dependency_injection.dart
+```
+
+---
+
+## 11. API Integration Best Practices
+
+### Repository Pattern
+```dart
+abstract class ItemRepository {
+  Future<Either<Failure, List<Item>>> getItems();
+  Future<Either<Failure, Item>> getItemById(String id);
+}
+
+class ItemRepositoryImpl implements ItemRepository {
+  final ApiClient apiClient;
+  final LocalDatabase localDatabase;
+  
+  ItemRepositoryImpl({
+    required this.apiClient,
+    required this.localDatabase,
+  });
+  
+  @override
+  Future<Either<Failure, List<Item>>> getItems() async {
+    try {
+      final items = await apiClient.fetchItems();
+      await localDatabase.cacheItems(items);
+      return Right(items);
+    } on NetworkException {
+      // Return cached data on network failure
+      final cached = await localDatabase.getCachedItems();
+      return Right(cached);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+}
+```
+
+### API Fallback Strategy
+```dart
+// ✅ Handle API versioning and fallbacks in repository
+Future<List<Item>> _fetchWithFallback() async {
+  try {
+    // Try new endpoint
+    return await apiClient.getItemsV2();
+  } on NotFoundException {
+    // Fall back to old endpoint
+    return await apiClient.getItemsV1();
+  }
+}
+```
+
+---
+
+## 12. Common Anti-Patterns to Avoid
+
+### ❌ Don't Do This
+1. **Business logic in widgets**
+2. **Using setState for complex state**
+3. **Hardcoded strings and numbers**
+4. **Tight coupling between layers**
+5. **Synchronous operations on main thread**
+6. **Catching generic exceptions without handling**
+7. **Building everything in one file**
+8. **Ignoring null safety**
+9. **Not using const constructors**
+10. **Mixing presentation and data layers**
+
+---
+
+## 13. Checklist for Every Screen
+
+Before considering a screen complete, verify:
+
+- [ ] Business logic extracted to BLoC/Cubit/ViewModel
+- [ ] All states handled (loading, success, error, empty)
+- [ ] Complex widgets extracted to separate files
+- [ ] Constants defined for spacing, sizes, strings
+- [ ] Navigation uses routing framework
+- [ ] Error handling is comprehensive and user-friendly
+- [ ] Dependencies injected through constructor
+- [ ] Widget is testable (no direct API calls)
+- [ ] Documentation added for public APIs
+- [ ] Const constructors used where possible
+- [ ] No magic numbers or hardcoded strings
+- [ ] Accessibility considerations (semantic labels)
+
+---
+
+## 14. Resources
+
+### Your Current Dependencies Analysis
+
+**✅ Good choices:**
+- `dio` (5.3.2): Excellent HTTP client
+- `provider` (6.0.5): Solid state management for your app size
+- `logger` (2.0.2): Good for debugging
+- `shared_preferences` (2.2.2): Standard for local storage
+- `geolocator` (14.0.2): Industry standard for location
+- `url_launcher` (6.2.5): Essential for external links
+- `intl` (0.20.2): Standard for internationalization
+
+**⚠️ Notes:**
+- `mapbox_maps_flutter` (2.11.0): You've pinned this due to build issues - that's a smart workaround. Document this in your README so future developers understand why.
+- `http` (1.6.0): You have both `dio` and `http`. Consider using only `dio` for consistency unless `http` is required by a dependency.
+
+**📦 Packages you should consider adding:**
+- `get_it` or `injectable`: For dependency injection (currently you seem to be using a `serviceLocator` without the package)
+- `freezed` + `freezed_annotation`: For immutable data classes and sealed classes
+- `json_serializable` + `json_annotation`: For automatic JSON serialization
+- `flutter_svg` (2.0.9): ✅ Already included - good for SVG support
+- `connectivity_plus` (7.0.0): ✅ Already included - good for network status
+
+**🧪 Testing packages to add:**
+- `mocktail`: For mocking in tests (better than mockito in most cases)
+- `bloc_test`: If you migrate to BLoC (not needed with Provider)
+- **State Management**: `flutter_bloc`, `riverpod`, `provider`
+- **Dependency Injection**: `get_it`, `injectable`
+- **Navigation**: `go_router`
+- **Error Handling**: `dartz`, `fpdart`
+- **API**: `dio`, `retrofit`
+- **Code Generation**: `freezed`, `json_serializable`
+- **Testing**: `mocktail`, `bloc_test`
+
+### Further Reading
+- [Flutter Architecture Samples](https://github.com/brianegan/flutter_architecture_samples)
+- [BLoC Library Documentation](https://bloclibrary.dev/)
+- [Riverpod Documentation](https://riverpod.dev/)
+- [Effective Dart](https://dart.dev/guides/language/effective-dart)
+
+---
+
+## Implementation Progress
+
+### ✅ Completed: Landing Page Refactor (Phase 1)
+
+**What was improved:**
+- **State Management**: Replaced manual setState with sealed classes (`LandingPageLoading`, `LandingPageSuccess`, `LandingPageError`)
+- **Business Logic Separation**: Created `LandingViewModel` using `ChangeNotifier` for all business logic
+- **Widget Extraction**: Split complex widgets into reusable components:
+  - `AppLogo` - Logo display with card styling
+  - `BusinessOwnerCTA` - Business owner call-to-action
+  - `FeatureGrid` - Statistics display grid
+  - `FeatureTile` - Individual feature tiles
+  - `ActionButton` - Main CTA button
+- **Constants Extraction**: Created `LandingPageConstants` class for all magic numbers and strings
+- **Dependency Injection**: Proper injection through constructor (using existing `serviceLocator`)
+- **Type Safety**: Eliminated boolean flags, using explicit state classes instead
+
+**File Structure Created:**
+```
+lib/
+  core/
+    constants/
+      landing_page_constants.dart
+  screens/
+    landing_page.dart (refactored)
+    landing_page/
+      widgets/
+        action_button.dart
+        app_logo.dart
+        business_owner_cta.dart
+        feature_grid.dart
+        feature_tile.dart
+        widgets.dart (exports)
+```
+
+**Benefits Achieved:**
+- ✅ Business logic completely separated from UI
+- ✅ Type-safe state management (no more boolean flags)
+- ✅ Highly testable code structure
+- ✅ Reusable widget components
+- ✅ No magic numbers or hardcoded strings
+- ✅ Clean separation of concerns
+- ✅ Provider-based architecture ready for scaling
+
+**Next Steps for Landing Page:**
+- Implement type-safe error handling with Either/Result pattern
+- Add error UI components
+- Add unit tests for ViewModel
+- Add widget tests for extracted components
+
+### ✅ Completed: Town Selection Screen Refactor (Phase 2)
+
+**What was improved:**
+- **State Management**: Replaced manual setState with sealed classes (`TownSelectionLoading`, `TownSelectionSuccess`, `TownSelectionError`, `TownSelectionEmpty`)
+- **Business Logic Separation**: Created `TownSelectionViewModel` using `ChangeNotifier` for all business logic (loading, filtering, selection)
+- **Widget Extraction**: Split complex widgets into reusable components:
+  - `TownSearchBar` - Search header with back button and search field
+  - `TownListView` - Scrollable list of towns
+  - `TownCard` - Individual town display with stats pills
+  - `CountPill` - Reusable stat display component
+- **Constants Extraction**: Created `TownSelectionConstants` class for all magic numbers, spacing, colors, and strings
+- **Search Functionality**: Real-time filtering with proper state management
+- **Error Handling**: Type-safe error states with proper UI feedback
+- **Type Safety**: Eliminated boolean flags and manual state management
+
+**File Structure Created:**
+```
+lib/
+  core/
+    constants/
+      landing_page_constants.dart    # Landing page constants
+      town_selection_constants.dart  # Town selection constants
+  screens/
+    landing_page.dart                # Refactored landing page
+    landing_page/
+      widgets/
+        action_button.dart
+        app_logo.dart
+        business_owner_cta.dart
+        feature_grid.dart
+        feature_tile.dart
+        widgets.dart (exports)
+    town_selection_screen.dart       # Refactored town selection
+    town_selection/
+      widgets/
+        count_pill.dart
+        town_card.dart
+        town_list_view.dart
+        town_search_bar.dart
+        widgets.dart (exports)
+```
+
+### ✅ Completed: Town Loader Screen Refactor (Phase 3)
+
+**What was improved:**
+- **State Management**: Replaced manual setState with sealed classes (`TownLoaderLoadingLocation`, `TownLoaderLocationSuccess`, `TownLoaderLocationError`, `TownLoaderSelectTown`)
+- **Business Logic Separation**: Created `TownLoaderViewModel` using `ChangeNotifier` for complex location detection and town loading logic
+- **Widget Extraction**: Complex loading and selection views inlined with proper Builder patterns for context access
+- **Constants Extraction**: Created `TownLoaderConstants` class for all spacing, colors, strings, and layout values
+- **Location Detection**: Real-time location detection with fallback to manual selection
+- **Error Handling**: Comprehensive error states with location permission handling and settings navigation
+- **Navigation Logic**: Clean separation of navigation logic with auto-navigation on success
+
+**File Structure Created:**
+```
+lib/
+  core/
+    constants/
+      landing_page_constants.dart      # Landing page constants
+      town_loader_constants.dart       # Town loader constants
+      town_selection_constants.dart    # Town selection constants
+  screens/
+    landing_page.dart                  # Refactored landing page
+    landing_page/
+      widgets/
+        action_button.dart
+        app_logo.dart
+        business_owner_cta.dart
+        feature_grid.dart
+        feature_tile.dart
+        widgets.dart (exports)
+    town_selection_screen.dart         # Refactored town selection
+    town_feature_selection_screen.dart # Refactored town feature selection
+    town_loader_screen.dart            # Refactored town loader
+    town_feature_selection/
+      widgets/
+        feature_card.dart
+        feature_data.dart
+        widgets.dart (exports)
+```
+
+**Benefits Achieved:**
+- ✅ **10 Screens Refactored**: Landing Page, Town Selection, Town Loader, Town Feature Selection, Business Card Page, Business Details Page, Business Category Page, Business Sub-Category Page, Current Events Screen, Event Details Screen
+- ✅ **Complete User Journey**: From app launch → location detection → town selection → feature selection → categories → sub-categories → business listings → event listings → event details → event reviews
+- ✅ **Consistent Architecture**: All screens follow identical Provider + ChangeNotifier + Sealed Classes pattern
+- ✅ **Type-Safe State Management**: No boolean flags or manual state management anywhere
+- ✅ **Data-Driven UI**: Feature cards are now configurable data structures instead of hardcoded widgets
+- ✅ **Highly Testable**: All business logic in ViewModels, all UI components extracted and reusable
+- ✅ **Maintainable**: Clear separation of concerns with modular, focused components
+- ✅ **Scalable**: Architecture proven across simple and complex screens, ready for team collaboration
+- ✅ **Zero Magic Numbers**: All spacing, colors, and strings centralized in constants files
+
+### ✅ Completed: Business Category Page Refactor (Phase 7)
+
+**What was improved:**
+- **State Management**: Replaced manual setState with sealed classes (`BusinessCategoryLocationLoading`, `BusinessCategoryTownSelection`, `BusinessCategoryLoading`, `BusinessCategorySuccess`, `BusinessCategoryError`)
+- **Complex multi-state management** for location detection, town selection, loading, success, and error states
+- **Immutable state classes** with proper copyWith methods for clean state updates
+- **Business Logic Separation**: Created `BusinessCategoryViewModel` with `ChangeNotifier` for all complex operations:
+  - Location detection and town finding with geolocation services
+  - Sequential data loading (categories first, then events)
+  - Navigation flows for town changing, category selection, and event viewing
+  - Error handling with comprehensive retry mechanisms and user feedback
+  - State coordination between location detection, town selection, and data loading
+- **Widget Extraction**: Split complex UI into 2 reusable components:
+  - `CategoryActionButton`: Generic action button with icon, label, and tap handling
+  - `PulsatingActionButton`: Animated button that pulses when events are available
+- **Constants Extraction**: Created `BusinessCategoryConstants` with 70+ constants covering:
+  - Container sizes, spacing, padding, and layout values
+  - Animation durations, scales, and opacity values
+  - Border radius, elevation, and styling constants
+  - Icon sizes, colors, and positioning values
+  - All strings including loading messages, button labels, and error text
+  - Event checking parameters and UI settle delays
+- **Complex Location Flow**: Automatic location detection with fallback to manual selection, town finding using geolocation services with nearest town calculation, graceful degradation when location services fail, skip options for users who don't want to share location
+- **Sequential Loading**: Categories loaded first, events checked asynchronously after UI settles
+
+**File Structure Created:**
+```
+lib/
+  core/
+    constants/
+      business_category_constants.dart  # 70+ constants for complete layout
+  screens/
+    business_category/
+      business_category.dart              # Main page export
+      business_category_page.dart         # Fully refactored main page
+      widgets/
+        category_action_button.dart       # Reusable action button
+        pulsating_action_button.dart      # Animated event button
+        widgets.dart (exports)            # Widget exports
+```
+
+### ✅ Completed: Business Sub-Category Page Refactor (Phase 8)
+
+**What was improved:**
+- **State Management**: Implemented sealed classes (`BusinessSubCategoryLoading`, `BusinessSubCategorySuccess`, `BusinessSubCategoryError`) for type-safe state management
+- **Business Logic Separation**: Created `BusinessSubCategoryViewModel` with `ChangeNotifier` for sub-category sorting and state coordination
+- **Widget Extraction**: Split complex UI into reusable components:
+  - `CategoryInfoBadge`: Displays business count and sub-category count with category icon
+  - `SubCategoryCard`: Individual sub-category display with navigation logic and disabled state handling
+- **Constants Extraction**: Created `BusinessSubCategoryConstants` with 25+ constants covering spacing, sizing, colors, strings, and layout values
+- **Sorting Logic**: Moved sub-category sorting (active businesses first, then alphabetical) to ViewModel for better separation of concerns
+- **Navigation Logic**: Clean navigation to BusinessCardPage with proper parameter passing
+- **Error Handling**: Type-safe error states with user-friendly UI feedback
+- **Empty State Handling**: Proper empty state display when no sub-categories exist
+
+**File Structure Created:**
+```
+lib/
+  core/
+    constants/
+      business_sub_category_constants.dart  # 25+ constants for complete layout
+  screens/
+    business_sub_category/
+      business_sub_category.dart              # Main export file
+      business_sub_category_page.dart         # Fully refactored main page (uses Provider)
+      business_sub_category_state.dart        # Sealed state classes
+      business_sub_category_view_model.dart   # Business logic and sorting
+      widgets/
+        category_info_badge.dart             # Category info display widget
+        sub_category_card.dart               # Sub-category card with navigation
+        widgets.dart (exports)               # Widget exports
+```
+
+### ✅ Completed: Current Events Screen Refactor (Phase 9)
+
+**What was improved:**
+- **Complex Pagination Logic**: Replaced manual pagination with `CurrentEventsViewModel` handling load more, refresh, and state coordination
+- **Advanced State Management**: Implemented sealed classes (`CurrentEventsLoading`, `CurrentEventsSuccess`, `CurrentEventsError`, `CurrentEventsLoadingMore`) for pagination states
+- **Event Filtering**: Moved event filtering logic (hiding finished events) to ViewModel for clean separation
+- **Widget Extraction**: Split complex event cards into reusable components:
+  - `EventCard`: Complete event display with images, badges, pricing, metadata, and navigation
+  - `PricePill`: Event pricing information with free/paid styling
+  - `InfoPill`: Event type and date metadata display
+- **Constants Extraction**: Created `CurrentEventsConstants` with 50+ constants covering spacing, colors, strings, icons, and layout values
+- **Pull-to-Refresh**: Clean refresh implementation with proper state management
+- **Load More Functionality**: Pagination with loading indicators and error handling
+- **Image Handling**: Proper network/local image URL resolution with fallback icons
+- **Event Status Display**: Finished events with overlay badges and disabled interactions
+- **Featured Events**: Priority listing badges with proper positioning
+- **Navigation Logic**: Clean event detail navigation with parameter passing
+
+**File Structure Created:**
+```
+lib/
+  core/
+    constants/
+      current_events_constants.dart  # 50+ constants for complete layout
+  screens/
+    current_events/
+      current_events.dart              # Main export file
+      current_events_screen.dart       # Fully refactored main page (Provider-based)
+      current_events_state.dart        # Sealed state classes with pagination
+      current_events_view_model.dart   # Complex pagination and filtering logic
+      widgets/
+        event_card.dart               # Complete event card with all features
+        info_pill.dart                # Metadata pill widget
+        price_pill.dart               # Pricing information widget
+        widgets.dart (exports)        # Widget exports
+```
+
+### ✅ Completed: Event Details Screen Refactor (Phase 10)
+
+**What was improved:**
+- **State Management**: Implemented sealed classes (`EventDetailsLoading`, `EventDetailsSuccess`, `EventDetailsError`) for type-safe state management
+- **Business Logic Separation**: Created `EventDetailsViewModel` with `ChangeNotifier` for event detail loading and error handling
+- **Error Handling**: Integrated ErrorHandler service with proper retry mechanisms and user-friendly error display
+- **Widget Preservation**: Maintained existing extracted widgets (EventInfoCard, EventImageGallery, EventLocationSection, EventContactSection, EventReviewsSection) while refactoring state management
+- **Constants Extraction**: Created `EventDetailsConstants` with 20+ constants covering spacing, strings, colors, and layout values
+- **Custom ScrollView**: Proper use of Sliver widgets for efficient scrolling with multiple content sections
+- **Navigation Logic**: Clean event review navigation with proper parameter passing
+- **Loading States**: Smooth loading experience with header image display during loading
+
+**File Structure Created:**
+```
+lib/
+  core/
+    constants/
+      event_details_constants.dart  # 20+ constants for complete layout
+  screens/
+    event_details/
+      event_details.dart              # Main export file
+      event_details_screen.dart       # Fully refactored main page (Provider-based)
+      event_details_state.dart        # Sealed state classes
+      event_details_view_model.dart   # Event loading and error handling logic
+      widgets/                       # Existing widgets maintained
+        event_contact_section.dart
+        event_image_gallery.dart
+        event_info_card.dart
+        event_location_section.dart
+        event_reviews_section.dart
+```
+
+**Benefits Achieved (10 Screens Total):**
+- ✅ **Complete User Journey**: From app launch → location detection → town selection → features → categories → sub-categories → business listings → event listings → event details → event reviews
+- ✅ **Complex Detail Screens**: Multi-section scrollable content with proper state management
+- ✅ **Error Handling Integration**: Centralized error handling with retry mechanisms
+- ✅ **Widget Architecture**: Successful preservation and integration of existing extracted widgets
+- ✅ **Efficient Scrolling**: CustomScrollView with Sliver widgets for performance
+- ✅ **Zero Magic Numbers**: All 165+ values across four screens centralized and maintainable
+- ✅ **Type-Safe State Management**: No boolean flags, proper state classes with loading context
+- ✅ **Clean Architecture**: Separation of concerns with ViewModel handling all business logic
+- ✅ **Highly Testable**: Event loading logic in ViewModel, all UI components properly separated
+
+**Current Architecture Pattern:**
+- **State Classes**: Sealed classes for type-safe state representation across all screen complexities
+- **ViewModels**: ChangeNotifier-based business logic separation with constructor dependency injection
+- **Widgets**: Extracted into reusable components with data-driven approaches where appropriate
+- **Constants**: All magic numbers and strings centralized per screen/feature area
+- **Dependency Injection**: Constructor-based injection with service locator pattern
+- **Error Handling**: Type-safe error states with user-friendly UI and recovery actions
+- **Navigation**: Clean separation with proper context handling and consistent patterns
+- **Data Structures**: Feature data and configuration objects instead of hardcoded UI
+
+---
+
+## Summary
+
+**Priority Implementation Order:**
+
+1. **✅ COMPLETED**: Separate business logic from UI (use Provider) - **10 screens done**
+2. **✅ COMPLETED**: Implement proper state management with sealed classes - **10 screens done**
+3. **✅ COMPLETED**: Extract reusable widgets into separate files - **30+ widgets extracted**
+4. **✅ COMPLETED**: Use dependency injection for all dependencies - **Constructor-based**
+5. **✅ COMPLETED**: Extract all constants and magic numbers - **10 constant files created**
+6. **High**: Implement type-safe error handling (Either/Result pattern) - **Partially done**
+7. **High**: Add comprehensive unit and widget tests
+8. **Medium**: Use declarative routing (go_router)
+9. **Medium**: Refactor remaining screens (page-by-page approach) - **Continue with next screen**
+10. **Low**: Performance optimizations (const, slivers)
+11. **Low**: Add comprehensive documentation
+
+Following these practices will result in:
+- More maintainable code
+- Easier testing
+- Better collaboration
+- Clearer AI model understanding
+- Reduced bugs
+- Faster feature development

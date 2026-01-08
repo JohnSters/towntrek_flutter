@@ -1,59 +1,71 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 import '../core/core.dart';
+import '../repositories/repositories.dart';
+import 'landing_page/widgets/widgets.dart';
 import 'town_loader_screen.dart';
 
-class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
+// State classes for type-safe state management
+sealed class LandingPageState {}
 
-  @override
-  State<LandingPage> createState() => _LandingPageState();
+class LandingPageLoading extends LandingPageState {}
+
+class LandingPageSuccess extends LandingPageState {
+  final int businessCount;
+  final int serviceCount;
+  final int eventCount;
+
+  LandingPageSuccess({
+    required this.businessCount,
+    required this.serviceCount,
+    required this.eventCount,
+  });
 }
 
-class _LandingPageState extends State<LandingPage> {
-  int _businessCount = 0;
-  int _serviceCount = 0;
-  int _eventCount = 0;
-  bool _isLoadingStats = true;
+class LandingPageError extends LandingPageState {
+  final String message;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadStats();
+  LandingPageError(this.message);
+}
+
+// ViewModel for business logic separation
+class LandingViewModel extends ChangeNotifier {
+  LandingPageState _state = LandingPageLoading();
+  LandingPageState get state => _state;
+
+  final StatsRepository _statsRepository;
+
+  LandingViewModel({required StatsRepository statsRepository})
+      : _statsRepository = statsRepository {
+    loadStats();
   }
 
-  Future<void> _loadStats() async {
-    try {
-      final statsRepo = serviceLocator.statsRepository;
-      final stats = await statsRepo.getLandingStats();
+  Future<void> loadStats() async {
+    _state = LandingPageLoading();
+    notifyListeners();
 
-      if (mounted) {
-        setState(() {
-          _businessCount = stats.businessCount;
-          _serviceCount = stats.serviceCount;
-          _eventCount = stats.eventCount;
-          _isLoadingStats = false;
-        });
-      }
+    try {
+      final stats = await _statsRepository.getLandingStats();
+      _state = LandingPageSuccess(
+        businessCount: stats.businessCount,
+        serviceCount: stats.serviceCount,
+        eventCount: stats.eventCount,
+      );
+      notifyListeners();
     } catch (e) {
-      // Silently fail or log error, keep counts at 0
-      debugPrint('Error loading stats: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingStats = false;
-        });
-      }
+      _state = LandingPageError(e.toString());
+      notifyListeners();
     }
   }
 
-  Future<void> _launchOwnerUrl() async {
-    final Uri url = Uri.parse('https://towntrek.co.za');
+  Future<void> launchOwnerUrl(BuildContext context) async {
+    final Uri url = Uri.parse(LandingPageConstants.ownerWebsiteUrl);
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not launch website')),
+            const SnackBar(content: Text(LandingPageConstants.launchUrlErrorMessage)),
           );
         }
       }
@@ -61,11 +73,28 @@ class _LandingPageState extends State<LandingPage> {
       debugPrint('Error launching URL: $e');
     }
   }
+}
+
+class LandingPage extends StatelessWidget {
+  const LandingPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => LandingViewModel(statsRepository: serviceLocator.statsRepository),
+      child: const _LandingPageContent(),
+    );
+  }
+}
+
+class _LandingPageContent extends StatelessWidget {
+  const _LandingPageContent();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final viewModel = context.watch<LandingViewModel>();
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -74,35 +103,20 @@ class _LandingPageState extends State<LandingPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: const EdgeInsets.symmetric(horizontal: LandingPageConstants.horizontalPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 40),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
 
-                    // App Logo with Card for emphasis
-                    Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(32.0),
-                      child: SvgPicture.asset(
-                        'assets/images/logos/towntrek_starter_logo2.svg',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                    // App Logo
+                    const AppLogo(),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
 
                     // Subtitle
                     Text(
-                      'Explore South Africa\'s small towns like never before.',
+                      LandingPageConstants.subtitleText,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface,
@@ -111,10 +125,10 @@ class _LandingPageState extends State<LandingPage> {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingSmall),
 
                     Text(
-                      'Discover hidden gems, local favorites, and authentic experiences—all at the click of a button.',
+                      LandingPageConstants.descriptionText,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         height: 1.5,
@@ -122,55 +136,19 @@ class _LandingPageState extends State<LandingPage> {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
 
                     // Business Owner CTA
-                    _buildBusinessOwnerCTA(context),
-
-                    const SizedBox(height: 24),
-
-                    // Feature Grid (1x3)
-                    SizedBox(
-                      height: 110, // Fixed height for the row of squares
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildFeatureTile(
-                              context,
-                              icon: Icons.store_mall_directory,
-                              label: 'Businesses',
-                              count: _businessCount,
-                              color: const Color(0xFF42B0D5), // Blue
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildFeatureTile(
-                              context,
-                              icon: Icons.handyman,
-                              label: 'Services',
-                              count: _serviceCount,
-                              color: const Color(0xFFFDB750), // Yellow/Orange
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildFeatureTile(
-                              context,
-                              icon: Icons.calendar_month,
-                              label: 'Events',
-                              count: _eventCount,
-                              color: const Color(0xFFFF6F61), // Red/Coral
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ],
-                      ),
+                    BusinessOwnerCTA(
+                      onTap: () => viewModel.launchOwnerUrl(context),
                     ),
 
-                    const SizedBox(height: 48),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+
+                    // Feature Grid
+                    _buildFeatureGrid(viewModel.state),
+
+                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge * 1.2),
                   ],
                 ),
               ),
@@ -178,10 +156,10 @@ class _LandingPageState extends State<LandingPage> {
 
             // Bottom Action Section
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
               child: Column(
                 children: [
-                  FilledButton(
+                  ActionButton(
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -189,32 +167,10 @@ class _LandingPageState extends State<LandingPage> {
                         ),
                       );
                     },
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.explore),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Start Exploring',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
                   Text(
-                    'TownTrek - Your Local Discovery Companion',
+                    LandingPageConstants.appTagline,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -229,132 +185,20 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  Widget _buildBusinessOwnerCTA(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF6A11CB), // Deep Purple
-            Color(0xFF2575FC), // Blue
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildFeatureGrid(LandingPageState state) {
+    return switch (state) {
+      LandingPageLoading() => const FeatureGrid(isLoading: true),
+      LandingPageSuccess(
+        businessCount: final businessCount,
+        serviceCount: final serviceCount,
+        eventCount: final eventCount,
+      ) =>
+        FeatureGrid(
+          businessCount: businessCount,
+          serviceCount: serviceCount,
+          eventCount: eventCount,
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2575FC).withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _launchOwnerUrl,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.add_business,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Business not listed?',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureTile(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    int? count,
-    BorderRadius? borderRadius,
-  }) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: borderRadius ?? BorderRadius.circular(0),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 32,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          if (count != null && !_isLoadingStats) ...[
-            const SizedBox(height: 2),
-            Text(
-              '$count+',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-          ] else if (count != null && _isLoadingStats) ...[
-            const SizedBox(height: 2),
-            SizedBox(
-              width: 12,
-              height: 12,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
+      LandingPageError() => const FeatureGrid(), // Show with null counts on error
+    };
   }
 }
