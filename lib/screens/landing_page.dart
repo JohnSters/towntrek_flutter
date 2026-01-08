@@ -98,11 +98,6 @@ class _LandingPageState extends State<LandingPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
-
-                    // Business Owner CTA
-                    _buildBusinessOwnerCTA(context),
-
                     const SizedBox(height: 40),
 
                     // Subtitle
@@ -127,74 +122,48 @@ class _LandingPageState extends State<LandingPage> {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 40),
 
-                    // Feature Grid (2x2)
-                    AspectRatio(
-                      aspectRatio: 1.0, // Make the whole grid square
-                      child: Column(
+                    // Business Owner CTA
+                    _buildBusinessOwnerCTA(context),
+
+                    const SizedBox(height: 24),
+
+                    // Feature Grid (1x3)
+                    SizedBox(
+                      height: 110, // Fixed height for the row of squares
+                      child: Row(
                         children: [
                           Expanded(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _buildFeatureTile(
-                                    context,
-                                    icon: Icons.store_mall_directory,
-                                    label: 'Businesses',
-                                    count: _businessCount,
-                                    color: const Color(0xFF42B0D5), // Blue
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(24),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: _buildFeatureTile(
-                                    context,
-                                    icon: Icons.handyman,
-                                    label: 'Services',
-                                    count: _serviceCount,
-                                    color: const Color(0xFFFDB750), // Yellow/Orange
-                                    borderRadius: const BorderRadius.only(
-                                      topRight: Radius.circular(24),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            child: _buildFeatureTile(
+                              context,
+                              icon: Icons.store_mall_directory,
+                              label: 'Businesses',
+                              count: _businessCount,
+                              color: const Color(0xFF42B0D5), // Blue
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(width: 8),
                           Expanded(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _buildFeatureTile(
-                                    context,
-                                    icon: Icons.calendar_month,
-                                    label: 'Events',
-                                    count: _eventCount,
-                                    color: const Color(0xFFFF6F61), // Red/Coral
-                                    borderRadius: const BorderRadius.only(
-                                      bottomLeft: Radius.circular(24),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: _buildFeatureTile(
-                                    context,
-                                    icon: Icons.more_horiz,
-                                    label: 'And More',
-                                    count: null, // No count for "More"
-                                    color: const Color(0xFF6BBF59), // Green
-                                    borderRadius: const BorderRadius.only(
-                                      bottomRight: Radius.circular(24),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            child: _buildFeatureTile(
+                              context,
+                              icon: Icons.handyman,
+                              label: 'Services',
+                              count: _serviceCount,
+                              color: const Color(0xFFFDB750), // Yellow/Orange
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildFeatureTile(
+                              context,
+                              icon: Icons.calendar_month,
+                              label: 'Events',
+                              count: _eventCount,
+                              color: const Color(0xFFFF6F61), // Red/Coral
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                         ],
@@ -354,30 +323,30 @@ class _LandingPageState extends State<LandingPage> {
           Icon(
             icon,
             color: Colors.white,
-            size: 48,
+            size: 32,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             label,
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
           if (count != null && !_isLoadingStats) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               '$count+',
-              style: theme.textTheme.titleLarge?.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ] else if (count != null && _isLoadingStats) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             SizedBox(
-              width: 16,
-              height: 16,
+              width: 12,
+              height: 12,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 color: Colors.white.withValues(alpha: 0.8),
