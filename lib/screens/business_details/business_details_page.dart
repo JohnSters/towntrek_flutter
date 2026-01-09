@@ -47,6 +47,12 @@ class _BusinessDetailsPageContent extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
+          PageHeader(
+            title: viewModel.businessName,
+            subtitle: 'Business Details',
+            height: 120.0,
+            headerType: HeaderType.business,
+          ),
           // Main content area
           Expanded(
             child: _buildContent(context, viewModel),

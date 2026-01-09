@@ -88,8 +88,31 @@ class OperatingHoursSection extends StatelessWidget {
   }
 
   String _formatDayOfWeek(int dayOfWeek) {
+    // Handle different day numbering systems
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    return days[dayOfWeek - 1];
+
+    // If dayOfWeek is 0, treat as Sunday (C# backend uses 0=Sunday..6=Saturday)
+    if (dayOfWeek == 0) {
+      return 'Sunday';
+    }
+
+    // Handle negative values or values > 7 (fallback to Sunday)
+    if (dayOfWeek < 0) {
+      return 'Invalid Day';
+    }
+
+    // If dayOfWeek is 1-7, use as 1-indexed array (1=Monday, 7=Sunday)
+    if (dayOfWeek >= 1 && dayOfWeek <= 7) {
+      return days[dayOfWeek - 1];
+    }
+
+    // Handle values 1-6 as potentially 0-indexed (0=Sunday, 1=Monday, etc.)
+    if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+      return days[dayOfWeek];
+    }
+
+    // Fallback for unexpected values
+    return 'Day $dayOfWeek';
   }
 
   String _formatTime(String time) {

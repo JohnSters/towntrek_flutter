@@ -4,6 +4,7 @@ import '../../core/core.dart';
 import '../../models/models.dart';
 import 'service_detail_state.dart';
 import 'service_detail_view_model.dart';
+import 'widgets/widgets.dart';
 
 
 /// Service Detail Page - Shows comprehensive service information
@@ -103,24 +104,47 @@ class _ServiceDetailPageContent extends StatelessWidget {
     ServiceDetailDto serviceDetails,
     ServiceDetailViewModel viewModel,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Service info
-          Text(
-            serviceDetails.name,
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(serviceDetails.description),
-          const SizedBox(height: 16),
+    return CustomScrollView(
+      slivers: [
+        // Service Info Card (Description and Service Area)
+        SliverToBoxAdapter(
+          child: ServiceInfoCard(service: serviceDetails),
+        ),
 
-          // Placeholder for additional content
-          const Text('Service details view - Coming soon'),
-        ],
-      ),
+        // Service Features (Pricing, availability, etc.)
+        SliverToBoxAdapter(
+          child: ServiceFeaturesSection(service: serviceDetails),
+        ),
+
+        // Image Gallery
+        if (serviceDetails.images.isNotEmpty)
+          SliverToBoxAdapter(
+            child: ServiceImageGallery(images: serviceDetails.images),
+          ),
+
+        // Documents
+        if (serviceDetails.documents.isNotEmpty)
+          SliverToBoxAdapter(
+            child: ServiceDocumentsSection(documents: serviceDetails.documents),
+          ),
+
+        // Operating Hours
+        SliverToBoxAdapter(
+          child: OperatingHoursSection(
+            operatingHours: serviceDetails.operatingHours,
+          ),
+        ),
+
+        // Contact & Actions
+        SliverToBoxAdapter(
+          child: ContactActionsSection(service: serviceDetails),
+        ),
+
+        // Bottom spacing
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 32),
+        ),
+      ],
     );
   }
 }

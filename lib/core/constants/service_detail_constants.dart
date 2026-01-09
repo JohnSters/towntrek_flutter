@@ -8,11 +8,11 @@ class ServiceDetailConstants {
 
   // Layout spacing and padding
   static const double contentPadding = 24.0;
-  static const double sectionSpacing = 24.0;
+  static const double sectionSpacing = 24.0; // Reduced back for better balance
   static const double bottomSpacing = 24.0;
   static const double headerPaddingVertical = 12.0;
   static const double headerPaddingHorizontal = 24.0;
-  static const double cardPadding = 20.0;
+  static const double cardPadding = 20.0; // Reduced back for better balance
   static const double infoCardPadding = 16.0;
   static const double iconSpacing = 8.0;
   static const double statusIndicatorPaddingVertical = 12.0;
