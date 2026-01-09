@@ -135,16 +135,16 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
               Icon(
                 Icons.category,
                 size: BusinessSubCategoryConstants.emptyStateIconSize,
-                color: colorScheme.onSurface.withOpacity(
-                  BusinessSubCategoryConstants.emptyStateIconOpacity,
+                color: colorScheme.onSurface.withValues(
+                  alpha: BusinessSubCategoryConstants.emptyStateIconOpacity,
                 ),
               ),
               SizedBox(height: BusinessSubCategoryConstants.emptyStateIconSpacing),
               Text(
                 BusinessSubCategoryConstants.noSubCategoriesFound,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(
-                    BusinessSubCategoryConstants.emptyStateTextOpacity,
+                  color: colorScheme.onSurface.withValues(
+                    alpha: BusinessSubCategoryConstants.emptyStateTextOpacity,
                   ),
                 ),
               ),

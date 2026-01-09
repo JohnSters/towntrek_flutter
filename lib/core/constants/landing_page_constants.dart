@@ -5,8 +5,8 @@ class LandingPageConstants {
   static const double verticalSpacingLarge = 40.0;
   static const double verticalSpacingMedium = 24.0;
   static const double verticalSpacingSmall = 16.0;
-  static const double featureGridHeight = 110.0;
-  static const double featureTileSpacing = 8.0;
+  static const double featureGridHeight = 92.0;
+  static const double featureTileSpacing = 10.0;
 
   // Size constants
   static const double logoContainerHeight = 200.0;

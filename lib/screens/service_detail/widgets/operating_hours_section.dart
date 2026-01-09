@@ -27,7 +27,7 @@ class OperatingHoursSection extends StatelessWidget {
       ),
       child: Card(
         elevation: ServiceDetailConstants.cardElevation,
-        shadowColor: colorScheme.shadow.withOpacity(ServiceDetailConstants.shadowOpacity),
+        shadowColor: colorScheme.shadow.withValues(alpha: ServiceDetailConstants.shadowOpacity),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ServiceDetailConstants.cardBorderRadius),
         ),

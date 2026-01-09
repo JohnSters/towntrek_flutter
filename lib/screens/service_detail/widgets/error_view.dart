@@ -35,16 +35,16 @@ class ServiceDetailErrorView extends StatelessWidget {
                   Icon(
                     ServiceDetailConstants.errorIcon,
                     size: ServiceDetailConstants.errorIconSize,
-                    color: colorScheme.error.withOpacity(
-                      ServiceDetailConstants.errorIconOpacity,
+                    color: colorScheme.error.withValues(
+                      alpha: ServiceDetailConstants.errorIconOpacity,
                     ),
                   ),
                   SizedBox(height: ServiceDetailConstants.errorSpacing),
                   Text(
                     error ?? 'Unable to load service details',
                     style: theme.textTheme.headlineSmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(
-                        ServiceDetailConstants.errorTextOpacity,
+                      color: colorScheme.onSurface.withValues(
+                        alpha: ServiceDetailConstants.errorTextOpacity,
                       ),
                     ),
                     textAlign: TextAlign.center,

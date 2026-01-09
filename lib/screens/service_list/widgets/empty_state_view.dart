@@ -36,16 +36,16 @@ class ServiceListEmptyStateView extends StatelessWidget {
                 Icon(
                   ServiceListConstants.emptyIcon,
                   size: ServiceListConstants.errorIconSize,
-                  color: colorScheme.onSurface.withOpacity(
-                    ServiceListConstants.emptyStateIconOpacity,
+                  color: colorScheme.onSurface.withValues(
+                    alpha: ServiceListConstants.emptyStateIconOpacity,
                   ),
                 ),
                 SizedBox(height: ServiceListConstants.errorSpacing),
                 Text(
                   ServiceListConstants.emptyStateTitle,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(
-                      ServiceListConstants.emptyStateTextOpacity,
+                    color: colorScheme.onSurface.withValues(
+                      alpha: ServiceListConstants.emptyStateTextOpacity,
                     ),
                   ),
                   textAlign: TextAlign.center,

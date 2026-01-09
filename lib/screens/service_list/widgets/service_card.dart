@@ -23,7 +23,7 @@ class ServiceCard extends StatelessWidget {
         bottom: ServiceListConstants.cardMarginBottom,
       ),
       elevation: ServiceListConstants.cardElevation,
-      shadowColor: colorScheme.shadow.withOpacity(0.1),
+      shadowColor: colorScheme.shadow.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(
           ServiceListConstants.cardBorderRadius,
@@ -117,7 +117,7 @@ class ServiceCard extends StatelessWidget {
                   return Icon(
                     Icons.handyman,
                     size: 30,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   );
                 },
               ),
@@ -125,7 +125,7 @@ class ServiceCard extends StatelessWidget {
           : Icon(
               Icons.handyman,
               size: 30,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
     );
   }
@@ -160,7 +160,7 @@ class ServiceCard extends StatelessWidget {
               size: 16,
               color: starValue <= rating + 0.5
                   ? Colors.amber
-                  : colorScheme.onSurfaceVariant.withOpacity(0.3),
+                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
             );
           }),
         ),

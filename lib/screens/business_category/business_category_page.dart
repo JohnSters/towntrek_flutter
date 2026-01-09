@@ -198,7 +198,7 @@ class BusinessCategoryViewModel extends ChangeNotifier {
     ).then((selectedTown) {
       // If a town was selected, navigate to TownFeatureSelectionScreen with new town
       // This resets the flow to the "Hub" for the new town
-      if (selectedTown != null) {
+      if (selectedTown != null && context.mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => TownFeatureSelectionScreen(town: selectedTown),

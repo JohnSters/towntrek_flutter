@@ -29,8 +29,8 @@ class CategoryCard extends StatelessWidget {
           ServiceCategoryConstants.categoryCardBorderRadius,
         ),
         side: BorderSide(
-          color: colorScheme.outline.withOpacity(
-            ServiceCategoryConstants.outlineOpacity,
+          color: colorScheme.outline.withValues(
+            alpha: ServiceCategoryConstants.outlineOpacity,
           ),
         ),
       ),
@@ -77,8 +77,8 @@ class CategoryCard extends StatelessWidget {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: ServiceCategoryConstants.titleMediumWeight,
                           color: isDisabled
-                              ? colorScheme.onSurface.withOpacity(
-                                  ServiceCategoryConstants.disabledTextOpacity,
+                              ? colorScheme.onSurface.withValues(
+                                  alpha: ServiceCategoryConstants.disabledTextOpacity,
                                 )
                               : colorScheme.onSurface,
                         ),
@@ -96,8 +96,8 @@ class CategoryCard extends StatelessWidget {
                 ),
                 Icon(
                   ServiceCategoryConstants.chevronRightIcon,
-                  color: colorScheme.onSurfaceVariant.withOpacity(
-                    ServiceCategoryConstants.chevronOpacity,
+                  color: colorScheme.onSurfaceVariant.withValues(
+                    alpha: ServiceCategoryConstants.chevronOpacity,
                   ),
                 ),
               ],

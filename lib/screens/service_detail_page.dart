@@ -161,7 +161,7 @@ class _ServiceDetailPageContent extends StatelessWidget {
               width: ServiceDetailConstants.statusDotSize,
               height: ServiceDetailConstants.statusDotSize,
               decoration: BoxDecoration(
-                color: ServiceDetailConstants.dotColor.withOpacity(0.4),
+                color: ServiceDetailConstants.dotColor.withValues(alpha: 0.4),
                 shape: BoxShape.circle,
               ),
             ),

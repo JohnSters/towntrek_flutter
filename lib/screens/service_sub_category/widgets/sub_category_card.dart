@@ -32,8 +32,8 @@ class SubCategoryCard extends StatelessWidget {
           ServiceSubCategoryConstants.cardBorderRadius,
         ),
         side: BorderSide(
-          color: colorScheme.outline.withOpacity(
-            ServiceSubCategoryConstants.cardBorderOpacity,
+          color: colorScheme.outline.withValues(
+            alpha: ServiceSubCategoryConstants.cardBorderOpacity,
           ),
         ),
       ),
@@ -81,8 +81,8 @@ class SubCategoryCard extends StatelessWidget {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: ServiceSubCategoryConstants.titleMediumWeight,
                           color: isDisabled
-                              ? colorScheme.onSurface.withOpacity(
-                                  ServiceSubCategoryConstants.disabledTextOpacity,
+                              ? colorScheme.onSurface.withValues(
+                                  alpha: ServiceSubCategoryConstants.disabledTextOpacity,
                                 )
                               : colorScheme.onSurface,
                         ),

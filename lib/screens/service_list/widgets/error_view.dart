@@ -44,16 +44,16 @@ class ServiceListErrorView extends StatelessWidget {
                   Icon(
                     ServiceListConstants.errorIcon,
                     size: ServiceListConstants.errorIconSize,
-                    color: colorScheme.error.withOpacity(
-                      ServiceListConstants.errorIconOpacity,
+                    color: colorScheme.error.withValues(
+                      alpha: ServiceListConstants.errorIconOpacity,
                     ),
                   ),
                   SizedBox(height: ServiceListConstants.errorSpacing),
                   Text(
                     title,
                     style: theme.textTheme.headlineSmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(
-                        ServiceListConstants.errorTextOpacity,
+                      color: colorScheme.onSurface.withValues(
+                        alpha: ServiceListConstants.errorTextOpacity,
                       ),
                     ),
                     textAlign: TextAlign.center,

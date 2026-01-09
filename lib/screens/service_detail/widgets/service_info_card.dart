@@ -18,7 +18,7 @@ class ServiceInfoCard extends StatelessWidget {
 
     return Card(
       elevation: ServiceDetailConstants.cardElevation,
-      shadowColor: colorScheme.shadow.withOpacity(ServiceDetailConstants.shadowOpacity),
+      shadowColor: colorScheme.shadow.withValues(alpha: ServiceDetailConstants.shadowOpacity),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(ServiceDetailConstants.cardBorderRadius),
       ),

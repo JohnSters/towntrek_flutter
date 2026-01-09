@@ -22,8 +22,8 @@ class CategoryActionButton extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: theme.colorScheme.surfaceContainerHighest.withOpacity(
-        ServiceCategoryConstants.surfaceContainerHighestOpacity,
+      color: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: ServiceCategoryConstants.surfaceContainerHighestOpacity,
       ),
       borderRadius: BorderRadius.circular(
         ServiceCategoryConstants.actionButtonBorderRadius,

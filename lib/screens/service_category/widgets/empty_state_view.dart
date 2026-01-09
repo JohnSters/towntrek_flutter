@@ -17,16 +17,16 @@ class EmptyStateView extends StatelessWidget {
           Icon(
             ServiceCategoryConstants.emptyStateIcon,
             size: ServiceCategoryConstants.emptyIconSize,
-            color: colorScheme.onSurface.withOpacity(
-              ServiceCategoryConstants.emptyIconOpacity,
+            color: colorScheme.onSurface.withValues(
+              alpha: ServiceCategoryConstants.emptyIconOpacity,
             ),
           ),
           SizedBox(height: ServiceCategoryConstants.emptyStateTextSpacing),
           Text(
             ServiceCategoryConstants.emptyStateTitle,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurface.withOpacity(
-                ServiceCategoryConstants.emptyTextOpacity,
+              color: colorScheme.onSurface.withValues(
+                alpha: ServiceCategoryConstants.emptyTextOpacity,
               ),
             ),
           ),
