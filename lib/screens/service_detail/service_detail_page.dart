@@ -5,6 +5,7 @@ import '../../models/models.dart';
 import 'service_detail_state.dart';
 import 'service_detail_view_model.dart';
 import 'widgets/widgets.dart';
+import 'widgets/service_logo_section.dart';
 
 
 /// Service Detail Page - Shows comprehensive service information
@@ -106,6 +107,11 @@ class _ServiceDetailPageContent extends StatelessWidget {
   ) {
     return CustomScrollView(
       slivers: [
+        // Service Logo (moved to top right)
+        SliverToBoxAdapter(
+          child: ServiceLogoSection(service: serviceDetails),
+        ),
+
         // Service Info Card (Description and Service Area)
         SliverToBoxAdapter(
           child: ServiceInfoCard(service: serviceDetails),
