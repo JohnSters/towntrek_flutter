@@ -13,67 +13,67 @@ class FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return Card(
-      elevation: TownFeatureConstants.cardElevation,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(TownFeatureConstants.cardBorderRadius),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: feature.onTap,
-        child: Container(
-          height: TownFeatureConstants.cardHeight,
-          padding: const EdgeInsets.all(TownFeatureConstants.cardPadding),
-          decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: feature.color, width: TownFeatureConstants.borderWidth)),
-            gradient: LinearGradient(
-              colors: [
-                feature.color.withValues(alpha: TownFeatureConstants.iconBackgroundAlpha),
-                theme.colorScheme.surface,
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+    final featureColor = feature.color;
+
+    return SizedBox(
+      height: 120, // Further increased height to accommodate longer text
+      child: OutlinedButton(
+        onPressed: feature.onTap,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.all(20),
+          side: BorderSide(
+            color: featureColor.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: featureColor.withValues(alpha: 0.02),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: featureColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                feature.icon,
+                color: featureColor,
+                size: 24,
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(TownFeatureConstants.iconPadding),
-                decoration: BoxDecoration(
-                  color: feature.color.withValues(alpha: TownFeatureConstants.iconBackgroundAlpha),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(feature.icon, color: feature.color, size: TownFeatureConstants.iconSize),
-              ),
-              const SizedBox(width: TownFeatureConstants.cardPadding),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      feature.title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: TownFeatureConstants.cardTitleFontWeight,
-                      ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    feature.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
                     ),
-                    const SizedBox(height: TownFeatureConstants.titleSpacing),
-                    Text(
-                      feature.description,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  Text(
+                    feature.description,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: TownFeatureConstants.chevronAlpha),
-              ),
-            ],
-          ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: featureColor.withValues(alpha: 0.6),
+            ),
+          ],
         ),
       ),
     );

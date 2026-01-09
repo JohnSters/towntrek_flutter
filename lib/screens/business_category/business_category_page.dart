@@ -2,10 +2,152 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../core/config/business_category_config.dart';
 import 'business_category_state.dart';
 import 'business_category_view_model.dart';
 import 'widgets/widgets.dart';
+
+/// Animated Events Button that pulses when events are available
+class _AnimatedEventsButton extends StatefulWidget {
+  final bool hasEvents;
+  final int eventCount;
+  final VoidCallback? onPressed;
+
+  const _AnimatedEventsButton({
+    required this.hasEvents,
+    required this.eventCount,
+    this.onPressed,
+  });
+
+  @override
+  State<_AnimatedEventsButton> createState() => _AnimatedEventsButtonState();
+}
+
+class _AnimatedEventsButtonState extends State<_AnimatedEventsButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _glowAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.05,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _glowAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.8,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    if (widget.hasEvents) {
+      _animationController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedEventsButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hasEvents != oldWidget.hasEvents) {
+      if (widget.hasEvents) {
+        _animationController.repeat(reverse: true);
+      } else {
+        _animationController.stop();
+        _animationController.reset();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.hasEvents) {
+      return FilledButton.icon(
+        onPressed: widget.onPressed,
+        icon: const Icon(Icons.event),
+        label: const Text('No Events'),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(48),
+          elevation: 0,
+        ),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withValues(alpha: _glowAnimation.value * 0.3),
+                blurRadius: 12 + (_glowAnimation.value * 8),
+                spreadRadius: _glowAnimation.value * 2,
+              ),
+            ],
+          ),
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: FilledButton.icon(
+              onPressed: widget.onPressed,
+              icon: Icon(
+                Icons.event,
+                color: Colors.white,
+                shadows: [
+                  Shadow(
+                    color: Color.fromRGBO(0, 128, 0, 0.5),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              label: Text(
+                '${widget.eventCount} Events',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  shadows: [
+                    Shadow(
+                      color: Color.fromRGBO(0, 128, 0, 0.5),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                elevation: 4 + (_glowAnimation.value * 2),
+                shadowColor: Colors.green.withValues(alpha: 0.4),
+                backgroundColor: Colors.green.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
 /// Page for displaying business categories for a selected town
 class BusinessCategoryPage extends StatelessWidget {
@@ -327,17 +469,10 @@ class _BusinessCategoryPageContent extends StatelessWidget {
         const SizedBox(width: 16),
         // Events Button
         Expanded(
-          child: FilledButton.icon(
+          child: _AnimatedEventsButton(
+            hasEvents: hasEvents,
+            eventCount: state.currentEventCount,
             onPressed: hasEvents ? () => viewModel.navigateToEvents(context) : null,
-            icon: const Icon(Icons.event),
-            label: Text(hasEvents
-                ? '${state.currentEventCount} ${BusinessCategoryConstants.eventsText}'
-                : BusinessCategoryConstants.noEventsText),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-              elevation: hasEvents ? 2 : 0,
-              shadowColor: hasEvents ? Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3) : null,
-            ),
           ),
         ),
       ],

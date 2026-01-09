@@ -37,42 +37,41 @@ class _TownFeatureSelectionScreenContent extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      body: Column(
-        children: [
-          PageHeader(
-            title: town.name,
-            subtitle: town.province,
-            height: TownFeatureConstants.pageHeaderHeight,
-            trailing: IconButton(
-              icon: Icon(Icons.location_on, color: colorScheme.primary),
-              onPressed: () => viewModel.changeTown(context),
-              tooltip: TownFeatureConstants.changeTownTooltip,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            PageHeader(
+              title: town.name,
+              subtitle: town.province,
+              height: TownFeatureConstants.pageHeaderHeight,
+              headerType: HeaderType.default_,
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(TownFeatureConstants.pagePadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    TownFeatureConstants.pageTitle,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: TownFeatureConstants.titleFontWeight,
-                      color: colorScheme.onSurface,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(TownFeatureConstants.pagePadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      TownFeatureConstants.pageTitle,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: TownFeatureConstants.titleFontWeight,
+                        color: colorScheme.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: TownFeatureConstants.contentSpacing),
+                    const SizedBox(height: TownFeatureConstants.contentSpacing),
 
-                  // Feature Cards
-                  ..._buildFeatureCards(context, viewModel, town),
-                ],
+                    // Feature Cards
+                    ..._buildFeatureCards(context, viewModel, town),
+                  ],
+                ),
               ),
             ),
-          ),
-          const BackNavigationFooter(),
-        ],
+            const BackNavigationFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -106,7 +105,7 @@ class _TownFeatureSelectionScreenContent extends StatelessWidget {
       return Column(
         children: [
           FeatureCard(feature: feature),
-          if (feature != features.last) const SizedBox(height: TownFeatureConstants.cardSpacing),
+          if (feature != features.last) const SizedBox(height: 16),
         ],
       );
     }).toList();

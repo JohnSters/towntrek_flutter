@@ -7,15 +7,8 @@ class CurrentEventsConstants {
   CurrentEventsConstants._();
 
   // Layout spacing and padding
-  static const double listPaddingHorizontal = 16.0;
-  static const double listPaddingVertical = 12.0;
-  static const double cardMarginBottom = 16.0;
-  static const double cardPaddingAll = 16.0;
-  static const double eventCardPaddingHorizontal = 20.0;
-  static const double eventCardPaddingVertical = 16.0;
-  static const double logoSize = 80.0;
-  static const double logoMarginRight = 16.0;
-  static const double contentPadding = 16.0;
+  static const double cardSpacing = 16.0; // Space between cards
+  static const double logoSize = 64.0; // Consistent with other Material 3 cards
   static const double loadMorePaddingVertical = 16.0;
 
   // Card styling
@@ -108,7 +101,6 @@ class CurrentEventsConstants {
 
   // Page layout
   static const double pageHeaderHeight = 120.0;
-  static const double cardSpacing = 16.0;
 
   // Font weights
   static const FontWeight titleFontWeight = FontWeight.bold;

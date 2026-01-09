@@ -37,10 +37,28 @@ class _CurrentEventsScreenContent extends StatelessWidget {
     final viewModel = context.watch<CurrentEventsViewModel>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${CurrentEventsConstants.eventsPrefix} ${viewModel.townName}'),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Page Header
+            PageHeader(
+              title: viewModel.townName,
+              subtitle: CurrentEventsConstants.eventsPrefix,
+              height: 80, // Consistent header height
+              headerType: HeaderType.event,
+            ),
+
+            // Main content area
+            Expanded(
+              child: _buildContent(context, viewModel),
+            ),
+
+            // Navigation footer
+            const BackNavigationFooter(),
+          ],
+        ),
       ),
-      body: _buildContent(context, viewModel),
     );
   }
 
@@ -128,10 +146,7 @@ class _CurrentEventsScreenContent extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: viewModel.refreshEvents,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(
-          horizontal: CurrentEventsConstants.listPaddingHorizontal,
-          vertical: CurrentEventsConstants.listPaddingVertical,
-        ),
+        padding: const EdgeInsets.all(24),
         itemCount: events.length + (hasNextPage ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == events.length) {
