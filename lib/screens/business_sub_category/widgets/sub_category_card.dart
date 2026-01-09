@@ -23,120 +23,89 @@ class SubCategoryCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final bool isDisabled = subCategory.businessCount == 0;
 
-    return Card(
-      margin: const EdgeInsets.only(
-        bottom: BusinessSubCategoryConstants.cardMarginBottom,
-      ),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          BusinessSubCategoryConstants.cardBorderRadius,
-        ),
+    return OutlinedButton(
+      onPressed: isDisabled ? null : () => _navigateToBusinessCardPage(context),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.all(20),
         side: BorderSide(
-          color: colorScheme.outline.withValues(
-            alpha: BusinessSubCategoryConstants.cardBorderOpacity,
-          ),
+          color: isDisabled
+              ? colorScheme.outline.withValues(alpha: 0.2) // Disabled: 20% opacity
+              : colorScheme.primary.withValues(alpha: 0.25), // Enabled: 25% opacity
+          width: 1.5,
         ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        backgroundColor: isDisabled
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1) // Disabled: 10%
+            : colorScheme.primary.withValues(alpha: 0.02), // Enabled: 5%
       ),
-      child: Opacity(
-        opacity: isDisabled
-            ? BusinessSubCategoryConstants.disabledOpacity
-            : 1.0,
-        child: InkWell(
-          onTap: isDisabled ? null : () => _navigateToBusinessCardPage(context),
-          borderRadius: BorderRadius.circular(
-            BusinessSubCategoryConstants.cardBorderRadius,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: BusinessSubCategoryConstants.subCategoryCardPaddingHorizontal,
-              vertical: BusinessSubCategoryConstants.subCategoryCardPaddingVertical,
+      child: Row(
+        children: [
+          // Icon Container
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: isDisabled
+                  ? colorScheme.surfaceContainerHighest
+                  : colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
+            child: Icon(
+              BusinessCategoryConfig.getCategoryIcon(category.key),
+              size: 24,
+              color: isDisabled
+                  ? colorScheme.onSurfaceVariant
+                  : colorScheme.onSecondaryContainer,
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Title and Description
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon Container
-                Container(
-                  width: BusinessSubCategoryConstants.iconContainerSize,
-                  height: BusinessSubCategoryConstants.iconContainerSize,
-                  decoration: BoxDecoration(
-                    color: BusinessCategoryConfig.getCategoryColor(
-                      category.key,
-                      colorScheme,
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      BusinessSubCategoryConstants.iconContainerBorderRadius,
-                    ),
+                // Title
+                Text(
+                  subCategory.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDisabled
+                        ? colorScheme.onSurface.withValues(alpha: 0.6)
+                        : colorScheme.onSurface,
                   ),
-                  child: Icon(
-                    BusinessCategoryConfig.getCategoryIcon(category.key),
-                    size: BusinessSubCategoryConstants.iconSize,
-                    color: BusinessCategoryConfig.getCategoryIconColor(
-                      category.key,
-                      colorScheme,
-                    ),
-                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
 
-                const SizedBox(width: BusinessSubCategoryConstants.iconSpacing),
+                const SizedBox(height: 4),
 
-                // Title and Description
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Title
-                      Text(
-                        subCategory.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isDisabled
-                              ? colorScheme.onSurface.withValues(
-                                  alpha: BusinessSubCategoryConstants.disabledTextOpacity,
-                                )
-                              : colorScheme.onSurface,
-                        ),
-                        maxLines: BusinessSubCategoryConstants.maxTitleLines,
-                        overflow: BusinessSubCategoryConstants.textOverflow,
-                      ),
-
-                      const SizedBox(height: BusinessSubCategoryConstants.titleSpacing),
-
-                      // Description
-                      Text(
-                        subCategory.businessCount == 0
-                            ? BusinessSubCategoryConstants.noBusinessesYet
-                            : '${subCategory.businessCount} ${BusinessSubCategoryConstants.businessesLabel}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isDisabled
-                              ? colorScheme.onSurfaceVariant.withValues(
-                                  alpha: BusinessSubCategoryConstants.disabledTextOpacity,
-                                )
-                              : colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: BusinessSubCategoryConstants.maxDescriptionLines,
-                        overflow: BusinessSubCategoryConstants.textOverflow,
-                      ),
-                    ],
+                // Description
+                Text(
+                  subCategory.businessCount == 0
+                      ? BusinessSubCategoryConstants.noBusinessesYet
+                      : '${subCategory.businessCount} ${BusinessSubCategoryConstants.businessesLabel}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                ),
-
-                const SizedBox(width: BusinessSubCategoryConstants.arrowIconSpacing),
-
-                // Arrow Icon
-                Icon(
-                  Icons.chevron_right,
-                  size: BusinessSubCategoryConstants.arrowIconSize,
-                  color: isDisabled
-                      ? colorScheme.onSurfaceVariant.withValues(
-                          alpha: BusinessSubCategoryConstants.disabledArrowOpacity,
-                        )
-                      : colorScheme.onSurfaceVariant,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-        ),
+
+          // Arrow Icon
+          Icon(
+            Icons.chevron_right,
+            color: isDisabled
+                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
+                : colorScheme.primary.withValues(alpha: 0.6),
+          ),
+        ],
       ),
     );
   }

@@ -34,13 +34,16 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildContent(),
-          ),
-          const BackNavigationFooter(),
-        ],
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildContent(),
+            ),
+            const BackNavigationFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -100,11 +103,11 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
                 if (state.sortedSubCategories.isEmpty)
                   _buildEmptyState()
                 else
-                  ListView.builder(
+                  ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
                     itemCount: state.sortedSubCategories.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final subCategory = state.sortedSubCategories[index];
                       return SubCategoryCard(
