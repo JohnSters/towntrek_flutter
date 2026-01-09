@@ -362,7 +362,90 @@ context.go('/details/123');
 
 ---
 
-## 7. Code Quality
+## 7. Material 3 Design System - UPDATED 2025
+
+### Our App's Material 3 Implementation
+
+This app uses a custom Material 3 design system with outlined buttons for interactive cards:
+
+#### OutlinedButton Card Pattern
+```dart
+OutlinedButton(
+  onPressed: onPressed,
+  style: OutlinedButton.styleFrom(
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    side: BorderSide(
+      color: isDisabled
+          ? colorScheme.outline.withValues(alpha: 0.2)
+          : colorScheme.primary.withValues(alpha: 0.25),
+      width: 1.0,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    backgroundColor: isDisabled
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
+        : colorScheme.primary.withValues(alpha: 0.05),
+  ),
+  child: Row(
+    children: [
+      // Icon container with secondary container background
+      Container(
+        width: 48, height: 48,
+        decoration: BoxDecoration(
+          color: colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(Icons.build, color: colorScheme.onSecondaryContainer),
+      ),
+      const SizedBox(width: 16),
+      // Title and subtitle column
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+      // Theme-aware chevron
+      Icon(
+        Icons.chevron_right,
+        color: colorScheme.primary.withValues(alpha: 0.6),
+      ),
+    ],
+  ),
+)
+```
+
+#### Key Design Features:
+- **Soft colored borders**: Primary color with 25% opacity for enabled states, outline with 20% for disabled
+- **Subtle backgrounds**: 5% primary color for enabled, 10% surface container for disabled
+- **Consistent sizing**: 48×48 icon containers, 16px spacing, 20×16 padding
+- **Theme-aware elements**: All colors use Material 3 color scheme tokens
+- **Proper disabled states**: Reduced opacity and alternative colors for unavailable items
+
+#### Implementation Across App:
+- **Service Categories**: `CategoryCard` widget with outlined button styling
+- **Service Sub-Categories**: `SubCategoryCard` widget with matching design
+- **Business Categories**: Similar pattern applied for consistency
+- **Event Cards**: Adapted pattern for event listings
+
+---
+
+## 8. Code Quality
 
 ### Constants and Magic Numbers
 ```dart
@@ -427,7 +510,7 @@ class ItemListView extends StatelessWidget {
 
 ---
 
-## 8. Performance Optimization
+## 9. Performance Optimization
 
 ### ListView Best Practices
 ```dart
@@ -489,7 +572,7 @@ BlocSelector<ItemBloc, ItemState, List<Item>>(
 
 ---
 
-## 9. Testing
+## 10. Testing
 
 ### Make Code Testable
 ```dart
@@ -533,7 +616,7 @@ void main() {
 
 ---
 
-## 10. Project Structure Example
+## 11. Project Structure Example
 
 ```
 lib/
@@ -583,7 +666,7 @@ lib/
 
 ---
 
-## 11. API Integration Best Practices
+## 12. API Integration Best Practices
 
 ### Repository Pattern
 ```dart
@@ -634,7 +717,7 @@ Future<List<Item>> _fetchWithFallback() async {
 
 ---
 
-## 12. Common Anti-Patterns to Avoid
+## 13. Common Anti-Patterns to Avoid
 
 ### ❌ Don't Do This
 1. **Business logic in widgets**
@@ -650,7 +733,7 @@ Future<List<Item>> _fetchWithFallback() async {
 
 ---
 
-## 13. Checklist for Every Screen
+## 14. Checklist for Every Screen
 
 Before considering a screen complete, verify:
 
@@ -669,7 +752,7 @@ Before considering a screen complete, verify:
 
 ---
 
-## 14. Resources
+## 15. Resources
 
 ### Your Current Dependencies Analysis
 
