@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
-import '../../models/models.dart';
-import '../../repositories/repositories.dart';
-import '../../services/navigation_service.dart';
-import '../../core/utils/external_link_launcher.dart';
+import 'business_details_state.dart';
+import 'business_details_view_model.dart';
 import 'widgets/business_status_indicator.dart';
 import 'widgets/business_info_card.dart';
 import 'widgets/business_image_gallery.dart';
@@ -12,98 +10,6 @@ import 'widgets/business_documents_section.dart';
 import 'widgets/operating_hours_section.dart';
 import 'widgets/reviews_section.dart';
 import 'widgets/contact_actions_section.dart';
-
-/// State classes for Business Details page
-sealed class BusinessDetailsState {}
-
-class BusinessDetailsLoading extends BusinessDetailsState {}
-
-class BusinessDetailsSuccess extends BusinessDetailsState {
-  final BusinessDetailDto business;
-  BusinessDetailsSuccess(this.business);
-}
-
-class BusinessDetailsError extends BusinessDetailsState {
-  final AppError error;
-  BusinessDetailsError(this.error);
-}
-
-/// ViewModel for Business Details page business logic
-class BusinessDetailsViewModel extends ChangeNotifier {
-  final BusinessRepository _businessRepository;
-  final NavigationService _navigationService;
-  final ErrorHandler _errorHandler;
-
-  BusinessDetailsState _state = BusinessDetailsLoading();
-  BusinessDetailsState get state => _state;
-
-  final int businessId;
-  final String businessName;
-
-  BusinessDetailsViewModel({
-    required this.businessId,
-    required this.businessName,
-    required BusinessRepository businessRepository,
-    required NavigationService navigationService,
-    required ErrorHandler errorHandler,
-  })  : _businessRepository = businessRepository,
-        _navigationService = navigationService,
-        _errorHandler = errorHandler {
-    loadBusinessDetails();
-  }
-
-  Future<void> loadBusinessDetails() async {
-    _state = BusinessDetailsLoading();
-    notifyListeners();
-
-    try {
-      final details = await _businessRepository.getBusinessDetails(businessId);
-      _state = BusinessDetailsSuccess(details);
-      notifyListeners();
-    } catch (e) {
-      final appError = await _errorHandler.handleError(
-        e,
-        retryAction: loadBusinessDetails,
-      );
-      _state = BusinessDetailsError(appError);
-      notifyListeners();
-    }
-  }
-
-  Future<void> navigateToBusiness(BuildContext context, BusinessDetailDto business) async {
-    try {
-      final result = await _navigationService.navigateToBusiness(business);
-      if (result.isFailure) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.error ?? BusinessDetailsConstants.navigationFailedMessage),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(BusinessDetailsConstants.navigationErrorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void rateBusiness(BuildContext context, BusinessDetailDto business) {
-    // Link to web application for reviews as requested
-    ExternalLinkLauncher.openWebsite(
-      context,
-      BusinessDetailsConstants.reviewsUrl,
-      failureMessage: 'Unable to open reviews page',
-    );
-  }
-}
 
 /// Comprehensive business details page with gallery, hours, reviews, and contact options
 class BusinessDetailsPage extends StatelessWidget {
