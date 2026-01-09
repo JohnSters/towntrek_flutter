@@ -84,6 +84,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
           title: viewModel.town.name,
           subtitle: '${viewModel.town.province} • ${ServiceCategoryConstants.servicesSubtitle}',
           height: ServiceCategoryConstants.pageHeaderHeight,
+          headerType: HeaderType.service,
         ),
         Expanded(
           child: SingleChildScrollView(

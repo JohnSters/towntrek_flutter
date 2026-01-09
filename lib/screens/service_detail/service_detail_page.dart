@@ -41,6 +41,12 @@ class _ServiceDetailPageContent extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
+          PageHeader(
+            title: viewModel.serviceName,
+            subtitle: 'Service Details',
+            height: 120.0,
+            headerType: HeaderType.service,
+          ),
           Expanded(
             child: _buildContent(context, viewModel),
           ),

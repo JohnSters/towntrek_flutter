@@ -24,6 +24,7 @@ class BusinessLoadingView extends StatelessWidget {
           title: subCategory.name,
           subtitle: '${category.name} in ${town.name}',
           height: BusinessCardConstants.loadingHeaderHeight,
+          headerType: HeaderType.business,
         ),
         const Expanded(
           child: Center(

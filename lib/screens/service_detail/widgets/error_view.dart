@@ -24,6 +24,7 @@ class ServiceDetailErrorView extends StatelessWidget {
           title: serviceName,
           subtitle: ServiceDetailConstants.errorSubtitle,
           height: ServiceDetailConstants.pageHeaderHeight,
+          headerType: HeaderType.service,
         ),
         Expanded(
           child: Center(

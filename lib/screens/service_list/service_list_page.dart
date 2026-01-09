@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
+import '../../core/constants/service_list_constants.dart';
 import 'service_list_state.dart';
 import 'service_list_view_model.dart';
 import 'widgets/widgets.dart';
@@ -45,6 +46,12 @@ class _ServiceListPageContent extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
+          PageHeader(
+            title: viewModel.subCategory.name,
+            subtitle: '${ServiceListConstants.servicesSubtitle} in ${viewModel.town.name}',
+            height: ServiceListConstants.pageHeaderHeight,
+            headerType: HeaderType.service,
+          ),
           Expanded(
             child: _buildContent(context, viewModel),
           ),

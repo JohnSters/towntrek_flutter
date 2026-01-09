@@ -24,6 +24,7 @@ class ServiceListLoadingView extends StatelessWidget {
           title: subCategory.name,
           subtitle: '${category.name} in ${town.name}',
           height: ServiceListConstants.pageHeaderHeight,
+          headerType: HeaderType.service,
         ),
         const Expanded(
           child: Center(

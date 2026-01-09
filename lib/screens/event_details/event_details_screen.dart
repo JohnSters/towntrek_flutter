@@ -122,6 +122,7 @@ class _LoadingView extends StatelessWidget {
             title: eventName,
             subtitle: eventType ?? EventDetailsConstants.loadingSubtitle,
             backgroundImage: initialImageUrl,
+            headerType: HeaderType.event,
           ),
         ),
         const SliverFillRemaining(
@@ -154,6 +155,7 @@ class _ErrorView extends StatelessWidget {
         PageHeader(
           title: eventName,
           subtitle: EventDetailsConstants.errorSubtitle,
+          headerType: HeaderType.event,
         ),
         Expanded(
           child: ErrorView(
@@ -185,6 +187,7 @@ class _EventDetailsView extends StatelessWidget {
             title: eventDetails.name,
             subtitle: eventDetails.eventType,
             backgroundImage: eventDetails.coverImageUrl,
+            headerType: HeaderType.event,
           ),
         ),
 

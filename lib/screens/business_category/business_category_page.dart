@@ -241,6 +241,7 @@ class _BusinessCategoryPageContent extends StatelessWidget {
           title: state.town.name,
           subtitle: '${state.town.province} • ${state.categories.length} Categories',
           height: BusinessCategoryConstants.headerHeight,
+          headerType: HeaderType.business,
         ),
 
         // Scrollable content

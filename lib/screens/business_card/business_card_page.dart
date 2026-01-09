@@ -93,6 +93,7 @@ class _BusinessCardPageContent extends StatelessWidget {
           title: viewModel.subCategory.name,
           subtitle: '${viewModel.category.name} in ${viewModel.town.name}',
           height: BusinessCardConstants.loadingHeaderHeight,
+          headerType: HeaderType.business,
         ),
         Expanded(
           child: ErrorView(error: state.error),
@@ -113,6 +114,7 @@ class _BusinessCardPageContent extends StatelessWidget {
           title: viewModel.subCategory.name,
           subtitle: '${viewModel.category.name} in ${viewModel.town.name}',
           height: BusinessCardConstants.successHeaderHeight,
+          headerType: HeaderType.business,
         ),
 
         // Business count info

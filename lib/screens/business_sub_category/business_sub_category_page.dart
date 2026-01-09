@@ -82,6 +82,7 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
           title: state.category.name,
           subtitle: '${BusinessSubCategoryConstants.subtitlePrefix} ${state.town.name}',
           height: BusinessSubCategoryConstants.pageHeaderHeight,
+          headerType: HeaderType.business,
         ),
         Expanded(
           child: SingleChildScrollView(

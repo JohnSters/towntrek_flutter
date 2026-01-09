@@ -33,6 +33,7 @@ class ServiceListErrorView extends StatelessWidget {
           title: subCategory.name,
           subtitle: '${category.name} in ${town.name}',
           height: ServiceListConstants.pageHeaderHeight,
+          headerType: HeaderType.service,
         ),
         Expanded(
           child: Center(

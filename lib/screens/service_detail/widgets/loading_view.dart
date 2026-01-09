@@ -19,6 +19,7 @@ class ServiceDetailLoadingView extends StatelessWidget {
           title: serviceName,
           subtitle: ServiceDetailConstants.loadingSubtitle,
           height: ServiceDetailConstants.pageHeaderHeight,
+          headerType: HeaderType.service,
         ),
         const Expanded(
           child: Center(
