@@ -45,23 +45,26 @@ class _BusinessDetailsPageContent extends StatelessWidget {
     final viewModel = context.watch<BusinessDetailsViewModel>();
 
     return Scaffold(
-      body: Column(
-        children: [
-          PageHeader(
-            title: viewModel.businessName,
-            subtitle: 'Business Details',
-            height: 120.0,
-            headerType: HeaderType.business,
-          ),
-          // Main content area
-          Expanded(
-            child: _buildContent(context, viewModel),
-          ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            PageHeader(
+              title: viewModel.businessName,
+              subtitle: 'Business Details',
+              height: 120.0,
+              headerType: HeaderType.business,
+            ),
+            // Main content area
+            Expanded(
+              child: _buildContent(context, viewModel),
+            ),
 
-          // Navigation footer - only show when we have business data
-          if (viewModel.state is BusinessDetailsSuccess)
-            const BackNavigationFooter(),
-        ],
+            // Navigation footer - only show when we have business data
+            if (viewModel.state is BusinessDetailsSuccess)
+              const BackNavigationFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -121,18 +124,9 @@ class _BusinessDetailsPageContent extends StatelessWidget {
   ) {
     final business = state.business;
 
-    return Column(
-      children: [
-        // Business Header with status
-        BusinessHeader(
-          businessName: business.name,
-          statusIndicator: BusinessStatusIndicator(business: business),
-        ),
-
-        // Scrollable content
-        Expanded(
-          child: CustomScrollView(
-            slivers: [
+    return Expanded(
+      child: CustomScrollView(
+        slivers: [
               // Business Info Card (Description and Address)
               SliverToBoxAdapter(
                 child: BusinessInfoCard(business: business),
@@ -182,9 +176,7 @@ class _BusinessDetailsPageContent extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ],
-    );
+        );
   }
 }
 

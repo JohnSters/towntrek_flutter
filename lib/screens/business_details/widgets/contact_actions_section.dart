@@ -21,61 +21,76 @@ class ContactActionsSection extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.1),
-          ),
-        ),
-        child: Padding(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: OutlinedButton(
+        onPressed: null, // Not clickable, just for styling
+        style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Section Title
-              Row(
+          side: BorderSide(
+            color: colorScheme.primary.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: colorScheme.primary.withValues(alpha: 0.02),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Pill-shaped title
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.contact_phone,
-                    size: 24,
+                    size: 18,
                     color: colorScheme.primary,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Text(
                     'Contact & Actions',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                       color: colorScheme.onSurface,
                     ),
                   ),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-              // Action Buttons - Full Width Rows
-              Column(
-                children: [
-                  // Take Me There Button
-                  if (business.latitude != null && business.longitude != null)
-                    _buildFullWidthActionButton(
-                      context,
-                      icon: Icons.directions,
-                      label: 'Take Me There',
-                      onPressed: onTakeMeThere,
-                      backgroundColor: Colors.teal,
-                    ),
+            // Action Buttons - Full Width Rows
+            Column(
+              children: [
+                // Take Me There Button
+                if (business.latitude != null && business.longitude != null)
+                  _buildFullWidthActionButton(
+                    context,
+                    icon: Icons.directions,
+                    label: 'Take Me There',
+                    onPressed: onTakeMeThere,
+                    backgroundColor: Colors.teal,
+                  ),
 
-                  // Contact Us Button
-                  if (business.phoneNumber != null)
-                    _buildFullWidthActionButton(
-                      context,
-                      icon: Icons.phone,
-                      label: 'Call',
-                      onPressed: () => _launchPhone(context, business.phoneNumber!),
+                // Contact Us Button
+                if (business.phoneNumber != null)
+                  _buildFullWidthActionButton(
+                    context,
+                    icon: Icons.phone,
+                    label: 'Call',
+                    onPressed: () => _launchPhone(context, business.phoneNumber!),
                       backgroundColor: Colors.green,
                     ),
 
@@ -162,8 +177,7 @@ class ContactActionsSection extends StatelessWidget {
                   ],
                 ),
               ],
-            ],
-          ),
+          ],
         ),
       ),
     );

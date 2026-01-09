@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/town_feature_constants.dart';
 import 'feature_data.dart';
 
 class FeatureCard extends StatelessWidget {

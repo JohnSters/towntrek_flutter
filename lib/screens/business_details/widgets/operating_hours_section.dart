@@ -23,80 +23,76 @@ class OperatingHoursSection extends StatelessWidget {
     final specialHours = operatingHours.where((h) => h.isSpecialHours).toList();
     final upcomingSpecialOperatingHours = BusinessUtils.getUpcomingSpecialOperatingHours(specialOperatingHours);
 
+    // Sort hours by day of week
+    regularHours.sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
+    specialHours.sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.1),
-          ),
-        ),
-        child: Padding(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: OutlinedButton(
+        onPressed: null, // Not clickable, just for styling
+        style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-                // Date-based Special Operating Hours (e.g. holiday closures)
-                if (upcomingSpecialOperatingHours.isNotEmpty) ...[
-                  _buildSpecialOperatingHoursBanners(context, upcomingSpecialOperatingHours),
-                  const SizedBox(height: 20),
-                ],
-              // Section Title
-              Row(
+          side: BorderSide(
+            color: colorScheme.primary.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: colorScheme.primary.withValues(alpha: 0.02),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Pill-shaped title
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.access_time,
-                    size: 24,
+                    size: 18,
                     color: colorScheme.primary,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Text(
                     'Operating Hours',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                       color: colorScheme.onSurface,
                     ),
                   ),
                 ],
               ),
+            ),
 
+            const SizedBox(height: 16),
+
+            // Date-based Special Operating Hours (e.g. holiday closures)
+            if (upcomingSpecialOperatingHours.isNotEmpty) ...[
+              _buildSpecialOperatingHoursBanners(context, upcomingSpecialOperatingHours),
               const SizedBox(height: 20),
-
-              // Regular Hours
-              if (regularHours.isNotEmpty) ...[
-                ...regularHours.map((hour) => _buildHourRow(context, hour)),
-                if (specialHours.isNotEmpty) const SizedBox(height: 20),
-              ],
-
-              // Special Hours
-              if (specialHours.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Special Hours',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ...specialHours.map((hour) => _buildHourRow(context, hour, isSpecial: true)),
-              ],
             ],
-          ),
+
+            // Day-by-day operating hours with color coding
+            ...regularHours.map((hour) => _buildDayCard(context, hour)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHourRow(BuildContext context, OperatingHourDto hour, {bool isSpecial = false}) {
+  Widget _buildDayCard(BuildContext context, OperatingHourDto hour) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -105,20 +101,44 @@ class OperatingHoursSection extends StatelessWidget {
         ? '${BusinessUtils.formatTime(hour.openTime!)} - ${BusinessUtils.formatTime(hour.closeTime!)}'
         : 'Closed';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: hour.isOpen
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+            : colorScheme.errorContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: hour.isOpen
+              ? colorScheme.outline.withValues(alpha: 0.2)
+              : colorScheme.error.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: Row(
         children: [
-          SizedBox(
-            width: 100,
+          // Day indicator
+          Container(
+            width: 80,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: hour.isOpen
+                  ? colorScheme.primary.withValues(alpha: 0.1)
+                  : colorScheme.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
             child: Text(
               dayName,
               style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: isSpecial ? colorScheme.primary : colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+                color: hour.isOpen ? colorScheme.primary : colorScheme.error,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
+          const SizedBox(width: 12),
+          // Hours display
           Expanded(
             child: Text(
               hour.isSpecialHours && hour.specialHoursNote != null
