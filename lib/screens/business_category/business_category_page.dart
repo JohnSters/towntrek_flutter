@@ -254,7 +254,7 @@ class _BusinessCategoryPageContent extends StatelessWidget {
                 // Action Buttons (Change Town & Events)
                 _buildActionButtons(context, viewModel, state),
 
-                SizedBox(height: BusinessCategoryConstants.extraLargeSpacing),
+                SizedBox(height: BusinessCategoryConstants.smallSpacing),
 
                 // Categories grid
                 if (state.categories.isEmpty)
@@ -266,7 +266,6 @@ class _BusinessCategoryPageContent extends StatelessWidget {
                           size: BusinessCategoryConstants.iconSizeExtraLarge,
                           color: colorScheme.onSurface.withValues(alpha: BusinessCategoryConstants.lowAlpha),
                         ),
-                        SizedBox(height: BusinessCategoryConstants.smallSpacing),
                         Text(
                           BusinessCategoryConstants.noCategoriesText,
                           style: theme.textTheme.bodyLarge?.copyWith(

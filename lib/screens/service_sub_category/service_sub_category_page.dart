@@ -42,13 +42,16 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildContent(),
-          ),
-          const BackNavigationFooter(),
-        ],
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildContent(),
+            ),
+            const BackNavigationFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -94,40 +97,128 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(
-              ServiceSubCategoryConstants.contentPadding,
-            ),
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CategoryInfoBadge(
                   subCategoryCount: state.sortedSubCategories.length,
                 ),
-                const SizedBox(height: ServiceSubCategoryConstants.infoBadgeSpacing),
+                const SizedBox(height: 16),
                 if (state.sortedSubCategories.isEmpty)
                   const ServiceEmptyStateView()
                 else
-                  ListView.builder(
+                  ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
                     itemCount: state.sortedSubCategories.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final subCategory = state.sortedSubCategories[index];
-                      return SubCategoryCard(
-                        subCategory: subCategory,
-                        countsAvailable: state.countsAvailable,
-                        onTap: () => _navigateToServiceList(context, state, subCategory),
-                      );
+                      return _buildSubCategoryCard(context, subCategory, state.countsAvailable, state);
                     },
                   ),
-                const SizedBox(height: ServiceSubCategoryConstants.bottomSpacing),
+                const SizedBox(height: 32),
               ],
             ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildSubCategoryCard(
+    BuildContext context,
+    ServiceSubCategoryDto subCategory,
+    bool countsAvailable,
+    ServiceSubCategorySuccess state,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDisabled = countsAvailable && subCategory.serviceCount == 0;
+
+    return OutlinedButton(
+      onPressed: isDisabled ? null : () => _navigateToServiceList(context, state, subCategory),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        side: BorderSide(
+          color: isDisabled
+              ? colorScheme.outline.withValues(alpha: 0.2)
+              : colorScheme.primary.withValues(alpha: 0.25),
+          width: 1.0,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: isDisabled
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
+            : colorScheme.primary.withValues(alpha: 0.05),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: isDisabled
+                  ? colorScheme.surfaceContainerHighest
+                  : colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.build,
+              size: 24,
+              color: isDisabled
+                  ? colorScheme.onSurfaceVariant
+                  : colorScheme.onSecondaryContainer,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  subCategory.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDisabled
+                        ? colorScheme.onSurface.withValues(alpha: 0.6)
+                        : colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  _getSubCategorySubtitle(subCategory, countsAvailable, isDisabled),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right,
+            color: isDisabled
+                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
+                : colorScheme.primary.withValues(alpha: 0.6),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getSubCategorySubtitle(ServiceSubCategoryDto subCategory, bool countsAvailable, bool isDisabled) {
+    if (isDisabled) {
+      return 'No services available';
+    }
+
+    if (countsAvailable) {
+      return '${subCategory.serviceCount} services';
+    }
+
+    return 'View services';
   }
 
   void _navigateToServiceList(

@@ -66,13 +66,12 @@ class ServiceFeaturesSection extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12), // Reduced from 20 to 12
               GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4, // 4 icons per row
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.7, // Allow more height for text
+                  childAspectRatio: 0.8, // Allow more height for text
                 ),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),

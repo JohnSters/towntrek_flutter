@@ -39,13 +39,16 @@ class _ServiceCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildContent(),
-          ),
-          const BackNavigationFooter(),
-        ],
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildContent(),
+            ),
+            const BackNavigationFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -88,12 +91,12 @@ class _ServiceCategoryPageContent extends StatelessWidget {
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(ServiceCategoryConstants.pagePadding),
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildActionButtons(context),
-                const SizedBox(height: ServiceCategoryConstants.actionButtonSpacing),
+                const SizedBox(height: 24),
                 if (state.categories.isEmpty)
                   const EmptyStateView()
                 else
@@ -101,19 +104,12 @@ class _ServiceCategoryPageContent extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: state.categories.length,
-                    separatorBuilder: (context, index) => const SizedBox(
-                      height: ServiceCategoryConstants.cardSpacing,
-                    ),
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final category = state.categories[index];
-                      return CategoryCard(
-                        category: category,
-                        countsAvailable: state.countsAvailable,
-                        onTap: () => _navigateToSubCategories(context, category, state.countsAvailable),
-                      );
+                      return _buildCategoryCard(context, category, state.countsAvailable);
                     },
                   ),
-                const SizedBox(height: ServiceCategoryConstants.contentBottomSpacing),
               ],
             ),
           ),
@@ -126,19 +122,112 @@ class _ServiceCategoryPageContent extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: CategoryActionButton(
-            icon: ServiceCategoryConstants.changeTownIcon,
-            label: ServiceCategoryConstants.changeTownLabel,
-            onTap: () => _changeTown(context),
-            color: Theme.of(context).colorScheme.primary,
+          child: FilledButton.icon(
+            onPressed: () => _changeTown(context),
+            icon: const Icon(Icons.location_city),
+            label: const Text('Change Town'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              elevation: 2,
+              shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
+            ),
           ),
         ),
-        const SizedBox(width: ServiceCategoryConstants.actionButtonSpacing),
+        const SizedBox(width: 16),
         const Expanded(
           child: SizedBox(), // Placeholder for Events or other action
         ),
       ],
     );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, ServiceCategoryDto category, bool countsAvailable) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDisabled = countsAvailable && category.serviceCount == 0;
+
+    return OutlinedButton(
+      onPressed: isDisabled ? null : () => _navigateToSubCategories(context, category, countsAvailable),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        side: BorderSide(
+          color: isDisabled
+              ? colorScheme.outline.withValues(alpha: 0.2)
+              : colorScheme.primary.withValues(alpha: 0.25),
+          width: 1.0,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: isDisabled
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
+            : colorScheme.primary.withValues(alpha: 0.05),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: isDisabled
+                  ? colorScheme.surfaceContainerHighest
+                  : colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.build,
+              size: 24,
+              color: isDisabled
+                  ? colorScheme.onSurfaceVariant
+                  : colorScheme.onSecondaryContainer,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  category.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDisabled
+                        ? colorScheme.onSurface.withValues(alpha: 0.6)
+                        : colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  _getCategorySubtitle(category, countsAvailable, isDisabled),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right,
+            color: isDisabled
+                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
+                : colorScheme.primary.withValues(alpha: 0.6),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getCategorySubtitle(ServiceCategoryDto category, bool countsAvailable, bool isDisabled) {
+    if (isDisabled) {
+      return 'No services available';
+    }
+
+    if (countsAvailable) {
+      return '${category.serviceCount} services';
+    }
+
+    return 'View services';
   }
 
   void _navigateToSubCategories(
