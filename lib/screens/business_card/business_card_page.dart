@@ -42,16 +42,19 @@ class _BusinessCardPageContent extends StatelessWidget {
     final viewModel = context.watch<BusinessCardViewModel>();
 
     return Scaffold(
-      body: Column(
-        children: [
-          // Main content area
-          Expanded(
-            child: _buildContent(context, viewModel),
-          ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Main content area
+            Expanded(
+              child: _buildContent(context, viewModel),
+            ),
 
-          // Navigation footer
-          const BackNavigationFooter(),
-        ],
+            // Navigation footer
+            const BackNavigationFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -141,14 +144,15 @@ class _BusinessCardPageContent extends StatelessWidget {
         }
         return false;
       },
-      child: ListView.builder(
-        padding: EdgeInsets.all(BusinessCardConstants.listPadding),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(24),
         itemCount: state.businesses.length + (state.isLoadingMore ? 1 : 0),
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
           if (index == state.businesses.length) {
             return Center(
               child: Padding(
-                padding: EdgeInsets.all(BusinessCardConstants.loadingIndicatorPadding),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: const CircularProgressIndicator(),
               ),
             );
