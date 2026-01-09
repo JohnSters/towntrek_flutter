@@ -38,49 +38,62 @@ class ServiceFeaturesSection extends StatelessWidget {
         horizontal: ServiceDetailConstants.contentPadding,
         vertical: ServiceDetailConstants.sectionSpacing,
       ),
-      child: Card(
-        elevation: ServiceDetailConstants.cardElevation,
-        shadowColor: colorScheme.shadow.withValues(alpha: ServiceDetailConstants.shadowOpacity),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ServiceDetailConstants.cardBorderRadius),
+      padding: const EdgeInsets.all(ServiceDetailConstants.cardPadding),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: ServiceDetailConstants.cardBackgroundOpacity),
+        borderRadius: BorderRadius.circular(ServiceDetailConstants.cardBorderRadius),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: ServiceDetailConstants.cardBorderOpacity),
+          width: ServiceDetailConstants.cardBorderWidth,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(ServiceDetailConstants.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.star,
-                    size: ServiceDetailConstants.contactIconSize,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Service Features',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: ServiceDetailConstants.titleFontWeight,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Centered pill-shaped title
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+                width: 1,
               ),
-              GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // 4 icons per row
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.8, // Allow more height for text
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.star,
+                  size: ServiceDetailConstants.contactIconSize,
+                  color: colorScheme.primary,
                 ),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: features.length,
-                itemBuilder: (context, index) => _buildFeatureIcon(features[index], context),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  'Service Features',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: ServiceDetailConstants.titleFontWeight,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3, // 3 icons per row for better spacing
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 0.9, // Better proportion for larger icons
+            ),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: features.length,
+            itemBuilder: (context, index) => _buildFeatureIcon(features[index], context),
+          ),
+        ],
       ),
     );
   }
@@ -166,11 +179,11 @@ class ServiceFeaturesSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 48, // Optimized size for grid
-          height: 48, // Optimized size for grid
+          width: 56, // Larger size for better visibility
+          height: 56, // Larger size for better visibility
           decoration: BoxDecoration(
             color: feature.color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: feature.color.withValues(alpha: 0.3),
               width: 1,
@@ -178,21 +191,21 @@ class ServiceFeaturesSection extends StatelessWidget {
           ),
           child: Icon(
             feature.icon,
-            size: 22, // Appropriate size for 48px container
+            size: 28, // Larger icon for 56px container
             color: feature.color,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
           feature.label,
           style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
-            fontSize: 8.5, // Very small but readable
+            fontSize: 9.5, // Slightly larger for readability
             fontWeight: FontWeight.w500,
-            height: 1.0, // Very tight line height
+            height: 1.1, // Better line height
           ),
           textAlign: TextAlign.center,
-          maxLines: 3,
+          maxLines: 2, // Reduce from 3 to 2 lines for compactness
           overflow: TextOverflow.ellipsis,
         ),
       ],

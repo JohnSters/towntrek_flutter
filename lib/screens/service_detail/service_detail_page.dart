@@ -140,9 +140,9 @@ class _ServiceDetailPageContent extends StatelessWidget {
           child: ContactActionsSection(service: serviceDetails),
         ),
 
-        // Bottom spacing
+        // Bottom spacing for proper Material 3 layout
         const SliverToBoxAdapter(
-          child: SizedBox(height: 32),
+          child: SizedBox(height: 24),
         ),
       ],
     );

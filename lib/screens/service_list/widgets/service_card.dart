@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
-import '../../../core/constants/service_list_constants.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../service_detail/service_detail_page.dart';
 
@@ -18,94 +17,98 @@ class ServiceCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
-      margin: const EdgeInsets.only(
-        bottom: ServiceListConstants.cardMarginBottom,
-      ),
-      elevation: ServiceListConstants.cardElevation,
-      shadowColor: colorScheme.shadow.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          ServiceListConstants.cardBorderRadius,
+    return OutlinedButton(
+      onPressed: () => _navigateToServiceDetails(context),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.all(20),
+        side: BorderSide(
+          color: colorScheme.primary.withValues(alpha: 0.3),
+          width: 1.5,
         ),
-      ),
-      child: InkWell(
-        onTap: () => _navigateToServiceDetails(context),
-        borderRadius: BorderRadius.circular(
-          ServiceListConstants.cardBorderRadius,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(
-            ServiceListConstants.serviceCardPaddingHorizontal,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        backgroundColor: colorScheme.primary.withValues(alpha: 0.02),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  _buildServiceLogo(colorScheme),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          service.name,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: ServiceListConstants.titleFontWeight,
-                            color: colorScheme.onSurface,
-                          ),
-                          maxLines: ServiceListConstants.maxTitleLines,
-                          overflow: ServiceListConstants.textOverflow,
-                        ),
-                        const SizedBox(height: 4),
-                        _buildRatingAndVerificationRow(colorScheme, theme),
-                      ],
+              _buildServiceLogo(colorScheme),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      service.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (service.shortDescription != null &&
-                  service.shortDescription!.isNotEmpty)
-                Text(
-                  service.shortDescription!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                  maxLines: ServiceListConstants.maxDescriptionLines,
-                  overflow: ServiceListConstants.textOverflow,
-                ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => _navigateToServiceDetails(context),
-                  icon: const Icon(Icons.info_outline, size: 18),
-                  label: const Text('Service Details'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+                    const SizedBox(height: 8),
+                    _buildRatingAndVerificationRow(colorScheme, theme),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          if (service.shortDescription != null &&
+              service.shortDescription!.isNotEmpty)
+            Text(
+              service.shortDescription!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _navigateToServiceDetails(context),
+              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              label: const Text('View Details'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 1,
+                shadowColor: colorScheme.shadow.withValues(alpha: 0.3),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildServiceLogo(ColorScheme colorScheme) {
     return Container(
-      width: 60,
-      height: 60,
+      width: 64,
+      height: 64,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         color: colorScheme.surfaceContainerHighest,
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.4),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: service.logoUrl != null
           ? ClipRRect(
@@ -115,17 +118,17 @@ class ServiceCard extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
-                    Icons.handyman,
-                    size: 30,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    Icons.business_rounded,
+                    size: 32,
+                    color: colorScheme.primary.withValues(alpha: 0.6),
                   );
                 },
               ),
             )
           : Icon(
-              Icons.handyman,
-              size: 30,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              Icons.business_rounded,
+              size: 32,
+              color: colorScheme.primary.withValues(alpha: 0.6),
             ),
     );
   }
@@ -133,49 +136,73 @@ class ServiceCard extends StatelessWidget {
   Widget _buildRatingAndVerificationRow(ColorScheme colorScheme, ThemeData theme) {
     return Row(
       children: [
-        if (service.isVerified) ...[
-          Icon(Icons.verified, size: 16, color: Colors.blue),
-          const SizedBox(width: 4),
-          Text(
-            'Verified',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.blue,
-              fontWeight: FontWeight.bold,
+        // Verified Badge
+        if (service.isVerified)
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.blue.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              Icons.verified_rounded,
+              size: 16,
+              color: Colors.blue.shade700,
             ),
           ),
-          const SizedBox(width: 8),
-        ],
 
-        // Rating Row
+        // Rating with Stars and Count (Business Card Style)
         Row(
-          children: List.generate(5, (starIndex) {
-            final rating = service.rating ?? 0.0;
-            final starValue = starIndex + 1;
-            return Icon(
-              starValue <= rating
-                  ? Icons.star
-                  : starValue - 0.5 <= rating
-                      ? Icons.star_half
-                      : Icons.star_outline,
-              size: 16,
-              color: starValue <= rating + 0.5
-                  ? Colors.amber
-                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-            );
-          }),
-        ),
+          children: [
+            // Stars
+            Row(
+              children: List.generate(5, (starIndex) {
+                final rating = service.rating ?? 0.0;
+                final starValue = starIndex + 1;
+                return Icon(
+                  starValue <= rating
+                      ? Icons.star_rounded
+                      : starValue - 0.5 <= rating
+                          ? Icons.star_half_rounded
+                          : Icons.star_outline_rounded,
+                  size: 18,
+                  color: starValue <= rating + 0.5
+                      ? Colors.amber.shade600
+                      : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                );
+              }),
+            ),
 
-        const SizedBox(width: 6),
+            const SizedBox(width: 8),
 
-        // Rating Text
-        Text(
-          service.rating != null
-              ? '${service.rating!.toStringAsFixed(1)} (${service.totalReviews})'
-              : 'No reviews',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
-          ),
+            // Rating Text with Count
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.amber.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                service.rating != null
+                    ? '${service.rating!.toStringAsFixed(1)} (${service.totalReviews})'
+                    : 'No reviews',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.amber.shade800,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

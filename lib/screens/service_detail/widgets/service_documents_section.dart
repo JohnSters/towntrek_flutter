@@ -25,39 +25,51 @@ class ServiceDocumentsSection extends StatelessWidget {
         horizontal: ServiceDetailConstants.contentPadding,
         vertical: ServiceDetailConstants.sectionSpacing,
       ),
-      child: Card(
-        elevation: ServiceDetailConstants.cardElevation,
-        shadowColor: colorScheme.shadow.withValues(alpha: ServiceDetailConstants.shadowOpacity),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ServiceDetailConstants.cardBorderRadius),
+      padding: const EdgeInsets.all(ServiceDetailConstants.cardPadding),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: ServiceDetailConstants.cardBackgroundOpacity),
+        borderRadius: BorderRadius.circular(ServiceDetailConstants.cardBorderRadius),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: ServiceDetailConstants.cardBorderOpacity),
+          width: ServiceDetailConstants.cardBorderWidth,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(ServiceDetailConstants.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.description,
-                    size: ServiceDetailConstants.contactIconSize,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Documents & Certifications',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: ServiceDetailConstants.titleFontWeight,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Centered pill-shaped title
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+                width: 1,
               ),
-              const SizedBox(height: 16),
-              ...documents.map((document) => _buildDocumentItem(context, document)),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.description,
+                  size: ServiceDetailConstants.contactIconSize,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Documents & Certifications',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: ServiceDetailConstants.titleFontWeight,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+            ...documents.map((document) => _buildDocumentItem(context, document)),
+          ],
       ),
     );
   }

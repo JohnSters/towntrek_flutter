@@ -364,11 +364,18 @@ context.go('/details/123');
 
 ## 7. Material 3 Design System - UPDATED 2025
 
-### Our App's Material 3 Implementation
+### Our App's Material 3 Implementation Guide
 
-This app uses a custom Material 3 design system with outlined buttons for interactive cards:
+This comprehensive guide documents our custom Material 3 design system. Our approach combines Material 3 principles with unique, standout designs that create visual hierarchy and modern aesthetics.
 
-#### OutlinedButton Card Pattern
+---
+
+## 🎨 **Core Design Patterns**
+
+### **Pattern 1: OutlinedButton Cards (Navigation Lists)**
+Used for category and sub-category navigation screens.
+
+#### **Standard Implementation**
 ```dart
 OutlinedButton(
   onPressed: onPressed,
@@ -376,72 +383,269 @@ OutlinedButton(
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
     side: BorderSide(
       color: isDisabled
-          ? colorScheme.outline.withValues(alpha: 0.2)
-          : colorScheme.primary.withValues(alpha: 0.25),
+          ? colorScheme.outline.withValues(alpha: 0.2)    // Disabled: 20% opacity
+          : colorScheme.primary.withValues(alpha: 0.25),  // Enabled: 25% opacity
       width: 1.0,
     ),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     backgroundColor: isDisabled
-        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
-        : colorScheme.primary.withValues(alpha: 0.05),
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)  // Disabled: 10%
+        : colorScheme.primary.withValues(alpha: 0.05),                // Enabled: 5%
   ),
-  child: Row(
-    children: [
-      // Icon container with secondary container background
-      Container(
-        width: 48, height: 48,
-        decoration: BoxDecoration(
-          color: colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(Icons.build, color: colorScheme.onSecondaryContainer),
+  child: Row(children: [
+    // Icon container (48x48)
+    Container(
+      width: 48, height: 48,
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(10),
       ),
-      const SizedBox(width: 16),
-      // Title and subtitle column
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+      child: Icon(icon, color: colorScheme.onSecondaryContainer),
+    ),
+    const SizedBox(width: 16),
+    // Content column
+    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title, style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
+      Text(subtitle, style: theme.textTheme.bodyMedium?.copyWith(
+        color: colorScheme.onSurfaceVariant)),
+    ])),
+    // Chevron
+    Icon(Icons.chevron_right, color: colorScheme.primary.withValues(alpha: 0.6)),
+  ]),
+)
+```
+
+#### **Screens Using This Pattern**
+- ✅ **Service Categories** (`CategoryCard`)
+- ✅ **Service Sub-Categories** (`SubCategoryCard`)
+- ✅ **Business Categories** (adapted pattern)
+
+---
+
+### **Pattern 2: Elevated Content Cards (Detail Lists)**
+Used for service listings and content-heavy displays with prominent, standout backgrounds.
+
+#### **Standard Implementation (OutlinedButton Pattern)**
+```dart
+OutlinedButton(
+  onPressed: onPressed,
+  style: OutlinedButton.styleFrom(
+    padding: const EdgeInsets.all(20),
+    side: BorderSide(
+      color: colorScheme.primary.withValues(alpha: 0.3),
+      width: 1.5,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    backgroundColor: colorScheme.primary.withValues(alpha: 0.02),
+  ),
+  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    // Header row with logo and title
+    Row(children: [logoContainer, const SizedBox(width: 16), titleColumn]),
+    // Content sections
+    const SizedBox(height: 16), descriptionText,
+    const SizedBox(height: 20), actionButton,
+  ]),
+)
+```
+
+#### **Key Features**
+- **Colored borders**: Primary color with 30% opacity, 1.5px width
+- **Subtle backgrounds**: 2% primary color for soft highlighting
+- **Rounded corners**: 16px for modern appearance
+- **Consistent padding**: 20px for spacious layout
+- **OutlinedButton styling**: Modern interactive appearance
+
+#### **Component Breakdown**
+
+##### **Logo Container with Primary Border**
+```dart
+Container(
+  width: 64, height: 64,
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(14),
+    color: colorScheme.surfaceContainerHighest,
+    border: Border.all(
+      color: colorScheme.primary.withValues(alpha: 0.4),
+      width: 2,
+    ),
+    boxShadow: [BoxShadow(
+      color: colorScheme.primary.withValues(alpha: 0.1),
+      blurRadius: 8, offset: const Offset(0, 3),
+    )],
+  ),
+  child: Icon(Icons.business_rounded, size: 32, color: colorScheme.primary.withValues(alpha: 0.6)),
+)
+```
+
+##### **Enhanced Verified Badge**
+```dart
+Container(
+  margin: const EdgeInsets.only(right: 12),
+  padding: const EdgeInsets.all(6),
+  decoration: BoxDecoration(
+    color: Colors.blue.withValues(alpha: 0.15),
+    borderRadius: BorderRadius.circular(10),
+    border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 1),
+  ),
+  child: Icon(Icons.verified_rounded, size: 16, color: Colors.blue.shade700),
+)
+```
+
+##### **Star Rating with Count (Business Card Style)**
+```dart
+Row(children: [
+  // Stars Row
+  Row(children: List.generate(5, (starIndex) {
+    final rating = service.rating ?? 0.0;
+    final starValue = starIndex + 1;
+    return Icon(
+      starValue <= rating ? Icons.star_rounded :
+      starValue - 0.5 <= rating ? Icons.star_half_rounded : Icons.star_outline_rounded,
+      size: 18,
+      color: starValue <= rating + 0.5 ? Colors.amber.shade600 :
+             colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+    );
+  })),
+  const SizedBox(width: 8),
+  // Rating Badge with Count
+  Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.amber.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.amber.withValues(alpha: 0.25), width: 1),
+    ),
+    child: Text(
+      '${service.rating!.toStringAsFixed(1)} (${service.totalReviews})',
+      style: theme.textTheme.labelMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: Colors.amber.shade800,
+        letterSpacing: 0.5,
       ),
-      // Theme-aware chevron
-      Icon(
-        Icons.chevron_right,
-        color: colorScheme.primary.withValues(alpha: 0.6),
-      ),
-    ],
+    ),
+  ),
+])
+```
+
+##### **Icon-Only Verified Badge**
+```dart
+Container(
+  padding: const EdgeInsets.all(4),
+  decoration: BoxDecoration(
+    color: Colors.blue.withValues(alpha: 0.1),
+    shape: BoxShape.circle,
+  ),
+  child: Icon(Icons.verified_rounded, size: 16, color: Colors.blue.shade700),
+)
+```
+
+##### **Prominent Action Button**
+```dart
+FilledButton.icon(
+  onPressed: onPressed,
+  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+  label: const Text('View Details'),
+  style: FilledButton.styleFrom(
+    padding: const EdgeInsets.symmetric(vertical: 14),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    elevation: 1,
+    shadowColor: colorScheme.shadow.withValues(alpha: 0.3),
   ),
 )
 ```
 
-#### Key Design Features:
-- **Soft colored borders**: Primary color with 25% opacity for enabled states, outline with 20% for disabled
-- **Subtle backgrounds**: 5% primary color for enabled, 10% surface container for disabled
-- **Consistent sizing**: 48×48 icon containers, 16px spacing, 20×16 padding
-- **Theme-aware elements**: All colors use Material 3 color scheme tokens
-- **Proper disabled states**: Reduced opacity and alternative colors for unavailable items
+#### **Screens Using This Pattern**
+- ✅ **Service Listings** (`ServiceCard`) - Implemented with colored outlined styling and prominent ratings
+- 🚧 **Business Listings** (pending implementation)
+- 🚧 **Event Listings** (pending implementation)
 
-#### Implementation Across App:
-- **Service Categories**: `CategoryCard` widget with outlined button styling
-- **Service Sub-Categories**: `SubCategoryCard` widget with matching design
-- **Business Categories**: Similar pattern applied for consistency
-- **Event Cards**: Adapted pattern for event listings
+---
+
+## 🎯 **Design Decision Framework**
+
+### **When to Use Each Pattern**
+
+| Pattern | Use Case | Elevation | Background | Best For |
+|---------|----------|-----------|------------|----------|
+| **OutlinedButton** | Navigation, Categories | 0 | Subtle colored | Lists where hierarchy is important |
+| **Elevated Card** | Content, Details | 2 | Gradient, prominent | Standout content, service listings |
+
+### **Color Usage Guidelines**
+- **Primary colors**: Use for enabled states, accents (25% opacity for outlines)
+- **Surface containers**: Use for backgrounds and subtle differentiation
+- **Outline variants**: Use for borders and dividers (20-50% opacity)
+- **Semantic colors**: Blue for verified, amber for ratings, red for errors
+
+### **Spacing System**
+- **8px**: Small gaps, icon spacing
+- **16px**: Standard spacing, list separators
+- **20px**: Card padding, major sections
+- **24px**: Page padding, large sections
+- **32px**: Bottom spacing, major content breaks
+
+---
+
+## 📱 **Implementation Examples by Screen**
+
+### **✅ COMPLETED: Service Category Screen**
+```
+Pattern: OutlinedButton Cards
+Features: Navigation list with soft borders and subtle backgrounds
+Files: CategoryCard (outlined button), 16px spacing, primary color accents
+```
+
+### **✅ COMPLETED: Service Sub-Category Screen**
+```
+Pattern: OutlinedButton Cards
+Features: Matching category design with consistent 25% border opacity
+Files: SubCategoryCard (outlined button), identical styling to categories
+```
+
+### **✅ COMPLETED: Service List Screen**
+```
+Pattern: OutlinedButton Content Cards
+Features: Colored outlined borders, prominent ratings with star display, modern styling
+Files: ServiceCard (outlined button), 64x64 logo with primary borders, star ratings with count
+Components: Enhanced verified badges, full star rating display, business card style ratings
+```
+
+---
+
+## 🚀 **Quick Implementation Guide**
+
+### **For New Navigation Screens (Categories)**
+1. Use `OutlinedButton` with 25% primary border opacity
+2. Add 48x48 icon container with secondaryContainer background
+3. Include chevron_right with 60% primary opacity
+4. Space with 16px separators
+
+### **For New Content Screens (Listings)**
+1. Use `Card` with elevation: 2 and gradient background
+2. Add prominent logo containers (60x60) with borders
+3. Use chip-style badges for ratings/metadata
+4. Include elevated FilledButton for primary actions
+
+### **Common Components**
+- **Logo containers**: Always include subtle borders and shadows
+- **Rating displays**: Use amber chip-style badges
+- **Verification**: Blue circular icon-only badges
+- **Buttons**: FilledButton.icon with elevation and rounded corners
+
+---
+
+## 🎨 **Design Philosophy**
+
+Our Material 3 approach prioritizes:
+- **Visual hierarchy** through elevation and color differences
+- **Modern aesthetics** with gradients, rounded corners, and subtle shadows
+- **Accessibility** with proper contrast ratios and semantic colors
+- **Consistency** across all screens using established patterns
+- **Uniqueness** through custom gradients and prominent styling
+
+This system creates standout, modern interfaces while maintaining Material 3 principles and excellent usability.
 
 ---
 

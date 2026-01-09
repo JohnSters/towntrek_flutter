@@ -8,7 +8,7 @@ class ServiceDetailConstants {
 
   // Layout spacing and padding
   static const double contentPadding = 24.0;
-  static const double sectionSpacing = 24.0; // Reduced back for better balance
+  static const double sectionSpacing = 16.0; // Tighter spacing between cards
   static const double bottomSpacing = 24.0;
   static const double headerPaddingVertical = 12.0;
   static const double headerPaddingHorizontal = 24.0;
@@ -22,9 +22,12 @@ class ServiceDetailConstants {
   // Page header
   static const double pageHeaderHeight = 120.0;
 
-  // Card styling
+  // Material 3 Card styling (matching design system)
   static const double cardBorderRadius = 16.0;
-  static const double cardElevation = 2.0;
+  static const double cardBorderWidth = 1.5;
+  static const double cardBorderOpacity = 0.1; // Much lighter borders
+  static const double cardBackgroundOpacity = 0.02;
+  static const double cardElevation = 0.0; // OutlinedButton doesn't use elevation
   static const double shadowOpacity = 0.1;
 
   // Status indicator colors
