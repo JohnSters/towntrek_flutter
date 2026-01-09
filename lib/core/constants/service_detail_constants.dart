@@ -107,7 +107,7 @@ class ServiceDetailConstants {
   static const String contactInfoTitle = 'Contact & Actions';
   static const String documentsTitle = 'Documents';
   static const String todayText = 'Today';
-  static const String closedTodayText = 'Closed today';
+  static const String closedTodayText = 'Closed';
   static const String open24HoursText = 'Open 24 hours';
   static const String refreshErrorTitle = 'Connection Error';
   static const String refreshErrorMessage = 'Failed to load service details. Please check your connection and try again.';

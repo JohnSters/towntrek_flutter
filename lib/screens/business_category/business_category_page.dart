@@ -40,17 +40,20 @@ class _BusinessCategoryPageContent extends StatelessWidget {
     final viewModel = context.watch<BusinessCategoryViewModel>();
 
     return Scaffold(
-      body: Column(
-        children: [
-          // Main content area
-          Expanded(
-            child: _buildContent(context, viewModel),
-          ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Main content area
+            Expanded(
+              child: _buildContent(context, viewModel),
+            ),
 
-          // Navigation footer (only show when we have content to navigate back from)
-          if (viewModel.state is BusinessCategorySuccess)
-            const BackNavigationFooter(),
-        ],
+            // Navigation footer (only show when we have content to navigate back from)
+            if (viewModel.state is BusinessCategorySuccess)
+              const BackNavigationFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -254,7 +257,7 @@ class _BusinessCategoryPageContent extends StatelessWidget {
                 // Action Buttons (Change Town & Events)
                 _buildActionButtons(context, viewModel, state),
 
-                SizedBox(height: BusinessCategoryConstants.smallSpacing),
+                const SizedBox(height: 24),
 
                 // Categories grid
                 if (state.categories.isEmpty)
@@ -276,18 +279,18 @@ class _BusinessCategoryPageContent extends StatelessWidget {
                     ),
                   )
                 else
-                  SizedBox(
-                    width: double.infinity,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.zero,
-                      itemCount: state.categories.length,
-                      itemBuilder: (context, index) {
-                        final category = state.categories[index];
-                        return _buildCategoryCard(context, viewModel, category);
-                      },
-                    ),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: state.categories.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final category = state.categories[index];
+                      return BusinessCategoryCard(
+                        category: category,
+                        onTap: () => viewModel.navigateToCategory(context, category),
+                      );
+                    },
                   ),
 
                 SizedBox(height: BusinessCategoryConstants.largeSpacing),
@@ -310,129 +313,35 @@ class _BusinessCategoryPageContent extends StatelessWidget {
       children: [
         // Change Town Button
         Expanded(
-          child: CategoryActionButton(
-            icon: Icons.location_on,
-            label: BusinessCategoryConstants.changeTownText,
-            onTap: () => viewModel.changeTown(context),
-            color: Theme.of(context).colorScheme.primary,
+          child: FilledButton.icon(
+            onPressed: () => viewModel.changeTown(context),
+            icon: const Icon(Icons.location_city),
+            label: const Text('Change Town'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              elevation: 2,
+              shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
+            ),
           ),
         ),
-        SizedBox(width: BusinessCategoryConstants.smallSpacing),
+        const SizedBox(width: 16),
         // Events Button
         Expanded(
-          child: PulsatingActionButton(
-            icon: Icons.event,
-            label: hasEvents
+          child: FilledButton.icon(
+            onPressed: hasEvents ? () => viewModel.navigateToEvents(context) : null,
+            icon: const Icon(Icons.event),
+            label: Text(hasEvents
                 ? '${state.currentEventCount} ${BusinessCategoryConstants.eventsText}'
-                : BusinessCategoryConstants.noEventsText,
-            onTap: hasEvents ? () => viewModel.navigateToEvents(context) : null,
-            isActive: hasEvents,
+                : BusinessCategoryConstants.noEventsText),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              elevation: hasEvents ? 2 : 0,
+              shadowColor: hasEvents ? Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3) : null,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildCategoryCard(
-    BuildContext context,
-    BusinessCategoryViewModel viewModel,
-    CategoryWithCountDto category,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final bool isDisabled = category.businessCount == 0;
-
-    return Card(
-      margin: EdgeInsets.only(bottom: BusinessCategoryConstants.cardMarginBottom),
-      elevation: BusinessCategoryConstants.cardElevation,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(BusinessCategoryConstants.borderRadiusMedium),
-        side: BorderSide(
-          color: colorScheme.outline.withValues(alpha: BusinessCategoryConstants.cardBorderAlpha),
-        ),
-      ),
-      child: Opacity(
-        opacity: isDisabled ? BusinessCategoryConstants.disabledOpacity : 1.0,
-        child: InkWell(
-          onTap: isDisabled ? null : () => viewModel.navigateToCategory(context, category),
-          borderRadius: BorderRadius.circular(BusinessCategoryConstants.borderRadiusMedium),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: BusinessCategoryConstants.cardHorizontalPadding,
-              vertical: BusinessCategoryConstants.cardVerticalPadding,
-            ),
-            child: Row(
-              children: [
-                // Icon Container
-                Container(
-                  width: BusinessCategoryConstants.categoryIconContainerSize,
-                  height: BusinessCategoryConstants.categoryIconContainerSize,
-                  decoration: BoxDecoration(
-                    color: BusinessCategoryConfig.getCategoryColor(category.key, colorScheme),
-                    borderRadius: BorderRadius.circular(BusinessCategoryConstants.borderRadiusSmall),
-                  ),
-                  child: Icon(
-                    BusinessCategoryConfig.getCategoryIcon(category.key),
-                    size: BusinessCategoryConstants.iconSizeMedium,
-                    color: BusinessCategoryConfig.getCategoryIconColor(category.key, colorScheme),
-                  ),
-                ),
-
-                SizedBox(width: BusinessCategoryConstants.smallSpacing),
-
-                // Title and Description
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Title
-                      Text(
-                        category.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isDisabled
-                              ? colorScheme.onSurface.withValues(alpha: BusinessCategoryConstants.disabledAlpha)
-                              : colorScheme.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      SizedBox(height: BusinessCategoryConstants.tinySpacing),
-
-                      // Description
-                      Text(
-                        category.businessCount == 0
-                            ? BusinessCategoryConstants.noBusinessesText
-                            : '${category.businessCount} businesses',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isDisabled
-                              ? colorScheme.onSurfaceVariant.withValues(alpha: BusinessCategoryConstants.disabledAlpha)
-                              : colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(width: BusinessCategoryConstants.smallSpacing),
-
-                // Arrow Icon
-                Icon(
-                  Icons.chevron_right,
-                  size: BusinessCategoryConstants.iconSizeSmall,
-                  color: isDisabled
-                      ? colorScheme.onSurfaceVariant.withValues(alpha: BusinessCategoryConstants.lowAlpha)
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

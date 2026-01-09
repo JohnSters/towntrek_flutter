@@ -87,7 +87,7 @@ class OperatingHoursSection extends StatelessWidget {
               children: [
                 // Day indicator
                 Container(
-                  width: 80,
+                  width: 110,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: hour.isAvailable
