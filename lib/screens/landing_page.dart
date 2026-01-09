@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/core.dart';
 import '../repositories/repositories.dart';
 import 'landing_page/widgets/widgets.dart';
-import 'town_loader_screen.dart';
+import 'town_loader/town_loader_screen.dart';
 
 // State classes for type-safe state management
 sealed class LandingPageState {}

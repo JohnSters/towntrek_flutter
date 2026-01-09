@@ -5,10 +5,10 @@ import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import '../../services/services.dart';
 import '../../core/config/business_category_config.dart';
-import '../town_selection_screen.dart';
-import '../current_events_screen.dart';
+import '../town_selection/town_selection_screen.dart';
+import '../current_events/current_events_screen.dart';
 import '../business_sub_category_page.dart';
-import '../town_feature_selection_screen.dart';
+import '../town_feature_selection/town_feature_selection_screen.dart';
 import 'widgets/widgets.dart';
 
 /// State classes for Business Category page

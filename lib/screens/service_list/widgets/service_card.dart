@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/models.dart';
 import '../../../core/constants/service_list_constants.dart';
 import '../../../core/utils/url_utils.dart';
-import '../../service_detail_page.dart';
+import '../../service_detail/service_detail_page.dart';
 
 /// Card widget for displaying service information with navigation
 class ServiceCard extends StatelessWidget {

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../core/widgets/navigation_footer.dart';
 import '../../core/widgets/page_header.dart';
-import '../service_list_page.dart';
+import '../service_list/service_list_page.dart';
 import '../../core/constants/service_sub_category_constants.dart';
 import 'service_sub_category_state.dart';
 import 'service_sub_category_view_model.dart';

@@ -9,7 +9,7 @@ import 'widgets/event_contact_section.dart';
 import 'widgets/event_reviews_section.dart';
 import 'event_details_state.dart';
 import 'event_details_view_model.dart';
-import 'event_all_reviews_screen.dart';
+import '../event_all_reviews/event_all_reviews_screen.dart';
 
 /// Screen displaying detailed information for a specific event
 /// Uses Provider pattern with EventDetailsViewModel for state management

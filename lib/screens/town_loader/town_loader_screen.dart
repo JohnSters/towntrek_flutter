@@ -5,8 +5,8 @@ import '../../core/core.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import '../../services/services.dart';
-import '../town_feature_selection_screen.dart';
-import '../town_selection_screen.dart';
+import '../town_feature_selection/town_feature_selection_screen.dart';
+import '../town_selection/town_selection_screen.dart';
 
 // State classes for type-safe state management
 sealed class TownLoaderState {}
