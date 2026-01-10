@@ -5,6 +5,7 @@ class EventDto {
   final String? description;
   final String? shortDescription;
   final String eventType;
+  final String? status;
   final DateTime startDate;
   final DateTime? endDate;
   final String? startTime;
@@ -28,6 +29,7 @@ class EventDto {
     this.description,
     this.shortDescription,
     required this.eventType,
+    this.status,
     required this.startDate,
     this.endDate,
     this.startTime,
@@ -57,6 +59,7 @@ class EventDto {
       // Map ShortDescription explicitly
       shortDescription: json['ShortDescription'] as String? ?? json['shortDescription'] as String?,
       eventType: json['EventType'] as String? ?? json['eventType'] as String,
+      status: json['Status'] as String? ?? json['status'] as String?,
       startDate: DateTime.parse(json['StartDate'] as String? ?? json['startDate'] as String),
       endDate: json['EndDate'] != null ? DateTime.parse(json['EndDate'] as String) :
                json['endDate'] != null ? DateTime.parse(json['endDate'] as String) : null,
@@ -87,6 +90,7 @@ class EventDto {
       'description': description,
       'shortDescription': shortDescription,
       'eventType': eventType,
+      'status': status,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate?.toIso8601String(),
       'startTime': startTime,
@@ -113,6 +117,7 @@ class EventDto {
     String? description,
     String? shortDescription,
     String? eventType,
+    String? status,
     DateTime? startDate,
     DateTime? endDate,
     String? startTime,
@@ -136,6 +141,7 @@ class EventDto {
       description: description ?? this.description,
       shortDescription: shortDescription ?? this.shortDescription,
       eventType: eventType ?? this.eventType,
+      status: status ?? this.status,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       startTime: startTime ?? this.startTime,
@@ -177,20 +183,25 @@ class EventDto {
   /// Get the effective end date/time of the event
   DateTime get effectiveEndDateTime {
     final end = endDate ?? startDate;
-    // If there's a start time, assume the event ends at that time
-    // Otherwise, assume it ends at the end of the day
+    // If there's an end time, assume the event ends at that time.
+    // Otherwise, assume it ends at the end of the day (23:59).
+    final timeString = endTime;
+    final parts = (timeString ?? '').split(':');
+    final hour = parts.isNotEmpty && parts[0].isNotEmpty ? int.tryParse(parts[0]) : null;
+    final minute = parts.length > 1 && parts[1].isNotEmpty ? int.tryParse(parts[1]) : null;
+
     return DateTime(
       end.year,
       end.month,
       end.day,
-      startTime != null ? int.parse(startTime!.split(':')[0]) : 23,
-      startTime != null ? int.parse(startTime!.split(':')[1]) : 59,
+      hour ?? 23,
+      minute ?? 59,
     );
   }
 
   /// Check if the event has finished
   bool get isFinished {
-    return DateTime.now().isAfter(effectiveEndDateTime);
+    return status == 'Completed' || DateTime.now().isAfter(effectiveEndDateTime);
   }
 
   /// Get the number of days since the event finished (negative if not finished)
