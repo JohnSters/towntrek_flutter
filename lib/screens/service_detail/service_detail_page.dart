@@ -6,6 +6,7 @@ import 'service_detail_state.dart';
 import 'service_detail_view_model.dart';
 import 'widgets/widgets.dart';
 import 'widgets/service_logo_section.dart';
+import 'widgets/service_status_indicator.dart';
 
 
 /// Service Detail Page - Shows comprehensive service information
@@ -49,6 +50,13 @@ class _ServiceDetailPageContent extends StatelessWidget {
             height: 120.0,
             headerType: HeaderType.service,
           ),
+
+          // Open/Closed indicator (right under the banner)
+          if (viewModel.state is ServiceDetailSuccess)
+            ServiceStatusIndicator(
+              service: (viewModel.state as ServiceDetailSuccess).serviceDetails,
+            ),
+
           Expanded(
             child: _buildContent(context, viewModel),
           ),

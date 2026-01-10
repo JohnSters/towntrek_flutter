@@ -27,67 +27,69 @@ class OperatingHoursSection extends StatelessWidget {
     regularHours.sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
     specialHours.sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
 
+    // Ensure we always render all 7 days (closed days included), matching the Service Details UI.
+    final byDayName = <String, OperatingHourDto>{};
+    for (final h in regularHours) {
+      byDayName[BusinessUtils.formatDayOfWeek(h.dayOfWeek)] = h;
+    }
+
+    const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final displayHours = allDays
+        .map((d) => byDayName[d] ?? OperatingHourDto(dayOfWeek: d, isOpen: false, isSpecialHours: false))
+        .toList();
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: OutlinedButton(
-        onPressed: null, // Not clickable, just for styling
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.all(20),
-          side: BorderSide(
-            color: colorScheme.primary.withValues(alpha: 0.1),
-            width: 1.5,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          backgroundColor: colorScheme.primary.withValues(alpha: 0.02),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.1),
+          width: 1.5,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Pill-shaped title
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: colorScheme.primary.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.access_time,
-                    size: 18,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Operating Hours',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Pill-shaped title (matching Service Details)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+                width: 1,
               ),
             ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.schedule, size: 24, color: colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Operating Hours',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // Date-based Special Operating Hours (e.g. holiday closures)
-            if (upcomingSpecialOperatingHours.isNotEmpty) ...[
-              _buildSpecialOperatingHoursBanners(context, upcomingSpecialOperatingHours),
-              const SizedBox(height: 20),
-            ],
-
-            // Day-by-day operating hours with color coding
-            ...regularHours.map((hour) => _buildDayCard(context, hour)),
+          // Date-based Special Operating Hours (e.g. holiday closures)
+          if (upcomingSpecialOperatingHours.isNotEmpty) ...[
+            _buildSpecialOperatingHoursBanners(context, upcomingSpecialOperatingHours),
+            const SizedBox(height: 20),
           ],
-        ),
+
+          // Day-by-day hours, including Closed days (red)
+          ...displayHours.map((h) => _buildDayCard(context, h)),
+        ],
       ),
     );
   }
@@ -98,7 +100,7 @@ class OperatingHoursSection extends StatelessWidget {
 
     final dayName = BusinessUtils.formatDayOfWeek(hour.dayOfWeek);
     final timeDisplay = hour.isOpen && hour.openTime != null && hour.closeTime != null
-        ? '${BusinessUtils.formatTime(hour.openTime!)} - ${BusinessUtils.formatTime(hour.closeTime!)}'
+        ? '${_formatTime24(hour.openTime!)} - ${_formatTime24(hour.closeTime!)}'
         : 'Closed';
 
     return Container(
@@ -120,17 +122,20 @@ class OperatingHoursSection extends StatelessWidget {
         children: [
           // Day indicator
           Container(
-            width: 80,
+            width: 110,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: hour.isOpen
                   ? colorScheme.primary.withValues(alpha: 0.1)
                   : colorScheme.error.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               dayName,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+              style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: hour.isOpen ? colorScheme.primary : colorScheme.error,
               ),
@@ -140,19 +145,40 @@ class OperatingHoursSection extends StatelessWidget {
           const SizedBox(width: 12),
           // Hours display
           Expanded(
-            child: Text(
-              hour.isSpecialHours && hour.specialHoursNote != null
-                  ? hour.specialHoursNote!
-                  : timeDisplay,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: hour.isOpen ? colorScheme.onSurfaceVariant : colorScheme.error,
-                fontStyle: hour.isSpecialHours ? FontStyle.italic : FontStyle.normal,
-              ),
+            child: Row(
+              children: [
+                Icon(
+                  hour.isOpen ? Icons.access_time : Icons.cancel,
+                  size: 16,
+                  color: hour.isOpen ? colorScheme.primary : colorScheme.error,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    hour.isSpecialHours && hour.specialHoursNote != null ? hour.specialHoursNote! : timeDisplay,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: hour.isOpen ? colorScheme.onSurface : colorScheme.error,
+                      fontWeight: FontWeight.w500,
+                      fontStyle: hour.isSpecialHours ? FontStyle.italic : FontStyle.normal,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _formatTime24(String time) {
+    // Accept: "09:00", "09:00:00", "09:00:00.0000000" -> "HH:mm"
+    final main = time.trim().split('.').first;
+    final parts = main.split(':');
+    if (parts.length < 2) return time;
+    final hh = (int.tryParse(parts[0]) ?? 0).toString().padLeft(2, '0');
+    final mm = (int.tryParse(parts[1]) ?? 0).toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 
   Widget _buildSpecialOperatingHoursBanners(BuildContext context, List<SpecialOperatingHourDto> items) {

@@ -7,6 +7,7 @@ import 'widgets/business_info_card.dart';
 import 'widgets/business_image_gallery.dart';
 import 'widgets/business_documents_section.dart';
 import 'widgets/operating_hours_section.dart';
+import 'widgets/business_status_indicator.dart';
 import 'widgets/reviews_section.dart';
 import 'widgets/contact_actions_section.dart';
 
@@ -42,6 +43,7 @@ class _BusinessDetailsPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessDetailsViewModel>();
+    final state = viewModel.state;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -54,6 +56,11 @@ class _BusinessDetailsPageContent extends StatelessWidget {
               height: 120.0,
               headerType: HeaderType.business,
             ),
+
+            // Open/Closed indicator (right under the banner)
+            if (state is BusinessDetailsSuccess)
+              BusinessStatusIndicator(business: state.business),
+
             // Main content area
             Expanded(
               child: _buildContent(context, viewModel),
@@ -123,9 +130,10 @@ class _BusinessDetailsPageContent extends StatelessWidget {
   ) {
     final business = state.business;
 
-    return Expanded(
-      child: CustomScrollView(
-        slivers: [
+    // NOTE: The caller already wraps content in an Expanded. Returning another Expanded here causes
+    // "Incorrect use of ParentDataWidget" (Expanded nested in Expanded).
+    return CustomScrollView(
+      slivers: [
               // Business Info Card (Description and Address)
               SliverToBoxAdapter(
                 child: BusinessInfoCard(business: business),
@@ -174,8 +182,7 @@ class _BusinessDetailsPageContent extends StatelessWidget {
                 child: SizedBox(height: BusinessDetailsConstants.bottomPadding),
               ),
             ],
-          ),
-        );
+    );
   }
 }
 

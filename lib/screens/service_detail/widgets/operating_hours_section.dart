@@ -97,6 +97,9 @@ class OperatingHoursSection extends StatelessWidget {
                   ),
                   child: Text(
                     _formatDayOfWeek(hour.dayOfWeek),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: hour.isAvailable ? colorScheme.primary : colorScheme.error,
@@ -177,7 +180,12 @@ class OperatingHoursSection extends StatelessWidget {
   }
 
   String _formatTime(String time) {
-    // Simple time formatting - could be enhanced
-    return time;
+    // Accept: "09:00", "09:00:00", "09:00:00.0000000" -> "HH:mm"
+    final main = time.trim().split('.').first;
+    final parts = main.split(':');
+    if (parts.length < 2) return time;
+    final hh = (int.tryParse(parts[0]) ?? 0).toString().padLeft(2, '0');
+    final mm = (int.tryParse(parts[1]) ?? 0).toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 }
