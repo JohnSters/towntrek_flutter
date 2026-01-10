@@ -29,6 +29,7 @@ class LandingViewModel extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
+      debugPrint('Stats loading error: $e');
       _state = LandingPageError(e.toString());
       notifyListeners();
     }

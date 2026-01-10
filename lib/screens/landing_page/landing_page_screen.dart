@@ -74,12 +74,12 @@ class _LandingPageContent extends StatelessWidget {
                       onTap: () => viewModel.launchOwnerUrl(context),
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingSmall),
 
                     // Feature Grid
                     _buildFeatureGrid(viewModel.state),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge * 1.2),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
                   ],
                 ),
               ),
