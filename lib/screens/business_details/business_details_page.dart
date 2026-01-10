@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import 'business_details_state.dart';
 import 'business_details_view_model.dart';
-import 'widgets/business_status_indicator.dart';
 import 'widgets/business_info_card.dart';
 import 'widgets/business_image_gallery.dart';
 import 'widgets/business_documents_section.dart';
