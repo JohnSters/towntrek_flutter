@@ -474,7 +474,7 @@ class _BusinessCategoryPageContent extends StatelessWidget {
           child: FilledButton.icon(
             onPressed: () => viewModel.changeTown(context),
             icon: const Icon(Icons.location_city),
-            label: const Text('Change Town'),
+            label: const Text('Wrong Town?'),
             style: FilledButton.styleFrom(
               minimumSize: Size.fromHeight(BusinessCategoryConstants.connectedButtonHeight),
               elevation: 2,

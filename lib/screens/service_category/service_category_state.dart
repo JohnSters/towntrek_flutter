@@ -13,19 +13,23 @@ class ServiceCategoryLoading extends ServiceCategoryState {}
 class ServiceCategorySuccess extends ServiceCategoryState {
   final List<ServiceCategoryDto> categories;
   final bool countsAvailable;
+  final int currentEventCount;
 
   ServiceCategorySuccess({
     required this.categories,
     required this.countsAvailable,
+    this.currentEventCount = 0,
   });
 
   ServiceCategorySuccess copyWith({
     List<ServiceCategoryDto>? categories,
     bool? countsAvailable,
+    int? currentEventCount,
   }) {
     return ServiceCategorySuccess(
       categories: categories ?? this.categories,
       countsAvailable: countsAvailable ?? this.countsAvailable,
+      currentEventCount: currentEventCount ?? this.currentEventCount,
     );
   }
 }

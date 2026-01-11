@@ -43,8 +43,7 @@ class _CurrentEventsScreenContent extends StatelessWidget {
           children: [
             // Page Header
             PageHeader(
-              title: viewModel.townName,
-              subtitle: CurrentEventsConstants.eventsPrefix,
+              title: '${CurrentEventsConstants.eventsPrefix} ${viewModel.townName}',
               height: 80, // Consistent header height
               headerType: HeaderType.event,
             ),

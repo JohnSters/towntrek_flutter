@@ -43,7 +43,7 @@ class ServiceCategoryConstants {
 
   // Strings
   static const String servicesSubtitle = 'Services';
-  static const String changeTownLabel = 'Change Town';
+  static const String changeTownLabel = 'Wrong Town?';
   static const String emptyStateTitle = 'No service categories found';
   static const String noServicesAvailable = 'No services available';
   static const String servicesCount = 'services';

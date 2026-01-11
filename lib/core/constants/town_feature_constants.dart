@@ -44,5 +44,5 @@ class TownFeatureConstants {
   static const String servicesDescription = 'Plumbers, electricians, and other pros';
   static const String eventsTitle = 'Events';
   static const String eventsDescription = 'Discover what\'s happening in town';
-  static const String changeTownTooltip = 'Change Town';
+  static const String changeTownTooltip = 'Wrong Town?';
 }
