@@ -55,7 +55,12 @@ class EventDetailsConstants {
   // Text overflow
   static const TextOverflow textOverflow = TextOverflow.ellipsis;
 
+  // Image gallery
+  static const double imagePreviewSize = 120.0;
+  static const double imagePreviewSpacing = 12.0;
+
   // Icon data
   static const IconData errorIcon = Icons.error_outline;
   static const IconData retryIcon = Icons.refresh;
+  static const IconData starIcon = Icons.star;
 }
