@@ -44,8 +44,12 @@ class ApiClient {
       (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
         final client = HttpClient();
         client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-           // Allow self-signed certs for localhost and local network
-           return host == 'localhost' || host == '10.0.2.2' || host.startsWith('192.168.');
+          // Allow self-signed certs for local development only.
+          // NOTE: Keep this restricted and never enable for production/public hosts.
+          return host == 'localhost' ||
+              host == '127.0.0.1' ||
+              host == '10.0.2.2' ||
+              host.startsWith('192.168.');
         };
         return client;
       };
