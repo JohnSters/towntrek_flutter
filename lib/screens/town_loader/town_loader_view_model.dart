@@ -46,7 +46,7 @@ class TownLoaderViewModel extends ChangeNotifier {
       final nearestTownResult = await _geolocationService.findNearestTown(townsResult);
 
       if (nearestTownResult.isSuccess) {
-        _state = TownLoaderLocationSuccess(nearestTownResult.data);
+        _state = TownLoaderConfirmTown(nearestTownResult.data);
         notifyListeners();
       } else {
         // Location detection failed, show town selection
@@ -79,6 +79,16 @@ class TownLoaderViewModel extends ChangeNotifier {
         builder: (context) => const TownSelectionScreen(),
       ),
     );
+  }
+
+  void confirmDetectedTown(TownDto town) {
+    _state = TownLoaderLocationSuccess(town);
+    notifyListeners();
+  }
+
+  void rejectDetectedTown() {
+    _state = TownLoaderSelectTown();
+    notifyListeners();
   }
 
   void navigateToFeatureSelection(BuildContext context, TownDto town) {

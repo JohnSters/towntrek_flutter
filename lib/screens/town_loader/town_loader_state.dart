@@ -12,6 +12,12 @@ class TownLoaderLocationSuccess extends TownLoaderState {
   TownLoaderLocationSuccess(this.town);
 }
 
+class TownLoaderConfirmTown extends TownLoaderState {
+  final TownDto detectedTown;
+
+  TownLoaderConfirmTown(this.detectedTown);
+}
+
 class TownLoaderLocationError extends TownLoaderState {
   final AppError error;
   final String? locationFailureMessage;
