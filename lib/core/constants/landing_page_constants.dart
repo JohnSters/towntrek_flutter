@@ -9,8 +9,8 @@ class LandingPageConstants {
   static const double featureTileSpacing = 10.0;
 
   // Size constants
-  static const double logoContainerHeight = 200.0;
-  static const double logoPadding = 32.0;
+  static const double logoContainerHeight = 100;
+  static const double logoPadding = 15.0;
   static const double buttonHeight = 56.0;
   static const double featureIconSize = 32.0;
   static const double loadingIndicatorSize = 12.0;

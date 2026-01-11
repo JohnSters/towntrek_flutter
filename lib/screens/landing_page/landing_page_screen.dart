@@ -38,12 +38,11 @@ class _LandingPageContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
-
+                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
                     // App Logo
                     const AppLogo(),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
 
                     // Subtitle
                     Text(
@@ -56,7 +55,7 @@ class _LandingPageContent extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingSmall),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
 
                     Text(
                       LandingPageConstants.descriptionText,
@@ -67,19 +66,19 @@ class _LandingPageContent extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
 
                     // Business Owner CTA
                     BusinessOwnerCTA(
                       onTap: () => viewModel.launchOwnerUrl(context),
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingSmall),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
 
                     // Feature Grid
                     _buildFeatureGrid(viewModel.state),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingLarge),
+                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
                   ],
                 ),
               ),

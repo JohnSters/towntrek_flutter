@@ -14,75 +14,50 @@ class BusinessOwnerCTA extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(LandingPageConstants.gradientStartColor),
-            Color(LandingPageConstants.gradientEndColor),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return FilledButton(
+      onPressed: onTap,
+      style: FilledButton.styleFrom(
+        backgroundColor: Color(LandingPageConstants.gradientStartColor),
+        foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, LandingPageConstants.buttonHeight),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusMedium),
         ),
-        borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(LandingPageConstants.gradientEndColor).withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+        elevation: 2,
+        shadowColor: Color(LandingPageConstants.gradientEndColor).withValues(alpha: 0.3),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(LandingPageConstants.verticalSpacingSmall),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusSmall),
+            ),
+            child: const Icon(
+              Icons.add_business,
+              color: Colors.white,
+              size: LandingPageConstants.featureIconSize - 12,
+            ),
+          ),
+          const SizedBox(width: LandingPageConstants.verticalSpacingSmall),
+          Expanded(
+            child: Text(
+              LandingPageConstants.businessOwnerTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.start,
+            ),
+          ),
+          const SizedBox(width: LandingPageConstants.verticalSpacingSmall),
+          const Icon(
+            Icons.arrow_forward,
+            color: Colors.white,
+            size: LandingPageConstants.featureIconSize - 12,
           ),
         ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusMedium),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: LandingPageConstants.horizontalPadding,
-              vertical: LandingPageConstants.verticalSpacingSmall,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(LandingPageConstants.verticalSpacingSmall),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusSmall),
-                  ),
-                  child: const Icon(
-                    Icons.add_business,
-                    color: Colors.white,
-                    size: LandingPageConstants.featureIconSize - 12, // Slightly smaller for CTA
-                  ),
-                ),
-                const SizedBox(width: LandingPageConstants.verticalSpacingSmall),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        LandingPageConstants.businessOwnerTitle,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward,
-                  color: Colors.white,
-                  size: LandingPageConstants.featureIconSize - 12,
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

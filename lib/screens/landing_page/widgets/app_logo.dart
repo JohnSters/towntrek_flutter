@@ -10,17 +10,9 @@ class AppLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: LandingPageConstants.logoContainerHeight,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusLarge),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      padding: const EdgeInsets.all(LandingPageConstants.logoPadding),
       child: SvgPicture.asset(
         'assets/images/logos/towntrek_starter_logo2.svg',
         fit: BoxFit.contain,
