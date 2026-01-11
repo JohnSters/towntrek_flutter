@@ -6,23 +6,23 @@ import 'business_category_state.dart';
 import 'business_category_view_model.dart';
 import 'widgets/widgets.dart';
 
-/// Animated Events Button that pulses when events are available
-class _AnimatedEventsButton extends StatefulWidget {
+/// Animated Connected Events Button that pulses when events are available
+class _AnimatedConnectedEventsButton extends StatefulWidget {
   final bool hasEvents;
   final int eventCount;
   final VoidCallback? onPressed;
 
-  const _AnimatedEventsButton({
+  const _AnimatedConnectedEventsButton({
     required this.hasEvents,
     required this.eventCount,
     this.onPressed,
   });
 
   @override
-  State<_AnimatedEventsButton> createState() => _AnimatedEventsButtonState();
+  State<_AnimatedConnectedEventsButton> createState() => _AnimatedConnectedEventsButtonState();
 }
 
-class _AnimatedEventsButtonState extends State<_AnimatedEventsButton>
+class _AnimatedConnectedEventsButtonState extends State<_AnimatedConnectedEventsButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -58,7 +58,7 @@ class _AnimatedEventsButtonState extends State<_AnimatedEventsButton>
   }
 
   @override
-  void didUpdateWidget(_AnimatedEventsButton oldWidget) {
+  void didUpdateWidget(_AnimatedConnectedEventsButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.hasEvents != oldWidget.hasEvents) {
       if (widget.hasEvents) {
@@ -78,14 +78,26 @@ class _AnimatedEventsButtonState extends State<_AnimatedEventsButton>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (!widget.hasEvents) {
       return FilledButton.icon(
         onPressed: widget.onPressed,
         icon: const Icon(Icons.event),
         label: const Text('No Events'),
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
+          minimumSize: const Size.fromHeight(64), // Larger square buttons
           elevation: 0,
+          backgroundColor: colorScheme.surfaceContainerHighest,
+          foregroundColor: colorScheme.onSurfaceVariant,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(0),
+              topRight: Radius.circular(0),
+              bottomLeft: Radius.circular(0),
+              bottomRight: Radius.circular(8),
+            ),
+          ),
         ),
       );
     }
@@ -95,7 +107,7 @@ class _AnimatedEventsButtonState extends State<_AnimatedEventsButton>
       builder: (context, child) {
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero, // No rounded borders
             boxShadow: [
               BoxShadow(
                 color: Colors.green.withValues(alpha: _glowAnimation.value * 0.3),
@@ -132,13 +144,13 @@ class _AnimatedEventsButtonState extends State<_AnimatedEventsButton>
                 ),
               ),
               style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
+                minimumSize: Size.fromHeight(BusinessCategoryConstants.connectedButtonHeight),
                 elevation: 4 + (_glowAnimation.value * 2),
                 shadowColor: Colors.green.withValues(alpha: 0.4),
                 backgroundColor: Colors.green.shade600,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.zero, // No rounded borders
                 ),
               ),
             ),
@@ -389,18 +401,21 @@ class _BusinessCategoryPageContent extends StatelessWidget {
           headerType: HeaderType.business,
         ),
 
-        // Scrollable content
+        // Connected Action Buttons (fills entire width, connects to header)
+        _buildConnectedActionButtons(context, viewModel, state),
+
+        // Scrollable content (no top padding since buttons connect to header)
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(BusinessCategoryConstants.horizontalPadding),
+            padding: EdgeInsets.fromLTRB(
+              BusinessCategoryConstants.horizontalPadding,
+              BusinessCategoryConstants.smallSpacing, // Small top padding for content separation
+              BusinessCategoryConstants.horizontalPadding,
+              BusinessCategoryConstants.horizontalPadding,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Action Buttons (Change Town & Events)
-                _buildActionButtons(context, viewModel, state),
-
-                const SizedBox(height: 24),
-
                 // Categories grid
                 if (state.categories.isEmpty)
                   Center(
@@ -444,38 +459,74 @@ class _BusinessCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(
+  Widget _buildConnectedActionButtons(
     BuildContext context,
     BusinessCategoryViewModel viewModel,
     BusinessCategorySuccess state,
   ) {
     final bool hasEvents = state.categoriesLoaded && state.currentEventCount > 0;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
       children: [
-        // Change Town Button
+        // Change Town Button - Connected design
         Expanded(
           child: FilledButton.icon(
             onPressed: () => viewModel.changeTown(context),
             icon: const Icon(Icons.location_city),
             label: const Text('Change Town'),
             style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
+              minimumSize: Size.fromHeight(BusinessCategoryConstants.connectedButtonHeight),
               elevation: 2,
-              shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
+              shadowColor: colorScheme.shadow.withValues(alpha: 0.3),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // No rounded borders
+              ),
             ),
           ),
         ),
-        const SizedBox(width: 16),
-        // Events Button
+        // Events Button - Connected design (no gap between buttons)
         Expanded(
-          child: _AnimatedEventsButton(
+          child: _buildConnectedEventsButton(
+            context: context,
             hasEvents: hasEvents,
             eventCount: state.currentEventCount,
             onPressed: hasEvents ? () => viewModel.navigateToEvents(context) : null,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildConnectedEventsButton({
+    required BuildContext context,
+    required bool hasEvents,
+    required int eventCount,
+    required VoidCallback? onPressed,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (!hasEvents) {
+      return FilledButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.event),
+        label: const Text('No Events'),
+        style: FilledButton.styleFrom(
+          minimumSize: Size.fromHeight(BusinessCategoryConstants.connectedButtonHeight),
+          elevation: 0,
+          backgroundColor: colorScheme.surfaceContainerHighest,
+          foregroundColor: colorScheme.onSurfaceVariant,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero, // No rounded borders
+          ),
+        ),
+      );
+    }
+
+    return _AnimatedConnectedEventsButton(
+      hasEvents: hasEvents,
+      eventCount: eventCount,
+      onPressed: onPressed,
     );
   }
 

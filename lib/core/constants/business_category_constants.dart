@@ -27,6 +27,7 @@ class BusinessCategoryConstants {
   static const double actionButtonHeight = 100.0;
   static const double actionButtonPadding = 12.0;
   static const double actionButtonIconSize = 40.0;
+  static const double connectedButtonHeight = 64.0; // Height for connected buttons that fill width
 
   // Card styling
   static const double cardElevation = 0.0;
@@ -79,7 +80,7 @@ class BusinessCategoryConstants {
   static const String selectManuallyText = 'Select Manually';
   static const String noCategoriesText = 'No business categories found';
   static const String noBusinessesText = 'No businesses yet';
-  static const String changeTownText = 'Change Town';
+  static const String changeTownText = 'Wrong Town?';
   static const String eventsText = 'Events';
   static const String noEventsText = 'No Events';
 }
