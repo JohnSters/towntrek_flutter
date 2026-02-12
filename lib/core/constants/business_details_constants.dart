@@ -62,6 +62,8 @@ class BusinessDetailsConstants {
 
   // URLs
   static const String reviewsUrl = 'https://towntrek.co.za';
+  static const String publicBusinessPath = '/Public/Business/';
+  static const String reviewsSectionAnchor = '#reviews';
 
   // Strings
   static const String loadingTagline = 'Loading business details...';

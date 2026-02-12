@@ -49,4 +49,22 @@ class LandingViewModel extends ChangeNotifier {
       debugPrint('Error launching URL: $e');
     }
   }
+
+  Future<void> launchFeedbackEmail(BuildContext context) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: LandingPageConstants.feedbackEmail,
+    );
+    try {
+      if (!await launchUrl(emailUri, mode: LaunchMode.externalApplication)) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text(LandingPageConstants.launchEmailErrorMessage)),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error launching email: $e');
+    }
+  }
 }

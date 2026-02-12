@@ -4,6 +4,7 @@ import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import '../../services/navigation_service.dart';
 import '../../core/utils/external_link_launcher.dart';
+import '../../core/utils/url_utils.dart';
 import 'business_details_state.dart';
 
 /// ViewModel for Business Details page business logic
@@ -73,11 +74,14 @@ class BusinessDetailsViewModel extends ChangeNotifier {
     }
   }
 
-  void rateBusiness(BuildContext context, BusinessDetailDto business) {
-    // Link to web application for reviews as requested
-    ExternalLinkLauncher.openWebsite(
+  Future<void> rateBusiness(BuildContext context, BusinessDetailDto business) async {
+    final businessPath = '${BusinessDetailsConstants.publicBusinessPath}${business.id}'
+        '${BusinessDetailsConstants.reviewsSectionAnchor}';
+    final businessUrl = UrlUtils.resolveApiUrl(businessPath);
+
+    await ExternalLinkLauncher.openWebsite(
       context,
-      BusinessDetailsConstants.reviewsUrl,
+      businessUrl,
       failureMessage: 'Unable to open reviews page',
     );
   }

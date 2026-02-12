@@ -32,14 +32,17 @@ class LandingPageConstants {
 
   // URLs
   static const String ownerWebsiteUrl = 'https://towntrek.co.za';
+  static const String feedbackEmail = 'admin@bytecraftdigital.com';
 
   // Strings
   static const String subtitleText = 'Explore South Africa\'s small towns like never before.';
   static const String descriptionText = 'Discover hidden gems, local favorites, and authentic experiences—all at the click of a button.';
   static const String businessOwnerTitle = 'Business not listed?';
+  static const String feedbackButtonText = 'Send feedback';
   static const String exploreButtonText = 'Start Exploring';
   static const String appTagline = 'TownTrek - Your Local Discovery Companion';
   static const String launchUrlErrorMessage = 'Could not launch website';
+  static const String launchEmailErrorMessage = 'Could not open email app';
 
   // Feature labels
   static const String businessLabel = 'Businesses';

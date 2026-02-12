@@ -73,6 +73,21 @@ class _LandingPageContent extends StatelessWidget {
                       onTap: () => viewModel.launchOwnerUrl(context),
                     ),
 
+                    const SizedBox(height: LandingPageConstants.verticalSpacingSmall),
+
+                    TextButton.icon(
+                      onPressed: () => viewModel.launchFeedbackEmail(context),
+                      icon: const Icon(Icons.mail_outline, size: 18),
+                      label: const Text(LandingPageConstants.feedbackButtonText),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        minimumSize: Size.zero,
+                        foregroundColor: colorScheme.primary,
+                        textStyle: theme.textTheme.labelLarge,
+                      ),
+                    ),
+
                     const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
 
                     // Feature Grid
