@@ -1,0 +1,9 @@
+export '../event_all_reviews/event_all_reviews_screen.dart';
+export 'event_details_screen.dart';
+export 'event_details_state.dart';
+export 'event_details_view_model.dart';
+export 'widgets/event_contact_section.dart';
+export 'widgets/event_image_gallery.dart';
+export 'widgets/event_info_card.dart';
+export 'widgets/event_location_section.dart';
+export 'widgets/event_reviews_section.dart';

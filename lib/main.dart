@@ -8,6 +8,9 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Resolve best dev base URL early (before ApiClient/DI init).
+  await ApiConfig.initialize();
+
   // Setup HTTP overrides for local development if not in production
   if (ApiConfig.environment != AppEnvironment.production) {
     HttpOverrides.global = LocalDevHttpOverrides();

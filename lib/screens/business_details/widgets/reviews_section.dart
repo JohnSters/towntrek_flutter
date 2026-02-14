@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/business_utils.dart';
+import '../../../core/constants/business_details_constants.dart';
 
 class ReviewsSection extends StatelessWidget {
   final List<ReviewDto> reviews;
@@ -18,42 +19,48 @@ class ReviewsSection extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      margin: EdgeInsets.symmetric(
+        horizontal: BusinessDetailsConstants.cardHorizontalMargin,
+        vertical: BusinessDetailsConstants.cardVerticalMargin,
+      ),
       child: Card(
-        elevation: 0,
+        elevation: BusinessDetailsConstants.cardElevation,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(BusinessDetailsConstants.cardBorderRadius),
           side: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.1),
+            color: colorScheme.outline.withValues(alpha: BusinessDetailsConstants.cardBorderAlpha),
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(BusinessDetailsConstants.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Section Title
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.star,
-                    size: 24,
+                    size: BusinessDetailsConstants.iconSizeMedium,
                     color: Colors.amber,
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: BusinessDetailsConstants.smallSpacing),
                   Text(
-                    'Reviews',
+                    BusinessDetailsConstants.reviewsSectionTitle,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: BusinessDetailsConstants.tinySpacing),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: BusinessDetailsConstants.smallSpacing,
+                      vertical: BusinessDetailsConstants.tinySpacing,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(BusinessDetailsConstants.borderRadiusSmall),
                     ),
                     child: Text(
                       '${reviews.length}',
@@ -66,25 +73,25 @@ class ReviewsSection extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: BusinessDetailsConstants.contentSpacing),
 
               // Reviews List
-              ...reviews.take(3).map((review) => _buildReviewCard(context, review)),
+              ...reviews.take(BusinessDetailsConstants.maxReviewsToShow).map((review) => _buildReviewCard(context, review)),
 
               // Show more button if there are more reviews
-              if (reviews.length > 3)
+              if (reviews.length > BusinessDetailsConstants.maxReviewsToShow)
                 Padding(
-                  padding: const EdgeInsets.only(top: 16),
+                  padding: EdgeInsets.only(top: BusinessDetailsConstants.sectionVerticalMargin),
                   child: SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: onViewAllPressed,
                       icon: const Icon(Icons.expand_more),
-                      label: const Text('View All Reviews'),
+                      label: Text(BusinessDetailsConstants.viewAllReviewsLabel),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: EdgeInsets.symmetric(vertical: BusinessDetailsConstants.buttonVerticalPadding),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(BusinessDetailsConstants.borderRadiusSmall),
                         ),
                       ),
                     ),
@@ -102,16 +109,16 @@ class ReviewsSection extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
+      margin: EdgeInsets.only(bottom: BusinessDetailsConstants.smallSpacing),
+      elevation: BusinessDetailsConstants.cardElevation,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(BusinessDetailsConstants.reviewCardBorderRadius),
         side: BorderSide(
-          color: colorScheme.outline.withValues(alpha: 0.1),
+          color: colorScheme.outline.withValues(alpha: BusinessDetailsConstants.cardBorderAlpha),
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(BusinessDetailsConstants.contentPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -119,7 +126,7 @@ class ReviewsSection extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  radius: 16,
+                  radius: BusinessDetailsConstants.avatarRadius,
                   backgroundColor: colorScheme.primaryContainer,
                   child: Text(
                     review.userName.isNotEmpty ? review.userName[0].toUpperCase() : '?',
@@ -129,7 +136,7 @@ class ReviewsSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: BusinessDetailsConstants.smallSpacing),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +150,7 @@ class ReviewsSection extends StatelessWidget {
                       ),
                       if (review.isVerified)
                         Text(
-                          'Verified Review',
+                          BusinessDetailsConstants.verifiedReviewLabel,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w500,
@@ -157,15 +164,15 @@ class ReviewsSection extends StatelessWidget {
                   children: List.generate(5, (index) {
                     return Icon(
                       index < review.rating ? Icons.star : Icons.star_border,
-                      size: 16,
-                      color: index < review.rating ? Colors.amber : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                      size: BusinessDetailsConstants.starIconSize,
+                      color: index < review.rating ? Colors.amber : colorScheme.onSurfaceVariant.withValues(alpha: BusinessDetailsConstants.lowOpacity),
                     );
                   }),
                 ),
               ],
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: BusinessDetailsConstants.smallSpacing),
 
             // Review comment
             if (review.comment != null && review.comment!.isNotEmpty)
@@ -173,17 +180,17 @@ class ReviewsSection extends StatelessWidget {
                 review.comment!,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
+                  height: BusinessDetailsConstants.reviewLineHeight,
                 ),
               ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: BusinessDetailsConstants.tinySpacing),
 
             // Review date
             Text(
               BusinessUtils.formatReviewDate(review.createdAt),
               style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: BusinessDetailsConstants.mediumOpacity),
               ),
             ),
           ],

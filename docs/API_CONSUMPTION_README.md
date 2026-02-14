@@ -1,3 +1,41 @@
+# Local API testing (Android physical device / emulator)
+
+## Base URL selection (how the app decides where to call)
+
+- **Production**: always uses the Azure URL (release/profile default).
+- **Debug/dev**: the app auto-selects the first reachable option (in this order):
+  - `https://localhost:7125` (best for **physical devices over USB** via `adb reverse`)
+  - `https://10.0.2.2:7125` (best for **Android emulator**)
+  - `https://192.168.1.104:7125` (LAN fallback; requires the API to listen on your LAN interface)
+
+You can always override everything with:
+
+- `--dart-define=TT_API_BASE_URL=https://your-host:port`
+
+## Android physical device (USB) – recommended: adb reverse
+
+This makes your phone treat `https://localhost:7125` as your PC’s port 7125.
+
+```bash
+adb reverse tcp:7125 tcp:7125
+```
+
+Notes:
+- You must run this once per device connection (or after restarting adb).
+- Your local web service must be running on your PC at `https://localhost:7125/`.
+
+## Android emulator
+
+No adb reverse needed. The emulator can reach your PC’s localhost via:
+
+- `https://10.0.2.2:7125`
+
+## LAN fallback (when you want phone over Wi‑Fi)
+
+Use your PC LAN IP (example: `192.168.1.104`) and ensure:
+- Your API is bound to `0.0.0.0` / that IP (not only `localhost`)
+- Windows Firewall allows inbound traffic on port `7125`
+
 # TownTrek Flutter API Consumption Layer
 
 This document provides a comprehensive guide to the centralized API consumption layer built for the TownTrek Flutter application.

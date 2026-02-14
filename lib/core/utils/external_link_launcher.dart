@@ -103,12 +103,14 @@ class ExternalLinkLauncher {
   }) async {
     try {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched) {
+      if (!launched && context.mounted) {
         _snack(context, failureMessage ?? 'Could not open link');
       }
       return launched;
     } catch (_) {
-      _snack(context, failureMessage ?? 'Could not open link');
+      if (context.mounted) {
+        _snack(context, failureMessage ?? 'Could not open link');
+      }
       return false;
     }
   }

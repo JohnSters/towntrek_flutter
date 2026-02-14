@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'platform_network_probe.dart';
+
 /// Environments available for the application.
 enum AppEnvironment {
   production,
@@ -18,6 +20,9 @@ class ApiConfig {
   static const String _dartDefineEnv = String.fromEnvironment('TT_ENV', defaultValue: '');
   static const String _dartDefineBaseUrl = String.fromEnvironment('TT_API_BASE_URL', defaultValue: '');
 
+  // Runtime override (used for smart dev resolution without affecting release builds)
+  static String? _runtimeBaseUrlOverride;
+
   // Current Environment Configuration (runtime switchable)
   static AppEnvironment _currentEnvironment = _resolveInitialEnvironment();
 
@@ -26,12 +31,13 @@ class ApiConfig {
 
   // Local Development URLs
   // VS Studio typically runs on port 7125 for HTTPS
+  static const String _localhostUrl = 'https://localhost:7125';
   // Android Emulator uses 10.0.2.2 to access host localhost
   static const String _androidEmulatorUrl = 'https://10.0.2.2:7125';
   // iOS Simulator uses localhost
   // static const String _iosSimulatorUrl = 'https://localhost:7125';
   // Physical device needs your LAN IP
-  static const String _localNetworkUrl = 'https://192.168.1.102:7125';
+  static const String _localNetworkUrl = 'https://192.168.1.104:7125';
 
   // Mapbox configuration
   // WARNING: This key is exposed in the client app.
@@ -41,6 +47,10 @@ class ApiConfig {
 
   // Dynamic base URL getter
   static String get baseUrl {
+    // Highest priority (runtime): resolved/forced value (debug helper).
+    final runtime = _runtimeBaseUrlOverride?.trim();
+    if (runtime != null && runtime.isNotEmpty) return runtime;
+
     // Highest priority: explicit base URL override at build/run time.
     final override = _dartDefineBaseUrl.trim();
     if (override.isNotEmpty) return override;
@@ -49,15 +59,65 @@ class ApiConfig {
       case AppEnvironment.production:
         return azureUrl;
       case AppEnvironment.localHost:
-        // Simple platform check could be added here if needed,
-        // but typically 10.0.2.2 works for Android and localhost for iOS
-        // defaulting to the Android emulator friendly one for general "localhost"
-        // usage in mixed envs, or use Platform.isAndroid check if dart:io is imported.
-        // For now, returning the one most likely to work on Android Emulator.
-        return _androidEmulatorUrl;
+        // NOTE:
+        // - Android Emulator: use 10.0.2.2
+        // - Physical device (USB): prefer adb reverse + localhost (resolved at runtime in initialize())
+        // - iOS Simulator: localhost
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+          return _androidEmulatorUrl;
+        }
+        return _localhostUrl;
       case AppEnvironment.localNetwork:
         return _localNetworkUrl;
     }
+  }
+
+  /// Initializes runtime configuration for non-production builds.
+  ///
+  /// This is intentionally conservative:
+  /// - **Production** is never changed.
+  /// - If `TT_API_BASE_URL` is provided, we respect it and do nothing.
+  /// - Otherwise, we try a small set of common dev URLs and pick the first reachable one.
+  ///
+  /// Call this **before** creating the `ApiClient` (i.e., before DI init in `main()`).
+  static Future<void> initialize() async {
+    if (_currentEnvironment == AppEnvironment.production) return;
+
+    // Build/run-time override wins.
+    if (_dartDefineBaseUrl.trim().isNotEmpty) return;
+
+    final candidates = <String>[];
+
+    // For Android physical devices, `adb reverse tcp:7125 tcp:7125` allows localhost to work.
+    // For iOS Simulator, localhost works directly.
+    candidates.add(_localhostUrl);
+
+    // Android emulator host mapping.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      candidates.add(_androidEmulatorUrl);
+    }
+
+    // LAN fallback (requires API to bind to LAN interface and firewall to allow 7125).
+    candidates.add(_localNetworkUrl);
+
+    final resolved = await _pickFirstReachableBaseUrl(candidates);
+    if (resolved != null) {
+      _runtimeBaseUrlOverride = resolved;
+    }
+  }
+
+  static Future<String?> _pickFirstReachableBaseUrl(List<String> baseUrls) async {
+    for (final raw in baseUrls) {
+      final candidate = raw.trim();
+      if (candidate.isEmpty) continue;
+
+      final uri = Uri.tryParse(candidate);
+      if (uri == null || uri.host.isEmpty || uri.port == 0) continue;
+
+      final ok = await canConnect(uri.host, uri.port, timeout: const Duration(milliseconds: 750));
+      if (ok) return candidate;
+    }
+    return null;
   }
 
   static AppEnvironment _resolveInitialEnvironment() {

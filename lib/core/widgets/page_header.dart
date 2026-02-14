@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
 
+/// Enum to define different header types with distinct color schemes
+enum HeaderType {
+  business,
+  service,
+  event,
+  default_,
+}
+
 /// Reusable page header component with proper mobile design
 /// Features background, centered title, and proper spacing for longer titles
 class PageHeader extends StatelessWidget {
@@ -12,6 +20,7 @@ class PageHeader extends StatelessWidget {
   final double height;
   final EdgeInsetsGeometry? padding;
   final String? backgroundImage;
+  final HeaderType headerType;
 
   const PageHeader({
     super.key,
@@ -23,7 +32,56 @@ class PageHeader extends StatelessWidget {
     this.height = 120,
     this.padding,
     this.backgroundImage,
+    this.headerType = HeaderType.default_,
   });
+
+  /// Get gradient colors based on header type for distinct visual identity
+  LinearGradient _getGradient(ColorScheme colorScheme) {
+    switch (headerType) {
+      case HeaderType.business:
+        // Business screens: Strong dark blue gradient
+        return LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue.shade700,
+            Colors.blue.shade900,
+          ],
+        );
+
+      case HeaderType.service:
+        // Service screens: Strong dark green gradient
+        return LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.green.shade700,
+            Colors.green.shade900,
+          ],
+        );
+
+      case HeaderType.event:
+        // Event screens: Strong dark orange gradient
+        return LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.orange.shade700,
+            Colors.orange.shade900,
+          ],
+        );
+
+      case HeaderType.default_:
+        return LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            colorScheme.primary,
+            colorScheme.primary.withValues(alpha: 0.8),
+          ],
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,16 +113,7 @@ class PageHeader extends StatelessWidget {
                 ),
               )
             : null,
-        gradient: bgImage == null
-            ? LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  colorScheme.primary.withValues(alpha: 0.1),
-                  colorScheme.surface,
-                ],
-              )
-            : null,
+        gradient: bgImage == null ? _getGradient(colorScheme) : null,
       ),
       child: SafeArea(
         bottom: false,
@@ -99,7 +148,7 @@ class PageHeader extends StatelessWidget {
                           title,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: bgImage != null ? Colors.white : colorScheme.onSurface,
+                            color: Colors.white,
                             height: 1.2,
                           ),
                           maxLines: 1,
@@ -113,9 +162,7 @@ class PageHeader extends StatelessWidget {
                           Text(
                             subtitle!,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: bgImage != null 
-                                  ? Colors.white.withValues(alpha: 0.9)
-                                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                              color: Colors.white.withValues(alpha: 0.9),
                               height: 1.3,
                             ),
                             maxLines: 2,
