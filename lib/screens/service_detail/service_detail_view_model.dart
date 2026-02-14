@@ -1,5 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import '../../core/core.dart';
+import '../../core/utils/external_link_launcher.dart';
+import '../../core/utils/url_utils.dart';
+import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import '../../core/errors/error_handler.dart';
 import '../../core/constants/service_detail_constants.dart';
@@ -56,5 +59,17 @@ class ServiceDetailViewModel extends ChangeNotifier {
   /// Retry loading service details
   Future<void> retry() async {
     await loadServiceDetails();
+  }
+
+  Future<void> rateService(BuildContext context, ServiceDetailDto service) async {
+    final servicePath = '${ServiceDetailConstants.publicServicePath}${service.id}'
+        '${ServiceDetailConstants.reviewsSectionAnchor}';
+    final serviceUrl = UrlUtils.resolveApiUrl(servicePath);
+
+    await ExternalLinkLauncher.openWebsite(
+      context,
+      serviceUrl,
+      failureMessage: ServiceDetailConstants.openReviewsFailedMessage,
+    );
   }
 }

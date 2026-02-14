@@ -151,7 +151,10 @@ class _ServiceDetailPageContent extends StatelessWidget {
 
         // Contact & Actions
         SliverToBoxAdapter(
-          child: ContactActionsSection(service: serviceDetails),
+          child: ContactActionsSection(
+            service: serviceDetails,
+            onRateService: () => viewModel.rateService(context, serviceDetails),
+          ),
         ),
 
         // Bottom spacing for proper Material 3 layout

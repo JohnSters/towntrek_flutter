@@ -102,6 +102,7 @@ class ServiceDetailConstants {
   static const String directionsAction = 'Directions';
   static const String websiteAction = 'Website';
   static const String shareAction = 'Share';
+  static const String rateServiceAction = 'Rate Service';
   static const String operatingHoursTitle = 'Operating Hours';
   static const String attributesTitle = 'Services & Features';
   static const String contactInfoTitle = 'Contact & Actions';
@@ -112,6 +113,11 @@ class ServiceDetailConstants {
   static const String refreshErrorTitle = 'Connection Error';
   static const String refreshErrorMessage = 'Failed to load service details. Please check your connection and try again.';
   static const String retryButtonText = 'Try Again';
+  static const String openReviewsFailedMessage = 'Unable to open reviews page';
+
+  // URLs
+  static const String publicServicePath = '/Public/Service/';
+  static const String reviewsSectionAnchor = '#reviews';
 
   // Time formats
   static const String timeFormat = 'HH:mm';

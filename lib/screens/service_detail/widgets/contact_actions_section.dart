@@ -6,10 +6,12 @@ import '../../../core/utils/external_link_launcher.dart';
 /// Contact and action buttons section for service details
 class ContactActionsSection extends StatelessWidget {
   final ServiceDetailDto service;
+  final VoidCallback onRateService;
 
   const ContactActionsSection({
     super.key,
     required this.service,
+    required this.onRateService,
   });
 
   @override
@@ -113,6 +115,13 @@ class ContactActionsSection extends StatelessWidget {
         color: Colors.purple,
       ));
     }
+
+    actions.add(_buildActionButton(
+      icon: Icons.star_border,
+      label: ServiceDetailConstants.rateServiceAction,
+      onPressed: onRateService,
+      color: Colors.orange,
+    ));
 
     return actions;
   }
