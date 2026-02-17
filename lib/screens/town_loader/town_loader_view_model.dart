@@ -16,6 +16,9 @@ class TownLoaderViewModel extends ChangeNotifier {
   final TownRepository _townRepository;
   final GeolocationService _geolocationService;
   final ErrorHandler _errorHandler;
+  int _detectionRunId = 0;
+  bool _isDisposed = false;
+  bool _manualSelectionActive = false;
 
   TownLoaderViewModel({
     required TownRepository townRepository,
@@ -27,13 +30,32 @@ class TownLoaderViewModel extends ChangeNotifier {
     detectLocationAndLoadTown();
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _detectionRunId++;
+    super.dispose();
+  }
+
+  bool _shouldAbortDetection(int runId) {
+    return _isDisposed || _manualSelectionActive || runId != _detectionRunId;
+  }
+
+  void _enterManualSelectionMode() {
+    _manualSelectionActive = true;
+    _detectionRunId++;
+  }
+
   Future<void> detectLocationAndLoadTown() async {
+    _manualSelectionActive = false;
+    final runId = ++_detectionRunId;
     _state = TownLoaderLoadingLocation();
     notifyListeners();
 
     try {
       // Get all towns first
       final townsResult = await _townRepository.getTowns();
+      if (_shouldAbortDetection(runId)) return;
 
       if (townsResult.isEmpty) {
         final noDataError = AppErrors.noDataAvailable(detectLocationAndLoadTown);
@@ -44,6 +66,7 @@ class TownLoaderViewModel extends ChangeNotifier {
 
       // Try to find nearest town based on location
       final nearestTownResult = await _geolocationService.findNearestTown(townsResult);
+      if (_shouldAbortDetection(runId)) return;
 
       if (nearestTownResult.isSuccess) {
         _state = TownLoaderConfirmTown(nearestTownResult.data);
@@ -54,13 +77,16 @@ class TownLoaderViewModel extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
+      if (_shouldAbortDetection(runId)) return;
       final appError = await _errorHandler.handleError(e, retryAction: detectLocationAndLoadTown);
+      if (_shouldAbortDetection(runId)) return;
       _state = TownLoaderLocationError(appError);
       notifyListeners();
     }
   }
 
   void skipLocationDetection() {
+    _enterManualSelectionMode();
     _state = TownLoaderSelectTown();
     notifyListeners();
   }
@@ -74,6 +100,7 @@ class TownLoaderViewModel extends ChangeNotifier {
   }
 
   Future<TownDto?> selectTownManually(BuildContext context) async {
+    _enterManualSelectionMode();
     return await Navigator.of(context).push<TownDto>(
       MaterialPageRoute(
         builder: (context) => const TownSelectionScreen(),
