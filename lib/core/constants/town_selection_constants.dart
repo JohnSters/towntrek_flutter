@@ -37,6 +37,8 @@ class TownSelectionConstants {
   static const double pillPaddingHorizontal = 8.0;
   static const double pillPaddingVertical = 4.0;
   static const double dividerDotSize = 3.0;
+  static const double emailButtonVerticalPadding = 14.0;
+  static const double emailButtonIconSize = 20.0;
 
   // Shadow and elevation
   static const double shadowBlurRadius = 10.0;
@@ -80,6 +82,11 @@ class TownSelectionConstants {
   static const String noTownsMatchSearch = 'No towns match your search';
   static const String noTownsAvailableDescription = 'Please check your connection and try again';
   static const String noTownsMatchDescription = 'Try a different search term';
+  static const String requestTownButtonLabel = "Can't find your town? Email us";
+  static const String requestTownEmail = 'admin@bytecraftdigital.com';
+  static const String requestTownEmailSubject = 'Town request for TownTrek';
+  static const String requestTownEmailBodyIntro = 'Hi TownTrek team,';
+  static const String requestTownEmailBodyPrompt = 'Please add this town to TownTrek:';
 
   // Plural labels
   static const String businessLabel = 'Business';

@@ -1,25 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
+import '../../models/models.dart';
 import 'landing_page_state.dart';
 import 'landing_page_view_model.dart';
 import '../town_loader/town_loader_screen.dart';
+import '../town_feature_selection/town_feature_selection_screen.dart';
 import 'widgets/widgets.dart';
 
-class LandingPage extends StatelessWidget {
+class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
+
+  @override
+  State<LandingPage> createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage> {
+  TownDto? _favouriteTown;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavouriteTown();
+  }
+
+  Future<void> _loadFavouriteTown() async {
+    final favouriteTown = await FavouriteTownStorage.getFavouriteTown();
+    if (!mounted) return;
+    setState(() {
+      _favouriteTown = favouriteTown;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => LandingViewModel(statsRepository: serviceLocator.statsRepository),
-      child: const _LandingPageContent(),
+      create: (_) =>
+          LandingViewModel(statsRepository: serviceLocator.statsRepository),
+      child: _LandingPageContent(
+        favouriteTown: _favouriteTown,
+        onRefreshFavouriteTown: _loadFavouriteTown,
+      ),
     );
   }
 }
 
 class _LandingPageContent extends StatelessWidget {
-  const _LandingPageContent();
+  final TownDto? favouriteTown;
+  final Future<void> Function() onRefreshFavouriteTown;
+
+  const _LandingPageContent({
+    required this.favouriteTown,
+    required this.onRefreshFavouriteTown,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +67,21 @@ class _LandingPageContent extends StatelessWidget {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: LandingPageConstants.horizontalPadding),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: LandingPageConstants.horizontalPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingMedium,
+                    ),
                     // App Logo
                     const AppLogo(),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingMedium,
+                    ),
 
                     // Subtitle
                     Text(
@@ -55,7 +94,9 @@ class _LandingPageContent extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingMedium,
+                    ),
 
                     Text(
                       LandingPageConstants.descriptionText,
@@ -66,21 +107,30 @@ class _LandingPageContent extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingMedium,
+                    ),
 
                     // Business Owner CTA
                     BusinessOwnerCTA(
                       onTap: () => viewModel.launchOwnerUrl(context),
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingSmall),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingSmall,
+                    ),
 
                     TextButton.icon(
                       onPressed: () => viewModel.launchFeedbackEmail(context),
                       icon: const Icon(Icons.mail_outline, size: 18),
-                      label: const Text(LandingPageConstants.feedbackButtonText),
+                      label: const Text(
+                        LandingPageConstants.feedbackButtonText,
+                      ),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         minimumSize: Size.zero,
                         foregroundColor: colorScheme.primary,
@@ -88,12 +138,16 @@ class _LandingPageContent extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingMedium,
+                    ),
 
                     // Feature Grid
                     _buildFeatureGrid(viewModel.state),
 
-                    const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingMedium,
+                    ),
                   ],
                 ),
               ),
@@ -101,19 +155,45 @@ class _LandingPageContent extends StatelessWidget {
 
             // Bottom Action Section
             Padding(
-              padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
+              padding: const EdgeInsets.all(
+                LandingPageConstants.horizontalPadding,
+              ),
               child: Column(
                 children: [
+                  if (favouriteTown != null) ...[
+                    ActionButton(
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => TownFeatureSelectionScreen(
+                              town: favouriteTown!,
+                            ),
+                          ),
+                        );
+                        await onRefreshFavouriteTown();
+                      },
+                      buttonText:
+                          '${LandingPageConstants.favouriteExplorePrefix} ${favouriteTown!.name}',
+                      leadingIcon: Icons.star_rounded,
+                      backgroundColor: const Color(0xFF1E88E5),
+                    ),
+                    const SizedBox(
+                      height: LandingPageConstants.verticalSpacingSmall,
+                    ),
+                  ],
                   ActionButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const TownLoaderScreen(),
                         ),
                       );
+                      await onRefreshFavouriteTown();
                     },
                   ),
-                  const SizedBox(height: LandingPageConstants.verticalSpacingMedium),
+                  const SizedBox(
+                    height: LandingPageConstants.verticalSpacingMedium,
+                  ),
                   Text(
                     LandingPageConstants.appTagline,
                     style: theme.textTheme.labelMedium?.copyWith(
@@ -143,7 +223,8 @@ class _LandingPageContent extends StatelessWidget {
           serviceCount: serviceCount,
           eventCount: eventCount,
         ),
-      LandingPageError() => const FeatureGrid(), // Show with null counts on error
+      LandingPageError() =>
+        const FeatureGrid(), // Show with null counts on error
     };
   }
 }

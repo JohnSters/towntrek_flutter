@@ -14,6 +14,7 @@ export 'network/api_client.dart';
 export 'errors/app_error.dart';
 export 'errors/error_handler.dart';
 export 'utils/logger.dart';
+export 'utils/favourite_town_storage.dart';
 export 'utils/result.dart';
 export 'widgets/error_view.dart';
 export 'widgets/event_notification_banner.dart';

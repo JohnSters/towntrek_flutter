@@ -1,7 +1,7 @@
 name: towntrek_flutter
 description: "Local small town discovery app"
 publish_to: 'none'
-version: 1.0.3+10
+version: 1.0.4+11
 
 environment:
   sdk: ^3.9.2
