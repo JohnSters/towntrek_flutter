@@ -27,10 +27,11 @@ class FeatureTile extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 2.0),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: colorScheme.outline.withValues(alpha: 0.14),
+            color: colorScheme.outline.withValues(alpha: 0.22),
+            width: 1.4,
           ),
         ),
         child: Padding(

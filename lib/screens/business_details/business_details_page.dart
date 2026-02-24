@@ -102,7 +102,7 @@ class _BusinessDetailsLoadingView extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: 3,
             separatorBuilder: (_, _) => const SizedBox(width: 10),
-            itemBuilder: (_, __) => SizedBox(
+            itemBuilder: (_, _) => SizedBox(
               width: 142,
               child: _LoadingBlock(
                 height: 96,
@@ -130,8 +130,6 @@ class _BusinessDetailsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final openNow =
-        business.isOpenNow ?? BusinessUtils.isBusinessCurrentlyOpen(business.operatingHours);
 
     final availableServices = business.services
         .where((service) => service.isAvailable)
@@ -474,7 +472,7 @@ class _GalleryTile extends StatelessWidget {
               ),
             );
           },
-          errorBuilder: (context, _, __) {
+          errorBuilder: (context, _, _) {
             return Container(
               color: colorScheme.surfaceContainerHighest,
               alignment: Alignment.center,

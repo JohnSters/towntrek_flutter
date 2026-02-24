@@ -32,53 +32,46 @@ class _TownFeatureSelectionScreenContent extends StatefulWidget {
 
 class _TownFeatureSelectionScreenContentState
     extends State<_TownFeatureSelectionScreenContent> {
-  bool _isFavourite = false;
   bool _isFavouriteActionRunning = false;
 
   @override
   void initState() {
     super.initState();
-    _loadFavouriteState();
+    FavouriteTownStorage.ensureInitialized();
   }
 
-  Future<void> _loadFavouriteState() async {
-    final favouriteTown = await FavouriteTownStorage.getFavouriteTown();
-    if (!mounted) return;
-
-    setState(() {
-      _isFavourite = favouriteTown?.id == widget.initialTown.id;
-    });
-  }
-
-  Future<void> _toggleFavourite(TownDto town) async {
+  Future<void> _toggleFavourite(TownDto town, bool isFavourite) async {
     if (_isFavouriteActionRunning) return;
 
     setState(() {
       _isFavouriteActionRunning = true;
     });
 
-    if (_isFavourite) {
-      await FavouriteTownStorage.clearFavouriteTown();
-    } else {
-      await FavouriteTownStorage.setFavouriteTown(town);
-    }
+    try {
+      if (isFavourite) {
+        await FavouriteTownStorage.clearFavouriteTown();
+      } else {
+        await FavouriteTownStorage.setFavouriteTown(town);
+      }
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _isFavourite = !_isFavourite;
-      _isFavouriteActionRunning = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isFavourite
-              ? '${town.name} saved as favourite'
-              : '${town.name} removed from favourites',
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isFavourite
+                ? '${town.name} removed from favourites'
+                : '${town.name} saved as favourite',
+          ),
         ),
-      ),
-    );
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFavouriteActionRunning = false;
+        });
+      }
+    }
   }
 
   @override
@@ -101,20 +94,28 @@ class _TownFeatureSelectionScreenContentState
               subtitle: town.province,
               height: TownFeatureConstants.pageHeaderHeight,
               headerType: HeaderType.default_,
-              trailing: IconButton(
-                onPressed: _isFavouriteActionRunning
-                    ? null
-                    : () => _toggleFavourite(town),
-                tooltip: _isFavourite
-                    ? 'Remove favourite town'
-                    : 'Set as favourite town',
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                ),
-                icon: Icon(
-                  _isFavourite ? Icons.star_rounded : Icons.star_border_rounded,
-                  color: Colors.white,
-                ),
+              trailing: ValueListenableBuilder<TownDto?>(
+                valueListenable: FavouriteTownStorage.favouriteTownNotifier,
+                builder: (context, favouriteTown, _) {
+                  final isFavourite = favouriteTown?.id == town.id;
+                  return IconButton(
+                    onPressed: _isFavouriteActionRunning
+                        ? null
+                        : () => _toggleFavourite(town, isFavourite),
+                    tooltip: isFavourite
+                        ? 'Remove favourite town'
+                        : 'Set as favourite town',
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    ),
+                    icon: Icon(
+                      isFavourite
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: Colors.white,
+                    ),
+                  );
+                },
               ),
             ),
             Expanded(
