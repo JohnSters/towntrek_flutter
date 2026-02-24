@@ -23,7 +23,7 @@ TownTrek is a cross-platform mobile application built with Flutter that provides
 - **Networking**: HTTP client (Dio/HTTP package)
 - **Local Storage**: Shared Preferences / SQLite
 - **Location Services**: Geolocator package
-- **Maps Integration**: [Google Maps/Mapbox - TBD]
+- **Maps Integration**: Google Maps / external maps apps
 
 #### Backend Integration
 - **API Base URL**: Centralized in `lib/core/config/api_config.dart` and selected via build mode / `--dart-define`

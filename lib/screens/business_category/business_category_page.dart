@@ -353,7 +353,7 @@ class _BusinessCategoryPageContent extends StatelessWidget {
           ),
           SizedBox(height: BusinessCategoryConstants.largeSpacing),
           ElevatedButton.icon(
-            onPressed: () => viewModel.detectLocationAndLoadTown(),
+            onPressed: () => viewModel.detectLocationAndLoadTown(userInitiatedRetry: true),
             icon: const Icon(Icons.location_on),
             label: Text(BusinessCategoryConstants.useMyLocationText),
             style: ElevatedButton.styleFrom(

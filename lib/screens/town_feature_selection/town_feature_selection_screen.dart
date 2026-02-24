@@ -9,22 +9,77 @@ import 'widgets/widgets.dart';
 class TownFeatureSelectionScreen extends StatelessWidget {
   final TownDto town;
 
-  const TownFeatureSelectionScreen({
-    super.key,
-    required this.town,
-  });
+  const TownFeatureSelectionScreen({super.key, required this.town});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => TownFeatureViewModel(town),
-      child: const _TownFeatureSelectionScreenContent(),
+      child: _TownFeatureSelectionScreenContent(initialTown: town),
     );
   }
 }
 
-class _TownFeatureSelectionScreenContent extends StatelessWidget {
-  const _TownFeatureSelectionScreenContent();
+class _TownFeatureSelectionScreenContent extends StatefulWidget {
+  final TownDto initialTown;
+
+  const _TownFeatureSelectionScreenContent({required this.initialTown});
+
+  @override
+  State<_TownFeatureSelectionScreenContent> createState() =>
+      _TownFeatureSelectionScreenContentState();
+}
+
+class _TownFeatureSelectionScreenContentState
+    extends State<_TownFeatureSelectionScreenContent> {
+  bool _isFavourite = false;
+  bool _isFavouriteActionRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavouriteState();
+  }
+
+  Future<void> _loadFavouriteState() async {
+    final favouriteTown = await FavouriteTownStorage.getFavouriteTown();
+    if (!mounted) return;
+
+    setState(() {
+      _isFavourite = favouriteTown?.id == widget.initialTown.id;
+    });
+  }
+
+  Future<void> _toggleFavourite(TownDto town) async {
+    if (_isFavouriteActionRunning) return;
+
+    setState(() {
+      _isFavouriteActionRunning = true;
+    });
+
+    if (_isFavourite) {
+      await FavouriteTownStorage.clearFavouriteTown();
+    } else {
+      await FavouriteTownStorage.setFavouriteTown(town);
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _isFavourite = !_isFavourite;
+      _isFavouriteActionRunning = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _isFavourite
+              ? '${town.name} saved as favourite'
+              : '${town.name} removed from favourites',
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +101,21 @@ class _TownFeatureSelectionScreenContent extends StatelessWidget {
               subtitle: town.province,
               height: TownFeatureConstants.pageHeaderHeight,
               headerType: HeaderType.default_,
+              trailing: IconButton(
+                onPressed: _isFavouriteActionRunning
+                    ? null
+                    : () => _toggleFavourite(town),
+                tooltip: _isFavourite
+                    ? 'Remove favourite town'
+                    : 'Set as favourite town',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                ),
+                icon: Icon(
+                  _isFavourite ? Icons.star_rounded : Icons.star_border_rounded,
+                  color: Colors.white,
+                ),
+              ),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -76,7 +146,11 @@ class _TownFeatureSelectionScreenContent extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildFeatureCards(BuildContext context, TownFeatureViewModel viewModel, TownDto town) {
+  List<Widget> _buildFeatureCards(
+    BuildContext context,
+    TownFeatureViewModel viewModel,
+    TownDto town,
+  ) {
     final features = [
       FeatureData(
         title: TownFeatureConstants.businessesTitle,
@@ -98,6 +172,13 @@ class _TownFeatureSelectionScreenContent extends StatelessWidget {
         icon: Icons.event,
         color: const Color(TownFeatureConstants.eventsColor),
         onTap: () => viewModel.navigateToEvents(context, town),
+      ),
+      FeatureData(
+        title: '${TownFeatureConstants.whatToDoTitle} in ${town.name}',
+        description: TownFeatureConstants.whatToDoDescription,
+        icon: Icons.travel_explore,
+        color: const Color(TownFeatureConstants.whatToDoColor),
+        onTap: () => viewModel.navigateToWhatToDo(context, town),
       ),
     ];
 

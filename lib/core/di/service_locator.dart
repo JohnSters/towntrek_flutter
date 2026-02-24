@@ -20,7 +20,6 @@ class ServiceLocator {
   late final ServiceApiService _serviceApiService;
   late final StatsApiService _statsApiService;
   late final GeolocationService _geolocationService;
-  late final MapboxService _mapboxService;
   late final NavigationService _navigationService;
   late final ErrorHandler _errorHandler;
 
@@ -46,8 +45,7 @@ class ServiceLocator {
     _serviceApiService = ServiceApiService(_apiClient);
     _statsApiService = StatsApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
-    _mapboxService = MapboxServiceImpl();
-    _navigationService = NavigationServiceImpl(_geolocationService, _mapboxService);
+    _navigationService = NavigationServiceImpl();
 
     // Initialize repositories
     _businessRepository = BusinessRepositoryImpl(_businessApiService);
@@ -124,12 +122,6 @@ class ServiceLocator {
     return _geolocationService;
   }
 
-  /// Get the Mapbox service
-  MapboxService get mapboxService {
-    _ensureInitialized();
-    return _mapboxService;
-  }
-
   /// Get the navigation service
   NavigationService get navigationService {
     _ensureInitialized();
@@ -145,7 +137,7 @@ class ServiceLocator {
   void _ensureInitialized() {
     if (!_isInitialized) {
       throw StateError(
-        'ServiceLocator has not been initialized. Call initialize() in main() before accessing repositories.'
+        'ServiceLocator has not been initialized. Call initialize() in main() before accessing repositories.',
       );
     }
   }

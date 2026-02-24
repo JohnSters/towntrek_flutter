@@ -14,10 +14,6 @@ You can override without changing code using `--dart-define`:
 - **Force local**: `--dart-define=TT_ENV=localHost`
 - **Force a specific API host** (highest priority): `--dart-define=TT_API_BASE_URL=https://your-api-host`
 
-## Dependency notes
-
-- **Mapbox (Android build)**: `mapbox_maps_flutter` is **pinned** in `pubspec.yaml` because newer versions were causing Kotlin compilation failures during Android builds under the current Android toolchain. If you upgrade it, validate with `flutter build apk`.
-
 ## Google Play (Internal Testing) – Release signing
 
 Google Play will reject artifacts signed with the **debug** key. Configure a **release/upload keystore**:

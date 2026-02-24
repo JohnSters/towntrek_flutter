@@ -24,6 +24,9 @@ abstract class GeolocationService {
 
 /// Implementation of GeolocationService using geolocator package
 class GeolocationServiceImpl implements GeolocationService {
+  // Reject auto-detection when the closest town is farther than this radius.
+  static const double _maxTownMatchDistanceKm = 50.0;
+
   @override
   Future<Result<bool>> requestLocationPermission() async {
     try {
@@ -156,6 +159,12 @@ class GeolocationServiceImpl implements GeolocationService {
 
       if (nearestTown == null) {
         return Result.failure('Could not determine nearest town');
+      }
+
+      if (minDistance > _maxTownMatchDistanceKm) {
+        return Result.failure(
+          'No nearby town found within ${_maxTownMatchDistanceKm.toStringAsFixed(0)} km of your location.',
+        );
       }
 
       return Result.success(nearestTown);

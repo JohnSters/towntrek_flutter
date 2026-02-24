@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
+import '../../core/utils/external_link_launcher.dart';
 import '../../models/models.dart';
 import 'town_selection_state.dart';
 import 'town_selection_view_model.dart';
@@ -37,6 +38,7 @@ class _TownSelectionScreenContent extends StatelessWidget {
             Expanded(
               child: _buildTownList(context, viewModel.state, viewModel),
             ),
+            _buildRequestTownButton(context, viewModel),
           ],
         ),
       ),
@@ -234,6 +236,85 @@ class _TownSelectionScreenContent extends StatelessWidget {
             ),
       TownSelectionEmpty() => _buildEmptyState(),
     };
+  }
+
+  Widget _buildRequestTownButton(BuildContext context, TownSelectionViewModel viewModel) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        TownSelectionConstants.horizontalPadding,
+        0,
+        TownSelectionConstants.horizontalPadding,
+        TownSelectionConstants.verticalPadding,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: TownSelectionConstants.shadowAlpha),
+            blurRadius: TownSelectionConstants.shadowBlurRadius,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: () => _requestTownByEmail(context, viewModel.searchController.text),
+          icon: const Icon(
+            Icons.email_outlined,
+            size: TownSelectionConstants.emailButtonIconSize,
+          ),
+          label: Text(
+            TownSelectionConstants.requestTownButtonLabel,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(
+              vertical: TownSelectionConstants.emailButtonVerticalPadding,
+            ),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusMedium),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _requestTownByEmail(BuildContext context, String searchQuery) async {
+    final trimmedQuery = searchQuery.trim();
+    final bodyTownLine = trimmedQuery.isEmpty ? '[Add town name here]' : trimmedQuery;
+    final body = [
+      TownSelectionConstants.requestTownEmailBodyIntro,
+      '',
+      TownSelectionConstants.requestTownEmailBodyPrompt,
+      bodyTownLine,
+      '',
+      'Thanks!',
+    ].join('\n');
+
+    final uri = Uri(
+      scheme: 'mailto',
+      path: TownSelectionConstants.requestTownEmail,
+      queryParameters: {
+        'subject': TownSelectionConstants.requestTownEmailSubject,
+        'body': body,
+      },
+    );
+
+    await ExternalLinkLauncher.openUri(
+      context,
+      uri,
+      failureMessage: 'Unable to open email app',
+    );
   }
 
   Widget _buildTownCard(BuildContext context, TownDto town) {
