@@ -21,15 +21,32 @@ class TownLoaderScreen extends StatelessWidget {
   }
 }
 
-class _TownLoaderScreenContent extends StatelessWidget {
+class _TownLoaderScreenContent extends StatefulWidget {
   const _TownLoaderScreenContent();
+
+  @override
+  State<_TownLoaderScreenContent> createState() => _TownLoaderScreenContentState();
+}
+
+class _TownLoaderScreenContentState extends State<_TownLoaderScreenContent> {
+  bool _autoNavigationQueued = false;
+  bool _isConfirmationDialogVisible = false;
+  int? _pendingConfirmationTownId;
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<TownLoaderViewModel>();
+    final state = viewModel.state;
+
+    if (state is! TownLoaderLocationSuccess) {
+      _autoNavigationQueued = false;
+    }
+    if (state is! TownLoaderConfirmTown) {
+      _pendingConfirmationTownId = null;
+    }
 
     return Scaffold(
-      body: switch (viewModel.state) {
+      body: switch (state) {
         TownLoaderLoadingLocation() => _buildLocationLoadingView(context, viewModel),
         TownLoaderLocationSuccess(town: final town) => _buildAutoNavigationHandler(context, viewModel, town),
         TownLoaderConfirmTown(detectedTown: final town) => _buildTownConfirmationDialog(context, viewModel, town),
@@ -42,10 +59,17 @@ class _TownLoaderScreenContent extends StatelessWidget {
   }
 
   Widget _buildAutoNavigationHandler(BuildContext context, TownLoaderViewModel viewModel, TownDto town) {
-    // Auto-navigate when location is successfully detected
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      viewModel.navigateToFeatureSelection(context, town);
-    });
+    if (!_autoNavigationQueued) {
+      _autoNavigationQueued = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final latestState = viewModel.state;
+        if (latestState is! TownLoaderLocationSuccess || latestState.town.id != town.id) {
+          return;
+        }
+        viewModel.navigateToFeatureSelection(context, town);
+      });
+    }
 
     return const SizedBox.shrink();
   }
@@ -54,11 +78,22 @@ class _TownLoaderScreenContent extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Show confirmation dialog after the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!context.mounted) return;
-      _showTownConfirmationDialog(context, viewModel, detectedTown);
-    });
+    if (!_isConfirmationDialogVisible && _pendingConfirmationTownId != detectedTown.id) {
+      _pendingConfirmationTownId = detectedTown.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final latestState = viewModel.state;
+        final isStillAwaitingConfirmation =
+            latestState is TownLoaderConfirmTown &&
+            latestState.detectedTown.id == detectedTown.id &&
+            !viewModel.userCancelledAutoDetect;
+        if (!isStillAwaitingConfirmation) return;
+
+        _isConfirmationDialogVisible = true;
+        await _showTownConfirmationDialog(context, viewModel, detectedTown);
+        _isConfirmationDialogVisible = false;
+      });
+    }
 
     // While showing the dialog, display the detected town info
     return Center(
@@ -232,7 +267,7 @@ class _TownLoaderScreenContent extends StatelessWidget {
           ],
           const SizedBox(height: TownLoaderConstants.spacingExtraLarge),
           ElevatedButton.icon(
-            onPressed: viewModel.detectLocationAndLoadTown,
+            onPressed: () => viewModel.detectLocationAndLoadTown(userInitiatedRetry: true),
             icon: const Icon(Icons.location_on),
             label: const Text(TownLoaderConstants.useLocationButtonText),
             style: ElevatedButton.styleFrom(
@@ -458,14 +493,17 @@ class _TownLoaderScreenContent extends StatelessWidget {
       },
     );
 
-    // Handle the result
-    if (!context.mounted) return;
+    if (!mounted) return;
+    final latestState = viewModel.state;
+    final isStillAwaitingConfirmation =
+        latestState is TownLoaderConfirmTown &&
+        latestState.detectedTown.id == detectedTown.id &&
+        !viewModel.userCancelledAutoDetect;
+    if (!isStillAwaitingConfirmation) return;
 
     if (result == true) {
-      // User confirmed the town is correct
       viewModel.confirmDetectedTown(detectedTown);
     } else {
-      // User wants to choose manually or dismissed dialog
       viewModel.rejectDetectedTown();
     }
   }
