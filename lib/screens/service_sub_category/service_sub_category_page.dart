@@ -87,6 +87,13 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     BuildContext context,
     ServiceSubCategorySuccess state,
   ) {
+    final totalServices = state.category.serviceCount > 0
+        ? state.category.serviceCount
+        : state.sortedSubCategories.fold<int>(
+            0,
+            (sum, subCategory) => sum + subCategory.serviceCount,
+          );
+
     return Column(
       children: [
         PageHeader(
@@ -95,16 +102,19 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
           height: ServiceSubCategoryConstants.pageHeaderHeight,
           headerType: HeaderType.service,
         ),
+        _CategoryInfoBar(
+          icon: Icons.handyman_rounded,
+          text: '$totalServices services \u2022 ${state.category.name}',
+          backgroundColor: const Color(0xFFE3F2FD),
+          textColor: const Color(0xFF0D47A1),
+          borderColor: const Color(0xFFBBDEFB),
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CategoryInfoBadge(
-                  subCategoryCount: state.sortedSubCategories.length,
-                ),
-                const SizedBox(height: 16),
                 if (state.sortedSubCategories.isEmpty)
                   const ServiceEmptyStateView()
                 else
@@ -115,7 +125,12 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
                     separatorBuilder: (context, index) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final subCategory = state.sortedSubCategories[index];
-                      return _buildSubCategoryCard(context, subCategory, state.countsAvailable, state);
+                      return SubCategoryCard(
+                        subCategory: subCategory,
+                        countsAvailable: state.countsAvailable,
+                        townName: state.town.name,
+                        onTap: () => _navigateToServiceList(context, state, subCategory),
+                      );
                     },
                   ),
                 const SizedBox(height: 32),
@@ -125,100 +140,6 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildSubCategoryCard(
-    BuildContext context,
-    ServiceSubCategoryDto subCategory,
-    bool countsAvailable,
-    ServiceSubCategorySuccess state,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDisabled = countsAvailable && subCategory.serviceCount == 0;
-
-    return OutlinedButton(
-      onPressed: isDisabled ? null : () => _navigateToServiceList(context, state, subCategory),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        side: BorderSide(
-          color: isDisabled
-              ? colorScheme.outline.withValues(alpha: 0.2)
-              : colorScheme.primary.withValues(alpha: 0.25),
-          width: 1.0,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        backgroundColor: isDisabled
-            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
-            : colorScheme.primary.withValues(alpha: 0.05),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isDisabled
-                  ? colorScheme.surfaceContainerHighest
-                  : colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.build,
-              size: 24,
-              color: isDisabled
-                  ? colorScheme.onSurfaceVariant
-                  : colorScheme.onSecondaryContainer,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subCategory.name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDisabled
-                        ? colorScheme.onSurface.withValues(alpha: 0.6)
-                        : colorScheme.onSurface,
-                  ),
-                ),
-                Text(
-                  _getSubCategorySubtitle(subCategory, countsAvailable, isDisabled),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.chevron_right,
-            color: isDisabled
-                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
-                : colorScheme.primary.withValues(alpha: 0.6),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getSubCategorySubtitle(ServiceSubCategoryDto subCategory, bool countsAvailable, bool isDisabled) {
-    if (isDisabled) {
-      return 'No services available';
-    }
-
-    if (countsAvailable) {
-      return '${subCategory.serviceCount} services';
-    }
-
-    return 'View services';
   }
 
   void _navigateToServiceList(
@@ -233,6 +154,54 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
           subCategory: subCategory,
           town: state.town,
         ),
+      ),
+    );
+  }
+}
+
+class _CategoryInfoBar extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const _CategoryInfoBar({
+    required this.icon,
+    required this.text,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
       ),
     );
   }

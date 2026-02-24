@@ -63,146 +63,102 @@ class _LandingPageContent extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: LandingPageConstants.horizontalPadding,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 8),
+              const AppLogo(),
+              const SizedBox(height: 16),
+              Text(
+                LandingPageConstants.subtitleText,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                  height: 1.3,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingMedium,
-                    ),
-                    // App Logo
-                    const AppLogo(),
-
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingMedium,
-                    ),
-
-                    // Subtitle
-                    Text(
-                      LandingPageConstants.subtitleText,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                        height: 1.3,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingMedium,
-                    ),
-
-                    Text(
-                      LandingPageConstants.descriptionText,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingMedium,
-                    ),
-
-                    // Business Owner CTA
-                    BusinessOwnerCTA(
-                      onTap: () => viewModel.launchOwnerUrl(context),
-                    ),
-
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingSmall,
-                    ),
-
-                    // Feature Grid
-                    _buildFeatureGrid(viewModel.state),
-
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingMedium,
-                    ),
-                  ],
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 14),
+              Text(
+                LandingPageConstants.descriptionText,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.5,
                 ),
+                textAlign: TextAlign.center,
               ),
-            ),
-
-            // Bottom Action Section
-            Padding(
-              padding: const EdgeInsets.all(
-                LandingPageConstants.horizontalPadding,
+              const SizedBox(height: 20),
+              ActionButton(
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const TownLoaderScreen(),
+                    ),
+                  );
+                  await onRefreshFavouriteTown();
+                },
+                buttonText: 'Explore Now!',
+                compact: true,
               ),
-              child: Column(
-                children: [
-                  if (favouriteTown != null) ...[
-                    ActionButton(
-                      onPressed: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => TownFeatureSelectionScreen(
-                              town: favouriteTown!,
-                            ),
-                          ),
-                        );
-                        await onRefreshFavouriteTown();
-                      },
-                      buttonText:
-                          '${LandingPageConstants.favouriteExplorePrefix} ${favouriteTown!.name}',
-                      leadingIcon: Icons.star_rounded,
-                      backgroundColor: const Color(0xFF1E88E5),
-                    ),
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingSmall,
-                    ),
-                  ],
-                  ActionButton(
-                    onPressed: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const TownLoaderScreen(),
+              const SizedBox(height: 10),
+              BusinessOwnerCTA(
+                onTap: () => viewModel.launchOwnerUrl(context),
+                buttonText: 'Business Not Listed!',
+                compact: true,
+              ),
+              if (favouriteTown != null) ...[
+                const SizedBox(height: 10),
+                ActionButton(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TownFeatureSelectionScreen(
+                          town: favouriteTown!,
                         ),
-                      );
-                      await onRefreshFavouriteTown();
-                    },
-                  ),
-                  const SizedBox(
-                    height: LandingPageConstants.verticalSpacingMedium,
-                  ),
-                  Text(
-                    LandingPageConstants.appTagline,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(
-                    height: LandingPageConstants.verticalSpacingSmall,
-                  ),
-                  TextButton.icon(
-                    onPressed: () => viewModel.launchFeedbackEmail(context),
-                    icon: const Icon(Icons.mail_outline, size: 18),
-                    label: const Text(
-                      LandingPageConstants.feedbackButtonText,
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
                       ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      minimumSize: Size.zero,
-                      foregroundColor: colorScheme.primary,
-                      textStyle: theme.textTheme.labelLarge,
-                    ),
-                  ),
-                ],
+                    );
+                    await onRefreshFavouriteTown();
+                  },
+                  buttonText: 'Favourite Town: ${favouriteTown!.name}',
+                  leadingIcon: Icons.star_rounded,
+                  backgroundColor: const Color(0xFF1E88E5),
+                  compact: true,
+                ),
+              ],
+              const SizedBox(height: 14),
+              _buildFeatureGrid(viewModel.state),
+              const SizedBox(height: 10),
+              Text(
+                LandingPageConstants.appTagline,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(
+                height: LandingPageConstants.verticalSpacingSmall,
+              ),
+              TextButton.icon(
+                onPressed: () => viewModel.launchFeedbackEmail(context),
+                icon: const Icon(Icons.mail_outline, size: 18),
+                label: const Text(
+                  LandingPageConstants.feedbackButtonText,
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: Size.zero,
+                  foregroundColor: colorScheme.primary,
+                  textStyle: theme.textTheme.labelLarge,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -85,4 +85,15 @@ class BusinessDetailsViewModel extends ChangeNotifier {
       failureMessage: 'Unable to open reviews page',
     );
   }
+
+  Future<void> openFullBusinessDetails(BuildContext context, BusinessDetailDto business) async {
+    final businessPath = '${BusinessDetailsConstants.publicBusinessPath}${business.id}';
+    final businessUrl = UrlUtils.resolveApiUrl(businessPath);
+
+    await ExternalLinkLauncher.openWebsite(
+      context,
+      businessUrl,
+      failureMessage: 'Unable to open full business details',
+    );
+  }
 }

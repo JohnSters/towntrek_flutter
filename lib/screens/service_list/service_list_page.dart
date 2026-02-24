@@ -52,6 +52,13 @@ class _ServiceListPageContent extends StatelessWidget {
             height: ServiceListConstants.pageHeaderHeight,
             headerType: HeaderType.service,
           ),
+          _ListInfoBar(
+            icon: Icons.handyman_rounded,
+            text: '${viewModel.subCategory.serviceCount} services \u2022 ${viewModel.subCategory.name}',
+            backgroundColor: const Color(0xFFE3F2FD),
+            textColor: const Color(0xFF0D47A1),
+            borderColor: const Color(0xFFBBDEFB),
+          ),
           Expanded(
             child: _buildContent(context, viewModel),
           ),
@@ -145,6 +152,54 @@ class _ServiceListPageContent extends StatelessWidget {
             ],
           );
       },
+    );
+  }
+}
+
+class _ListInfoBar extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const _ListInfoBar({
+    required this.icon,
+    required this.text,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

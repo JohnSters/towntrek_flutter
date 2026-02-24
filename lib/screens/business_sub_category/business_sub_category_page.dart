@@ -87,6 +87,13 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
           height: BusinessSubCategoryConstants.pageHeaderHeight,
           headerType: HeaderType.business,
         ),
+        _CategoryInfoBar(
+          icon: Icons.business_center_rounded,
+          text: '${state.category.businessCount} businesses \u2022 ${state.category.name}',
+          backgroundColor: const Color(0xFFE9F7EF),
+          textColor: const Color(0xFF1D7A38),
+          borderColor: const Color(0xFFBFE5CB),
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(
@@ -95,11 +102,6 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CategoryInfoBadge(
-                  category: state.category,
-                  town: state.town,
-                ),
-                const SizedBox(height: BusinessSubCategoryConstants.infoBadgeSpacing),
                 if (state.sortedSubCategories.isEmpty)
                   _buildEmptyState()
                 else
@@ -156,6 +158,54 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _CategoryInfoBar extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const _CategoryInfoBar({
+    required this.icon,
+    required this.text,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
