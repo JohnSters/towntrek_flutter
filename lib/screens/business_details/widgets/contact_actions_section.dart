@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/external_link_launcher.dart';
 import '../../../core/utils/business_utils.dart';
@@ -90,93 +91,103 @@ class ContactActionsSection extends StatelessWidget {
                     context,
                     icon: Icons.phone,
                     label: 'Call',
-                    onPressed: () => _launchPhone(context, business.phoneNumber!),
-                      backgroundColor: Colors.green,
-                    ),
+                    onPressed: () =>
+                        _launchPhone(context, business.phoneNumber!),
+                    backgroundColor: Colors.green,
+                  ),
 
-                  // Email Us Button
-                  if (business.emailAddress != null)
-                    _buildFullWidthActionButton(
-                      context,
-                      icon: Icons.email,
-                      label: 'Email',
-                      onPressed: () => _launchEmail(context, business.emailAddress!),
-                      backgroundColor: Colors.blue,
-                    ),
-
-                  // Website Button
-                  if (business.website != null)
-                    _buildFullWidthActionButton(
-                      context,
-                      icon: Icons.web,
-                      label: 'Website',
-                      onPressed: () => _launchWebsite(context, business.website!),
-                      backgroundColor: Colors.purple,
-                    ),
-
-                  // Rate Business Button
+                // Email Us Button
+                if (business.emailAddress != null)
                   _buildFullWidthActionButton(
                     context,
-                    icon: Icons.star_border,
-                    label: 'Rate Business',
-                    onPressed: onRateBusiness,
-                    backgroundColor: Colors.orange,
+                    icon: Icons.email,
+                    label: 'Email',
+                    onPressed: () =>
+                        _launchEmail(context, business.emailAddress!),
+                    backgroundColor: Colors.blue,
                   ),
-                ],
-              ),
 
-              // Social Media Links
-              if (BusinessUtils.hasSocialMedia(business)) ...[
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
+                // Website Button
+                if (business.website != null)
+                  _buildFullWidthActionButton(
+                    context,
+                    icon: Icons.web,
+                    label: 'Website',
+                    onPressed: () => _launchWebsite(context, business.website!),
+                    backgroundColor: Colors.purple,
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.share,
-                        size: 20,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Follow Us',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (business.facebook != null)
-                      _buildSocialButton(
-                        context,
-                        icon: Icons.facebook,
-                        onPressed: () => _launchUrl(context, business.facebook!),
-                      ),
-                    if (business.instagram != null)
-                      _buildSocialButton(
-                        context,
-                        icon: Icons.camera_alt, // Instagram-like icon
-                        onPressed: () => _launchUrl(context, business.instagram!),
-                      ),
-                    if (business.whatsApp != null)
-                      _buildSocialButton(
-                        context,
-                        icon: Icons.message,
-                        onPressed: () => _launchUrl(context, business.whatsApp!),
-                      ),
-                  ],
+
+                // Rate Business Button
+                _buildFullWidthActionButton(
+                  context,
+                  icon: Icons.star_border,
+                  label: 'Rate Business',
+                  onPressed: onRateBusiness,
+                  backgroundColor: Colors.orange,
                 ),
               ],
+            ),
+
+            // Social Media Links
+            if (BusinessUtils.hasSocialMedia(business)) ...[
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.share,
+                      size: 20,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Follow Us',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (business.facebook != null)
+                    _buildSocialButton(
+                      icon: FontAwesomeIcons.facebookF,
+                      backgroundColor: const Color(0xFF1877F2),
+                      onPressed: () => _launchUrl(context, business.facebook!),
+                    ),
+                  if (business.facebook != null) const SizedBox(width: 12),
+                  if (business.instagram != null)
+                    _buildSocialButton(
+                      icon: FontAwesomeIcons.instagram,
+                      backgroundColor: const Color(0xFFC13584),
+                      onPressed: () => _launchUrl(context, business.instagram!),
+                    ),
+                  if (business.instagram != null && business.whatsApp != null)
+                    const SizedBox(width: 12),
+                  if (business.whatsApp != null)
+                    _buildSocialButton(
+                      icon: FontAwesomeIcons.whatsapp,
+                      backgroundColor: const Color(0xFF25D366),
+                      onPressed: () => _launchUrl(context, business.whatsApp!),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -218,19 +229,23 @@ class ContactActionsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSocialButton(
-    BuildContext context, {
+  Widget _buildSocialButton({
     required IconData icon,
+    required Color backgroundColor,
     required VoidCallback onPressed,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(icon),
-      style: IconButton.styleFrom(
-        backgroundColor: colorScheme.surfaceContainerHighest,
-        padding: const EdgeInsets.all(12),
+    return SizedBox(
+      width: 64,
+      height: 64,
+      child: IconButton(
+        onPressed: onPressed,
+        icon: FaIcon(icon, color: Colors.white, size: 28),
+        style: IconButton.styleFrom(
+          backgroundColor: backgroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
     );
   }
@@ -251,4 +266,3 @@ class ContactActionsSection extends StatelessWidget {
     await ExternalLinkLauncher.openRaw(context, urlString);
   }
 }
-

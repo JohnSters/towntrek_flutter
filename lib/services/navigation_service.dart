@@ -1,32 +1,25 @@
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:url_launcher/url_launcher.dart';
 import '../core/utils/result.dart';
 import '../models/models.dart';
-import 'geolocation_service.dart';
-import 'mapbox_service.dart';
 
 /// Service for handling navigation operations
 abstract class NavigationService {
   /// Navigate to a business location using the best available method
   Future<Result<bool>> navigateToBusiness(BusinessDetailDto business);
 
-  /// Get directions data for offline use or custom display
-  Future<Result<Map<String, dynamic>>> getDirectionsToBusiness(BusinessDetailDto business);
-
   /// Open navigation in external app with fallback options
   Future<Result<bool>> openExternalNavigation(
     double destinationLat,
-    double destinationLng,
-    [String? destinationName]
-  );
+    double destinationLng, [
+    String? destinationName,
+  ]);
 }
 
 /// Implementation of NavigationService
 class NavigationServiceImpl implements NavigationService {
-  final GeolocationService _geolocationService;
-  final MapboxService _mapboxService;
-
-  NavigationServiceImpl(this._geolocationService, this._mapboxService);
+  NavigationServiceImpl();
 
   @override
   Future<Result<bool>> navigateToBusiness(BusinessDetailDto business) async {
@@ -42,51 +35,17 @@ class NavigationServiceImpl implements NavigationService {
         business.longitude!,
         business.name,
       );
-
-      // FUTURE: When you want in-app Mapbox navigation with route display:
-      // final directionsResult = await getDirectionsToBusiness(business);
-      // if (directionsResult.isSuccess) {
-      //   // Navigate to a Mapbox-powered route screen
-      //   return showInAppNavigation(directionsResult.data!, business);
-      // }
     } catch (e) {
       return Result.failure('Navigation failed: $e');
     }
   }
 
   @override
-  Future<Result<Map<String, dynamic>>> getDirectionsToBusiness(BusinessDetailDto business) async {
-    if (business.latitude == null || business.longitude == null) {
-      return Result.failure('Business location not available');
-    }
-
-    try {
-      // Get current location
-      final currentLocationResult = await _geolocationService.getCurrentPosition();
-      if (currentLocationResult.isFailure) {
-        return Result.failure(currentLocationResult.error!);
-      }
-
-      final currentLocation = currentLocationResult.data;
-
-      // Get directions from Mapbox
-      return await _mapboxService.getDirections(
-        currentLocation.latitude,
-        currentLocation.longitude,
-        business.latitude!,
-        business.longitude!,
-      );
-    } catch (e) {
-      return Result.failure('Failed to get directions: $e');
-    }
-  }
-
-  @override
   Future<Result<bool>> openExternalNavigation(
     double destinationLat,
-    double destinationLng,
-    [String? destinationName]
-  ) async {
+    double destinationLng, [
+    String? destinationName,
+  ]) async {
     try {
       // Determine platform and use appropriate URL scheme
       final isIOS = _isIOS();
@@ -104,11 +63,13 @@ class NavigationServiceImpl implements NavigationService {
         // Android - use geo intent
         url = 'geo:$destinationLat,$destinationLng';
         if (destinationName != null) {
-          url += '?q=$destinationLat,$destinationLng(${Uri.encodeComponent(destinationName)})';
+          url +=
+              '?q=$destinationLat,$destinationLng(${Uri.encodeComponent(destinationName)})';
         }
       } else {
         // Desktop/web - Google Maps
-        url = 'https://www.google.com/maps/dir/?api=1&destination=$destinationLat,$destinationLng';
+        url =
+            'https://www.google.com/maps/dir/?api=1&destination=$destinationLat,$destinationLng';
       }
 
       final uri = Uri.parse(url);
@@ -141,5 +102,6 @@ class NavigationServiceImpl implements NavigationService {
 
   bool _isIOS() => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
-  bool _isAndroid() => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  bool _isAndroid() =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 }

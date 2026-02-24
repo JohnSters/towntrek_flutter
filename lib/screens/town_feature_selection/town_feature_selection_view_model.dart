@@ -4,6 +4,7 @@ import '../business_category/business_category.dart';
 import '../current_events/current_events_screen.dart';
 import '../service_category/service_category_page.dart';
 import '../town_selection/town_selection_screen.dart';
+import '../what_to_do/what_to_do_screen.dart';
 import 'town_feature_selection_screen.dart';
 import 'town_feature_selection_state.dart';
 
@@ -16,9 +17,7 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> changeTown(BuildContext context) async {
     final selectedTown = await Navigator.of(context).push<TownDto>(
-      MaterialPageRoute(
-        builder: (context) => const TownSelectionScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const TownSelectionScreen()),
     );
 
     if (selectedTown != null && context.mounted) {
@@ -32,28 +31,28 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   void navigateToBusinesses(BuildContext context, TownDto town) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BusinessCategoryPage(town: town),
-      ),
+      MaterialPageRoute(builder: (context) => BusinessCategoryPage(town: town)),
     );
   }
 
   void navigateToServices(BuildContext context, TownDto town) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ServiceCategoryPage(town: town),
-      ),
+      MaterialPageRoute(builder: (context) => ServiceCategoryPage(town: town)),
     );
   }
 
   void navigateToEvents(BuildContext context, TownDto town) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CurrentEventsScreen(
-          townId: town.id,
-          townName: town.name,
-        ),
+        builder: (context) =>
+            CurrentEventsScreen(townId: town.id, townName: town.name),
       ),
     );
+  }
+
+  void navigateToWhatToDo(BuildContext context, TownDto town) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => WhatToDoScreen(town: town)));
   }
 }

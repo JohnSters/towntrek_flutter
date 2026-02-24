@@ -120,28 +120,6 @@ class _LandingPageContent extends StatelessWidget {
                       height: LandingPageConstants.verticalSpacingSmall,
                     ),
 
-                    TextButton.icon(
-                      onPressed: () => viewModel.launchFeedbackEmail(context),
-                      icon: const Icon(Icons.mail_outline, size: 18),
-                      label: const Text(
-                        LandingPageConstants.feedbackButtonText,
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        minimumSize: Size.zero,
-                        foregroundColor: colorScheme.primary,
-                        textStyle: theme.textTheme.labelLarge,
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: LandingPageConstants.verticalSpacingMedium,
-                    ),
-
                     // Feature Grid
                     _buildFeatureGrid(viewModel.state),
 
@@ -200,6 +178,26 @@ class _LandingPageContent extends StatelessWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(
+                    height: LandingPageConstants.verticalSpacingSmall,
+                  ),
+                  TextButton.icon(
+                    onPressed: () => viewModel.launchFeedbackEmail(context),
+                    icon: const Icon(Icons.mail_outline, size: 18),
+                    label: const Text(
+                      LandingPageConstants.feedbackButtonText,
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: Size.zero,
+                      foregroundColor: colorScheme.primary,
+                      textStyle: theme.textTheme.labelLarge,
+                    ),
                   ),
                 ],
               ),

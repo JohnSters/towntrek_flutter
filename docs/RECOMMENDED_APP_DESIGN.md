@@ -981,7 +981,6 @@ Before considering a screen complete, verify:
 - `intl` (0.20.2): Standard for internationalization
 
 **⚠️ Notes:**
-- `mapbox_maps_flutter` (2.11.0): You've pinned this due to build issues - that's a smart workaround. Document this in your README so future developers understand why.
 - `http` (1.6.0): You have both `dio` and `http`. Consider using only `dio` for consistency unless `http` is required by a dependency.
 
 **📦 Packages you should consider adding:**

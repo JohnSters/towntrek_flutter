@@ -28,8 +28,9 @@ class TownFeatureConstants {
 
   // Colors (as hex values for consistency)
   static const int businessesColor = 0xFF1565C0; // Blue 800
-  static const int servicesColor = 0xFFEF6C00;   // Orange 800
-  static const int eventsColor = 0xFF6A1B9A;     // Purple 800
+  static const int servicesColor = 0xFFEF6C00; // Orange 800
+  static const int eventsColor = 0xFF6A1B9A; // Purple 800
+  static const int whatToDoColor = 0xFF00897B; // Teal 600
 
   // Import needed for FontWeight
   // Font weights
@@ -39,10 +40,15 @@ class TownFeatureConstants {
   // Strings
   static const String pageTitle = 'What are you looking for?';
   static const String businessesTitle = 'Businesses';
-  static const String businessesDescription = 'Find local shops, restaurants, and more';
+  static const String businessesDescription =
+      'Find local shops, restaurants, and more';
   static const String servicesTitle = 'Services';
-  static const String servicesDescription = 'Plumbers, electricians, and other pros';
+  static const String servicesDescription =
+      'Plumbers, electricians, and other pros';
   static const String eventsTitle = 'Events';
   static const String eventsDescription = 'Discover what\'s happening in town';
+  static const String whatToDoTitle = 'What to do';
+  static const String whatToDoDescription =
+      'Visitor tips, attractions, and local highlights';
   static const String changeTownTooltip = 'Wrong Town?';
 }

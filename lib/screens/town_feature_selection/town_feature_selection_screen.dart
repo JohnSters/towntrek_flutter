@@ -173,6 +173,13 @@ class _TownFeatureSelectionScreenContentState
         color: const Color(TownFeatureConstants.eventsColor),
         onTap: () => viewModel.navigateToEvents(context, town),
       ),
+      FeatureData(
+        title: '${TownFeatureConstants.whatToDoTitle} in ${town.name}',
+        description: TownFeatureConstants.whatToDoDescription,
+        icon: Icons.travel_explore,
+        color: const Color(TownFeatureConstants.whatToDoColor),
+        onTap: () => viewModel.navigateToWhatToDo(context, town),
+      ),
     ];
 
     return features.map((feature) {
