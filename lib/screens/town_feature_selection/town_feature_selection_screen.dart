@@ -124,6 +124,8 @@ class _TownFeatureSelectionScreenContentState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    TownPulseCard(town: town),
+                    const SizedBox(height: 20),
                     Text(
                       TownFeatureConstants.pageTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
