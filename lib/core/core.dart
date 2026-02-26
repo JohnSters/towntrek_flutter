@@ -19,6 +19,8 @@ export 'utils/favourite_town_storage.dart';
 export 'utils/result.dart';
 export 'widgets/error_view.dart';
 export 'widgets/event_notification_banner.dart';
+export 'widgets/full_screen_image_viewer.dart';
 export 'widgets/navigation_footer.dart';
 export 'widgets/page_header.dart';
+export 'widgets/tappable_image.dart';
 export 'di/service_locator.dart';

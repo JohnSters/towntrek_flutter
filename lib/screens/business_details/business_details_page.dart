@@ -185,7 +185,14 @@ class _BusinessDetailsBody extends StatelessWidget {
                 itemCount: business.images.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
-                  return _GalleryTile(image: business.images[index]);
+                  final allUrls = business.images
+                      .map((img) => UrlUtils.resolveImageUrl(img.url))
+                      .toList();
+                  return _GalleryTile(
+                    image: business.images[index],
+                    allImageUrls: allUrls,
+                    index: index,
+                  );
                 },
               ),
             ),
@@ -428,60 +435,71 @@ class _TopStatusBar extends StatelessWidget {
 
 class _GalleryTile extends StatelessWidget {
   final BusinessImageDto image;
+  final List<String> allImageUrls;
+  final int index;
 
-  const _GalleryTile({required this.image});
+  const _GalleryTile({
+    required this.image,
+    required this.allImageUrls,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final resolvedUrl = UrlUtils.resolveImageUrl(image.url);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 158,
-        color: colorScheme.surfaceContainerHighest,
-        child: Image.network(
-          resolvedUrl,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              color: colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
+    return TappableImage(
+      imageUrls: allImageUrls,
+      initialIndex: index,
+      heroTag: 'business_gallery_$index',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 158,
+          color: colorScheme.surfaceContainerHighest,
+          child: Image.network(
+            resolvedUrl,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Loading image...',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
-              ),
-            );
-          },
-          errorBuilder: (context, _, _) {
-            return Container(
-              color: colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.broken_image_outlined,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            );
-          },
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading image...',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
+                ),
+              );
+            },
+            errorBuilder: (context, _, _) {
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
