@@ -16,17 +16,20 @@ class ServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final introText = service.shortDescription?.trim().isNotEmpty == true
+        ? service.shortDescription!.trim()
+        : '${service.subCategoryName ?? service.categoryName ?? 'Local service'} in ${service.townName}';
 
     return OutlinedButton(
       onPressed: () => _navigateToServiceDetails(context),
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(14),
         side: BorderSide(
           color: colorScheme.primary.withValues(alpha: 0.3),
-          width: 1.5,
+          width: 1.2,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         backgroundColor: colorScheme.primary.withValues(alpha: 0.02),
       ),
@@ -36,7 +39,7 @@ class ServiceCard extends StatelessWidget {
           Row(
             children: [
               _buildServiceLogo(colorScheme),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,26 +53,24 @@ class ServiceCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     _buildRatingAndVerificationRow(colorScheme, theme),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (service.shortDescription != null &&
-              service.shortDescription!.isNotEmpty)
-            Text(
-              service.shortDescription!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 10),
+          Text(
+            introText,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              height: 1.35,
             ),
-          const SizedBox(height: 20),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -77,9 +78,9 @@ class ServiceCard extends StatelessWidget {
               icon: const Icon(Icons.arrow_forward_rounded, size: 18),
               label: const Text('View Details'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 elevation: 1,
                 shadowColor: colorScheme.shadow.withValues(alpha: 0.3),
@@ -93,33 +94,33 @@ class ServiceCard extends StatelessWidget {
 
   Widget _buildServiceLogo(ColorScheme colorScheme) {
     return Container(
-      width: 64,
-      height: 64,
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         color: colorScheme.surfaceContainerHighest,
         border: Border.all(
           color: colorScheme.primary.withValues(alpha: 0.4),
-          width: 2,
+          width: 1.6,
         ),
         boxShadow: [
           BoxShadow(
             color: colorScheme.primary.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: service.logoUrl != null
           ? ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 UrlUtils.resolveImageUrl(service.logoUrl!),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
                     Icons.business_rounded,
-                    size: 32,
+                    size: 28,
                     color: colorScheme.primary.withValues(alpha: 0.6),
                   );
                 },
@@ -127,7 +128,7 @@ class ServiceCard extends StatelessWidget {
             )
           : Icon(
               Icons.business_rounded,
-              size: 32,
+              size: 28,
               color: colorScheme.primary.withValues(alpha: 0.6),
             ),
     );
@@ -139,11 +140,11 @@ class ServiceCard extends StatelessWidget {
         // Verified Badge
         if (service.isVerified)
           Container(
-            margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.all(6),
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               color: Colors.blue.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: Colors.blue.withValues(alpha: 0.3),
                 width: 1,
@@ -151,7 +152,7 @@ class ServiceCard extends StatelessWidget {
             ),
             child: Icon(
               Icons.verified_rounded,
-              size: 16,
+              size: 14,
               color: Colors.blue.shade700,
             ),
           ),
@@ -170,7 +171,7 @@ class ServiceCard extends StatelessWidget {
                       : starValue - 0.5 <= rating
                           ? Icons.star_half_rounded
                           : Icons.star_outline_rounded,
-                  size: 18,
+                  size: 16,
                   color: starValue <= rating + 0.5
                       ? Colors.amber.shade600
                       : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
@@ -178,14 +179,14 @@ class ServiceCard extends StatelessWidget {
               }),
             ),
 
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
 
             // Rating Text with Count
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.amber.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: Colors.amber.withValues(alpha: 0.25),
                   width: 1,
@@ -195,10 +196,9 @@ class ServiceCard extends StatelessWidget {
                 service.rating != null
                     ? '${service.rating!.toStringAsFixed(1)} (${service.totalReviews})'
                     : 'No reviews',
-                style: theme.textTheme.labelMedium?.copyWith(
+                style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: Colors.amber.shade800,
-                  letterSpacing: 0.5,
                 ),
               ),
             ),

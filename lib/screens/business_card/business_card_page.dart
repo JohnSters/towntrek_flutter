@@ -112,21 +112,21 @@ class _BusinessCardPageContent extends StatelessWidget {
   Widget _buildBusinessesView(BuildContext context, BusinessCardViewModel viewModel, BusinessCardSuccess state) {
     return Column(
       children: [
-        // Page Header
         PageHeader(
           title: viewModel.subCategory.name,
           subtitle: '${viewModel.category.name} in ${viewModel.town.name}',
           height: BusinessCardConstants.successHeaderHeight,
           headerType: HeaderType.business,
         ),
-
-        // Business count info
-        BusinessCountInfo(
-          category: viewModel.category,
-          subCategory: viewModel.subCategory,
+        _ListInfoBar(
+          icon: Icons.business_center_rounded,
+          text:
+              '${viewModel.subCategory.businessCount} businesses \u2022 ${viewModel.subCategory.name}',
+          backgroundColor: const Color(0xFFE9F7EF),
+          textColor: const Color(0xFF1D7A38),
+          borderColor: const Color(0xFFBFE5CB),
         ),
 
-        // Businesses Grid/List
         Expanded(
           child: _buildBusinessesList(context, viewModel, state),
         ),
@@ -145,7 +145,7 @@ class _BusinessCardPageContent extends StatelessWidget {
         return false;
       },
       child: ListView.separated(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         itemCount: state.businesses.length + (state.isLoadingMore ? 1 : 0),
         separatorBuilder: (context, index) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
@@ -163,6 +163,54 @@ class _BusinessCardPageContent extends StatelessWidget {
             onTap: () => viewModel.onBusinessTap(context, business),
           );
         },
+      ),
+    );
+  }
+}
+
+class _ListInfoBar extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const _ListInfoBar({
+    required this.icon,
+    required this.text,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
       ),
     );
   }

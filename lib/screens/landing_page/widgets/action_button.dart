@@ -7,6 +7,7 @@ class ActionButton extends StatelessWidget {
   final String buttonText;
   final IconData leadingIcon;
   final Color backgroundColor;
+  final bool compact;
 
   const ActionButton({
     super.key,
@@ -14,6 +15,7 @@ class ActionButton extends StatelessWidget {
     this.buttonText = LandingPageConstants.exploreButtonText,
     this.leadingIcon = Icons.explore,
     this.backgroundColor = const Color(0xFFFF6B35),
+    this.compact = false,
   });
 
   @override
@@ -25,9 +27,9 @@ class ActionButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: backgroundColor,
         foregroundColor: Colors.white,
-        minimumSize: const Size(
+        minimumSize: Size(
           double.infinity,
-          LandingPageConstants.buttonHeight,
+          compact ? LandingPageConstants.compactButtonHeight : LandingPageConstants.buttonHeight,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
@@ -41,7 +43,7 @@ class ActionButton extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(
-              LandingPageConstants.verticalSpacingSmall,
+              10,
             ),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
@@ -52,25 +54,25 @@ class ActionButton extends StatelessWidget {
             child: Icon(
               leadingIcon,
               color: Colors.white,
-              size: LandingPageConstants.featureIconSize - 12,
+                size: compact ? 16 : LandingPageConstants.featureIconSize - 12,
             ),
           ),
-          const SizedBox(width: LandingPageConstants.verticalSpacingSmall),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               buttonText,
-              style: theme.textTheme.titleLarge?.copyWith(
+              style: (compact ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: LandingPageConstants.verticalSpacingSmall),
+          const SizedBox(width: 10),
           const Icon(
             Icons.arrow_forward,
             color: Colors.white,
-            size: LandingPageConstants.featureIconSize - 12,
+            size: 16,
           ),
         ],
       ),

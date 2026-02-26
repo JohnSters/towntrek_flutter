@@ -245,7 +245,7 @@ class _TownSelectionScreenContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(
         TownSelectionConstants.horizontalPadding,
-        0,
+        TownSelectionConstants.verticalSpacingSmall,
         TownSelectionConstants.horizontalPadding,
         TownSelectionConstants.verticalPadding,
       ),

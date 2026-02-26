@@ -22,53 +22,50 @@ class SubCategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final bool isDisabled = subCategory.businessCount == 0;
+    final intro = 'Explore ${subCategory.name} businesses in ${town.name}';
 
     return OutlinedButton(
       onPressed: isDisabled ? null : () => _navigateToBusinessCardPage(context),
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(14),
         side: BorderSide(
           color: isDisabled
-              ? colorScheme.outline.withValues(alpha: 0.2) // Disabled: 20% opacity
-              : colorScheme.primary.withValues(alpha: 0.25), // Enabled: 25% opacity
-          width: 1.5,
+              ? colorScheme.outline.withValues(alpha: 0.2)
+              : colorScheme.primary.withValues(alpha: 0.25),
+          width: 1.2,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         backgroundColor: isDisabled
-            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1) // Disabled: 10%
-            : colorScheme.primary.withValues(alpha: 0.02), // Enabled: 5%
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
+            : colorScheme.primary.withValues(alpha: 0.02),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon Container
           Container(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: isDisabled
                   ? colorScheme.surfaceContainerHighest
                   : colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               BusinessCategoryConfig.getCategoryIcon(category.key),
-              size: 24,
+              size: 22,
               color: isDisabled
                   ? colorScheme.onSurfaceVariant
                   : colorScheme.onSecondaryContainer,
             ),
           ),
-
-          const SizedBox(width: 16),
-
-          // Title and Description
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
                 Text(
                   subCategory.name,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -80,16 +77,23 @@ class SubCategoryCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-
-                const SizedBox(height: 4),
-
-                // Description
+                const SizedBox(height: 2),
                 Text(
                   subCategory.businessCount == 0
                       ? BusinessSubCategoryConstants.noBusinessesYet
                       : '${subCategory.businessCount} ${BusinessSubCategoryConstants.businessesLabel}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  intro,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -97,8 +101,6 @@ class SubCategoryCard extends StatelessWidget {
               ],
             ),
           ),
-
-          // Arrow Icon
           Icon(
             Icons.chevron_right,
             color: isDisabled
