@@ -129,13 +129,7 @@ class _LandingPageContent extends StatelessWidget {
                 LandingPageConstants.horizontalPadding,
                 8,
               ),
-              child: Column(
-                children: [
-                  const _PulsingStatsTitle(),
-                  const SizedBox(height: 8),
-                  _buildFeatureGrid(viewModel.state),
-                ],
-              ),
+              child: _buildPlatformStats(viewModel.state),
             ),
             _LandingFooter(
               onSendFeedback: () => viewModel.launchFeedbackEmail(context),
@@ -146,72 +140,21 @@ class _LandingPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureGrid(LandingPageState state) {
+  Widget _buildPlatformStats(LandingPageState state) {
     return switch (state) {
-      LandingPageLoading() => const FeatureGrid(isLoading: true),
+      LandingPageLoading() => const PlatformStatsCard(isLoading: true),
       LandingPageSuccess(
         businessCount: final businessCount,
         serviceCount: final serviceCount,
         eventCount: final eventCount,
       ) =>
-        FeatureGrid(
+        PlatformStatsCard(
           businessCount: businessCount,
           serviceCount: serviceCount,
           eventCount: eventCount,
         ),
-      LandingPageError() =>
-        const FeatureGrid(), // Show with null counts on error
+      LandingPageError() => const PlatformStatsCard(),
     };
-  }
-}
-
-class _PulsingStatsTitle extends StatefulWidget {
-  const _PulsingStatsTitle();
-
-  @override
-  State<_PulsingStatsTitle> createState() => _PulsingStatsTitleState();
-}
-
-class _PulsingStatsTitleState extends State<_PulsingStatsTitle>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1300),
-    )..repeat(reverse: true);
-    _scaleAnimation = Tween<double>(
-      begin: 0.98,
-      end: 1.02,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: Text(
-        'Towntrek Stats',
-        textAlign: TextAlign.center,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: colorScheme.onSurface,
-        ),
-      ),
-    );
   }
 }
 

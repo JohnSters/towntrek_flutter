@@ -4,21 +4,28 @@ import '../../../models/models.dart';
 import '../../../services/weather_service.dart';
 
 class _PulseConstants {
-  static const double cardBorderRadius = 16.0;
-  static const double cardPaddingH = 16.0;
-  static const double cardPaddingV = 14.0;
-  static const double headerSpacing = 12.0;
-  static const double statIconSize = 22.0;
-  static const double weatherIconSize = 26.0;
-  static const double liveDotSize = 7.0;
-  static const double borderOpacity = 0.18;
-  static const double gradientStartOpacity = 0.08;
-  static const double gradientEndOpacity = 0.03;
-  static const double shimmerHeight = 88.0;
+  static const double outerRadius = 14.0;
+  static const double headerPaddingH = 14.0;
+  static const double headerPaddingV = 10.0;
+  static const double tilePaddingH = 12.0;
+  static const double tilePaddingV = 12.0;
+  static const double tileIconBox = 34.0;
+  static const double tileIconSize = 18.0;
+  static const double tileIconRadius = 8.0;
+  static const double dividerWidth = 1.0;
+  static const double liveDotSize = 6.0;
+  static const double borderOpacity = 0.14;
+  static const double tileBackgroundOpacity = 0.05;
+  static const double shimmerHeight = 100.0;
   static const int maxEventsPageSize = 100;
+
+  static const Color businessColor = Color(0xFF1565C0);
+  static const Color serviceColor = Color(0xFFEF6C00);
+  static const Color eventColor = Color(0xFF6A1B9A);
+  static const Color liveGreen = Color(0xFF43A047);
 }
 
-/// A compact, glanceable dashboard card showing live town stats:
+/// A compact 2x2 dashboard card showing live town stats:
 /// business count, service count, active events, and current weather.
 ///
 /// Self-contained — manages its own async data loading internally.
@@ -46,10 +53,7 @@ class _TownPulseCardState extends State<TownPulseCard> {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
-    await Future.wait([
-      _fetchWeather(),
-      _fetchActiveEvents(),
-    ]);
+    await Future.wait([_fetchWeather(), _fetchActiveEvents()]);
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -64,9 +68,7 @@ class _TownPulseCardState extends State<TownPulseCard> {
       final data = await WeatherService().getCurrentWeather(lat, lng);
       if (!mounted) return;
       setState(() => _weather = data);
-    } catch (_) {
-      // Weather is non-critical; the card still shows other stats.
-    }
+    } catch (_) {}
   }
 
   Future<void> _fetchActiveEvents() async {
@@ -78,111 +80,132 @@ class _TownPulseCardState extends State<TownPulseCard> {
       if (!mounted) return;
       final count = response.events.where((e) => !e.shouldHide).length;
       setState(() => _activeEventsCount = count);
-    } catch (_) {
-      // Events failure is non-critical.
-    }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final dividerColor = colorScheme.outline.withValues(
+      alpha: _PulseConstants.borderOpacity,
+    );
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: _PulseConstants.cardPaddingH,
-        vertical: _PulseConstants.cardPaddingV,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_PulseConstants.cardBorderRadius),
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary.withValues(
-              alpha: _PulseConstants.gradientStartOpacity,
-            ),
-            colorScheme.tertiary.withValues(
-              alpha: _PulseConstants.gradientEndOpacity,
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(_PulseConstants.outerRadius),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: dividerColor),
+          borderRadius: BorderRadius.circular(_PulseConstants.outerRadius),
+          color: colorScheme.surfaceContainerLow,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _PulseHeader(isLoading: _isLoading),
+            Container(height: _PulseConstants.dividerWidth, color: dividerColor),
+            _isLoading
+                ? _buildLoadingGrid(colorScheme)
+                : _buildStatsGrid(context, dividerColor),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        border: Border.all(
-          color: colorScheme.primary.withValues(
-            alpha: _PulseConstants.borderOpacity,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PulseHeader(isLoading: _isLoading),
-          const SizedBox(height: _PulseConstants.headerSpacing),
-          _isLoading ? _buildShimmerRow(colorScheme) : _buildStatsRow(theme),
-        ],
       ),
     );
   }
 
-  Widget _buildShimmerRow(ColorScheme colorScheme) {
+  Widget _buildLoadingGrid(ColorScheme colorScheme) {
     return SizedBox(
       height: _PulseConstants.shimmerHeight,
       child: Center(
         child: SizedBox(
-          width: 20,
-          height: 20,
+          width: 18,
+          height: 18,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: colorScheme.primary.withValues(alpha: 0.5),
+            color: colorScheme.primary.withValues(alpha: 0.4),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStatsRow(ThemeData theme) {
+  Widget _buildStatsGrid(BuildContext context, Color dividerColor) {
     final town = widget.town;
+    final theme = Theme.of(context);
 
-    final items = <_StatItem>[
-      _StatItem(
-        icon: Icons.store_rounded,
-        value: '${town.businessCount}',
-        label: 'Businesses',
-        color: const Color(0xFF1565C0),
-      ),
-      _StatItem(
-        icon: Icons.handyman_rounded,
-        value: '${town.servicesCount}',
-        label: 'Services',
-        color: const Color(0xFFEF6C00),
-      ),
-      _StatItem(
-        icon: Icons.event_rounded,
-        value: _activeEventsCount != null ? '$_activeEventsCount' : '–',
-        label: 'Events\ntoday',
-        color: const Color(0xFF6A1B9A),
-      ),
-    ];
+    final weatherValue = _weather != null
+        ? '${_weather!.temperature.round()}°C'
+        : '–';
+    final weatherLabel = _weather?.description ?? 'Weather';
+    final weatherIcon = _weather?.icon ?? Icons.wb_cloudy_rounded;
+    final weatherColor = _weather != null
+        ? _weatherColor(_weather!.weatherCode)
+        : const Color(0xFF78909C);
 
-    if (_weather != null) {
-      items.add(
-        _StatItem(
-          icon: _weather!.icon,
-          value: '${_weather!.temperature.round()}°C',
-          label: _weather!.description,
-          color: _weatherColor(_weather!.weatherCode),
-          iconSize: _PulseConstants.weatherIconSize,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _StatTile(
+                  icon: Icons.store_rounded,
+                  value: '${town.businessCount}',
+                  label: 'Businesses',
+                  color: _PulseConstants.businessColor,
+                  theme: theme,
+                ),
+              ),
+              Container(
+                width: _PulseConstants.dividerWidth,
+                color: dividerColor,
+              ),
+              Expanded(
+                child: _StatTile(
+                  icon: Icons.handyman_rounded,
+                  value: '${town.servicesCount}',
+                  label: 'Services',
+                  color: _PulseConstants.serviceColor,
+                  theme: theme,
+                ),
+              ),
+            ],
+          ),
         ),
-      );
-    }
-
-    return Row(
-      children: items
-          .map(
-            (item) => Expanded(child: _StatColumn(item: item, theme: theme)),
-          )
-          .toList(),
+        Container(height: _PulseConstants.dividerWidth, color: dividerColor),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _StatTile(
+                  icon: Icons.event_rounded,
+                  value: _activeEventsCount != null
+                      ? '$_activeEventsCount'
+                      : '–',
+                  label: 'Events today',
+                  color: _PulseConstants.eventColor,
+                  theme: theme,
+                ),
+              ),
+              Container(
+                width: _PulseConstants.dividerWidth,
+                color: dividerColor,
+              ),
+              Expanded(
+                child: _StatTile(
+                  icon: weatherIcon,
+                  value: weatherValue,
+                  label: weatherLabel,
+                  color: weatherColor,
+                  theme: theme,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -200,7 +223,7 @@ class _TownPulseCardState extends State<TownPulseCard> {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-widgets
+// Header with pulsing "Live" indicator
 // ---------------------------------------------------------------------------
 
 class _PulseHeader extends StatefulWidget {
@@ -236,109 +259,120 @@ class _PulseHeaderState extends State<_PulseHeader>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Row(
-      children: [
-        Icon(
-          Icons.bolt_rounded,
-          size: 18,
-          color: colorScheme.primary,
-        ),
-        const SizedBox(width: 6),
-        Text(
-          'Town Pulse',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _PulseConstants.headerPaddingH,
+        vertical: _PulseConstants.headerPaddingV,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.bolt_rounded, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 5),
+          Text(
+            'Town Pulse',
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
           ),
-        ),
-        const Spacer(),
-        if (!widget.isLoading)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FadeTransition(
-                opacity: _dotController.drive(
-                  Tween(begin: 0.35, end: 1.0),
-                ),
-                child: Container(
-                  width: _PulseConstants.liveDotSize,
-                  height: _PulseConstants.liveDotSize,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF43A047),
-                    shape: BoxShape.circle,
-                  ),
+          const Spacer(),
+          if (!widget.isLoading) ...[
+            FadeTransition(
+              opacity: _dotController.drive(
+                Tween(begin: 0.3, end: 1.0),
+              ),
+              child: Container(
+                width: _PulseConstants.liveDotSize,
+                height: _PulseConstants.liveDotSize,
+                decoration: const BoxDecoration(
+                  color: _PulseConstants.liveGreen,
+                  shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 5),
-              Text(
-                'Live',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF43A047),
-                ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Live',
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: _PulseConstants.liveGreen,
               ),
-            ],
-          ),
-      ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
 
-class _StatItem {
+// ---------------------------------------------------------------------------
+// Individual stat tile (one cell of the 2x2 grid)
+// ---------------------------------------------------------------------------
+
+class _StatTile extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
   final Color color;
-  final double iconSize;
+  final ThemeData theme;
 
-  const _StatItem({
+  const _StatTile({
     required this.icon,
     required this.value,
     required this.label,
     required this.color,
-    this.iconSize = _PulseConstants.statIconSize,
+    required this.theme,
   });
-}
-
-class _StatColumn extends StatelessWidget {
-  final _StatItem item;
-  final ThemeData theme;
-
-  const _StatColumn({required this.item, required this.theme});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: item.color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(10),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _PulseConstants.tilePaddingH,
+        vertical: _PulseConstants.tilePaddingV,
+      ),
+      color: color.withValues(alpha: _PulseConstants.tileBackgroundOpacity),
+      child: Row(
+        children: [
+          Container(
+            width: _PulseConstants.tileIconBox,
+            height: _PulseConstants.tileIconBox,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(
+                _PulseConstants.tileIconRadius,
+              ),
+            ),
+            child: Icon(icon, size: _PulseConstants.tileIconSize, color: color),
           ),
-          child: Icon(item.icon, size: item.iconSize, color: item.color),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          item.value,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  value,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          item.label,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            height: 1.2,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
