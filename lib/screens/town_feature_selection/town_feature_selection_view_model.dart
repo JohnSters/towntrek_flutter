@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/core.dart';
 import '../../models/models.dart';
 import '../business_category/business_category.dart';
 import '../current_events/current_events_screen.dart';
@@ -58,10 +59,9 @@ class TownFeatureViewModel extends ChangeNotifier {
   }
 
   void navigateToCreativeSpaces(BuildContext context, TownDto town) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CreativeSpacesCategoryPage(town: town),
-      ),
+    CreativeSpacesNavigation.pushCategoryPage(
+      context,
+      pageBuilder: (_) => CreativeSpacesCategoryPage(town: town),
     );
   }
 }

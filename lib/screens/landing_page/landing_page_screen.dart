@@ -4,9 +4,9 @@ import '../../core/core.dart';
 import '../../models/models.dart';
 import 'landing_page_state.dart';
 import 'landing_page_view_model.dart';
+import '../creative_spaces/creative_spaces_category_page.dart';
 import '../town_loader/town_loader_screen.dart';
 import '../town_feature_selection/town_feature_selection_screen.dart';
-import '../creative_spaces/creative_spaces_category_page.dart';
 import 'widgets/widgets.dart';
 
 class LandingPage extends StatefulWidget {
@@ -122,11 +122,10 @@ class _LandingPageContent extends StatelessWidget {
                               const SizedBox(height: 10),
                               ActionButton(
                                 onPressed: () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => CreativeSpacesCategoryPage(
-                                        town: favouriteTown,
-                                      ),
+                                  await CreativeSpacesNavigation.pushCategoryPage(
+                                    context,
+                                    pageBuilder: (_) => CreativeSpacesCategoryPage(
+                                      town: favouriteTown,
                                     ),
                                   );
                                 },

@@ -37,12 +37,9 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
   }
 
   void _navigateToCategoryFlow(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => CreativeSpacesCategoryPage(town: town),
-        settings: const RouteSettings(name: CreativeSpacesCategoryPage.routeName),
-      ),
-      (route) => route.isFirst,
+    CreativeSpacesNavigation.resetToCategoryPage(
+      context,
+      pageBuilder: (_) => CreativeSpacesCategoryPage(town: town),
     );
   }
 
@@ -221,13 +218,12 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
     CreativeCategoryDto category,
     CreativeSubCategoryDto? subCategory,
   ) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CreativeSpacesListPage(
-          town: town,
-          category: category,
-          subCategory: subCategory,
-        ),
+    CreativeSpacesNavigation.pushListPage(
+      context,
+      pageBuilder: (_) => CreativeSpacesListPage(
+        town: town,
+        category: category,
+        subCategory: subCategory,
       ),
     );
   }

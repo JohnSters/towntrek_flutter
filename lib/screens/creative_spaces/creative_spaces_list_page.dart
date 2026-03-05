@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import 'creative_spaces_category_page.dart';
 import 'creative_spaces_state.dart';
 import 'creative_spaces_view_model.dart';
 import 'widgets/creative_space_card.dart';
+import 'creative_spaces_category_page.dart';
 
 class CreativeSpacesListPage extends StatelessWidget {
   final TownDto town;
@@ -98,12 +98,9 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
   }
 
   void _navigateToCategoryFlow(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => CreativeSpacesCategoryPage(town: widget.town),
-        settings: const RouteSettings(name: CreativeSpacesCategoryPage.routeName),
-      ),
-      (route) => route.isFirst,
+    CreativeSpacesNavigation.resetToCategoryPage(
+      context,
+      pageBuilder: (_) => CreativeSpacesCategoryPage(town: widget.town),
     );
   }
 

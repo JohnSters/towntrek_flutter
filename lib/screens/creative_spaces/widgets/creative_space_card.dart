@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/core.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../core/constants/creative_spaces_constants.dart';
 import '../../../models/models.dart';
@@ -299,12 +300,11 @@ class CreativeSpaceCard extends StatelessWidget {
   }
 
   void _navigateToDetail(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CreativeSpaceDetailPage(
-          creativeSpaceId: space.id,
-          creativeSpaceName: space.name,
-        ),
+    CreativeSpacesNavigation.pushDetailPage(
+      context,
+      pageBuilder: (_) => CreativeSpaceDetailPage(
+        creativeSpaceId: space.id,
+        creativeSpaceName: space.name,
       ),
     );
   }

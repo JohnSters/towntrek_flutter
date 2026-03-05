@@ -23,5 +23,6 @@ export 'widgets/event_notification_banner.dart';
 export 'widgets/full_screen_image_viewer.dart';
 export 'widgets/navigation_footer.dart';
 export 'widgets/page_header.dart';
+export 'navigation/creative_spaces_navigation.dart';
 export 'widgets/tappable_image.dart';
 export 'di/service_locator.dart';

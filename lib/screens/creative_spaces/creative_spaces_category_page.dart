@@ -3,14 +3,14 @@ import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import 'creative_spaces_list_page.dart';
 import 'creative_spaces_state.dart';
-import 'creative_spaces_sub_category_page.dart';
 import 'creative_spaces_view_model.dart';
 import 'widgets/creative_category_card.dart';
+import 'creative_spaces_list_page.dart';
+import 'creative_spaces_sub_category_page.dart';
 
 class CreativeSpacesCategoryPage extends StatelessWidget {
-  static const String routeName = '/creative-spaces-category';
+  static const String routeName = CreativeSpacesNavigation.categoryRouteName;
 
   final TownDto town;
 
@@ -228,24 +228,22 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
     bool countsAvailable,
   ) {
     if (category.subCategories.isEmpty) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => CreativeSpacesListPage(
-            town: town,
-            category: category,
-          ),
+      CreativeSpacesNavigation.pushListPage(
+        context,
+        pageBuilder: (_) => CreativeSpacesListPage(
+          town: town,
+          category: category,
         ),
       );
       return;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CreativeSpacesSubCategoryPage(
-          town: town,
-          category: category,
-          countsAvailable: countsAvailable,
-        ),
+    CreativeSpacesNavigation.pushSubCategoryPage(
+      context,
+      pageBuilder: (_) => CreativeSpacesSubCategoryPage(
+        town: town,
+        category: category,
+        countsAvailable: countsAvailable,
       ),
     );
   }
