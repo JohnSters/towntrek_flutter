@@ -91,7 +91,7 @@ class CreativeSpaceListResponse {
       page: page ?? this.page,
       pageSize: pageSize ?? this.pageSize,
       totalPages: totalPages ?? this.totalPages,
-      remoteHasNextPage: hasNextPage ?? this.remoteHasNextPage,
+      remoteHasNextPage: hasNextPage ?? remoteHasNextPage,
       hasPreviousPage: hasPreviousPage ?? this.hasPreviousPage,
     );
   }

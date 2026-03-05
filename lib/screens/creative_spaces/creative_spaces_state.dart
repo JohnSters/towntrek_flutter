@@ -24,10 +24,15 @@ sealed class CreativeSpacesState {
 class CreativeSpacesLoading extends CreativeSpacesState {}
 
 class CreativeSpacesLoadingMore extends CreativeSpacesState {
+  @override
   final List<CreativeSpaceDto> spaces;
+  @override
   final List<CreativeCategoryDto> categories;
+  @override
   final int totalItemCount;
+  @override
   final int currentPage;
+  @override
   final bool hasNextPage;
   final int? selectedCategoryId;
   final int? selectedSubCategoryId;
@@ -59,10 +64,15 @@ class CreativeSpacesLoadingMore extends CreativeSpacesState {
 }
 
 class CreativeSpacesSuccess extends CreativeSpacesState {
+  @override
   final List<CreativeSpaceDto> spaces;
+  @override
   final List<CreativeCategoryDto> categories;
+  @override
   final int totalItemCount;
+  @override
   final int currentPage;
+  @override
   final bool hasNextPage;
   final int? selectedCategoryId;
   final int? selectedSubCategoryId;

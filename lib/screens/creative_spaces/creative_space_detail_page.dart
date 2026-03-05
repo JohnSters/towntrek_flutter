@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
-import '../../core/errors/app_error.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
@@ -53,7 +52,7 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
           children: [
             PageHeader(
               title: headerTitle,
-              subtitle: 'Creative Space Details',
+              subtitle: CreativeSpacesConstants.creativeSpaceDetailsSubtitle,
               height: 118,
               headerType: HeaderType.creative,
             ),
@@ -116,7 +115,7 @@ Widget _buildErrorState(
       FilledButton.icon(
         onPressed: viewModel.retry,
         icon: const Icon(Icons.refresh_rounded),
-        label: const Text('Retry'),
+        label: const Text(CreativeSpacesConstants.retryLabel),
       ),
     ],
   );
@@ -283,7 +282,9 @@ class _InfoSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${rating.toStringAsFixed(1)} (${space.totalReviews})',
+                  CreativeSpacesConstants.ratingSummaryTemplate
+                      .replaceAll('{rating}', rating.toStringAsFixed(1))
+                      .replaceAll('{reviews}', space.totalReviews.toString()),
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
@@ -319,7 +320,7 @@ class _InfoSection extends StatelessWidget {
       if (space.city != null && space.city!.trim().isNotEmpty) space.city!.trim(),
       if (space.province != null && space.province!.trim().isNotEmpty) space.province!.trim(),
       if (space.postalCode != null && space.postalCode!.trim().isNotEmpty) space.postalCode!.trim(),
-    ].join(' • ');
+    ].join(CreativeSpacesConstants.itemInfoDivider);
   }
 }
 
@@ -331,7 +332,7 @@ class _QuickActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionShell(
-      title: 'Quick Actions',
+      title: CreativeSpacesConstants.quickActionsTitle,
       icon: Icons.bolt,
       child: Wrap(
         spacing: 10,
@@ -343,32 +344,32 @@ class _QuickActionsSection extends StatelessWidget {
               label: CreativeSpacesConstants.mapActionLabel,
               icon: Icons.map_rounded,
               onTap: () => _openMap(context),
-              backgroundColor: const Color(0xFFF3F4FF),
-              iconColor: const Color(0xFF3F51B5),
+              backgroundColor: CreativeSpacesConstants.quickActionMapBackground,
+              iconColor: CreativeSpacesConstants.quickActionMapIcon,
             ),
           if (space.contactPhone != null && space.contactPhone!.trim().isNotEmpty)
             _QuickActionButton(
               label: CreativeSpacesConstants.callActionLabel,
               icon: Icons.call_rounded,
               onTap: () => ExternalLinkLauncher.callPhone(context, space.contactPhone!.trim()),
-              backgroundColor: const Color(0xFFE8F5E9),
-              iconColor: const Color(0xFF2E7D32),
+              backgroundColor: CreativeSpacesConstants.quickActionCallBackground,
+              iconColor: CreativeSpacesConstants.quickActionCallIcon,
             ),
           if (space.contactEmail != null && space.contactEmail!.trim().isNotEmpty)
             _QuickActionButton(
               label: CreativeSpacesConstants.emailActionLabel,
               icon: Icons.mail_rounded,
               onTap: () => ExternalLinkLauncher.sendEmail(context, space.contactEmail!.trim()),
-              backgroundColor: const Color(0xFFFCE4EC),
-              iconColor: const Color(0xFFC2185B),
+              backgroundColor: CreativeSpacesConstants.quickActionEmailBackground,
+              iconColor: CreativeSpacesConstants.quickActionEmailIcon,
             ),
           if (space.contactWebsite != null && space.contactWebsite!.trim().isNotEmpty)
             _QuickActionButton(
               label: CreativeSpacesConstants.websiteActionLabel,
               icon: Icons.language_rounded,
               onTap: () => ExternalLinkLauncher.openWebsite(context, space.contactWebsite!.trim()),
-              backgroundColor: const Color(0xFFFFF3E0),
-              iconColor: const Color(0xFFE65100),
+              backgroundColor: CreativeSpacesConstants.quickActionWebsiteBackground,
+              iconColor: CreativeSpacesConstants.quickActionWebsiteIcon,
             ),
         ],
       ),
@@ -378,16 +379,38 @@ class _QuickActionsSection extends StatelessWidget {
   void _openMap(BuildContext context) {
     final lat = space.latitude;
     final lng = space.longitude;
-    final encodedQuery = Uri.encodeComponent(
-      lat != null && lng != null
-          ? '${space.name}, ${lat}, ${lng}'
-          : (space.physicalAddress ?? space.townName ?? space.name),
-    );
-    if (encodedQuery.trim().isEmpty) return;
+    final fallbackLocation = _getAddressFallback();
+    final queryText = lat != null && lng != null
+        ? CreativeSpacesConstants.mapCoordinateTemplate
+            .replaceAll('{name}', space.name)
+            .replaceAll('{lat}', lat.toString())
+            .replaceAll('{lng}', lng.toString())
+        : fallbackLocation;
+    if (queryText.trim().isEmpty) return;
+
+    final encodedQuery = Uri.encodeComponent(queryText);
 
     final query = encodedQuery;
-    final url = 'https://www.google.com/maps/search/?api=1&query=$query';
+    final url = '${CreativeSpacesConstants.mapsSearchBaseUrl}$query';
     ExternalLinkLauncher.openRaw(context, url, normalizeHttp: false);
+  }
+
+  String _getAddressFallback() {
+    final candidates = <String?>[
+      space.physicalAddress,
+      space.townName,
+      space.city,
+      space.province,
+      space.name,
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate != null && candidate.trim().isNotEmpty) {
+        return candidate.trim();
+      }
+    }
+
+    return '';
   }
 }
 
@@ -419,6 +442,8 @@ class _GallerySection extends StatelessWidget {
             return SizedBox(
               width: 132,
               child: TappableImage(
+                imageUrls: urls,
+                initialIndex: index,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
@@ -430,8 +455,6 @@ class _GallerySection extends StatelessWidget {
                     ),
                   ),
                 ),
-                imageUrls: urls,
-                initialIndex: index,
               ),
             );
           },
@@ -484,8 +507,7 @@ class _HoursSection extends StatelessWidget {
                   note: isSpecial ? hour.specialHoursNote : null,
                   isSpecial: isSpecial,
                 ),
-              )
-              .toList(),
+              ),
         ],
       ),
     );
@@ -528,7 +550,7 @@ class _ContactSection extends StatelessWidget {
           if (space.physicalAddress != null && space.physicalAddress!.trim().isNotEmpty)
             _SimpleListRow(
               icon: Icons.location_on_rounded,
-              label: 'Address',
+              label: CreativeSpacesConstants.addressLabel,
               value: space.physicalAddress!.trim(),
             ),
           if (space.contactMessage != null && space.contactMessage!.trim().isNotEmpty)
@@ -604,7 +626,8 @@ class _ReviewTile extends StatelessWidget {
               ],
               const Spacer(),
               Text(
-                '${review.rating.toStringAsFixed(1)} ★',
+                CreativeSpacesConstants.reviewRatingTemplate
+                    .replaceAll('{rating}', review.rating.toStringAsFixed(1)),
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -619,7 +642,10 @@ class _ReviewTile extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            '${review.createdAt.year}-${review.createdAt.month.toString().padLeft(2, '0')}-${review.createdAt.day.toString().padLeft(2, '0')}',
+            CreativeSpacesConstants.dateIsoTemplate
+                .replaceAll('{year}', review.createdAt.year.toString())
+                .replaceAll('{month}', review.createdAt.month.toString().padLeft(2, '0'))
+                .replaceAll('{day}', review.createdAt.day.toString().padLeft(2, '0')),
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -696,8 +722,10 @@ class _HourRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final timeText = openTime == null || closeTime == null || openTime!.trim().isEmpty || closeTime!.trim().isEmpty
-        ? (isOpen ? 'Open' : 'Closed')
-        : '${openTime!.trim()} - ${closeTime!.trim()}';
+        ? (isOpen ? CreativeSpacesConstants.openLabel : CreativeSpacesConstants.closedBadge)
+        : CreativeSpacesConstants.timeRangeTemplate
+            .replaceAll('{start}', openTime!.trim())
+            .replaceAll('{end}', closeTime!.trim());
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -722,9 +750,9 @@ class _HourRow extends StatelessWidget {
                 color: Colors.orange.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'Special',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+              child: Text(
+                CreativeSpacesConstants.specialLabel,
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
               ),
             ),
           Text(
@@ -814,7 +842,7 @@ class _SimpleListRow extends StatelessWidget {
           Icon(icon, size: 16),
           const SizedBox(width: 10),
           Text(
-            '$label: ',
+            '$label${CreativeSpacesConstants.labelValueSuffix}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),

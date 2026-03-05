@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../core/core.dart';
 import '../../repositories/repositories.dart';
 import 'creative_space_detail_state.dart';

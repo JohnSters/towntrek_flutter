@@ -3,11 +3,15 @@ import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
+import 'creative_spaces_list_page.dart';
 import 'creative_spaces_state.dart';
+import 'creative_spaces_sub_category_page.dart';
 import 'creative_spaces_view_model.dart';
-import 'widgets/creative_space_card.dart';
+import 'widgets/creative_category_card.dart';
 
 class CreativeSpacesCategoryPage extends StatelessWidget {
+  static const String routeName = '/creative-spaces-category';
+
   final TownDto town;
 
   const CreativeSpacesCategoryPage({
@@ -28,7 +32,7 @@ class CreativeSpacesCategoryPage extends StatelessWidget {
   }
 }
 
-class _CreativeSpacesCategoryPageContent extends StatefulWidget {
+class _CreativeSpacesCategoryPageContent extends StatelessWidget {
   final TownDto town;
 
   const _CreativeSpacesCategoryPageContent({
@@ -36,57 +40,19 @@ class _CreativeSpacesCategoryPageContent extends StatefulWidget {
   });
 
   @override
-  State<_CreativeSpacesCategoryPageContent> createState() =>
-      _CreativeSpacesCategoryPageContentState();
-}
-
-class _CreativeSpacesCategoryPageContentState
-    extends State<_CreativeSpacesCategoryPageContent> {
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _submitSearch(CreativeSpacesViewModel viewModel) {
-    viewModel.search(_searchController.text);
-  }
-
-  void _clearSearch(CreativeSpacesViewModel viewModel) {
-    _searchController.clear();
-    viewModel.search(null);
-  }
-
-  void _clearFilters(CreativeSpacesViewModel viewModel) {
-    _searchController.clear();
-    viewModel.clearFilters();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: '${TownFeatureConstants.creativeSpacesTitle} in ${widget.town.name}',
-              subtitle: CreativeSpacesConstants.pageSubtitle,
-              height: CreativeSpacesConstants.pageHeaderHeight,
-              headerType: HeaderType.creative,
-            ),
             Expanded(
               child: Consumer<CreativeSpacesViewModel>(
                 builder: (context, viewModel, child) {
                   final state = viewModel.state;
 
                   if (state is CreativeSpacesLoading) {
-                    return _buildLoading();
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (state is CreativeSpacesError) {
@@ -101,107 +67,46 @@ class _CreativeSpacesCategoryPageContentState
                     return const SizedBox.shrink();
                   }
 
-                  final isLoadingMore = state is CreativeSpacesLoadingMore;
-                  final spaces = state.spaces;
                   final categories = state.categories;
-                  final hasNextPage = state.hasNextPage;
-                  final totalItemCount = state.totalItemCount;
-                  final hasActiveFilters =
-                      viewModel.selectedCategoryId != null ||
-                          viewModel.selectedSubCategoryId != null ||
-                          (viewModel.searchTerm?.trim().isNotEmpty ?? false);
+                  final countsAvailable = viewModel.countsAvailable;
 
                   return RefreshIndicator(
                     onRefresh: viewModel.refresh,
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: CreativeSpacesConstants.pagePadding,
-                        vertical: 14,
-                      ),
                       children: [
-                        _buildSearchBar(context, viewModel),
-                        const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-                        if (categories.isNotEmpty) ...[
-                          _buildFilterBlock(
-                            context: context,
-                            title: CreativeSpacesConstants.categoryLabel,
-                            chips: [
-                              _buildFilterChip(
-                                context: context,
-                                label: CreativeSpacesConstants.filterAll,
-                                isActive: viewModel.selectedCategoryId == null,
-                                onTap: () => viewModel.selectCategory(null),
-                              ),
-                              for (final category in categories)
-                                _buildFilterChip(
-                                  context: context,
-                                  label: '${category.name} (${category.spaceCount})',
-                                  isActive: viewModel.selectedCategoryId == category.id,
-                                  onTap: () => viewModel.selectCategory(category.id),
+                        PageHeader(
+                          title: '${TownFeatureConstants.creativeSpacesTitle} in ${town.name}',
+                          subtitle: CreativeSpacesConstants.categoryHeaderHint,
+                          height: CreativeSpacesConstants.pageHeaderHeight,
+                          headerType: HeaderType.creative,
+                        ),
+                        _buildFlavorBanner(context),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            CreativeSpacesConstants.pagePadding,
+                            CreativeSpacesConstants.sectionSpacing,
+                            CreativeSpacesConstants.pagePadding,
+                            CreativeSpacesConstants.sectionSpacing,
+                          ),
+                          child: categories.isEmpty
+                              ? _buildEmptyState(context)
+                              : ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: categories.length,
+                                  separatorBuilder: (context, index) =>
+                                      const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
+                                  itemBuilder: (context, index) {
+                                    final category = categories[index];
+                                    return CreativeCategoryCard(
+                                      category: category,
+                                      countsAvailable: countsAvailable,
+                                      onTap: () => _openCategory(context, category, countsAvailable),
+                                    );
+                                  },
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-                        ],
-                        if (viewModel.selectedCategoryId != null &&
-                            viewModel.availableSubCategories.isNotEmpty) ...[
-                          _buildFilterBlock(
-                            context: context,
-                            title: CreativeSpacesConstants.subCategoryLabel,
-                            chips: [
-                              _buildFilterChip(
-                                context: context,
-                                label: CreativeSpacesConstants.filterAll,
-                                isActive: viewModel.selectedSubCategoryId == null,
-                                onTap: () => viewModel.selectSubCategory(null),
-                              ),
-                              for (final subCategory
-                                  in viewModel.availableSubCategories)
-                                _buildFilterChip(
-                                  context: context,
-                                  label: '${subCategory.name} (${subCategory.spaceCount})',
-                                  isActive:
-                                      viewModel.selectedSubCategoryId == subCategory.id,
-                                  onTap: () =>
-                                      viewModel.selectSubCategory(subCategory.id),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-                        ],
-                        spaces.isEmpty
-                            ? _buildEmptyState(
-                                context,
-                                viewModel: viewModel,
-                                hasActiveFilters: hasActiveFilters,
-                              )
-                            : _buildResultSummary(context, totalItemCount, spaces.length),
-                        const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-                        for (final space in spaces)
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: CreativeSpacesConstants.cardSpacing,
-                            ),
-                            child: CreativeSpaceCard(space: space),
-                          ),
-                        if (hasNextPage)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 8),
-                            child: isLoadingMore
-                                ? const Center(child: CircularProgressIndicator())
-                                : OutlinedButton(
-                                    onPressed: viewModel.loadMore,
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(44),
-                                      side: BorderSide(
-                                        color: CreativeSpacesConstants.sectionAccent
-                                            .withValues(alpha: 0.35),
-                                      ),
-                                    ),
-                                    child: const Text('Load more'),
-                                  ),
-                          ),
+                        ),
                       ],
                     ),
                   );
@@ -215,139 +120,82 @@ class _CreativeSpacesCategoryPageContentState
     );
   }
 
-  Widget _buildLoading() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 12),
-            Text(
-              CreativeSpacesConstants.loadingSpacesText,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              CreativeSpacesConstants.loadingSubtitleText,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+  Widget _buildFlavorBanner(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        CreativeSpacesConstants.pagePadding,
+        CreativeSpacesConstants.sectionSpacing,
+        CreativeSpacesConstants.pagePadding,
+        0,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            CreativeSpacesConstants.creativeTint,
+            CreativeSpacesConstants.creativeHighlight,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.3),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 10,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            color: CreativeSpacesConstants.creativePrimary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              CreativeSpacesConstants.categoryHeader,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    height: 1.2,
                   ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSearchBar(
-    BuildContext context,
-    CreativeSpacesViewModel viewModel,
-  ) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: _searchController,
-      builder: (context, value, child) {
-        return TextField(
-          controller: _searchController,
-          onSubmitted: (_) => _submitSearch(viewModel),
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: CreativeSpacesConstants.searchHint,
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.clear_rounded),
-                    onPressed: () => _clearSearch(viewModel),
-                  ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                CreativeSpacesConstants.searchBarRadius,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                CreativeSpacesConstants.searchBarRadius,
-              ),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.35),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFilterBlock({
-    required BuildContext context,
-    required String title,
-    required List<Widget> chips,
-  }) {
+  Widget _buildEmptyState(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
+        const SizedBox(height: 28),
+        Icon(
+          Icons.category_outlined,
+          size: 58,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(height: 12),
         Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          CreativeSpacesConstants.categoryUnavailableTitle,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+                height: 1.2,
               ),
         ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: chips,
+        const SizedBox(height: 6),
+        Text(
+          CreativeSpacesConstants.categoryUnavailableSubtitle,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.2,
+              ),
         ),
       ],
-    );
-  }
-
-  Widget _buildFilterChip({
-    required BuildContext context,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isActive ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w600,
-          fontSize: 12.5,
-        ),
-      ),
-      selected: isActive,
-      onSelected: (_) => onTap(),
-      selectedColor: CreativeSpacesConstants.sectionAccent,
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-      side: BorderSide(
-        color: isActive
-            ? CreativeSpacesConstants.sectionAccent
-            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
-      ),
-    );
-  }
-
-  Widget _buildResultSummary(
-    BuildContext context,
-    int totalCount,
-    int currentCount,
-  ) {
-    final displayedCount = totalCount > 0 ? totalCount : currentCount;
-    return Text(
-      CreativeSpacesConstants.resultCountTemplate.replaceAll(
-        '{count}',
-        displayedCount.toString(),
-      ),
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
     );
   }
 
@@ -361,65 +209,43 @@ class _CreativeSpacesCategoryPageContentState
     }
 
     return ListView(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       children: [
         ErrorView(error: error),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         FilledButton.icon(
           onPressed: viewModel.retry,
           icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Retry'),
+          label: const Text(CreativeSpacesConstants.retryLabel),
         ),
       ],
     );
   }
 
-  Widget _buildEmptyState(
-    BuildContext context, {
-    required CreativeSpacesViewModel viewModel,
-    required bool hasActiveFilters,
-  }) {
-    final title = hasActiveFilters
-        ? CreativeSpacesConstants.noSpacesWithFiltersTitle
-        : CreativeSpacesConstants.noSpacesTitle;
-    final subtitle = hasActiveFilters
-        ? CreativeSpacesConstants.noSpacesWithFiltersSubtitle
-        : CreativeSpacesConstants.noSpacesSubtitle;
+  void _openCategory(
+    BuildContext context,
+    CreativeCategoryDto category,
+    bool countsAvailable,
+  ) {
+    if (category.subCategories.isEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => CreativeSpacesListPage(
+            town: town,
+            category: category,
+          ),
+        ),
+      );
+      return;
+    }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 44),
-      child: Column(
-        children: [
-          Icon(
-            Icons.palette_outlined,
-            size: 52,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          if (hasActiveFilters) ...[
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () => _clearFilters(viewModel),
-              icon: const Icon(Icons.clear_all_rounded),
-              label: const Text(CreativeSpacesConstants.clearFiltersLabel),
-            ),
-          ],
-        ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CreativeSpacesSubCategoryPage(
+          town: town,
+          category: category,
+          countsAvailable: countsAvailable,
+        ),
       ),
     );
   }

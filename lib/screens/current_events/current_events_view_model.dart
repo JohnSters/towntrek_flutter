@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart';
 import '../../core/core.dart';
 import '../../repositories/repositories.dart';
-import '../../core/constants/current_events_constants.dart';
 import 'current_events_state.dart';
 
 /// ViewModel for Current Events screen

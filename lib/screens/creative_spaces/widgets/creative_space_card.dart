@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/url_utils.dart';
+import '../../../core/constants/creative_spaces_constants.dart';
 import '../../../models/models.dart';
 import '../creative_space_detail_page.dart';
 
@@ -20,8 +21,11 @@ class CreativeSpaceCard extends StatelessWidget {
     final intro = _buildIntroText();
     final isOpen = space.isOpenNow;
     final statusText = isOpen
-        ? 'Open now'
-        : 'Closed${space.openNowText != null && space.openNowText!.trim().isNotEmpty ? ' · ${space.openNowText!.trim()}' : ''}';
+        ? CreativeSpacesConstants.openBadge
+        : CreativeSpacesConstants.closedBadge +
+            (space.openNowText != null && space.openNowText!.trim().isNotEmpty
+                ? '${CreativeSpacesConstants.closedStatusSuffixDivider}${space.openNowText!.trim()}'
+                : '');
 
     return OutlinedButton(
       onPressed: () => _navigateToDetail(context),
@@ -69,11 +73,11 @@ class CreativeSpaceCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6D4C41).withValues(alpha: 0.14),
+                              color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: const Text(
-                              'Featured',
+                              CreativeSpacesConstants.featuredBadge,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -112,25 +116,25 @@ class CreativeSpaceCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               if (space.isVerified)
-                _buildPill(Icons.verified_rounded, 'Verified', Colors.blue.shade700, Colors.blue.shade50),
+                _buildPill(Icons.verified_rounded, CreativeSpacesConstants.verifiedBadge, Colors.blue.shade700, Colors.blue.shade50),
               if (space.categoryName != null && space.categoryName!.trim().isNotEmpty)
                 _buildPill(
                   Icons.category_rounded,
                   space.categoryName!.trim(),
-                  const Color(0xFF5D4037),
-                  const Color(0xFFEFEBE9),
+                  CreativeSpacesConstants.categoryPillTextColor,
+                  CreativeSpacesConstants.categoryPillBackgroundColor,
                 ),
               if (space.subCategoryName != null && space.subCategoryName!.trim().isNotEmpty)
                 _buildPill(
                   Icons.layers_rounded,
                   space.subCategoryName!.trim(),
-                  const Color(0xFF8D6E63),
-                  const Color(0xFFECEFF1),
+                  CreativeSpacesConstants.subCategoryPillTextColor,
+                  CreativeSpacesConstants.subCategoryPillBackgroundColor,
                 ),
               if (space.allowsPurchase)
-                _buildPill(Icons.shopping_bag_rounded, 'Purchases', Colors.orange.shade700, Colors.orange.shade50),
+                _buildPill(Icons.shopping_bag_rounded, CreativeSpacesConstants.purchasesLabel, Colors.orange.shade700, Colors.orange.shade50),
               if (space.offersWorkshops)
-                _buildPill(Icons.chair_rounded, 'Workshops', Colors.teal.shade700, Colors.teal.shade50),
+                _buildPill(Icons.chair_rounded, CreativeSpacesConstants.workshopsLabel, Colors.teal.shade700, Colors.teal.shade50),
               if (space.priceRange != null && space.priceRange!.trim().isNotEmpty)
                 _buildPill(
                   Icons.price_change_rounded,
@@ -148,7 +152,7 @@ class CreativeSpaceCard extends StatelessWidget {
               TextButton.icon(
                 onPressed: () => _navigateToDetail(context),
                 icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                label: const Text('View details'),
+                label: const Text(CreativeSpacesConstants.viewDetailsLabel),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
@@ -163,11 +167,13 @@ class CreativeSpaceCard extends StatelessWidget {
 
   String _buildIntroText() {
     final location =
-        [space.townName?.trim(), space.city?.trim()].where((value) => value != null && value.isNotEmpty).join(' • ');
+        [space.townName?.trim(), space.city?.trim()]
+            .where((value) => value != null && value.isNotEmpty)
+            .join(CreativeSpacesConstants.itemInfoDivider);
     return [
       if (space.shortDescription != null && space.shortDescription!.trim().isNotEmpty) space.shortDescription!.trim(),
       if (location.isNotEmpty) location,
-    ].join(' • ');
+    ].join(CreativeSpacesConstants.itemInfoDivider);
   }
 
   String? _resolveImageUrl() {
@@ -277,7 +283,11 @@ class CreativeSpaceCard extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          space.rating != null ? '${space.rating!.toStringAsFixed(1)} (${space.totalReviews})' : 'No reviews',
+          space.rating != null
+              ? CreativeSpacesConstants.ratingSummaryTemplate
+                  .replaceAll('{rating}', space.rating!.toStringAsFixed(1))
+                  .replaceAll('{reviews}', space.totalReviews.toString())
+              : CreativeSpacesConstants.noReviewsLabel,
           style: TextStyle(
             fontSize: 11,
             color: colorScheme.onSurfaceVariant,

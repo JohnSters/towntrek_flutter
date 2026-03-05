@@ -1,5 +1,6 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/core.dart';
-import '../../core/config/api_config.dart';
 import '../../repositories/repositories.dart';
 import '../../models/models.dart';
 import 'creative_spaces_state.dart';
@@ -9,6 +10,7 @@ class CreativeSpacesViewModel extends ChangeNotifier {
   final CreativeSpaceRepository _creativeSpaceRepository;
   final ErrorHandler _errorHandler;
   final int? _townId;
+  bool _countsAvailable = true;
 
   CreativeSpacesState _state = CreativeSpacesLoading();
   int _currentPage = 1;
@@ -20,9 +22,15 @@ class CreativeSpacesViewModel extends ChangeNotifier {
     required CreativeSpaceRepository creativeSpaceRepository,
     required ErrorHandler errorHandler,
     int? townId,
+    int? initialCategoryId,
+    int? initialSubCategoryId,
+    String? initialSearchTerm,
   })  : _creativeSpaceRepository = creativeSpaceRepository,
         _errorHandler = errorHandler,
         _townId = townId {
+    _selectedCategoryId = initialCategoryId;
+    _selectedSubCategoryId = initialSubCategoryId;
+    _searchTerm = initialSearchTerm?.trim();
     loadCreativeSpaces();
   }
 
@@ -37,6 +45,9 @@ class CreativeSpacesViewModel extends ChangeNotifier {
 
   /// Current search term
   String? get searchTerm => _searchTerm;
+
+  /// Whether category and subcategory counts are available from the API.
+  bool get countsAvailable => _countsAvailable;
 
   /// Available creative space categories
   List<CreativeCategoryDto> get categories {
@@ -242,18 +253,29 @@ class CreativeSpacesViewModel extends ChangeNotifier {
   }
 
   Future<List<CreativeCategoryDto>> _loadCategories() async {
-    if (_townId != null) {
-      try {
-        final withCounts =
-            await _creativeSpaceRepository.getCategoriesWithCounts(_townId!);
-        if (withCounts.isNotEmpty) {
-          return withCounts;
-        }
-      } catch (_) {
-        // Fallback to all categories
-      }
+    _countsAvailable = true;
+
+    if (_townId == null) {
+      return _creativeSpaceRepository.getCategories();
     }
 
+    try {
+      final withCounts = await _creativeSpaceRepository.getCategoriesWithCounts(_townId);
+      if (withCounts.isNotEmpty) {
+        _countsAvailable = true;
+        return withCounts;
+      }
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        _countsAvailable = false;
+        return _creativeSpaceRepository.getCategories();
+      }
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+
+    _countsAvailable = false;
     return _creativeSpaceRepository.getCategories();
   }
 
