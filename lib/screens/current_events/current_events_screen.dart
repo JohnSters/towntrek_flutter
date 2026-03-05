@@ -21,6 +21,7 @@ class CurrentEventsScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => CurrentEventsViewModel(
         eventRepository: serviceLocator.eventRepository,
+        errorHandler: serviceLocator.errorHandler,
         townId: townId,
         townName: townName,
       ),
@@ -66,46 +67,32 @@ class _CurrentEventsScreenContent extends StatelessWidget {
       CurrentEventsLoading() => const Center(child: CircularProgressIndicator()),
       CurrentEventsSuccess(events: final events, hasNextPage: final hasNextPage, isLoadingMore: final isLoadingMore) =>
         _buildEventsList(context, events, hasNextPage, isLoadingMore, viewModel),
-      CurrentEventsError(title: final title, message: final message) =>
-        _buildErrorView(title, message, viewModel),
+      CurrentEventsError(error: final error) =>
+        _buildErrorState(context, error: error, viewModel: viewModel),
       CurrentEventsLoadingMore() => const Center(child: CircularProgressIndicator()),
     };
   }
 
-  Widget _buildErrorView(String title, String message, CurrentEventsViewModel viewModel) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: viewModel.retryLoadEvents,
-              child: const Text('Try Again'),
-            ),
-          ],
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required CurrentEventsViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return ErrorView(error: error);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        ErrorView(error: error),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: viewModel.retryLoadEvents,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Retry'),
         ),
-      ),
+      ],
     );
   }
 

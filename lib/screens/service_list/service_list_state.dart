@@ -1,3 +1,4 @@
+import '../../core/errors/app_error.dart';
 import '../../models/models.dart';
 
 /// State classes for Service List page
@@ -39,13 +40,9 @@ class ServiceListSuccess extends ServiceListState {
 
 /// Error state for service list loading failure
 class ServiceListError extends ServiceListState {
-  final String title;
-  final String message;
+  final AppError error;
 
-  ServiceListError({
-    required this.title,
-    required this.message,
-  });
+  ServiceListError(this.error);
 }
 
 /// Loading more state for pagination

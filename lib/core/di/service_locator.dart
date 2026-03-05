@@ -17,6 +17,7 @@ class ServiceLocator {
   late final BusinessApiService _businessApiService;
   late final TownApiService _townApiService;
   late final EventApiService _eventApiService;
+  late final CreativeSpaceApiService _creativeSpaceApiService;
   late final ServiceApiService _serviceApiService;
   late final StatsApiService _statsApiService;
   late final GeolocationService _geolocationService;
@@ -27,6 +28,7 @@ class ServiceLocator {
   late final BusinessRepository _businessRepository;
   late final TownRepository _townRepository;
   late final EventRepository _eventRepository;
+  late final CreativeSpaceRepository _creativeSpaceRepository;
   late final ServiceRepository _serviceRepository;
   late final StatsRepository _statsRepository;
 
@@ -42,6 +44,7 @@ class ServiceLocator {
     _businessApiService = BusinessApiService(_apiClient);
     _townApiService = TownApiService(_apiClient);
     _eventApiService = EventApiService(_apiClient);
+    _creativeSpaceApiService = CreativeSpaceApiService(_apiClient);
     _serviceApiService = ServiceApiService(_apiClient);
     _statsApiService = StatsApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
@@ -51,6 +54,7 @@ class ServiceLocator {
     _businessRepository = BusinessRepositoryImpl(_businessApiService);
     _townRepository = TownRepositoryImpl(_townApiService);
     _eventRepository = EventRepositoryImpl(_eventApiService);
+    _creativeSpaceRepository = CreativeSpaceRepositoryImpl(_creativeSpaceApiService);
     _serviceRepository = ServiceRepositoryImpl(_serviceApiService);
     _statsRepository = StatsRepositoryImpl(_statsApiService);
 
@@ -80,6 +84,12 @@ class ServiceLocator {
     return _townApiService;
   }
 
+  /// Get the creative space API service
+  CreativeSpaceApiService get creativeSpaceApiService {
+    _ensureInitialized();
+    return _creativeSpaceApiService;
+  }
+
   /// Get the service API service
   ServiceApiService get serviceApiService {
     _ensureInitialized();
@@ -102,6 +112,12 @@ class ServiceLocator {
   EventRepository get eventRepository {
     _ensureInitialized();
     return _eventRepository;
+  }
+
+  /// Get the creative space repository
+  CreativeSpaceRepository get creativeSpaceRepository {
+    _ensureInitialized();
+    return _creativeSpaceRepository;
   }
 
   /// Get the service repository

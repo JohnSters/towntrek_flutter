@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
+import '../../core/core.dart';
 import '../../core/widgets/navigation_footer.dart';
 import '../../core/widgets/page_header.dart';
 import '../service_list/service_list_page.dart';
@@ -66,11 +67,10 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         }
 
         if (state is ServiceSubCategoryError) {
-          return Center(
-            child: Text(
-              state.message,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+          return _buildErrorState(
+            context,
+            error: state.error,
+            viewModel: viewModel,
           );
         }
 
@@ -80,6 +80,29 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
 
         return const SizedBox();
       },
+    );
+  }
+
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required ServiceSubCategoryViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return ErrorView(error: error);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        ErrorView(error: error),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: viewModel.retry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Retry'),
+        ),
+      ],
     );
   }
 

@@ -83,15 +83,11 @@ class ServiceListViewModel extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      await _errorHandler.handleError(
+      final appError = await _errorHandler.handleError(
         e,
         retryAction: () => loadServices(loadMore: loadMore),
       );
-
-      _state = ServiceListError(
-        title: ServiceListConstants.refreshErrorTitle,
-        message: ServiceListConstants.refreshErrorMessage,
-      );
+      _state = ServiceListError(appError);
 
       notifyListeners();
     }

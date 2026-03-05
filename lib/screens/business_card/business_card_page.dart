@@ -67,7 +67,7 @@ class _BusinessCardPageContent extends StatelessWidget {
     }
 
     if (state is BusinessCardError) {
-      return _buildErrorView(context, viewModel, state);
+      return _buildErrorState(context, error: state.error, viewModel: viewModel);
     }
 
     if (state is BusinessCardEmpty) {
@@ -89,7 +89,27 @@ class _BusinessCardPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorView(BuildContext context, BusinessCardViewModel viewModel, BusinessCardError state) {
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required BusinessCardViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return Column(
+        children: [
+          PageHeader(
+            title: viewModel.subCategory.name,
+            subtitle: '${viewModel.category.name} in ${viewModel.town.name}',
+            height: BusinessCardConstants.loadingHeaderHeight,
+            headerType: HeaderType.business,
+          ),
+          Expanded(
+            child: ErrorView(error: error),
+          ),
+        ],
+      );
+    }
+
     return Column(
       children: [
         PageHeader(
@@ -99,7 +119,18 @@ class _BusinessCardPageContent extends StatelessWidget {
           headerType: HeaderType.business,
         ),
         Expanded(
-          child: ErrorView(error: state.error),
+          child: ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.loadBusinesses,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ],
     );

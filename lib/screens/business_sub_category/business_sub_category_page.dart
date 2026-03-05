@@ -58,11 +58,10 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
         }
 
         if (state is BusinessSubCategoryError) {
-          return Center(
-            child: Text(
-              state.message,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+          return _buildErrorState(
+            context,
+            error: state.error,
+            viewModel: viewModel,
           );
         }
 
@@ -72,6 +71,29 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
 
         return const SizedBox();
       },
+    );
+  }
+
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required BusinessSubCategoryViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return ErrorView(error: error);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        ErrorView(error: error),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: viewModel.retry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Retry'),
+        ),
+      ],
     );
   }
 

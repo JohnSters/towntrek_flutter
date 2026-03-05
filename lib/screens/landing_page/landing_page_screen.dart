@@ -6,6 +6,7 @@ import 'landing_page_state.dart';
 import 'landing_page_view_model.dart';
 import '../town_loader/town_loader_screen.dart';
 import '../town_feature_selection/town_feature_selection_screen.dart';
+import '../creative_spaces/creative_spaces_category_page.dart';
 import 'widgets/widgets.dart';
 
 class LandingPage extends StatefulWidget {
@@ -100,20 +101,44 @@ class _LandingPageContent extends StatelessWidget {
 
                         return Padding(
                           padding: const EdgeInsets.only(top: 10),
-                          child: ActionButton(
-                            onPressed: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => TownFeatureSelectionScreen(
-                                    town: favouriteTown,
-                                  ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              ActionButton(
+                                onPressed: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => TownFeatureSelectionScreen(
+                                        town: favouriteTown,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                buttonText: 'Favourite Town: ${favouriteTown.name}',
+                                leadingIcon: Icons.star_rounded,
+                                backgroundColor: const Color(0xFF1E88E5),
+                                compact: true,
+                              ),
+                              const SizedBox(height: 10),
+                              ActionButton(
+                                onPressed: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => CreativeSpacesCategoryPage(
+                                        town: favouriteTown,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                buttonText:
+                                    '${TownFeatureConstants.creativeSpacesTitle} in ${favouriteTown.name}',
+                                leadingIcon: Icons.palette_rounded,
+                                backgroundColor: const Color(
+                                  TownFeatureConstants.creativeSpacesColor,
                                 ),
-                              );
-                            },
-                            buttonText: 'Favourite Town: ${favouriteTown.name}',
-                            leadingIcon: Icons.star_rounded,
-                            backgroundColor: const Color(0xFF1E88E5),
-                            compact: true,
+                                compact: true,
+                              ),
+                            ],
                           ),
                         );
                       },

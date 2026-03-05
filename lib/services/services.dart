@@ -2,6 +2,7 @@
 export 'business_api_service.dart';
 export 'town_api_service.dart';
 export 'event_api_service.dart';
+export 'service_apis/creative_space_api_service.dart';
 export 'geolocation_service.dart';
 export 'navigation_service.dart';
 export 'service_api_service.dart';

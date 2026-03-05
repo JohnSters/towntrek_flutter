@@ -165,6 +165,7 @@ class ApiConfig {
   // Endpoints
   static const String businessesEndpoint = 'businesses';
   static const String servicesEndpoint = 'services';
+  static const String creativeSpacesEndpoint = 'creativespaces';
   static const String townsEndpoint = 'towns';
   static const String eventsEndpoint = 'events';
   static const String statsEndpoint = 'stats';
@@ -253,6 +254,48 @@ class ApiConfig {
   ]) {
     return buildUrl(
       '$servicesEndpoint/categories/$categoryId/subcategories',
+      queryParams,
+    );
+  }
+
+  /// Builds creative spaces endpoint URL
+  static String creativeSpacesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(creativeSpacesEndpoint, queryParams);
+  }
+
+  /// Builds creative spaces search endpoint URL
+  static String creativeSpacesSearchUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$creativeSpacesEndpoint/search', queryParams);
+  }
+
+  /// Builds creative space categories endpoint URL
+  static String creativeSpaceCategoriesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$creativeSpacesEndpoint/categories', queryParams);
+  }
+
+  /// Builds creative space categories with counts for town endpoint URL
+  static String creativeSpaceCategoriesWithCountsUrl(
+    int townId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$creativeSpacesEndpoint/categories/town/$townId', queryParams);
+  }
+
+  /// Builds specific creative space endpoint URL
+  static String creativeSpaceDetailUrl(
+    int creativeSpaceId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$creativeSpacesEndpoint/$creativeSpaceId', queryParams);
+  }
+
+  /// Builds creative space subcategories endpoint URL
+  static String creativeSpaceSubCategoriesUrl(
+    int categoryId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl(
+      '$creativeSpacesEndpoint/categories/$categoryId/subcategories',
       queryParams,
     );
   }

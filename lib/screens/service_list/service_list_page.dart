@@ -75,40 +75,35 @@ class _ServiceListPageContent extends StatelessWidget {
         _buildServicesList(context, services, hasNextPage, isLoadingMore, viewModel),
       ServiceListLoadingMore(services: final services, currentPage: _) =>
         _buildServicesList(context, services, true, true, viewModel),
-      ServiceListError(title: final title, message: final message) =>
-        _buildErrorView(title, message),
+      ServiceListError(error: final error) =>
+        _buildErrorState(
+          context,
+          error: error,
+          viewModel: viewModel,
+        ),
     };
   }
 
-  Widget _buildErrorView(String title, String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-            ),
-          ],
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required ServiceListViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return ErrorView(error: error);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        ErrorView(error: error),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: viewModel.retry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Retry'),
         ),
-      ),
+      ],
     );
   }
 
@@ -120,8 +115,10 @@ class _ServiceListPageContent extends StatelessWidget {
     ServiceListViewModel viewModel,
   ) {
     if (services.isEmpty) {
-      return const Center(
-        child: Text('No services found'),
+      return ServiceListEmptyStateView(
+        category: viewModel.category,
+        subCategory: viewModel.subCategory,
+        town: viewModel.town,
       );
     }
 

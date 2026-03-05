@@ -64,7 +64,11 @@ class _ServiceCategoryPageContent extends StatelessWidget {
         }
 
         if (state is ServiceCategoryError) {
-          return ErrorView(error: state.error);
+          return _buildErrorState(
+            context,
+            error: state.error,
+            viewModel: viewModel,
+          );
         }
 
         if (state is ServiceCategorySuccess) {
@@ -73,6 +77,29 @@ class _ServiceCategoryPageContent extends StatelessWidget {
 
         return const SizedBox();
       },
+    );
+  }
+
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required ServiceCategoryViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return ErrorView(error: error);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        ErrorView(error: error),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: viewModel.retry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Retry'),
+        ),
+      ],
     );
   }
 

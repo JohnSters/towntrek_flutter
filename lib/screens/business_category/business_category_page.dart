@@ -228,7 +228,11 @@ class _BusinessCategoryPageContent extends StatelessWidget {
     }
 
     if (state is BusinessCategoryError) {
-      return _buildErrorView(state);
+      return _buildErrorState(
+        context,
+        viewModel: viewModel,
+        error: state.error,
+      );
     }
 
     if (state is BusinessCategorySuccess) {
@@ -379,8 +383,27 @@ class _BusinessCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorView(BusinessCategoryError state) {
-    return ErrorView(error: state.error);
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required BusinessCategoryViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return ErrorView(error: error);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        ErrorView(error: error),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: viewModel.retry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Retry'),
+        ),
+      ],
+    );
   }
 
   Widget _buildCategoriesView(

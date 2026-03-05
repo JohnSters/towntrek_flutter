@@ -31,6 +31,7 @@ class TownFeatureConstants {
   static const int servicesColor = 0xFFEF6C00; // Orange 800
   static const int eventsColor = 0xFF6A1B9A; // Purple 800
   static const int whatToDoColor = 0xFF00897B; // Teal 600
+  static const int creativeSpacesColor = 0xFF6D4C41; // Brown 700
 
   // Import needed for FontWeight
   // Font weights
@@ -50,5 +51,8 @@ class TownFeatureConstants {
   static const String whatToDoTitle = 'What to do';
   static const String whatToDoDescription =
       'Visitor tips, attractions, and local highlights';
+  static const String creativeSpacesTitle = 'Creative Spaces';
+  static const String creativeSpacesDescription =
+      'Discover local artisans, studios, and cultural experiences';
   static const String changeTownTooltip = 'Wrong Town?';
 }

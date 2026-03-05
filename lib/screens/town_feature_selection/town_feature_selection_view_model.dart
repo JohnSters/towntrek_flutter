@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/models.dart';
 import '../business_category/business_category.dart';
 import '../current_events/current_events_screen.dart';
+import '../creative_spaces/creative_spaces_category_page.dart';
 import '../service_category/service_category_page.dart';
 import '../town_selection/town_selection_screen.dart';
 import '../what_to_do/what_to_do_screen.dart';
@@ -54,5 +55,13 @@ class TownFeatureViewModel extends ChangeNotifier {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => WhatToDoScreen(town: town)));
+  }
+
+  void navigateToCreativeSpaces(BuildContext context, TownDto town) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CreativeSpacesCategoryPage(town: town),
+      ),
+    );
   }
 }

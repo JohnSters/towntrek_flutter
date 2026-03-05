@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import '../../core/core.dart';
 import '../../repositories/repositories.dart';
 import '../../core/constants/current_events_constants.dart';
@@ -8,6 +7,7 @@ import 'current_events_state.dart';
 /// Handles pagination, loading states, and event filtering
 class CurrentEventsViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
+  final ErrorHandler _errorHandler;
   final int _townId;
   final String _townName;
 
@@ -16,9 +16,11 @@ class CurrentEventsViewModel extends ChangeNotifier {
 
   CurrentEventsViewModel({
     required EventRepository eventRepository,
+    required ErrorHandler errorHandler,
     required int townId,
     required String townName,
   }) : _eventRepository = eventRepository,
+      _errorHandler = errorHandler,
        _townId = townId,
        _townName = townName,
        _state = CurrentEventsLoading() {
@@ -54,10 +56,11 @@ class CurrentEventsViewModel extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      _state = CurrentEventsError(
-        title: CurrentEventsConstants.refreshErrorTitle,
-        message: CurrentEventsConstants.refreshErrorMessage,
+      final appError = await _errorHandler.handleError(
+        e,
+        retryAction: loadEvents,
       );
+      _state = CurrentEventsError(appError);
       notifyListeners();
     }
   }
@@ -91,6 +94,10 @@ class CurrentEventsViewModel extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
+      await _errorHandler.handleError(
+        e,
+        retryAction: () => loadMoreEvents(),
+      );
       // Revert loading state on error
       _state = currentState.copyWith(isLoadingMore: false);
       notifyListeners();

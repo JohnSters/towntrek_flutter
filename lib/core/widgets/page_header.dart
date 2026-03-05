@@ -6,6 +6,7 @@ enum HeaderType {
   business,
   service,
   event,
+  creative,
   default_,
 }
 
@@ -68,6 +69,17 @@ class PageHeader extends StatelessWidget {
           colors: [
             Colors.orange.shade700,
             Colors.orange.shade900,
+          ],
+        );
+
+      case HeaderType.creative:
+        // Creative screens: Warm artistic brown gradient
+        return LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF8D6E63),
+            const Color(0xFF5D4037),
           ],
         );
 
