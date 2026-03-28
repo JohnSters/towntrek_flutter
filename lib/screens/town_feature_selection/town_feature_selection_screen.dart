@@ -81,9 +81,6 @@ class _TownFeatureSelectionScreenContentState
       TownFeatureLoaded(town: final town) => town,
     };
 
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
@@ -125,19 +122,8 @@ class _TownFeatureSelectionScreenContentState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     TownPulseCard(town: town),
-                    const SizedBox(height: 20),
-                    Text(
-                      TownFeatureConstants.pageTitle,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: TownFeatureConstants.titleFontWeight,
-                        color: colorScheme.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: TownFeatureConstants.contentSpacing),
-
-                    // Feature Cards
-                    ..._buildFeatureCards(context, viewModel, town),
+                    const SizedBox(height: TownFeatureConstants.sectionGap),
+                    _buildFeatureGrid(context, viewModel, town),
                   ],
                 ),
               ),
@@ -149,56 +135,80 @@ class _TownFeatureSelectionScreenContentState
     );
   }
 
-  List<Widget> _buildFeatureCards(
+  Widget _buildFeatureGrid(
     BuildContext context,
     TownFeatureViewModel viewModel,
     TownDto town,
   ) {
-    final features = [
-      FeatureData(
-        title: TownFeatureConstants.businessesTitle,
-        description: TownFeatureConstants.businessesDescription,
-        icon: Icons.store_mall_directory,
-        color: const Color(TownFeatureConstants.businessesColor),
-        onTap: () => viewModel.navigateToBusinesses(context, town),
-      ),
-      FeatureData(
-        title: TownFeatureConstants.servicesTitle,
-        description: TownFeatureConstants.servicesDescription,
-        icon: Icons.handyman,
-        color: const Color(TownFeatureConstants.servicesColor),
-        onTap: () => viewModel.navigateToServices(context, town),
-      ),
-      FeatureData(
-        title: TownFeatureConstants.eventsTitle,
-        description: TownFeatureConstants.eventsDescription,
-        icon: Icons.event,
-        color: const Color(TownFeatureConstants.eventsColor),
-        onTap: () => viewModel.navigateToEvents(context, town),
-      ),
-      FeatureData(
-        title: '${TownFeatureConstants.whatToDoTitle} in ${town.name}',
-        description: TownFeatureConstants.whatToDoDescription,
-        icon: Icons.travel_explore,
-        color: const Color(TownFeatureConstants.whatToDoColor),
-        onTap: () => viewModel.navigateToWhatToDo(context, town),
-      ),
-      FeatureData(
-        title: TownFeatureConstants.creativeSpacesTitle,
-        description: TownFeatureConstants.creativeSpacesDescription,
-        icon: Icons.palette_rounded,
-        color: const Color(TownFeatureConstants.creativeSpacesColor),
-        onTap: () => viewModel.navigateToCreativeSpaces(context, town),
-      ),
-    ];
+    final creativeSpaces = FeatureData(
+      title: TownFeatureConstants.creativeSpacesTitle,
+      description: TownFeatureConstants.creativeSpacesDescription,
+      icon: Icons.palette_rounded,
+      color: const Color(TownFeatureConstants.creativeSpacesColor),
+      onTap: () => viewModel.navigateToCreativeSpaces(context, town),
+    );
 
-    return features.map((feature) {
-      return Column(
-        children: [
-          FeatureCard(feature: feature),
-          if (feature != features.last) const SizedBox(height: 16),
-        ],
-      );
-    }).toList();
+    final businesses = FeatureData(
+      title: TownFeatureConstants.businessesTitle,
+      description: TownFeatureConstants.businessesDescription,
+      icon: Icons.store_mall_directory,
+      color: const Color(TownFeatureConstants.businessesColor),
+      onTap: () => viewModel.navigateToBusinesses(context, town),
+    );
+
+    final services = FeatureData(
+      title: TownFeatureConstants.servicesTitle,
+      description: TownFeatureConstants.servicesDescription,
+      icon: Icons.handyman,
+      color: const Color(TownFeatureConstants.servicesColor),
+      onTap: () => viewModel.navigateToServices(context, town),
+    );
+
+    final events = FeatureData(
+      title: TownFeatureConstants.eventsTitle,
+      description: TownFeatureConstants.eventsDescription,
+      icon: Icons.event,
+      color: const Color(TownFeatureConstants.eventsColor),
+      onTap: () => viewModel.navigateToEvents(context, town),
+    );
+
+    final whatToDo = FeatureData(
+      title: TownFeatureConstants.whatToDoTitle,
+      description: TownFeatureConstants.whatToDoDescription,
+      icon: Icons.travel_explore,
+      color: const Color(TownFeatureConstants.whatToDoColor),
+      onTap: () => viewModel.navigateToWhatToDo(context, town),
+    );
+
+    const gap = SizedBox(height: TownFeatureConstants.gridGap);
+    const hGap = SizedBox(width: TownFeatureConstants.gridGap);
+
+    return Column(
+      children: [
+        FeatureHeroCard(feature: creativeSpaces),
+        gap,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: FeatureGridCard(feature: businesses)),
+              hGap,
+              Expanded(child: FeatureGridCard(feature: services)),
+            ],
+          ),
+        ),
+        gap,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: FeatureGridCard(feature: events)),
+              hGap,
+              Expanded(child: FeatureGridCard(feature: whatToDo)),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
