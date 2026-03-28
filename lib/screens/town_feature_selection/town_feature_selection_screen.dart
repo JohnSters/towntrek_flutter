@@ -121,7 +121,15 @@ class _TownFeatureSelectionScreenContentState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TownPulseCard(town: town),
+                    TownPulseCard(
+                      town: town,
+                      onNavigate: (destination) => _onPulseNavigate(
+                        context,
+                        viewModel,
+                        town,
+                        destination,
+                      ),
+                    ),
                     const SizedBox(height: TownFeatureConstants.sectionGap),
                     _buildFeatureGrid(context, viewModel, town),
                   ],
@@ -180,6 +188,22 @@ class _TownFeatureSelectionScreenContentState
       onTap: () => viewModel.navigateToWhatToDo(context, town),
     );
 
+    final properties = FeatureData(
+      title: TownFeatureConstants.propertiesTitle,
+      description: TownFeatureConstants.propertiesDescription,
+      icon: Icons.home_work_rounded,
+      color: const Color(TownFeatureConstants.propertiesColor),
+      onTap: () => viewModel.navigateToProperties(context, town),
+    );
+
+    final equipmentRentals = FeatureData(
+      title: TownFeatureConstants.equipmentRentalsTitle,
+      description: TownFeatureConstants.equipmentRentalsDescription,
+      icon: Icons.construction,
+      color: const Color(TownFeatureConstants.equipmentRentalsColor),
+      onTap: () => viewModel.navigateToEquipmentRentals(context, town),
+    );
+
     const gap = SizedBox(height: TownFeatureConstants.gridGap);
     const hGap = SizedBox(width: TownFeatureConstants.gridGap);
 
@@ -208,7 +232,42 @@ class _TownFeatureSelectionScreenContentState
             ],
           ),
         ),
+        gap,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: FeatureGridCard(feature: properties)),
+              hGap,
+              Expanded(child: FeatureGridCard(feature: equipmentRentals)),
+            ],
+          ),
+        ),
       ],
     );
+  }
+
+  void _onPulseNavigate(
+    BuildContext context,
+    TownFeatureViewModel viewModel,
+    TownDto town,
+    TownPulseDestination destination,
+  ) {
+    switch (destination) {
+      case TownPulseDestination.businesses:
+        viewModel.navigateToBusinesses(context, town);
+      case TownPulseDestination.services:
+        viewModel.navigateToServices(context, town);
+      case TownPulseDestination.events:
+        viewModel.navigateToEvents(context, town);
+      case TownPulseDestination.creativeSpaces:
+        viewModel.navigateToCreativeSpaces(context, town);
+      case TownPulseDestination.whatToDo:
+        viewModel.navigateToWhatToDo(context, town);
+      case TownPulseDestination.properties:
+        viewModel.navigateToProperties(context, town);
+      case TownPulseDestination.equipmentRentals:
+        viewModel.navigateToEquipmentRentals(context, town);
+    }
   }
 }

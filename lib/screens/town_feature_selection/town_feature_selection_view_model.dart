@@ -7,6 +7,7 @@ import '../creative_spaces/creative_spaces_category_page.dart';
 import '../service_category/service_category_page.dart';
 import '../town_selection/town_selection_screen.dart';
 import '../what_to_do/what_to_do_screen.dart';
+import '../property_list/property_list_screen.dart';
 import 'town_feature_selection_screen.dart';
 import 'town_feature_selection_state.dart';
 
@@ -34,6 +35,23 @@ class TownFeatureViewModel extends ChangeNotifier {
   void navigateToBusinesses(BuildContext context, TownDto town) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => BusinessCategoryPage(town: town)),
+    );
+  }
+
+  void navigateToEquipmentRentals(BuildContext context, TownDto town) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BusinessCategoryPage(
+          town: town,
+          openCategoryKey: TownFeatureConstants.equipmentRentalsCategoryKey,
+        ),
+      ),
+    );
+  }
+
+  void navigateToProperties(BuildContext context, TownDto town) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => PropertyListScreen(town: town)),
     );
   }
 

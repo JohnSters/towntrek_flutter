@@ -7,4 +7,5 @@ export 'geolocation_service.dart';
 export 'navigation_service.dart';
 export 'service_api_service.dart';
 export 'stats_api_service.dart';
+export 'property_api_service.dart';
 export 'weather_service.dart';

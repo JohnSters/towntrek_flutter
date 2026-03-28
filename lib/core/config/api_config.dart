@@ -169,6 +169,7 @@ class ApiConfig {
   static const String townsEndpoint = 'towns';
   static const String eventsEndpoint = 'events';
   static const String statsEndpoint = 'stats';
+  static const String propertiesEndpoint = 'properties';
 
   // Timeout configurations - reduced for development
   static const Duration connectTimeout = Duration(seconds: 10);
@@ -370,6 +371,11 @@ class ApiConfig {
   /// Builds stats summary endpoint URL (used by the mobile landing page)
   static String statsSummaryUrl([Map<String, dynamic>? queryParams]) {
     return buildUrl('$statsEndpoint/summary', queryParams);
+  }
+
+  /// Builds public properties list endpoint URL
+  static String propertiesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(propertiesEndpoint, queryParams);
   }
 
   /// Get the appropriate base URL for the current environment

@@ -165,9 +165,13 @@ class _AnimatedConnectedEventsButtonState extends State<_AnimatedConnectedEvents
 class BusinessCategoryPage extends StatelessWidget {
   final TownDto? town;
 
+  /// When set, after categories load the matching category (by [CategoryWithCountDto.key], case-insensitive) opens immediately.
+  final String? openCategoryKey;
+
   const BusinessCategoryPage({
     super.key,
     this.town,
+    this.openCategoryKey,
   });
 
   @override
@@ -181,17 +185,56 @@ class BusinessCategoryPage extends StatelessWidget {
         geolocationService: serviceLocator.geolocationService,
         errorHandler: serviceLocator.errorHandler,
       ),
-      child: const _BusinessCategoryPageContent(),
+      child: _BusinessCategoryPageContent(openCategoryKey: openCategoryKey),
     );
   }
 }
 
-class _BusinessCategoryPageContent extends StatelessWidget {
-  const _BusinessCategoryPageContent();
+class _BusinessCategoryPageContent extends StatefulWidget {
+  final String? openCategoryKey;
+
+  const _BusinessCategoryPageContent({this.openCategoryKey});
+
+  @override
+  State<_BusinessCategoryPageContent> createState() => _BusinessCategoryPageContentState();
+}
+
+class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageContent> {
+  bool _didOpenInitialCategory = false;
+
+  void _tryOpenInitialCategory(
+    BuildContext context,
+    BusinessCategoryViewModel viewModel,
+    BusinessCategorySuccess state,
+  ) {
+    final key = widget.openCategoryKey;
+    if (key == null || _didOpenInitialCategory || !context.mounted) return;
+
+    CategoryWithCountDto? match;
+    final normalized = key.toLowerCase();
+    for (final c in state.categories) {
+      if (c.key.toLowerCase() == normalized) {
+        match = c;
+        break;
+      }
+    }
+
+    _didOpenInitialCategory = true;
+    if (match == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      viewModel.navigateToCategory(context, match!);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessCategoryViewModel>();
+    final state = viewModel.state;
+    if (state is BusinessCategorySuccess) {
+      _tryOpenInitialCategory(context, viewModel, state);
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,

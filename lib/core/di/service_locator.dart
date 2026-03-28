@@ -20,6 +20,7 @@ class ServiceLocator {
   late final CreativeSpaceApiService _creativeSpaceApiService;
   late final ServiceApiService _serviceApiService;
   late final StatsApiService _statsApiService;
+  late final PropertyApiService _propertyApiService;
   late final GeolocationService _geolocationService;
   late final NavigationService _navigationService;
   late final ErrorHandler _errorHandler;
@@ -31,6 +32,7 @@ class ServiceLocator {
   late final CreativeSpaceRepository _creativeSpaceRepository;
   late final ServiceRepository _serviceRepository;
   late final StatsRepository _statsRepository;
+  late final PropertyRepository _propertyRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -47,6 +49,7 @@ class ServiceLocator {
     _creativeSpaceApiService = CreativeSpaceApiService(_apiClient);
     _serviceApiService = ServiceApiService(_apiClient);
     _statsApiService = StatsApiService(_apiClient);
+    _propertyApiService = PropertyApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _navigationService = NavigationServiceImpl();
 
@@ -57,6 +60,7 @@ class ServiceLocator {
     _creativeSpaceRepository = CreativeSpaceRepositoryImpl(_creativeSpaceApiService);
     _serviceRepository = ServiceRepositoryImpl(_serviceApiService);
     _statsRepository = StatsRepositoryImpl(_statsApiService);
+    _propertyRepository = PropertyRepositoryImpl(_propertyApiService);
 
     _isInitialized = true;
   }
@@ -130,6 +134,12 @@ class ServiceLocator {
   StatsRepository get statsRepository {
     _ensureInitialized();
     return _statsRepository;
+  }
+
+  /// Get the property repository
+  PropertyRepository get propertyRepository {
+    _ensureInitialized();
+    return _propertyRepository;
   }
 
   /// Get the geolocation service

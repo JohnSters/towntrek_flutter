@@ -24,6 +24,11 @@ class TownFeatureConstants {
   static const int eventsColor = 0xFF6A1B9A; // Purple 800
   static const int whatToDoColor = 0xFF00897B; // Teal 600
   static const int creativeSpacesColor = 0xFFD81B60; // Rose 700
+  static const int propertiesColor = 0xFF2E7D32; // Green 800
+  static const int equipmentRentalsColor = 0xFFFF9800; // Amber / equipment pillar
+
+  /// Business category key from server seed (matches web `?category=equipment-rentals`).
+  static const String equipmentRentalsCategoryKey = 'equipment-rentals';
 
   // Font weights
   static const FontWeight titleFontWeight = FontWeight.bold;
@@ -45,5 +50,11 @@ class TownFeatureConstants {
   static const String creativeSpacesTitle = 'Creative Spaces';
   static const String creativeSpacesDescription =
       'Local artisans, studios & cultural gems';
+  static const String propertiesTitle = 'Properties';
+  static const String propertiesDescription =
+      'Homes and spaces for rent & sale';
+  static const String equipmentRentalsTitle = 'Equipment Rentals';
+  static const String equipmentRentalsDescription =
+      'Tools, machinery & gear for hire';
   static const String changeTownTooltip = 'Wrong Town?';
 }
