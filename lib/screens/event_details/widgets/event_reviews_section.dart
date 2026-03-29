@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/business_utils.dart';
+import 'event_detail_ui.dart';
 
 class EventReviewsSection extends StatelessWidget {
   final List<EventReviewDto> reviews;
@@ -17,172 +18,136 @@ class EventReviewsSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.1),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Section Title
-              Row(
-                children: [
-                  const Icon(
-                    Icons.star,
-                    size: 24,
-                    color: Colors.amber,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Reviews',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${reviews.length}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Reviews List
-              ...reviews.take(3).map((review) => _buildReviewCard(context, review)),
-
-              // Show more button if there are more reviews
-              if (reviews.length > 3)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: onViewAllPressed,
-                      icon: const Icon(Icons.expand_more),
-                      label: const Text('View All Reviews'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReviewCard(BuildContext context, EventReviewDto review) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final userName = review.userName ?? 'Anonymous';
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: colorScheme.outline.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: EventDetailSectionShell(
+        title: 'Reviews',
+        icon: Icons.rate_review_rounded,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Reviewer info and rating
             Row(
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: colorScheme.primaryContainer,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: colorScheme.outline.withValues(alpha: 0.16),
+                    ),
+                  ),
                   child: Text(
-                    userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onPrimaryContainer,
+                    '${reviews.length}',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        userName,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 8),
+                Text(
+                  reviews.length == 1 ? 'review' : 'reviews',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                // Star rating
-                Row(
-                  children: List.generate(5, (index) {
-                    return Icon(
-                      index < review.rating ? Icons.star : Icons.star_border,
-                      size: 16,
-                      color: index < review.rating ? Colors.amber : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                    );
-                  }),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // Review comment
-            if (review.comment != null && review.comment!.isNotEmpty)
-              Text(
-                review.comment!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
+            ...reviews.take(3).map((review) => _buildReviewTile(context, review)),
+            if (reviews.length > 3)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: onViewAllPressed,
+                    icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                    label: const Text('View all reviews'),
                   ),
+                ),
               ),
-
-            const SizedBox(height: 8),
-
-            // Review date
-            Text(
-              BusinessUtils.formatReviewDate(review.createdAt),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
-}
 
+  Widget _buildReviewTile(BuildContext context, EventReviewDto review) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final userName = review.userName ?? 'Anonymous';
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: colorScheme.primaryContainer,
+                child: Text(
+                  userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  userName,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < review.rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                    size: 16,
+                    color: index < review.rating
+                        ? Colors.amber
+                        : colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
+                  );
+                }),
+              ),
+            ],
+          ),
+          if (review.comment != null && review.comment!.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              review.comment!.trim(),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Text(
+            BusinessUtils.formatReviewDate(review.createdAt),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

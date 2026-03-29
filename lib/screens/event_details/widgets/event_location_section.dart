@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/core.dart';
 import '../../../models/models.dart';
+import 'event_detail_ui.dart';
 
 class EventLocationSection extends StatelessWidget {
   final EventDetailDto event;
@@ -11,10 +12,35 @@ class EventLocationSection extends StatelessWidget {
     required this.event,
   });
 
+  /// Normalizes for comparison so we can treat "same street, different formatting" as one address.
+  static String _normalizeAddressKey(String s) {
+    return s.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  /// When [physicalAddress] and [venueAddress] are the same place (one is a shorter/longer variant),
+  /// show a single line — usually the more complete one.
+  static List<String> _dedupedAddressLines(String physical, String? venue) {
+    final p = physical.trim();
+    final v = venue?.trim() ?? '';
+    if (p.isEmpty && v.isEmpty) return const [];
+    if (p.isEmpty) return [v];
+    if (v.isEmpty) return [p];
+    if (p == v) return [p];
+
+    final pKey = _normalizeAddressKey(p);
+    final vKey = _normalizeAddressKey(v);
+    if (pKey == vKey) return [p];
+
+    if (pKey.contains(vKey) || vKey.contains(pKey)) {
+      return [p.length >= v.length ? p : v];
+    }
+
+    return [p, v];
+  }
+
   Future<void> _openMap(BuildContext context) async {
     final hasCoords = event.latitude != null && event.longitude != null;
 
-    // Prefer the same "Take me there" style flow used by Businesses (directions to lat/lng)
     if (hasCoords) {
       final result = await serviceLocator.navigationService.openExternalNavigation(
         event.latitude!,
@@ -33,7 +59,6 @@ class EventLocationSection extends StatelessWidget {
       return;
     }
 
-    // Fallback: map search by address/name (still better than doing nothing)
     final parts = <String>[
       if (event.venue?.trim().isNotEmpty == true) event.venue!.trim(),
       if (event.venueAddress?.trim().isNotEmpty == true) event.venueAddress!.trim(),
@@ -81,104 +106,64 @@ class EventLocationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     final hasCoords = event.latitude != null && event.longitude != null;
     final hasAddress = event.physicalAddress.trim().isNotEmpty ||
         (event.venueAddress?.trim().isNotEmpty ?? false) ||
         (event.venue?.trim().isNotEmpty ?? false);
-    final canOpenMaps = hasCoords || hasAddress;
+    if (!hasCoords && !hasAddress) return const SizedBox.shrink();
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.1),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final canOpenMaps = hasCoords || hasAddress;
+    final addressLines = _dedupedAddressLines(
+      event.physicalAddress,
+      event.venueAddress,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: EventDetailSectionShell(
+        title: 'Location',
+        icon: Icons.place_outlined,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (event.venue != null && event.venue!.trim().isNotEmpty)
               Text(
-                'Location',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                event.venue!.trim(),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 16),
-              
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.location_on,
-                      color: colorScheme.secondary,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (event.venue != null)
-                          Text(
-                            event.venue!,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        Text(
-                          event.physicalAddress,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        if (event.venueAddress != null && event.venueAddress != event.physicalAddress)
-                           Text(
-                            event.venueAddress!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              // Map Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: canOpenMaps ? () => _openMap(context) : null,
-                  icon: const Icon(Icons.map),
-                  label: const Text('Open in Maps'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+            for (var i = 0; i < addressLines.length; i++) ...[
+              if (i > 0 || (event.venue != null && event.venue!.trim().isNotEmpty))
+                const SizedBox(height: 6),
+              Text(
+                addressLines[i],
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.35,
+                  color: colorScheme.onSurface.withValues(alpha: 0.88),
                 ),
               ),
             ],
-          ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                EventDetailQuickIconButton(
+                  tooltip: 'Take me there',
+                  icon: Icons.directions_rounded,
+                  backgroundColor: const Color(0xFFE0F2F1),
+                  iconColor: const Color(0xFF00695C),
+                  onPressed: canOpenMaps ? () => _openMap(context) : null,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
-

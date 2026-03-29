@@ -48,19 +48,22 @@ class _EventDetailsScreenContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          const Expanded(
-            child: _Content(),
-          ),
-          Consumer<EventDetailsViewModel>(
-            builder: (context, viewModel, child) {
-              return viewModel.state is EventDetailsSuccess
-                  ? const BackNavigationFooter()
-                  : const SizedBox();
-            },
-          ),
-        ],
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const Expanded(
+              child: _Content(),
+            ),
+            Consumer<EventDetailsViewModel>(
+              builder: (context, viewModel, child) {
+                return viewModel.state is EventDetailsSuccess
+                    ? const BackNavigationFooter()
+                    : const SizedBox();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -123,6 +126,7 @@ class _LoadingView extends StatelessWidget {
             subtitle: eventType ?? EventDetailsConstants.loadingSubtitle,
             backgroundImage: initialImageUrl,
             headerType: HeaderType.event,
+            height: 112.0,
           ),
         ),
         const SliverFillRemaining(
@@ -156,6 +160,7 @@ class _ErrorView extends StatelessWidget {
           title: eventName,
           subtitle: EventDetailsConstants.errorSubtitle,
           headerType: HeaderType.event,
+          height: 112.0,
         ),
         Expanded(
           child: ErrorView(
@@ -181,58 +186,44 @@ class _EventDetailsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // Event Header
         SliverToBoxAdapter(
           child: PageHeader(
             title: eventDetails.name,
             subtitle: eventDetails.eventType,
             backgroundImage: eventDetails.coverImageUrl,
             headerType: HeaderType.event,
+            height: 112.0,
           ),
         ),
-
-        // Info Card (Date, Time, Price, Description)
         SliverToBoxAdapter(
-          child: EventInfoCard(event: eventDetails),
-        ),
-
-        // Image Gallery
-        if (eventDetails.images.isNotEmpty)
-          SliverToBoxAdapter(
-            child: EventImageGallery(images: eventDetails.images),
-          ),
-
-        // Location Section
-        SliverToBoxAdapter(
-          child: EventLocationSection(event: eventDetails),
-        ),
-
-        // Contact Section
-        SliverToBoxAdapter(
-          child: EventContactSection(event: eventDetails),
-        ),
-
-        // Reviews Section
-        if (eventDetails.reviews.isNotEmpty)
-          SliverToBoxAdapter(
-            child: EventReviewsSection(
-              reviews: eventDetails.reviews,
-              onViewAllPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => EventAllReviewsScreen(
-                      eventName: eventDetails.name,
-                      reviews: eventDetails.reviews,
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                EventInfoCard(event: eventDetails),
+                if (eventDetails.images.isNotEmpty)
+                  EventImageGallery(images: eventDetails.images),
+                EventLocationSection(event: eventDetails),
+                EventContactSection(event: eventDetails),
+                if (eventDetails.reviews.isNotEmpty)
+                  EventReviewsSection(
+                    reviews: eventDetails.reviews,
+                    onViewAllPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => EventAllReviewsScreen(
+                            eventName: eventDetails.name,
+                            reviews: eventDetails.reviews,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+                const SizedBox(height: EventDetailsConstants.bottomPadding),
+              ],
             ),
           ),
-
-        // Bottom padding
-        const SliverToBoxAdapter(
-          child: SizedBox(height: EventDetailsConstants.bottomPadding),
         ),
       ],
     );
