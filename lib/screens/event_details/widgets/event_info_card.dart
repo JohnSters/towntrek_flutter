@@ -89,9 +89,10 @@ class EventInfoCard extends StatelessWidget {
                 ],
               ),
               
-              const SizedBox(height: 20),
+              // Tight spacing before feature tiles (GridView.shrinkWrap was leaving excess gap)
+              if (_hasFeatures(event)) const SizedBox(height: 10),
               
-              // Features Grid (Outdoor, Parking, etc)
+              // Features (Outdoor, Parking, etc)
               if (_hasFeatures(event)) ...[
                 _buildFeaturesGrid(context, event),
                 const SizedBox(height: 20),
@@ -170,33 +171,46 @@ class EventInfoCard extends StatelessWidget {
       features.add(_buildFeatureItem(context, Icons.umbrella, 'Weather Backup'));
     }
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 3,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      children: features,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final tileWidth = (maxWidth - 8) / 2;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final tile in features)
+              SizedBox(
+                width: tileWidth,
+                child: tile,
+              ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildFeatureItem(BuildContext context, IconData icon, String label) {
     final theme = Theme.of(context);
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Icon(icon, size: 18, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall,
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ],
       ),

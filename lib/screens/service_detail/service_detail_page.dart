@@ -325,22 +325,28 @@ class _ServiceDetailBody extends StatelessWidget {
               children: [
                 if (service.facebook?.trim().isNotEmpty == true)
                   _SocialIconButton(
+                    tooltip: 'Facebook',
                     icon: FontAwesomeIcons.facebookF,
-                    color: const Color(0xFF1877F2),
+                    backgroundColor: const Color(0xFFE8F1FE),
+                    iconColor: const Color(0xFF1877F2),
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.facebook!),
                   ),
                 if (service.instagram?.trim().isNotEmpty == true)
                   _SocialIconButton(
+                    tooltip: 'Instagram',
                     icon: FontAwesomeIcons.instagram,
-                    color: const Color(0xFFC13584),
+                    backgroundColor: const Color(0xFFFCE4F0),
+                    iconColor: const Color(0xFFC13584),
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.instagram!),
                   ),
                 if (service.whatsApp?.trim().isNotEmpty == true)
                   _SocialIconButton(
+                    tooltip: 'WhatsApp',
                     icon: FontAwesomeIcons.whatsapp,
-                    color: const Color(0xFF25D366),
+                    backgroundColor: const Color(0xFFE8F7EC),
+                    iconColor: const Color(0xFF25D366),
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.whatsApp!),
                   ),
@@ -706,30 +712,37 @@ class _QuickActionIconButton extends StatelessWidget {
 }
 
 class _SocialIconButton extends StatelessWidget {
+  final String tooltip;
   final IconData icon;
-  final Color color;
+  final Color backgroundColor;
+  final Color iconColor;
   final VoidCallback onPressed;
 
   const _SocialIconButton({
+    required this.tooltip,
     required this.icon,
-    required this.color,
+    required this.backgroundColor,
+    required this.iconColor,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 42,
-      height: 42,
-      child: IconButton(
-        onPressed: onPressed,
-        style: IconButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: IconButton(
+          onPressed: onPressed,
+          style: IconButton.styleFrom(
+            backgroundColor: backgroundColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
+          icon: FaIcon(icon, size: 24, color: iconColor),
         ),
-        icon: FaIcon(icon, size: 18, color: Colors.white),
       ),
     );
   }
