@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
-import '../../core/utils/business_category_copy.dart';
 import '../../models/models.dart';
 import 'business_card_state.dart';
 import 'business_card_view_model.dart';
@@ -43,7 +42,7 @@ class _BusinessCardPageContent extends StatelessWidget {
     final viewModel = context.watch<BusinessCardViewModel>();
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
         child: Column(
           children: [
@@ -53,7 +52,7 @@ class _BusinessCardPageContent extends StatelessWidget {
             ),
 
             // Navigation footer
-            const BackNavigationFooter(),
+            const _BackToPropertiesFooter(),
           ],
         ),
       ),
@@ -95,30 +94,25 @@ class _BusinessCardPageContent extends StatelessWidget {
     required AppError error,
     required BusinessCardViewModel viewModel,
   }) {
+    final header = BusinessCardHeroHeader(
+      subCategoryName: viewModel.subCategory.name,
+      categoryName: viewModel.category.name,
+      categoryKey: viewModel.category.key,
+      townName: viewModel.town.name,
+    );
+
     if (error.actionText != null && error.action != null) {
       return Column(
         children: [
-          PageHeader(
-            title: viewModel.subCategory.name,
-            subtitle: '${viewModel.category.name} in ${viewModel.town.name}',
-            height: BusinessCardConstants.loadingHeaderHeight,
-            headerType: HeaderType.business,
-          ),
-          Expanded(
-            child: ErrorView(error: error),
-          ),
+          header,
+          Expanded(child: ErrorView(error: error)),
         ],
       );
     }
 
     return Column(
       children: [
-        PageHeader(
-          title: viewModel.subCategory.name,
-          subtitle: '${viewModel.category.name} in ${viewModel.town.name}',
-          height: BusinessCardConstants.loadingHeaderHeight,
-          headerType: HeaderType.business,
-        ),
+        header,
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),
@@ -144,24 +138,16 @@ class _BusinessCardPageContent extends StatelessWidget {
   Widget _buildBusinessesView(BuildContext context, BusinessCardViewModel viewModel, BusinessCardSuccess state) {
     return Column(
       children: [
-        PageHeader(
-          title: viewModel.subCategory.name,
-          subtitle: '${viewModel.category.name} in ${viewModel.town.name}',
-          height: BusinessCardConstants.successHeaderHeight,
-          headerType: HeaderType.business,
+        BusinessCardHeroHeader(
+          subCategoryName: viewModel.subCategory.name,
+          categoryName: viewModel.category.name,
+          categoryKey: viewModel.category.key,
+          townName: viewModel.town.name,
         ),
-        _ListInfoBar(
-          icon: BusinessCategoryCopy.infoBarIcon(viewModel.category.key),
-          text: BusinessCategoryCopy.subCategoryInfoBarLine(
-            count: viewModel.subCategory.businessCount,
-            subCategoryName: viewModel.subCategory.name,
-            categoryKey: viewModel.category.key,
-          ),
-          backgroundColor: const Color(0xFFE9F7EF),
-          textColor: const Color(0xFF1D7A38),
-          borderColor: const Color(0xFFBFE5CB),
+        _ResultsLabel(
+          count: viewModel.subCategory.businessCount,
+          categoryName: viewModel.subCategory.name,
         ),
-
         Expanded(
           child: _buildBusinessesList(context, viewModel, state),
         ),
@@ -196,6 +182,8 @@ class _BusinessCardPageContent extends StatelessWidget {
           return BusinessCardWidget(
             business: business,
             categoryKey: viewModel.category.key,
+            townName: viewModel.town.name,
+            provinceName: viewModel.town.province,
             onTap: () => viewModel.onBusinessTap(context, business),
           );
         },
@@ -204,49 +192,105 @@ class _BusinessCardPageContent extends StatelessWidget {
   }
 }
 
-class _ListInfoBar extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color backgroundColor;
-  final Color textColor;
-  final Color borderColor;
+class _ResultsLabel extends StatelessWidget {
+  final int count;
+  final String categoryName;
 
-  const _ListInfoBar({
-    required this.icon,
-    required this.text,
-    required this.backgroundColor,
-    required this.textColor,
-    required this.borderColor,
+  const _ResultsLabel({
+    required this.count,
+    required this.categoryName,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    final resultText = count == 1 ? '1 result' : '$count results';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: const Color(0xFF1A3A62),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            resultText,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            width: 3,
+            height: 3,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.6),
+              shape: BoxShape.circle,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              categoryName,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BackToPropertiesFooter extends StatelessWidget {
+  const _BackToPropertiesFooter();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w700,
+      color: const Color(0xFFF0F4F8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.black.withValues(alpha: 0.13),
+                  width: 0.5,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_back,
+                    size: 13,
+                    color: Color(0xFF3D5068),
                   ),
+                  SizedBox(width: 6),
+                  Text(
+                    'Back to properties',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF3D5068),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

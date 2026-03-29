@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/business_card_constants.dart';
-import '../../../core/widgets/page_header.dart';
 import '../../../models/models.dart';
+import 'business_card_hero_header.dart';
 
 /// Widget for displaying loading state with header
 class BusinessLoadingView extends StatelessWidget {
@@ -20,11 +19,11 @@ class BusinessLoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        PageHeader(
-          title: subCategory.name,
-          subtitle: '${category.name} in ${town.name}',
-          height: BusinessCardConstants.loadingHeaderHeight,
-          headerType: HeaderType.business,
+        BusinessCardHeroHeader(
+          subCategoryName: subCategory.name,
+          categoryName: category.name,
+          categoryKey: category.key,
+          townName: town.name,
         ),
         const Expanded(
           child: Center(
