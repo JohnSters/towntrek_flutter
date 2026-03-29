@@ -2,6 +2,39 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/town_feature_constants.dart';
 import 'feature_data.dart';
 
+class _FeatureLivePill extends StatelessWidget {
+  const _FeatureLivePill();
+
+  static const Color _liveGreen = Color(0xFF43A047);
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: _liveGreen.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _liveGreen.withValues(alpha: 0.55),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        child: Text(
+          'Live',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: _liveGreen,
+                fontWeight: FontWeight.w800,
+                fontSize: 10,
+                height: 1.1,
+                letterSpacing: 0.35,
+              ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Full-width hero card with a bold gradient background.
 /// Used for a single featured category (e.g. Creative Spaces).
 class FeatureHeroCard extends StatelessWidget {
@@ -199,10 +232,20 @@ class FeatureGridCard extends StatelessWidget {
                         size: 20,
                       ),
                     ),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (feature.showLiveBadge) ...[
+                          const _FeatureLivePill(),
+                          const SizedBox(width: 8),
+                        ],
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.4),
+                        ),
+                      ],
                     ),
                   ],
                 ),

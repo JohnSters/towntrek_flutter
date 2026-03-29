@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/core.dart';
 import '../../../models/models.dart';
 import '../../../services/weather_service.dart';
 
@@ -28,7 +27,6 @@ class _PulseConstants {
   static const double borderOpacity = 0.14;
   static const double tileBackgroundOpacity = 0.05;
   static const double loadingMinHeight = 132.0;
-  static const int maxEventsPageSize = 100;
 
   static const Color businessColor = Color(0xFF1565C0);
   static const Color serviceColor = Color(0xFFEF6C00);
@@ -40,65 +38,30 @@ class _PulseConstants {
   static const Color liveGreen = Color(0xFF43A047);
 }
 
-/// Compact dashboard: all town entity shortcuts plus live events and weather in a dense 4×2 grid.
-class TownPulseCard extends StatefulWidget {
+/// Compact dashboard: metrics from [TownFeatureViewModel], weather, and navigation.
+class TownPulseCard extends StatelessWidget {
   final TownDto town;
+  final bool isLoading;
+  final WeatherData? weather;
+  final int? activeEventsCount;
+  final int? creativeTotal;
+  final int? propertiesTotal;
+  final int? equipmentTotal;
   final void Function(TownPulseDestination destination) onNavigate;
 
   const TownPulseCard({
     super.key,
     required this.town,
+    required this.isLoading,
+    required this.weather,
+    required this.activeEventsCount,
+    required this.creativeTotal,
+    required this.propertiesTotal,
+    required this.equipmentTotal,
     required this.onNavigate,
   });
 
-  @override
-  State<TownPulseCard> createState() => _TownPulseCardState();
-}
-
-class _TownPulseCardState extends State<TownPulseCard> {
-  WeatherData? _weather;
-  int? _activeEventsCount;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLiveData();
-  }
-
-  Future<void> _loadLiveData() async {
-    if (!mounted) return;
-    setState(() => _isLoading = true);
-
-    await Future.wait([_fetchWeather(), _fetchActiveEvents()]);
-
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-  }
-
-  Future<void> _fetchWeather() async {
-    final lat = widget.town.latitude;
-    final lng = widget.town.longitude;
-    if (lat == null || lng == null) return;
-
-    try {
-      final data = await WeatherService().getCurrentWeather(lat, lng);
-      if (!mounted) return;
-      setState(() => _weather = data);
-    } catch (_) {}
-  }
-
-  Future<void> _fetchActiveEvents() async {
-    try {
-      final response = await serviceLocator.eventRepository.getCurrentEvents(
-        townId: widget.town.id,
-        pageSize: _PulseConstants.maxEventsPageSize,
-      );
-      if (!mounted) return;
-      final count = response.events.where((e) => !e.shouldHide).length;
-      setState(() => _activeEventsCount = count);
-    } catch (_) {}
-  }
+  static String _countOrDash(int? v) => v != null ? '$v' : '–';
 
   @override
   Widget build(BuildContext context) {
@@ -118,9 +81,9 @@ class _TownPulseCardState extends State<TownPulseCard> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _PulseHeader(isLoading: _isLoading),
+            _PulseHeader(isLoading: isLoading),
             Container(height: _PulseConstants.dividerWidth, color: dividerColor),
-            _isLoading
+            isLoading
                 ? _buildLoadingArea(colorScheme)
                 : _buildEntityTable(context, dividerColor),
           ],
@@ -146,20 +109,24 @@ class _TownPulseCardState extends State<TownPulseCard> {
   }
 
   Widget _buildEntityTable(BuildContext context, Color dividerColor) {
-    final town = widget.town;
     final theme = Theme.of(context);
 
-    final weatherValue = _weather != null
-        ? '${_weather!.temperature.round()}°'
-        : '–';
-    final weatherLabel = _weather != null ? _shortWeatherLabel(_weather!.description) : 'Weather';
-    final weatherIcon = _weather?.icon ?? Icons.wb_cloudy_rounded;
-    final weatherColor = _weather != null
-        ? _weatherColor(_weather!.weatherCode)
+    final weatherValue =
+        weather != null ? '${weather!.temperature.round()}°' : '–';
+    final weatherLabel =
+        weather != null ? _shortWeatherLabel(weather!.description) : 'Weather';
+    final weatherIcon = weather?.icon ?? Icons.wb_cloudy_rounded;
+    final weatherColor = weather != null
+        ? _weatherColor(weather!.weatherCode)
         : const Color(0xFF78909C);
 
-    final eventsValue =
-        _activeEventsCount != null ? '$_activeEventsCount' : '–';
+    final eventsValue = _countOrDash(activeEventsCount);
+    final eventsLive =
+        activeEventsCount != null && activeEventsCount! > 0;
+
+    final creativeValue = _countOrDash(creativeTotal);
+    final propertiesValue = _countOrDash(propertiesTotal);
+    final equipmentValue = _countOrDash(equipmentTotal);
 
     return Table(
       defaultColumnWidth: const FlexColumnWidth(1),
@@ -177,7 +144,7 @@ class _TownPulseCardState extends State<TownPulseCard> {
               value: '${town.businessCount}',
               label: 'Businesses',
               color: _PulseConstants.businessColor,
-              onTap: () => widget.onNavigate(TownPulseDestination.businesses),
+              onTap: () => onNavigate(TownPulseDestination.businesses),
             ),
             _navCell(
               context,
@@ -186,25 +153,28 @@ class _TownPulseCardState extends State<TownPulseCard> {
               value: '${town.servicesCount}',
               label: 'Services',
               color: _PulseConstants.serviceColor,
-              onTap: () => widget.onNavigate(TownPulseDestination.services),
+              onTap: () => onNavigate(TownPulseDestination.services),
             ),
-            _navCell(
-              context,
-              theme,
-              icon: Icons.event_rounded,
-              value: eventsValue,
-              label: 'Events',
-              color: _PulseConstants.eventColor,
-              onTap: () => widget.onNavigate(TownPulseDestination.events),
+            _maybeAnimateEventsCell(
+              eventsLive: eventsLive,
+              child: _navCell(
+                context,
+                theme,
+                icon: Icons.event_rounded,
+                value: eventsValue,
+                label: 'Events',
+                color: _PulseConstants.eventColor,
+                onTap: () => onNavigate(TownPulseDestination.events),
+              ),
             ),
             _navCell(
               context,
               theme,
               icon: Icons.palette_rounded,
-              value: '·',
+              value: creativeValue,
               label: 'Creative',
               color: _PulseConstants.creativeColor,
-              onTap: () => widget.onNavigate(TownPulseDestination.creativeSpaces),
+              onTap: () => onNavigate(TownPulseDestination.creativeSpaces),
             ),
           ],
         ),
@@ -217,25 +187,25 @@ class _TownPulseCardState extends State<TownPulseCard> {
               value: '·',
               label: 'What to do',
               color: _PulseConstants.whatToDoColor,
-              onTap: () => widget.onNavigate(TownPulseDestination.whatToDo),
+              onTap: () => onNavigate(TownPulseDestination.whatToDo),
             ),
             _navCell(
               context,
               theme,
               icon: Icons.home_work_rounded,
-              value: '·',
+              value: propertiesValue,
               label: 'Properties',
               color: _PulseConstants.propertiesColor,
-              onTap: () => widget.onNavigate(TownPulseDestination.properties),
+              onTap: () => onNavigate(TownPulseDestination.properties),
             ),
             _navCell(
               context,
               theme,
               icon: Icons.construction_rounded,
-              value: '·',
+              value: equipmentValue,
               label: 'Equipment',
               color: _PulseConstants.equipmentColor,
-              onTap: () => widget.onNavigate(TownPulseDestination.equipmentRentals),
+              onTap: () => onNavigate(TownPulseDestination.equipmentRentals),
             ),
             _staticCell(
               context,
@@ -249,6 +219,14 @@ class _TownPulseCardState extends State<TownPulseCard> {
         ),
       ],
     );
+  }
+
+  Widget _maybeAnimateEventsCell({
+    required bool eventsLive,
+    required Widget child,
+  }) {
+    if (!eventsLive) return child;
+    return _LiveEventsPulseCellWrapper(child: child);
   }
 
   /// Keeps weather line to one short row under the value.
@@ -305,6 +283,74 @@ class _TownPulseCardState extends State<TownPulseCard> {
       >= 95 => const Color(0xFF5C6BC0),
       _ => const Color(0xFF78909C),
     };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Subtle live animation for Events cell (Town Pulse)
+// ---------------------------------------------------------------------------
+
+class _LiveEventsPulseCellWrapper extends StatefulWidget {
+  final Widget child;
+
+  const _LiveEventsPulseCellWrapper({required this.child});
+
+  @override
+  State<_LiveEventsPulseCellWrapper> createState() =>
+      _LiveEventsPulseCellWrapperState();
+}
+
+class _LiveEventsPulseCellWrapperState extends State<_LiveEventsPulseCellWrapper>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final t = CurvedAnimation(
+            parent: _controller,
+            curve: Curves.easeInOut,
+          ).value;
+          final scale = 1.0 + 0.035 * t;
+          final glow = 0.1 + 0.12 * t;
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: _PulseConstants.eventColor
+                      .withValues(alpha: glow * 0.4),
+                  blurRadius: 5 + 5 * t,
+                  spreadRadius: 0.35 * t,
+                ),
+              ],
+            ),
+            child: Transform.scale(
+              scale: scale,
+              alignment: Alignment.center,
+              child: widget.child,
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 

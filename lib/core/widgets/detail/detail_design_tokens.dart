@@ -23,6 +23,15 @@ abstract final class DetailQuickActionColors {
   /// Distinct from [rateBackground] / [rateIcon] so tickets never reads as "rate".
   static const ticketsBackground = Color(0xFFEDE7F6);
   static const ticketsIcon = Color(0xFF4527A0);
+
+  /// Opens the listing on the TownTrek public site ([DetailTownTrekWebAction]).
+  static const towntrekWebBackground = Color(0xFFE8EAF6);
+}
+
+/// Shared tooltip and asset for opening an entity on the TownTrek website from detail quick actions.
+abstract final class DetailTownTrekWebAction {
+  static const String tooltip = 'View on TownTrek website';
+  static const String assetPath = 'assets/images/logos/towntrek_starter_icon2.png';
 }
 
 abstract final class DetailSocialColors {

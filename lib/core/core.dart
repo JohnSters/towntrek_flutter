@@ -11,6 +11,8 @@ export 'widgets/entity_listing_hero_header.dart';
 export 'widgets/listing_results_band.dart';
 export 'widgets/listing_back_footer.dart';
 export 'widgets/listing_info_chip.dart';
+export 'widgets/live_events_strip_button.dart';
+export 'widgets/connected_wrong_town_strip_button.dart';
 export 'constants/business_details_constants.dart';
 export 'constants/business_category_constants.dart';
 export 'constants/business_sub_category_constants.dart';

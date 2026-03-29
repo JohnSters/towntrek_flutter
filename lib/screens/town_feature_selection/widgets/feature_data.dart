@@ -7,6 +7,7 @@ class FeatureData {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final bool showLiveBadge;
 
   const FeatureData({
     required this.title,
@@ -14,5 +15,6 @@ class FeatureData {
     required this.icon,
     required this.color,
     required this.onTap,
+    this.showLiveBadge = false,
   });
 }

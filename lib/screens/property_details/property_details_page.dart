@@ -335,6 +335,13 @@ class _PropertyDetailsBody extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
+              DetailQuickActionButton(
+                tooltip: DetailTownTrekWebAction.tooltip,
+                assetImagePath: DetailTownTrekWebAction.assetPath,
+                backgroundColor: DetailQuickActionColors.towntrekWebBackground,
+                iconColor: DetailQuickActionColors.websiteIcon,
+                onPressed: () => viewModel.openFullListingOnWeb(context),
+              ),
               if (listing.latitude != null && listing.longitude != null)
                 DetailQuickActionButton(
                   tooltip: 'Take Me There',
@@ -355,15 +362,6 @@ class _PropertyDetailsBody extends StatelessWidget {
                   ),
                 ),
             ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () => viewModel.openFullListingOnWeb(context),
-            icon: const Icon(Icons.open_in_new_rounded, size: 18),
-            label: const Text('View full listing on web'),
           ),
         ),
       ],

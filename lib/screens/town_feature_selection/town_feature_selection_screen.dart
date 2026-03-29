@@ -125,6 +125,12 @@ class _TownFeatureSelectionScreenContentState
                   children: [
                     TownPulseCard(
                       town: town,
+                      isLoading: viewModel.pulseLoading,
+                      weather: viewModel.pulseWeather,
+                      activeEventsCount: viewModel.pulseActiveEventsCount,
+                      creativeTotal: viewModel.pulseCreativeTotal,
+                      propertiesTotal: viewModel.pulsePropertiesTotal,
+                      equipmentTotal: viewModel.pulseEquipmentTotal,
                       onNavigate: (destination) => _onPulseNavigate(
                         context,
                         viewModel,
@@ -180,6 +186,7 @@ class _TownFeatureSelectionScreenContentState
       icon: Icons.event,
       color: const Color(TownFeatureConstants.eventsColor),
       onTap: () => viewModel.navigateToEvents(context, town),
+      showLiveBadge: viewModel.eventsLive,
     );
 
     final whatToDo = FeatureData(

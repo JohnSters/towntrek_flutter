@@ -161,6 +161,13 @@ class _CreativeSpaceDetailBody extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
         _InfoSection(space: space),
+        if (space.contactPhone != null ||
+            space.contactEmail != null ||
+            space.contactWebsite != null ||
+            space.physicalAddress != null) ...[
+          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
+          _ContactSection(space: space),
+        ],
         const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
         _QuickActionsSection(space: space),
         if (space.images.isNotEmpty) ...[
@@ -183,13 +190,6 @@ class _CreativeSpaceDetailBody extends StatelessWidget {
             hours: space.specialOperatingHours,
             isSpecial: true,
           ),
-        ],
-        if (space.contactPhone != null ||
-            space.contactEmail != null ||
-            space.contactWebsite != null ||
-            space.physicalAddress != null) ...[
-          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-          _ContactSection(space: space),
         ],
         if (space.reviews.isNotEmpty) ...[
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
@@ -395,6 +395,15 @@ class _QuickActionsSection extends StatelessWidget {
         spacing: 10,
         runSpacing: 10,
         children: [
+          DetailQuickActionButton(
+            tooltip: DetailTownTrekWebAction.tooltip,
+            assetImagePath: DetailTownTrekWebAction.assetPath,
+            backgroundColor: DetailQuickActionColors.towntrekWebBackground,
+            iconColor: DetailQuickActionColors.websiteIcon,
+            onPressed: () => context
+                .read<CreativeSpaceDetailViewModel>()
+                .openFullDetailsOnWeb(context),
+          ),
           if (canNavigate)
             DetailQuickActionButton(
               tooltip: 'Take Me There',
@@ -615,6 +624,71 @@ class _HoursSection extends StatelessWidget {
   }
 }
 
+/// Location pin in a square tile + address in a pill (no "Address:" label).
+class _CreativeContactAddressRow extends StatelessWidget {
+  final String address;
+
+  const _CreativeContactAddressRow({required this.address});
+
+  static const double _tile = 44;
+  static const double _radius = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = CreativeSpacesConstants.creativePrimary;
+    final border = Border.all(color: accent.withValues(alpha: 0.22));
+
+    // ListView gives unbounded height; stretch needs a finite cross-axis.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: _tile,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(_radius),
+              border: border,
+            ),
+            child: Center(
+              child: Icon(
+                Icons.location_on_rounded,
+                color: accent,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: _tile),
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(_radius),
+                  border: border,
+                ),
+                child: Text(
+                  address,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    height: 1.3,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF3D5068),
+                    letterSpacing: 0.1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ContactSection extends StatelessWidget {
   final CreativeSpaceDetailDto space;
 
@@ -628,6 +702,14 @@ class _ContactSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (space.physicalAddress != null &&
+              space.physicalAddress!.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _CreativeContactAddressRow(
+                address: space.physicalAddress!.trim(),
+              ),
+            ),
           if (space.contactPhone != null &&
               space.contactPhone!.trim().isNotEmpty)
             _SimpleListRow(
@@ -648,13 +730,6 @@ class _ContactSection extends StatelessWidget {
               icon: Icons.language_rounded,
               label: CreativeSpacesConstants.websiteActionLabel,
               value: space.contactWebsite!.trim(),
-            ),
-          if (space.physicalAddress != null &&
-              space.physicalAddress!.trim().isNotEmpty)
-            _SimpleListRow(
-              icon: Icons.location_on_rounded,
-              label: CreativeSpacesConstants.addressLabel,
-              value: space.physicalAddress!.trim(),
             ),
           if (space.contactMessage != null &&
               space.contactMessage!.trim().isNotEmpty)

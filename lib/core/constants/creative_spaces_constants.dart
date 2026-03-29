@@ -84,6 +84,8 @@ class CreativeSpacesConstants {
   static const String callActionLabel = 'Call';
   static const String emailActionLabel = 'Email';
   static const String websiteActionLabel = 'Website';
+  /// Public web route for creative space detail (`PublicController.CreativeSpaceDetails`).
+  static const String publicCreativeSpacePath = '/Public/CreativeSpace/';
   static const String addressLabel = 'Address';
   static const String specialLabel = 'Special';
   static const String openLabel = 'Open';

@@ -1,5 +1,7 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../../core/core.dart';
+import '../../core/utils/external_link_launcher.dart';
+import '../../core/utils/url_utils.dart';
 import '../../repositories/repositories.dart';
 import 'creative_space_detail_state.dart';
 
@@ -50,5 +52,16 @@ class CreativeSpaceDetailViewModel extends ChangeNotifier {
   /// Retry loading details
   Future<void> retry() async {
     await loadCreativeSpaceDetails();
+  }
+
+  Future<void> openFullDetailsOnWeb(BuildContext context) async {
+    final path =
+        '${CreativeSpacesConstants.publicCreativeSpacePath}$creativeSpaceId';
+    final url = UrlUtils.resolveApiUrl(path);
+    await ExternalLinkLauncher.openWebsite(
+      context,
+      url,
+      failureMessage: 'Unable to open full creative space details',
+    );
   }
 }
