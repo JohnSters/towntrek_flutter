@@ -14,10 +14,7 @@ class CreativeSpacesCategoryPage extends StatelessWidget {
 
   final TownDto town;
 
-  const CreativeSpacesCategoryPage({
-    super.key,
-    required this.town,
-  });
+  const CreativeSpacesCategoryPage({super.key, required this.town});
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +32,7 @@ class CreativeSpacesCategoryPage extends StatelessWidget {
 class _CreativeSpacesCategoryPageContent extends StatelessWidget {
   final TownDto town;
 
-  const _CreativeSpacesCategoryPageContent({
-    required this.town,
-  });
+  const _CreativeSpacesCategoryPageContent({required this.town});
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +58,8 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                     );
                   }
 
-                  if (state is! CreativeSpacesSuccess && state is! CreativeSpacesLoadingMore) {
+                  if (state is! CreativeSpacesSuccess &&
+                      state is! CreativeSpacesLoadingMore) {
                     return const SizedBox.shrink();
                   }
 
@@ -76,8 +72,9 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: [
                         PageHeader(
-                          title: '${TownFeatureConstants.creativeSpacesTitle} in ${town.name}',
-                          subtitle: CreativeSpacesConstants.categoryHeaderHint,
+                          title: TownFeatureConstants.creativeSpacesTitle,
+                          subtitle:
+                              'Discover makers, studios, and creative experiences in ${town.name}',
                           height: CreativeSpacesConstants.pageHeaderHeight,
                           headerType: HeaderType.creative,
                         ),
@@ -96,13 +93,20 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: categories.length,
                                   separatorBuilder: (context, index) =>
-                                      const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
+                                      const SizedBox(
+                                        height: CreativeSpacesConstants
+                                            .sectionSpacing,
+                                      ),
                                   itemBuilder: (context, index) {
                                     final category = categories[index];
                                     return CreativeCategoryCard(
                                       category: category,
                                       countsAvailable: countsAvailable,
-                                      onTap: () => _openCategory(context, category, countsAvailable),
+                                      onTap: () => _openCategory(
+                                        context,
+                                        category,
+                                        countsAvailable,
+                                      ),
                                     );
                                   },
                                 ),
@@ -121,6 +125,7 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
   }
 
   Widget _buildFlavorBanner(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.fromLTRB(
         CreativeSpacesConstants.pagePadding,
@@ -131,36 +136,52 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            CreativeSpacesConstants.creativeTint,
-            CreativeSpacesConstants.creativeHighlight,
+            colorScheme.primaryContainer.withValues(alpha: 0.7),
+            colorScheme.secondaryContainer.withValues(alpha: 0.45),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.3),
-        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.18)),
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       child: Row(
         children: [
-          Icon(
-            Icons.auto_awesome,
-            color: CreativeSpacesConstants.creativePrimary,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colorScheme.surface.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              color: CreativeSpacesConstants.creativePrimary,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              CreativeSpacesConstants.categoryHeader,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  CreativeSpacesConstants.categoryHeader,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: colorScheme.onSurface,
                     height: 1.2,
                   ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  CreativeSpacesConstants.categoryHeaderHint,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -182,18 +203,18 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
         Text(
           CreativeSpacesConstants.categoryUnavailableTitle,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                height: 1.2,
-              ),
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           CreativeSpacesConstants.categoryUnavailableSubtitle,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.2,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.2,
+          ),
         ),
       ],
     );
@@ -230,10 +251,8 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
     if (category.subCategories.isEmpty) {
       CreativeSpacesNavigation.pushListPage(
         context,
-        pageBuilder: (_) => CreativeSpacesListPage(
-          town: town,
-          category: category,
-        ),
+        pageBuilder: (_) =>
+            CreativeSpacesListPage(town: town, category: category),
       );
       return;
     }

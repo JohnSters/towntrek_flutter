@@ -28,8 +28,8 @@ class CreativeCategoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            CreativeSpacesConstants.creativeTint.withValues(alpha: 0.9),
-            CreativeSpacesConstants.creativeHighlight.withValues(alpha: 0.6),
+            colorScheme.primaryContainer.withValues(alpha: 0.66),
+            colorScheme.secondaryContainer.withValues(alpha: 0.42),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -43,7 +43,9 @@ class CreativeCategoryCard extends StatelessWidget {
           side: BorderSide(
             color: isDisabled
                 ? colorScheme.outline.withValues(alpha: 0.25)
-                : CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.35),
+                : CreativeSpacesConstants.creativePrimary.withValues(
+                    alpha: 0.35,
+                  ),
             width: 1.2,
           ),
           shape: RoundedRectangleBorder(
@@ -51,7 +53,7 @@ class CreativeCategoryCard extends StatelessWidget {
           ),
           backgroundColor: isDisabled
               ? colorScheme.surface.withValues(alpha: 0.15)
-              : CreativeSpacesConstants.creativeTint.withValues(alpha: 0.55),
+              : colorScheme.surface.withValues(alpha: 0.25),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,12 +64,12 @@ class CreativeCategoryCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isDisabled
                     ? colorScheme.surfaceContainerHighest
-                    : CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.12),
+                    : colorScheme.surface.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isDisabled
                       ? colorScheme.outline.withValues(alpha: 0.2)
-                      : CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.2),
+                      : colorScheme.primary.withValues(alpha: 0.16),
                 ),
               ),
               child: Icon(
@@ -86,7 +88,7 @@ class CreativeCategoryCard extends StatelessWidget {
                   Text(
                     category.name,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: isDisabled
                           ? colorScheme.onSurface.withValues(alpha: 0.55)
                           : colorScheme.onSurface,
@@ -97,9 +99,11 @@ class CreativeCategoryCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _subtitleText(),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: isDisabled
+                          ? colorScheme.onSurfaceVariant
+                          : CreativeSpacesConstants.creativePrimary,
+                      fontWeight: FontWeight.w700,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -109,7 +113,10 @@ class CreativeCategoryCard extends StatelessWidget {
                     Text(
                       category.description!.trim(),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.9,
+                        ),
+                        height: 1.3,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -135,9 +142,11 @@ class CreativeCategoryCard extends StatelessWidget {
     if (category.spaceCount == 0) {
       return countsAvailable
           ? CreativeSpacesConstants.noSpacesAvailableLabel
-          : CreativeSpacesConstants.exploreCategoryLabel.replaceAll('{name}', category.name);
+          : CreativeSpacesConstants.exploreCategoryLabel.replaceAll(
+              '{name}',
+              category.name,
+            );
     }
     return '${category.spaceCount} spaces';
   }
 }
-

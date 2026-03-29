@@ -7,14 +7,12 @@ import '../../../models/models.dart';
 class CreativeSubCategoryCard extends StatelessWidget {
   final CreativeSubCategoryDto subCategory;
   final bool countsAvailable;
-  final String? townName;
   final VoidCallback? onTap;
 
   const CreativeSubCategoryCard({
     super.key,
     required this.subCategory,
     required this.countsAvailable,
-    this.townName,
     this.onTap,
   });
 
@@ -23,9 +21,9 @@ class CreativeSubCategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDisabled = countsAvailable && subCategory.spaceCount == 0;
-    final intro = townName != null && townName!.trim().isNotEmpty
-        ? '${subCategory.name} spaces in ${townName!.trim()}'
-        : CreativeSpacesConstants.exploreSubCategoryLabel.replaceAll('{name}', subCategory.name);
+    final intro = isDisabled
+        ? CreativeSpacesConstants.noSpacesSubCategoryLabel
+        : 'Explore spaces in this creative style';
 
     return OutlinedButton(
       onPressed: isDisabled ? null : onTap,
@@ -34,15 +32,13 @@ class CreativeSubCategoryCard extends StatelessWidget {
         side: BorderSide(
           color: isDisabled
               ? colorScheme.outline.withValues(alpha: 0.2)
-              : CreativeSpacesConstants.creativeSecondary.withValues(alpha: 0.45),
+              : colorScheme.primary.withValues(alpha: 0.26),
           width: 1.2,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: isDisabled
             ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
-            : CreativeSpacesConstants.creativeTint.withValues(alpha: 0.4),
+            : colorScheme.surfaceContainerLow,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,12 +49,12 @@ class CreativeSubCategoryCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: isDisabled
                   ? colorScheme.surfaceContainerHighest
-                  : CreativeSpacesConstants.creativeSecondary.withValues(alpha: 0.18),
+                  : colorScheme.secondaryContainer.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isDisabled
                     ? colorScheme.outline.withValues(alpha: 0.25)
-                    : CreativeSpacesConstants.creativeSecondary.withValues(alpha: 0.25),
+                    : colorScheme.primary.withValues(alpha: 0.16),
               ),
             ),
             child: Icon(
@@ -87,23 +83,24 @@ class CreativeSubCategoryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  isDisabled
-                      ? CreativeSpacesConstants.noSpacesSubCategoryLabel
-                      : '${subCategory.spaceCount} spaces',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+                  '${subCategory.spaceCount} spaces',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: isDisabled
+                        ? colorScheme.onSurfaceVariant
+                        : CreativeSpacesConstants.creativeSecondary,
+                    fontWeight: FontWeight.w700,
                   ),
                   maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 5),
                 Text(
                   intro,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
+                    height: 1.3,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -120,4 +117,3 @@ class CreativeSubCategoryCard extends StatelessWidget {
     );
   }
 }
-

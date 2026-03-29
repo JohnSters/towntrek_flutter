@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
 import 'creative_spaces_list_page.dart';
-import 'creative_spaces_category_page.dart';
 import 'widgets/creative_sub_category_card.dart';
 
 class CreativeSpacesSubCategoryPage extends StatelessWidget {
@@ -26,20 +25,11 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
         child: Column(
           children: [
             _buildHeader(context),
-            Expanded(
-              child: _buildBody(context),
-            ),
+            Expanded(child: _buildBody(context)),
             const BackNavigationFooter(),
           ],
         ),
       ),
-    );
-  }
-
-  void _navigateToCategoryFlow(BuildContext context) {
-    CreativeSpacesNavigation.resetToCategoryPage(
-      context,
-      pageBuilder: (_) => CreativeSpacesCategoryPage(town: town),
     );
   }
 
@@ -50,7 +40,10 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
     return Column(
       children: [
         PageHeader(
-          title: CreativeSpacesConstants.categoryStylesTemplate.replaceAll('{name}', category.name),
+          title: CreativeSpacesConstants.categoryStylesTemplate.replaceAll(
+            '{name}',
+            category.name,
+          ),
           subtitle: CreativeSpacesConstants.subCategoryHeaderSubtitleTemplate
               .replaceAll('{category}', category.name)
               .replaceAll('{town}', town.name),
@@ -67,17 +60,10 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
           ),
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
-                CreativeSpacesConstants.creativeTint.withValues(alpha: 0.55),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.2),
+              color: colorScheme.outline.withValues(alpha: 0.16),
             ),
           ),
           child: Column(
@@ -89,41 +75,30 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
                 children: [
                   _Pill(
                     icon: Icons.style,
-                  label: CreativeSpacesConstants.resultsForLabel
-                      .replaceAll('{count}', category.spaceCount.toString())
-                      .replaceAll('{context}', category.name),
+                    label: CreativeSpacesConstants.resultsForLabel
+                        .replaceAll('{count}', category.spaceCount.toString())
+                        .replaceAll('{context}', category.name),
                   ),
-                  OutlinedButton.icon(
+                  FilledButton.tonalIcon(
                     icon: const Icon(Icons.apps_rounded, size: 16),
                     label: const Text(CreativeSpacesConstants.viewAllLabel),
                     onPressed: () => _openList(context, category, null),
-                    style: OutlinedButton.styleFrom(
+                    style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 0,
                       ),
                       minimumSize: const Size.fromHeight(30),
-                      backgroundColor: colorScheme.surface.withValues(alpha: 0.6),
-                      side: BorderSide(
-                        color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.35),
-                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: CreativeSpacesConstants.contextStripActionSpacing),
-              TextButton.icon(
-                onPressed: () => _navigateToCategoryFlow(context),
-                icon: const Icon(Icons.grid_view_rounded, size: 16),
-                label: const Text(CreativeSpacesConstants.backToCategoriesLabel),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                  minimumSize: const Size.fromHeight(0),
-                  textStyle: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  foregroundColor: CreativeSpacesConstants.creativePrimary,
-                  visualDensity: VisualDensity.compact,
+              const SizedBox(height: 8),
+              Text(
+                'Pick a creative style to see the spaces that match it.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.3,
                 ),
               ),
             ],
@@ -149,14 +124,13 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: category.subCategories.length,
-                separatorBuilder: (_, _) =>
+        separatorBuilder: (_, _) =>
             const SizedBox(height: CreativeSpacesConstants.cardSpacing),
         itemBuilder: (context, index) {
           final subCategory = category.subCategories[index];
           return CreativeSubCategoryCard(
             subCategory: subCategory,
             countsAvailable: countsAvailable,
-            townName: town.name,
             onTap: () => _openList(context, category, subCategory),
           );
         },
@@ -183,18 +157,18 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
             Text(
               CreativeSpacesConstants.noSubCategoriesFound,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
-                  ),
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
             Text(
               CreativeSpacesConstants.noSubCategoryFallbackMessage,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    height: 1.2,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.2,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -203,7 +177,10 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
               icon: const Icon(Icons.view_list_rounded),
               label: Text(
                 CreativeSpacesConstants.allInContextLabelTemplate
-                    .replaceAll('{label}', CreativeSpacesConstants.allSpacesLabel)
+                    .replaceAll(
+                      '{label}',
+                      CreativeSpacesConstants.allSpacesLabel,
+                    )
                     .replaceAll('{context}', category.name),
               ),
             ),
@@ -233,10 +210,7 @@ class _Pill extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _Pill({
-    required this.icon,
-    required this.label,
-  });
+  const _Pill({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -260,10 +234,10 @@ class _Pill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
-                  height: 1.2,
-                ),
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface,
+              height: 1.2,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -272,4 +246,3 @@ class _Pill extends StatelessWidget {
     );
   }
 }
-

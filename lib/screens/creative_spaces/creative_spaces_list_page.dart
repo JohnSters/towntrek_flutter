@@ -6,7 +6,6 @@ import '../../models/models.dart';
 import 'creative_spaces_state.dart';
 import 'creative_spaces_view_model.dart';
 import 'widgets/creative_space_card.dart';
-import 'creative_spaces_category_page.dart';
 
 class CreativeSpacesListPage extends StatelessWidget {
   final TownDto town;
@@ -51,10 +50,12 @@ class _CreativeSpacesListPageContent extends StatefulWidget {
   });
 
   @override
-  State<_CreativeSpacesListPageContent> createState() => _CreativeSpacesListPageContentState();
+  State<_CreativeSpacesListPageContent> createState() =>
+      _CreativeSpacesListPageContentState();
 }
 
-class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageContent> {
+class _CreativeSpacesListPageContentState
+    extends State<_CreativeSpacesListPageContent> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -73,34 +74,33 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
   }
 
   String get _listTitle {
-    final subCategoryName = widget.subCategory?.name;
-    if (subCategoryName == null || subCategoryName.trim().isEmpty) {
-      return CreativeSpacesConstants.listHeaderTitleTemplate.replaceAll(
-        '{name}',
-        widget.category.name,
-      );
-    }
+    final selectedName = widget.subCategory?.name ?? widget.category.name;
     return CreativeSpacesConstants.listHeaderTitleTemplate.replaceAll(
       '{name}',
-      widget.subCategory!.name,
+      selectedName,
     );
   }
 
   String get _listSubtitle {
     if (widget.subCategory == null) {
-      return CreativeSpacesConstants.listSubtitleCategoryTemplate
-          .replaceAll('{category}', widget.category.name)
-          .replaceAll('{town}', widget.town.name);
+      return CreativeSpacesConstants.listSubtitleCategoryTemplate.replaceAll(
+        '{town}',
+        widget.town.name,
+      );
     }
     return CreativeSpacesConstants.listSubtitleSubCategoryTemplate
-        .replaceAll('{subCategory}', widget.subCategory!.name)
-        .replaceAll('{category}', widget.category.name);
+        .replaceAll('{category}', widget.category.name)
+        .replaceAll('{town}', widget.town.name);
   }
 
-  void _navigateToCategoryFlow(BuildContext context) {
-    CreativeSpacesNavigation.resetToCategoryPage(
-      context,
-      pageBuilder: (_) => CreativeSpacesCategoryPage(town: widget.town),
+  String _resultsSummaryText(int totalItemCount) {
+    if (totalItemCount == 1) {
+      return '1 creative space';
+    }
+
+    return CreativeSpacesConstants.resultCountTemplate.replaceAll(
+      '{count}',
+      totalItemCount.toString(),
     );
   }
 
@@ -127,10 +127,15 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
                   }
 
                   if (state is CreativeSpacesError) {
-                    return _buildErrorState(context, viewModel: viewModel, error: state.error);
+                    return _buildErrorState(
+                      context,
+                      viewModel: viewModel,
+                      error: state.error,
+                    );
                   }
 
-                  if (state is! CreativeSpacesSuccess && state is! CreativeSpacesLoadingMore) {
+                  if (state is! CreativeSpacesSuccess &&
+                      state is! CreativeSpacesLoadingMore) {
                     return const SizedBox.shrink();
                   }
 
@@ -142,18 +147,29 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
                     onRefresh: viewModel.refresh,
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: CreativeSpacesConstants.pagePadding,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
                       children: [
                         _buildSearchBar(viewModel),
-                        const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-                        _buildContextStrip(context, isLoadingMore, state.totalItemCount),
-                        const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
+                        const SizedBox(
+                          height: CreativeSpacesConstants.sectionSpacing,
+                        ),
+                        _buildResultsSummaryCard(
+                          context,
+                          isLoadingMore,
+                          state.totalItemCount,
+                        ),
+                        const SizedBox(
+                          height: CreativeSpacesConstants.sectionSpacing,
+                        ),
                         spaces.isEmpty
                             ? _buildEmptyState(context, viewModel)
-                            : _buildSpacesList(context, spaces, hasNextPage, isLoadingMore, viewModel),
+                            : _buildSpacesList(
+                                context,
+                                spaces,
+                                hasNextPage,
+                                isLoadingMore,
+                                viewModel,
+                              ),
                       ],
                     ),
                   );
@@ -178,14 +194,16 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
             const SizedBox(height: 12),
             Text(
               CreativeSpacesConstants.loadingSpacesText,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               CreativeSpacesConstants.loadingSubtitleText,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -201,12 +219,16 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
           controller: _searchController,
           onSubmitted: (_) => _submitSearch(viewModel),
           textInputAction: TextInputAction.search,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.2,
-              ),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.2),
           decoration: InputDecoration(
             hintText: CreativeSpacesConstants.searchHint,
-            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             suffixIcon: value.text.isEmpty
                 ? null
                 : IconButton(
@@ -222,12 +244,28 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
               height: 1.2,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(CreativeSpacesConstants.searchBarRadius),
+              borderRadius: BorderRadius.circular(
+                CreativeSpacesConstants.searchBarRadius,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(CreativeSpacesConstants.searchBarRadius),
+              borderRadius: BorderRadius.circular(
+                CreativeSpacesConstants.searchBarRadius,
+              ),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.35),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.16),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(
+                CreativeSpacesConstants.searchBarRadius,
+              ),
+              borderSide: BorderSide(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.45),
               ),
             ),
           ),
@@ -236,146 +274,136 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
     );
   }
 
-  Widget _buildContextStrip(BuildContext context, bool isLoadingMore, int totalItemCount) {
-    final selectedCategoryName = widget.category.name;
-    final selectedSubCategoryName = widget.subCategory?.name;
-    final hasSearch = _searchController.text.trim().isNotEmpty;
-    final currentSearch = hasSearch ? _searchController.text.trim() : null;
-    final resultSummary = totalItemCount > 0
-        ? CreativeSpacesConstants.resultCountTemplate.replaceAll(
-            '{count}',
-            totalItemCount.toString(),
-          )
-        : CreativeSpacesConstants.numericValueTemplate
-            .replaceAll('{count}', '0')
-            .replaceAll('{label}', CreativeSpacesConstants.resultsLabel);
-    final contextChipLabels = [
-      resultSummary,
-      CreativeSpacesConstants.contextChipValueTemplate
-          .replaceAll('{label}', CreativeSpacesConstants.resultsForCategory)
-          .replaceAll('{value}', selectedCategoryName),
-      if (selectedSubCategoryName != null && selectedSubCategoryName.trim().isNotEmpty)
-        CreativeSpacesConstants.contextChipValueTemplate
-            .replaceAll('{label}', CreativeSpacesConstants.resultsForSubCategory)
-            .replaceAll('{value}', selectedSubCategoryName.trim()),
-      if (currentSearch != null)
-        CreativeSpacesConstants.contextChipValueTemplate
-            .replaceAll('{label}', CreativeSpacesConstants.searchChipPrefix)
-            .replaceAll('{value}', currentSearch),
+  Widget _buildResultsSummaryCard(
+    BuildContext context,
+    bool isLoadingMore,
+    int totalItemCount,
+  ) {
+    final currentSearch = _searchController.text.trim();
+    final detailChips = [
+      if (widget.subCategory != null)
+        _SummaryChipData(
+          icon: Icons.category_rounded,
+          label: widget.category.name,
+        ),
+      if (currentSearch.isNotEmpty)
+        _SummaryChipData(
+          icon: Icons.search_rounded,
+          label: '${CreativeSpacesConstants.searchChipPrefix}: $currentSearch',
+        ),
     ];
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 240),
+      duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       alignment: Alignment.topLeft,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              CreativeSpacesConstants.creativeTint.withValues(alpha: 0.95),
-              CreativeSpacesConstants.creativeHighlight.withValues(alpha: 0.65),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.16),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.palette_outlined,
-                  size: 16,
-                  color: CreativeSpacesConstants.creativePrimary,
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: CreativeSpacesConstants.creativeTint,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.palette_outlined,
+                    size: 18,
+                    color: CreativeSpacesConstants.creativePrimary,
+                  ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    _listSubtitle,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          height: 1.2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _resultsSummaryText(totalItemCount),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        currentSearch.isEmpty
+                            ? 'Browse the spaces that match this selection.'
+                            : 'Showing spaces that match your current search.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (isLoadingMore)
                   const SizedBox(
-                    height: 14,
-                    width: 14,
+                    height: 16,
+                    width: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
               ],
             ),
-            const SizedBox(height: 8),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.08),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: Wrap(
-                key: ValueKey(contextChipLabels.join(CreativeSpacesConstants.contextChipSeparator)),
+            if (detailChips.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
                 spacing: 8,
-                runSpacing: CreativeSpacesConstants.contextStripActionSpacing,
-                children: contextChipLabels
-                    .map((chipLabel) => _buildContextChip(context, chipLabel))
+                runSpacing: 8,
+                children: detailChips
+                    .map((chip) => _buildContextChip(context, chip))
                     .toList(),
               ),
-            ),
-            const SizedBox(height: CreativeSpacesConstants.contextStripActionSpacing),
-            TextButton.icon(
-              onPressed: () => _navigateToCategoryFlow(context),
-              icon: const Icon(Icons.grid_view_rounded, size: 16),
-              label: Text(CreativeSpacesConstants.backToCategoriesLabel),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                minimumSize: const Size.fromHeight(0),
-                textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                foregroundColor: CreativeSpacesConstants.creativePrimary,
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContextChip(BuildContext context, String label) {
+  Widget _buildContextChip(BuildContext context, _SummaryChipData chip) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.16),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            chip.icon,
+            size: 14,
+            color: CreativeSpacesConstants.creativePrimary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            chip.label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
               height: 1.2,
             ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -391,7 +419,8 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: spaces.length + (hasNextPage ? 1 : 0),
-      separatorBuilder: (_, _) => const SizedBox(height: CreativeSpacesConstants.cardSpacing),
+      separatorBuilder: (_, _) =>
+          const SizedBox(height: CreativeSpacesConstants.cardSpacing),
       itemBuilder: (context, index) {
         if (index == spaces.length) {
           if (isLoadingMore) {
@@ -410,7 +439,9 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(44),
                 side: BorderSide(
-                  color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.35),
+                  color: CreativeSpacesConstants.creativePrimary.withValues(
+                    alpha: 0.35,
+                  ),
                 ),
               ),
             ),
@@ -422,10 +453,14 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, CreativeSpacesViewModel viewModel) {
+  Widget _buildEmptyState(
+    BuildContext context,
+    CreativeSpacesViewModel viewModel,
+  ) {
     final hasSearch = (_searchController.text.trim().isNotEmpty);
-    final emptyMessage =
-        hasSearch ? CreativeSpacesConstants.noSpacesWithFiltersSubtitle : CreativeSpacesConstants.noSpacesForSelection;
+    final emptyMessage = hasSearch
+        ? CreativeSpacesConstants.noSpacesWithFiltersSubtitle
+        : CreativeSpacesConstants.noSpacesForSelection;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 44),
@@ -440,17 +475,17 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
           Text(
             CreativeSpacesConstants.noSpacesTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                ),
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             emptyMessage,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.2,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.2,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -458,7 +493,7 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
             TextButton.icon(
               onPressed: () => _clearSearch(viewModel),
               icon: const Icon(Icons.refresh_rounded),
-                label: const Text(CreativeSpacesConstants.clearSearchLabel),
+              label: const Text(CreativeSpacesConstants.clearSearchLabel),
             ),
         ],
       ),
@@ -489,3 +524,9 @@ class _CreativeSpacesListPageContentState extends State<_CreativeSpacesListPageC
   }
 }
 
+class _SummaryChipData {
+  final IconData icon;
+  final String label;
+
+  const _SummaryChipData({required this.icon, required this.label});
+}

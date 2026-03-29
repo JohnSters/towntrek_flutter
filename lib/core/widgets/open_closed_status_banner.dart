@@ -19,6 +19,17 @@ class OpenClosedStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final normalizedSubtitle = subtitle?.trim();
+    final fallbackHeadline = isOpen ? openText : closedText;
+    final effectiveHeadline = _buildHeadline(
+      normalizedSubtitle,
+      fallbackHeadline,
+    );
+    final effectiveSubtitle = _buildSubtitle(
+      normalizedSubtitle,
+      effectiveHeadline,
+      fallbackHeadline,
+    );
 
     final bg = isOpen
         ? const Color(0xFFE8F5E9) // light green
@@ -28,49 +39,50 @@ class OpenClosedStatusBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       decoration: BoxDecoration(
         color: bg,
-        border: Border(
-          bottom: BorderSide(
-            color: (isOpen ? colorScheme.primary : colorScheme.error).withValues(alpha: 0.12),
-            width: 1,
+        border: Border.all(
+          color: (isOpen ? colorScheme.primary : colorScheme.error).withValues(
+            alpha: 0.12,
           ),
+          width: 1,
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          Icon(Icons.access_time_filled, size: 18, color: accent),
-          const SizedBox(width: 8),
-          Text(
-            isOpen ? openText : closedText,
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: text,
-              letterSpacing: 0.4,
-            ),
-          ),
-          if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-            const SizedBox(width: 8),
-            Container(
-              width: 4,
-              height: 4,
-              decoration: BoxDecoration(
-                color: text.withValues(alpha: 0.35),
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                subtitle!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: accent,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.access_time_filled, size: 18, color: accent),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  effectiveHeadline,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: text,
+                    letterSpacing: 0.2,
+                  ),
                 ),
+              ),
+            ],
+          ),
+          if (effectiveSubtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              effectiveSubtitle,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: accent,
+                height: 1.2,
               ),
             ),
           ],
@@ -78,5 +90,40 @@ class OpenClosedStatusBanner extends StatelessWidget {
       ),
     );
   }
-}
 
+  String _buildHeadline(String? normalizedSubtitle, String fallbackHeadline) {
+    if (normalizedSubtitle == null || normalizedSubtitle.isEmpty) {
+      return fallbackHeadline;
+    }
+
+    final lowerSubtitle = normalizedSubtitle.toLowerCase();
+    final lowerHeadline = fallbackHeadline.toLowerCase();
+    if (lowerSubtitle == lowerHeadline ||
+        lowerSubtitle.startsWith(lowerHeadline) ||
+        lowerSubtitle.contains('currently $lowerHeadline')) {
+      return normalizedSubtitle;
+    }
+
+    return fallbackHeadline;
+  }
+
+  String? _buildSubtitle(
+    String? normalizedSubtitle,
+    String effectiveHeadline,
+    String fallbackHeadline,
+  ) {
+    if (normalizedSubtitle == null || normalizedSubtitle.isEmpty) {
+      return null;
+    }
+
+    if (effectiveHeadline == normalizedSubtitle) {
+      return null;
+    }
+
+    if (normalizedSubtitle.toLowerCase() == fallbackHeadline.toLowerCase()) {
+      return null;
+    }
+
+    return normalizedSubtitle;
+  }
+}

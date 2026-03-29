@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
+import '../constants/creative_spaces_constants.dart';
 
 /// Enum to define different header types with distinct color schemes
-enum HeaderType {
-  business,
-  service,
-  event,
-  creative,
-  default_,
-}
+enum HeaderType { business, service, event, creative, default_ }
 
 /// Reusable page header component with proper mobile design
 /// Features background, centered title, and proper spacing for longer titles
@@ -44,10 +39,7 @@ class PageHeader extends StatelessWidget {
         return LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.blue.shade700,
-            Colors.blue.shade900,
-          ],
+          colors: [Colors.blue.shade700, Colors.blue.shade900],
         );
 
       case HeaderType.service:
@@ -55,10 +47,7 @@ class PageHeader extends StatelessWidget {
         return LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.green.shade700,
-            Colors.green.shade900,
-          ],
+          colors: [Colors.green.shade700, Colors.green.shade900],
         );
 
       case HeaderType.event:
@@ -66,20 +55,17 @@ class PageHeader extends StatelessWidget {
         return LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.orange.shade700,
-            Colors.orange.shade900,
-          ],
+          colors: [Colors.orange.shade700, Colors.orange.shade900],
         );
 
       case HeaderType.creative:
-        // Creative screens: Warm artistic brown gradient
+        // Creative screens: vibrant artistic gradient
         return LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF8D6E63),
-            const Color(0xFF5D4037),
+            CreativeSpacesConstants.creativePrimary,
+            CreativeSpacesConstants.creativeSecondary,
           ],
         );
 
@@ -137,25 +123,24 @@ class PageHeader extends StatelessWidget {
             children: [
               // Leading widget (optional)
               if (leading != null) ...[
-                Row(
-                  children: [
-                    leading!,
-                    const Spacer(),
-                  ],
-                ),
+                Row(children: [leading!, const Spacer()]),
                 const SizedBox(height: 8),
               ],
 
               // Title and Subtitle Row
               Row(
-                mainAxisAlignment: centerTitle ? MainAxisAlignment.center : MainAxisAlignment.start,
+                mainAxisAlignment: centerTitle
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: centerTitle ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                      crossAxisAlignment: centerTitle
+                          ? CrossAxisAlignment.center
+                          : CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Title - No wrapping, single line with ellipsis
+                        // Allow longer entity names without forcing early truncation.
                         Text(
                           title,
                           style: theme.textTheme.headlineMedium?.copyWith(
@@ -163,9 +148,11 @@ class PageHeader extends StatelessWidget {
                             color: Colors.white,
                             height: 1.2,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          textAlign: centerTitle ? TextAlign.center : TextAlign.left,
+                          textAlign: centerTitle
+                              ? TextAlign.center
+                              : TextAlign.left,
                         ),
 
                         // Subtitle (optional)
@@ -179,7 +166,9 @@ class PageHeader extends StatelessWidget {
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            textAlign: centerTitle ? TextAlign.center : TextAlign.left,
+                            textAlign: centerTitle
+                                ? TextAlign.center
+                                : TextAlign.left,
                           ),
                         ],
                       ],
@@ -280,8 +269,7 @@ class BusinessHeader extends StatelessWidget {
           ),
 
           // Status indicator bar (Full width)
-          if (statusIndicator != null)
-            statusIndicator!,
+          if (statusIndicator != null) statusIndicator!,
         ],
       ),
     );
