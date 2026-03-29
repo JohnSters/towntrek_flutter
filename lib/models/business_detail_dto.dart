@@ -33,6 +33,10 @@ class BusinessDetailDto {
   final bool? isOpenNow;
   final String? openNowText;
 
+  /// Equipment rentals category: advertised rates (ZAR), when returned by the API.
+  final double? hourlyRate;
+  final double? dailyRate;
+
   final List<OperatingHourDto> operatingHours;
   final List<SpecialOperatingHourDto> specialOperatingHours;
   final List<BusinessServiceDto> services;
@@ -64,6 +68,8 @@ class BusinessDetailDto {
     required this.isVerified,
     this.isOpenNow,
     this.openNowText,
+    this.hourlyRate,
+    this.dailyRate,
     required this.operatingHours,
     required this.specialOperatingHours,
     required this.services,
@@ -98,6 +104,8 @@ class BusinessDetailDto {
       isVerified: json['isVerified'] as bool? ?? false,
       isOpenNow: json['isOpenNow'] as bool?,
       openNowText: json['openNowText'] as String?,
+      hourlyRate: json['hourlyRate'] != null ? (json['hourlyRate'] as num).toDouble() : null,
+      dailyRate: json['dailyRate'] != null ? (json['dailyRate'] as num).toDouble() : null,
       operatingHours: (json['operatingHours'] as List<dynamic>?)
           ?.map((e) => OperatingHourDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
@@ -180,6 +188,8 @@ class BusinessDetailDto {
     bool? isVerified,
     bool? isOpenNow,
     String? openNowText,
+    double? hourlyRate,
+    double? dailyRate,
     List<OperatingHourDto>? operatingHours,
     List<SpecialOperatingHourDto>? specialOperatingHours,
     List<BusinessServiceDto>? services,
@@ -211,6 +221,8 @@ class BusinessDetailDto {
       isVerified: isVerified ?? this.isVerified,
       isOpenNow: isOpenNow ?? this.isOpenNow,
       openNowText: openNowText ?? this.openNowText,
+      hourlyRate: hourlyRate ?? this.hourlyRate,
+      dailyRate: dailyRate ?? this.dailyRate,
       operatingHours: operatingHours ?? this.operatingHours,
       specialOperatingHours: specialOperatingHours ?? this.specialOperatingHours,
       services: services ?? this.services,

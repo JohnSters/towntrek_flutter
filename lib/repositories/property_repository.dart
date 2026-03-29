@@ -7,6 +7,8 @@ abstract class PropertyRepository {
     int page = 1,
     int pageSize = 12,
   });
+
+  Future<PropertyListingDetailDto> getDetail(int id);
 }
 
 class PropertyRepositoryImpl implements PropertyRepository {
@@ -21,5 +23,10 @@ class PropertyRepositoryImpl implements PropertyRepository {
     int pageSize = 12,
   }) {
     return _apiService.getList(townId: townId, page: page, pageSize: pageSize);
+  }
+
+  @override
+  Future<PropertyListingDetailDto> getDetail(int id) {
+    return _apiService.getDetail(id);
   }
 }

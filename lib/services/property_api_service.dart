@@ -25,4 +25,11 @@ class PropertyApiService {
 
     return PropertyListingListResponse.fromJson(response.data!);
   }
+
+  Future<PropertyListingDetailDto> getDetail(int id) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiConfig.propertyDetailUrl(id),
+    );
+    return PropertyListingDetailDto.fromJson(response.data!);
+  }
 }

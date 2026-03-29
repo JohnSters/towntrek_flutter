@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/business_category_constants.dart';
-import '../../../models/models.dart';
 import '../../../core/config/business_category_config.dart';
+import '../../../core/utils/business_category_copy.dart';
+import '../../../models/models.dart';
 
 /// Card widget for displaying business categories using Material 3 OutlinedButton pattern
 /// Matches the design of ServiceCategoryCard for consistency
@@ -72,7 +72,10 @@ class BusinessCategoryCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  _getSubtitleText(),
+                  BusinessCategoryCopy.categoryGridSubtitle(
+                    category.businessCount,
+                    category.key,
+                  ),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -92,13 +95,5 @@ class BusinessCategoryCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _getSubtitleText() {
-    if (category.businessCount == 0) {
-      return BusinessCategoryConstants.noBusinessesText;
-    }
-
-    return '${category.businessCount} ${category.businessCount == 1 ? 'business' : 'businesses'}';
   }
 }

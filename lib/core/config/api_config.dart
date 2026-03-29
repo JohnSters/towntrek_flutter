@@ -378,6 +378,14 @@ class ApiConfig {
     return buildUrl(propertiesEndpoint, queryParams);
   }
 
+  /// Builds public property listing detail URL
+  static String propertyDetailUrl(
+    int propertyListingId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$propertiesEndpoint/$propertyListingId', queryParams);
+  }
+
   /// Get the appropriate base URL for the current environment
   static String getBaseUrlForEnvironment([AppEnvironment? environment]) {
     if (environment != null) {

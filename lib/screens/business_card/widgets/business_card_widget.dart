@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/town_feature_constants.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../models/business_dto.dart';
 
@@ -7,11 +8,24 @@ class BusinessCardWidget extends StatelessWidget {
   final BusinessDto business;
   final VoidCallback? onTap;
 
+  /// When this matches [TownFeatureConstants.equipmentRentalsCategoryKey], the card uses
+  /// equipment styling (same layout as other businesses).
+  final String? categoryKey;
+
   const BusinessCardWidget({
     super.key,
     required this.business,
     this.onTap,
+    this.categoryKey,
   });
+
+  bool get _isEquipmentRentalsCategory {
+    final k = categoryKey?.trim().toLowerCase();
+    return k == TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase();
+  }
+
+  IconData get _fallbackIcon =>
+      _isEquipmentRentalsCategory ? Icons.construction_rounded : Icons.business_rounded;
 
   @override
   Widget build(BuildContext context) {
@@ -67,14 +81,14 @@ class BusinessCardWidget extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(
-                              Icons.business_rounded,
+                              _fallbackIcon,
                               size: 28,
                               color: colorScheme.primary.withValues(alpha: 0.6),
                             );
                           },
                         )
                       : Icon(
-                          Icons.business_rounded,
+                          _fallbackIcon,
                           size: 28,
                           color: colorScheme.primary.withValues(alpha: 0.6),
                         ),
@@ -117,7 +131,9 @@ class BusinessCardWidget extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: onTap,
               icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-              label: const Text('View Details'),
+              label: Text(
+                _isEquipmentRentalsCategory ? 'View rental details' : 'View Details',
+              ),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(

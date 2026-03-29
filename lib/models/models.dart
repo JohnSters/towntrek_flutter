@@ -32,4 +32,6 @@ export 'creative_space_operating_hour_dto.dart';
 export 'creative_space_list_response.dart';
 export 'landing_stats_dto.dart';
 export 'property_listing_card_dto.dart';
+export 'property_listing_detail_dto.dart';
+export 'property_listing_image_dto.dart';
 export 'property_listing_list_response.dart';

@@ -204,6 +204,15 @@ class _BusinessDetailsBody extends StatelessWidget {
           icon: Icons.schedule,
           child: _HoursGrid(operatingHours: business.operatingHours),
         ),
+        if (business.category.toLowerCase() ==
+            TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase()) ...[
+          const SizedBox(height: 12),
+          _SectionShell(
+            title: 'Hire rates',
+            icon: Icons.payments_outlined,
+            child: _EquipmentHireRatesContent(business: business),
+          ),
+        ],
         const SizedBox(height: 12),
         _SectionShell(
           title: 'Quick Actions',
@@ -326,6 +335,50 @@ class _BusinessDetailsBody extends StatelessWidget {
             label: const Text('View full details and reviews on web'),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _EquipmentHireRatesContent extends StatelessWidget {
+  final BusinessDetailDto business;
+
+  const _EquipmentHireRatesContent({required this.business});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final h = business.hourlyRate;
+    final d = business.dailyRate;
+    final hasHourly = h != null && h > 0;
+    final hasDaily = d != null && d > 0;
+
+    if (!hasHourly && !hasDaily) {
+      return Text(
+        'Ask the business for current hire rates.',
+        style: theme.textTheme.bodyMedium?.copyWith(
+          height: 1.35,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasHourly)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              'Hourly: R${h.toStringAsFixed(2)} / hour',
+              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+        if (hasDaily)
+          Text(
+            'Daily (full day): R${d.toStringAsFixed(2)} / day',
+            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
       ],
     );
   }

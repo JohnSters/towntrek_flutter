@@ -4,8 +4,14 @@ import 'package:flutter/material.dart';
 class _ViewerConstants {
   static const double minScale = 0.8;
   static const double maxScale = 4.0;
-  static const double closeIconSize = 28.0;
+  static const double closeIconSize = 26.0;
   static const double closeButtonPadding = 8.0;
+  static const double closeButtonDiameter = 44.0;
+  static const double closeButtonBackgroundOpacity = 0.62;
+  static const double closeButtonBorderOpacity = 0.55;
+  static const double closeButtonBorderWidth = 1.5;
+  static const double closeButtonShadowOpacity = 0.45;
+  static const double closeButtonShadowBlur = 10.0;
   static const double indicatorFontSize = 16.0;
   static const double indicatorBottomPadding = 32.0;
   static const double indicatorBackgroundOpacity = 0.55;
@@ -18,6 +24,66 @@ class _ViewerConstants {
   static const double dragOpacityDivisor = 400.0;
   static const double dragOpacityMin = 0.3;
   static const Duration snapBackDuration = Duration(milliseconds: 200);
+}
+
+/// Circular close control: dark fill, light rim, and shadow so it stays visible on
+/// very light or very dark image areas (used by all full-screen gallery flows).
+class FullScreenImageCloseControl extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const FullScreenImageCloseControl({
+    super.key,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Close',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(
+                alpha: _ViewerConstants.closeButtonBackgroundOpacity,
+              ),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(
+                  alpha: _ViewerConstants.closeButtonBorderOpacity,
+                ),
+                width: _ViewerConstants.closeButtonBorderWidth,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: _ViewerConstants.closeButtonShadowOpacity,
+                  ),
+                  blurRadius: _ViewerConstants.closeButtonShadowBlur,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: _ViewerConstants.closeButtonDiameter,
+              height: _ViewerConstants.closeButtonDiameter,
+              child: Center(
+                child: Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: _ViewerConstants.closeIconSize,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// A full-screen, production-quality image viewer.
@@ -136,13 +202,8 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer>
                   padding: const EdgeInsets.all(
                     _ViewerConstants.closeButtonPadding,
                   ),
-                  child: IconButton(
+                  child: FullScreenImageCloseControl(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: _ViewerConstants.closeIconSize,
-                    ),
                   ),
                 ),
               ),

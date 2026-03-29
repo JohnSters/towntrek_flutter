@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
-import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
+import '../property_details/property_details.dart';
 import 'property_list_state.dart';
 import 'property_list_view_model.dart';
+import 'widgets/widgets.dart';
 
 class PropertyListScreen extends StatelessWidget {
   final TownDto town;
 
   const PropertyListScreen({super.key, required this.town});
 
-  static const double _headerHeight = 100;
+  static const double _headerHeight = 140;
   static const double _horizontalPadding = 16;
 
   @override
@@ -34,6 +34,18 @@ class _PropertyListContent extends StatelessWidget {
 
   const _PropertyListContent({required this.town});
 
+  void _openDetails(BuildContext context, PropertyListingCardDto listing) {
+    final fallback = listing.address.trim().isNotEmpty ? listing.address : listing.ownerName;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PropertyDetailsPage(
+          listingId: listing.id,
+          titleFallback: fallback,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<PropertyListViewModel>();
@@ -47,7 +59,7 @@ class _PropertyListContent extends StatelessWidget {
               title: 'Properties',
               subtitle: '${town.name} • ${town.province}',
               height: PropertyListScreen._headerHeight,
-              headerType: HeaderType.default_,
+              headerType: HeaderType.business,
             ),
             Expanded(child: _buildBody(context, viewModel)),
             const BackNavigationFooter(),
@@ -62,10 +74,18 @@ class _PropertyListContent extends StatelessWidget {
       PropertyListLoading() => const Center(child: CircularProgressIndicator()),
       PropertyListSuccess(
         items: final items,
+        totalCount: final totalCount,
         hasNextPage: final hasNextPage,
         isLoadingMore: final isLoadingMore,
       ) =>
-        _buildList(context, viewModel, items, hasNextPage, isLoadingMore),
+        _buildList(
+          context,
+          viewModel,
+          items,
+          totalCount,
+          hasNextPage,
+          isLoadingMore,
+        ),
       PropertyListError(error: final error) => _buildError(context, viewModel, error),
     };
   }
@@ -96,6 +116,7 @@ class _PropertyListContent extends StatelessWidget {
     BuildContext context,
     PropertyListViewModel viewModel,
     List<PropertyListingCardDto> items,
+    int totalCount,
     bool hasNextPage,
     bool isLoadingMore,
   ) {
@@ -114,206 +135,93 @@ class _PropertyListContent extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(PropertyListScreen._horizontalPadding),
-      itemCount: items.length + (hasNextPage ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == items.length) {
-          if (!isLoadingMore) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              viewModel.loadMore();
-            });
-          }
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        return Padding(
-          padding: EdgeInsets.only(bottom: index < items.length - 1 || hasNextPage ? 12 : 0),
-          child: _PropertyListingCard(listing: items[index]),
-        );
-      },
+    return Column(
+      children: [
+        _ListInfoBar(
+          icon: Icons.home_work_rounded,
+          text:
+              '$totalCount listing${totalCount == 1 ? '' : 's'} · Properties in ${town.name}',
+          backgroundColor: const Color(0xFFE9F7EF),
+          textColor: const Color(0xFF1D7A38),
+          borderColor: const Color(0xFFBFE5CB),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(PropertyListScreen._horizontalPadding),
+            itemCount: items.length + (hasNextPage ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == items.length) {
+                if (!isLoadingMore) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    viewModel.loadMore();
+                  });
+                }
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index < items.length - 1 || hasNextPage ? 16 : 0,
+                ),
+                child: PropertyListingCardWidget(
+                  listing: items[index],
+                  onTap: () => _openDetails(context, items[index]),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _PropertyListingCard extends StatelessWidget {
-  final PropertyListingCardDto listing;
+class _ListInfoBar extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color borderColor;
 
-  const _PropertyListingCard({required this.listing});
-
-  String get _typeLabel => listing.listingType == 1 ? 'For sale' : 'For rent';
-
-  String _formatPrice() {
-    return NumberFormat.currency(
-      symbol: 'R ',
-      decimalDigits: 0,
-    ).format(listing.price);
-  }
+  const _ListInfoBar({
+    required this.icon,
+    required this.text,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.borderColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final imageUrl = listing.primaryImageUrl != null && listing.primaryImageUrl!.trim().isNotEmpty
-        ? UrlUtils.resolveImageUrl(listing.primaryImageUrl!.trim())
-        : null;
-
-    return Card(
-      elevation: 0,
-      color: colorScheme.primary.withValues(alpha: 0.02),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: colorScheme.primary.withValues(alpha: 0.2),
-          width: 1.2,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildThumb(imageUrl, colorScheme),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              listing.address.trim().isNotEmpty ? listing.address : listing.ownerName,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (listing.isFeatured)
-                            Container(
-                              margin: const EdgeInsets.only(left: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: colorScheme.tertiary.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                'Featured',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.onTertiaryContainer,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _formatPrice(),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          _pill(context, Icons.home_outlined, _typeLabel),
-                          if (listing.townName.trim().isNotEmpty)
-                            _pill(context, Icons.location_on_outlined, listing.townName),
-                        ],
-                      ),
-                      if (listing.summary != null && listing.summary!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          listing.summary!.trim(),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _pill(BuildContext context, IconData icon, String text) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
+        color: backgroundColor,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: borderColor),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                ),
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildThumb(String? imageUrl, ColorScheme colorScheme) {
-    return Container(
-      width: 86,
-      height: 86,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.25),
-          width: 1.2,
-        ),
-      ),
-      child: imageUrl == null
-          ? Icon(
-              Icons.home_work_rounded,
-              size: 32,
-              color: colorScheme.onSurfaceVariant,
-            )
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(11),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                width: 86,
-                height: 86,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.home_work_rounded,
-                    size: 32,
-                    color: colorScheme.onSurfaceVariant,
-                  );
-                },
-              ),
-            ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/url_utils.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../core/constants/event_details_constants.dart';
 
 /// Image preview gallery for events - shows thumbnails that open full-screen viewer
@@ -199,9 +200,13 @@ class _EventFullScreenImageViewerState extends State<EventFullScreenImageViewer>
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 6),
+            child: Center(
+              child: FullScreenImageCloseControl(
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
           ),
         ],
       ),

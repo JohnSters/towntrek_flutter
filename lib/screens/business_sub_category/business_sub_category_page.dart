@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/models.dart';
 import '../../core/core.dart';
+import '../../core/utils/business_category_copy.dart';
+import '../../models/models.dart';
 import 'business_sub_category.dart';
 
 /// Page for displaying business sub-categories for a selected category
@@ -110,8 +111,12 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
           headerType: HeaderType.business,
         ),
         _CategoryInfoBar(
-          icon: Icons.business_center_rounded,
-          text: '${state.category.businessCount} businesses \u2022 ${state.category.name}',
+          icon: BusinessCategoryCopy.infoBarIcon(state.category.key),
+          text: BusinessCategoryCopy.categoryInfoBarLine(
+            count: state.category.businessCount,
+            categoryName: state.category.name,
+            categoryKey: state.category.key,
+          ),
           backgroundColor: const Color(0xFFE9F7EF),
           textColor: const Color(0xFF1D7A38),
           borderColor: const Color(0xFFBFE5CB),

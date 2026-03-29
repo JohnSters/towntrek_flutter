@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
+import '../../core/utils/business_category_copy.dart';
 import '../../models/models.dart';
 import 'business_card_state.dart';
 import 'business_card_view_model.dart';
@@ -150,9 +151,12 @@ class _BusinessCardPageContent extends StatelessWidget {
           headerType: HeaderType.business,
         ),
         _ListInfoBar(
-          icon: Icons.business_center_rounded,
-          text:
-              '${viewModel.subCategory.businessCount} businesses \u2022 ${viewModel.subCategory.name}',
+          icon: BusinessCategoryCopy.infoBarIcon(viewModel.category.key),
+          text: BusinessCategoryCopy.subCategoryInfoBarLine(
+            count: viewModel.subCategory.businessCount,
+            subCategoryName: viewModel.subCategory.name,
+            categoryKey: viewModel.category.key,
+          ),
           backgroundColor: const Color(0xFFE9F7EF),
           textColor: const Color(0xFF1D7A38),
           borderColor: const Color(0xFFBFE5CB),
@@ -191,6 +195,7 @@ class _BusinessCardPageContent extends StatelessWidget {
           final business = state.businesses[index];
           return BusinessCardWidget(
             business: business,
+            categoryKey: viewModel.category.key,
             onTap: () => viewModel.onBusinessTap(context, business),
           );
         },

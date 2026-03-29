@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/business_card_constants.dart';
 import '../../../core/config/business_category_config.dart';
+import '../../../core/constants/business_card_constants.dart';
+import '../../../core/utils/business_category_copy.dart';
 import '../../../models/category_with_count_dto.dart';
 
 /// Widget for displaying empty state when no businesses are found
@@ -36,7 +37,7 @@ class BusinessEmptyView extends StatelessWidget {
           ),
           SizedBox(height: BusinessCardConstants.emptySpacing),
           Text(
-            BusinessCardConstants.noBusinessesFound,
+            BusinessCategoryCopy.emptyCardListTitle(category.key),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: colorScheme.onSurface,
@@ -44,7 +45,7 @@ class BusinessEmptyView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            BusinessCardConstants.noBusinessesMessage,
+            BusinessCategoryCopy.emptyCardListMessage(category.key),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: BusinessCardConstants.highOpacity),
             ),
