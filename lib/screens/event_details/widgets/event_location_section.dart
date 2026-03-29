@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/core.dart';
 import '../../../models/models.dart';
-import 'event_detail_ui.dart';
 
 class EventLocationSection extends StatelessWidget {
   final EventDetailDto event;
@@ -123,7 +122,8 @@ class EventLocationSection extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: EventDetailSectionShell(
+      child: DetailSectionShell(
+        expandTitle: true,
         title: 'Location',
         icon: Icons.place_outlined,
         child: Column(
@@ -152,11 +152,11 @@ class EventLocationSection extends StatelessWidget {
               spacing: 10,
               runSpacing: 10,
               children: [
-                EventDetailQuickIconButton(
-                  tooltip: 'Take me there',
+                DetailQuickActionButton(
+                  tooltip: 'Take Me There',
                   icon: Icons.directions_rounded,
-                  backgroundColor: const Color(0xFFE0F2F1),
-                  iconColor: const Color(0xFF00695C),
+                  backgroundColor: DetailQuickActionColors.directionsBackground,
+                  iconColor: DetailQuickActionColors.directionsIcon,
                   onPressed: canOpenMaps ? () => _openMap(context) : null,
                 ),
               ],

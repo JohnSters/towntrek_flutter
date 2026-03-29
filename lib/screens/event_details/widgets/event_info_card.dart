@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/core.dart';
 import '../../../models/models.dart';
-import 'event_detail_ui.dart';
 
 class EventInfoCard extends StatelessWidget {
   final EventDetailDto event;
@@ -63,96 +63,65 @@ class EventInfoCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        EventDetailSectionShell(
+        DetailSectionShell(
+          expandTitle: true,
           title: 'Schedule & pricing',
           icon: Icons.event_rounded,
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildChip(
+              _buildDetailTag(
                 context,
-                Icons.calendar_today,
+                Icons.calendar_today_rounded,
                 event.displayDate,
-                colorScheme.primary,
-                colorScheme.primaryContainer,
               ),
               if (event.startTime != null)
-                _buildChip(
+                _buildDetailTag(
                   context,
-                  Icons.access_time,
+                  Icons.schedule_rounded,
                   '${event.startTime} ${event.endTime != null ? '- ${event.endTime}' : ''}',
-                  colorScheme.secondary,
-                  colorScheme.secondaryContainer,
                 ),
-              _buildChip(
+              _buildDetailTag(
                 context,
-                Icons.attach_money,
+                Icons.payments_outlined,
                 event.displayPrice,
-                event.isFreeEvent ? Colors.green : colorScheme.tertiary,
-                event.isFreeEvent
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : colorScheme.tertiaryContainer,
               ),
               if (event.ageRestrictions != null && event.ageRestrictions!.isNotEmpty)
-                _buildChip(
+                _buildDetailTag(
                   context,
                   Icons.warning_amber_rounded,
                   event.ageRestrictions!,
-                  Colors.orange,
-                  Colors.orange.withValues(alpha: 0.1),
                 ),
             ],
           ),
         ),
         if (_hasFeatures(event)) ...[
           const SizedBox(height: 12),
-          EventDetailSectionShell(
+          DetailSectionShell(
+            expandTitle: true,
             title: 'Features',
-            icon: Icons.bolt_rounded,
+            icon: Icons.grid_view_rounded,
             child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 if (event.isOutdoorEvent)
-                  EventDetailQuickIconButton(
-                    tooltip: 'Outdoor',
-                    icon: Icons.landscape_rounded,
-                    backgroundColor: const Color(0xFFE0F2F1),
-                    iconColor: const Color(0xFF00695C),
-                    onPressed: () {},
-                  ),
+                  _buildDetailTag(context, Icons.landscape_rounded, 'Outdoor'),
                 if (event.hasParking)
-                  EventDetailQuickIconButton(
-                    tooltip: 'Parking',
-                    icon: Icons.local_parking_rounded,
-                    backgroundColor: const Color(0xFFE8F5E9),
-                    iconColor: const Color(0xFF2E7D32),
-                    onPressed: () {},
-                  ),
+                  _buildDetailTag(context, Icons.local_parking_rounded, 'Parking'),
                 if (event.hasRefreshments)
-                  EventDetailQuickIconButton(
-                    tooltip: 'Refreshments',
-                    icon: Icons.restaurant_rounded,
-                    backgroundColor: const Color(0xFFFFF3E0),
-                    iconColor: const Color(0xFFEF6C00),
-                    onPressed: () {},
-                  ),
+                  _buildDetailTag(context, Icons.restaurant_rounded, 'Refreshments'),
                 if (event.hasWeatherBackup)
-                  EventDetailQuickIconButton(
-                    tooltip: 'Weather backup',
-                    icon: Icons.umbrella_rounded,
-                    backgroundColor: const Color(0xFFE3F2FD),
-                    iconColor: const Color(0xFF1565C0),
-                    onPressed: () {},
-                  ),
+                  _buildDetailTag(context, Icons.umbrella_rounded, 'Weather backup'),
               ],
             ),
           ),
         ],
         if (event.description?.trim().isNotEmpty == true) ...[
           const SizedBox(height: 12),
-          EventDetailSectionShell(
+          DetailSectionShell(
+            expandTitle: true,
             title: 'About',
             icon: Icons.notes_rounded,
             child: Text(
@@ -166,7 +135,8 @@ class EventInfoCard extends StatelessWidget {
         ],
         if (event.ticketInfo != null && event.ticketInfo!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
-          EventDetailSectionShell(
+          DetailSectionShell(
+            expandTitle: true,
             title: 'Ticket info',
             icon: Icons.confirmation_number_outlined,
             child: Text(
@@ -177,7 +147,8 @@ class EventInfoCard extends StatelessWidget {
         ],
         if (event.eventProgram != null && event.eventProgram!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
-          EventDetailSectionShell(
+          DetailSectionShell(
+            expandTitle: true,
             title: 'Program',
             icon: Icons.list_alt_rounded,
             child: Text(
@@ -197,30 +168,27 @@ class EventInfoCard extends StatelessWidget {
         event.hasWeatherBackup;
   }
 
-  Widget _buildChip(
-    BuildContext context,
-    IconData icon,
-    String label,
-    Color color,
-    Color backgroundColor,
-  ) {
+  /// Matches Business/Services & Features pill styling.
+  Widget _buildDetailTag(BuildContext context, IconData icon, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.18),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(icon, size: 16, color: colorScheme.primary),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
               overflow: TextOverflow.ellipsis,

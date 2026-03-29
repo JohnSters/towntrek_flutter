@@ -245,7 +245,7 @@ class _PropertyDetailsBody extends StatelessWidget {
         ),
         if (listing.ownerName.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Listed by',
             icon: Icons.person_outline_rounded,
             child: Text(
@@ -258,7 +258,7 @@ class _PropertyDetailsBody extends StatelessWidget {
         ],
         if (galleryPairs.isNotEmpty) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Gallery',
             icon: Icons.photo_library_outlined,
             child: SizedBox(
@@ -279,7 +279,7 @@ class _PropertyDetailsBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 12),
-        _SectionShell(
+        DetailSectionShell(
           title: 'Location',
           icon: Icons.place_outlined,
           child: Column(
@@ -305,27 +305,27 @@ class _PropertyDetailsBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _SectionShell(
-          title: 'Quick actions',
+        DetailSectionShell(
+          title: 'Quick Actions',
           icon: Icons.bolt_rounded,
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
               if (listing.latitude != null && listing.longitude != null)
-                _QuickActionIconButton(
-                  tooltip: 'Take me there',
+                DetailQuickActionButton(
+                  tooltip: 'Take Me There',
                   icon: Icons.directions_rounded,
-                  color: const Color(0xFFE0F2F1),
-                  iconColor: const Color(0xFF00695C),
+                  backgroundColor: DetailQuickActionColors.directionsBackground,
+                  iconColor: DetailQuickActionColors.directionsIcon,
                   onPressed: () => viewModel.openDirections(context, listing),
                 ),
               if (listing.telephoneNumber.trim().isNotEmpty)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Call',
                   icon: Icons.call_rounded,
-                  color: const Color(0xFFE8F5E9),
-                  iconColor: const Color(0xFF2E7D32),
+                  backgroundColor: DetailQuickActionColors.callBackground,
+                  iconColor: DetailQuickActionColors.callIcon,
                   onPressed: () => ExternalLinkLauncher.callPhone(
                     context,
                     listing.telephoneNumber.trim(),
@@ -353,55 +353,6 @@ class _PropertyDetailsBody extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SectionShell extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  const _SectionShell({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.16),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 17, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
     );
   }
 }
@@ -437,16 +388,26 @@ class _GalleryTile extends StatelessWidget {
               return Container(
                 color: colorScheme.surfaceContainerHighest,
                 alignment: Alignment.center,
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                        : null,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading image...',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
                 ),
               );
             },
@@ -461,43 +422,6 @@ class _GalleryTile extends StatelessWidget {
               );
             },
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickActionIconButton extends StatelessWidget {
-  final String tooltip;
-  final IconData icon;
-  final Color color;
-  final Color iconColor;
-  final VoidCallback onPressed;
-
-  const _QuickActionIconButton({
-    required this.tooltip,
-    required this.icon,
-    required this.color,
-    required this.iconColor,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: SizedBox(
-        width: 56,
-        height: 56,
-        child: IconButton(
-          onPressed: onPressed,
-          style: IconButton.styleFrom(
-            backgroundColor: color,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          icon: Icon(icon, size: 24, color: iconColor),
         ),
       ),
     );

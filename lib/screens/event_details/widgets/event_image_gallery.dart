@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/core.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/url_utils.dart';
-import 'event_detail_ui.dart';
 
 /// Horizontal gallery matching [business_details_page] gallery (TappableImage, 158×104, radius 10).
 class EventImageGallery extends StatelessWidget {
@@ -31,7 +30,8 @@ class EventImageGallery extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: EventDetailSectionShell(
+      child: DetailSectionShell(
+        expandTitle: true,
         title: 'Gallery',
         icon: Icons.photo_library_outlined,
         child: SizedBox(

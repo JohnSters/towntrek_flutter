@@ -30,4 +30,5 @@ export 'widgets/navigation_footer.dart';
 export 'widgets/page_header.dart';
 export 'navigation/creative_spaces_navigation.dart';
 export 'widgets/tappable_image.dart';
+export 'widgets/detail/detail_widgets.dart';
 export 'di/service_locator.dart';

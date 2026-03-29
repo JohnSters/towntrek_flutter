@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/core.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/business_utils.dart';
-import 'event_detail_ui.dart';
 
 class EventReviewsSection extends StatelessWidget {
   final List<EventReviewDto> reviews;
@@ -20,7 +20,8 @@ class EventReviewsSection extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: EventDetailSectionShell(
+      child: DetailSectionShell(
+        expandTitle: true,
         title: 'Reviews',
         icon: Icons.rate_review_rounded,
         child: Column(

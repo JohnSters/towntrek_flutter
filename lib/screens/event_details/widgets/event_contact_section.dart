@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/core.dart';
 import '../../../core/utils/external_link_launcher.dart';
 import '../../../models/models.dart';
-import 'event_detail_ui.dart';
 
 class EventContactSection extends StatelessWidget {
   final EventDetailDto event;
@@ -82,42 +82,43 @@ class EventContactSection extends StatelessWidget {
 
     final actions = <Widget>[
       if (_hasValue(event.phoneNumber))
-        EventDetailQuickIconButton(
+        DetailQuickActionButton(
           tooltip: 'Call',
           icon: Icons.call_rounded,
-          backgroundColor: const Color(0xFFE8F5E9),
-          iconColor: const Color(0xFF2E7D32),
+          backgroundColor: DetailQuickActionColors.callBackground,
+          iconColor: DetailQuickActionColors.callIcon,
           onPressed: () => ExternalLinkLauncher.callPhone(context, event.phoneNumber!),
         ),
       if (_hasValue(event.emailAddress))
-        EventDetailQuickIconButton(
+        DetailQuickActionButton(
           tooltip: 'Email',
           icon: Icons.mail_rounded,
-          backgroundColor: const Color(0xFFE3F2FD),
-          iconColor: const Color(0xFF1565C0),
+          backgroundColor: DetailQuickActionColors.emailBackground,
+          iconColor: DetailQuickActionColors.emailIcon,
           onPressed: () => ExternalLinkLauncher.sendEmail(context, event.emailAddress!),
         ),
       if (_hasValue(event.website))
-        EventDetailQuickIconButton(
+        DetailQuickActionButton(
           tooltip: 'Website',
           icon: Icons.language_rounded,
-          backgroundColor: const Color(0xFFF3E5F5),
-          iconColor: const Color(0xFF6A1B9A),
+          backgroundColor: DetailQuickActionColors.websiteBackground,
+          iconColor: DetailQuickActionColors.websiteIcon,
           onPressed: () => _openWebsite(context, event.website!),
         ),
       if (event.requiresTickets)
-        EventDetailQuickIconButton(
+        DetailQuickActionButton(
           tooltip: 'Get tickets',
           icon: Icons.confirmation_number_rounded,
-          backgroundColor: const Color(0xFFFFF3E0),
-          iconColor: const Color(0xFFEF6C00),
+          backgroundColor: DetailQuickActionColors.ticketsBackground,
+          iconColor: DetailQuickActionColors.ticketsIcon,
           onPressed: () => _handleGetTickets(context),
         ),
     ];
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: EventDetailSectionShell(
+      child: DetailSectionShell(
+        expandTitle: true,
         title: 'Contact & tickets',
         icon: Icons.contact_mail_rounded,
         child: Column(

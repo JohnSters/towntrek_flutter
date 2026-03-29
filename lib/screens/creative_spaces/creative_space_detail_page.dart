@@ -5,7 +5,7 @@ import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import '../business_details/widgets/business_documents_section.dart';
-import '../../core/widgets/open_closed_status_banner.dart';
+import '../../core/utils/business_utils.dart';
 import 'creative_space_detail_state.dart';
 import 'creative_space_detail_view_model.dart';
 
@@ -56,14 +56,11 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
             PageHeader(
               title: headerTitle,
               subtitle: headerSubtitle,
-              height: 118,
+              height: 112.0,
               headerType: HeaderType.creative,
             ),
             if (state is CreativeSpaceDetailSuccess)
-              OpenClosedStatusBanner(
-                isOpen: state.creativeSpace.isOpenNow,
-                subtitle: state.creativeSpace.openNowText,
-              ),
+              _CreativeOpenClosedBanner(space: state.creativeSpace),
             Expanded(
               child: switch (state) {
                 CreativeSpaceDetailLoading() =>
@@ -126,6 +123,60 @@ Widget _buildErrorState(
   );
 }
 
+class _CreativeOpenClosedBanner extends StatelessWidget {
+  final CreativeSpaceDetailDto space;
+
+  const _CreativeOpenClosedBanner({required this.space});
+
+  @override
+  Widget build(BuildContext context) {
+    final openNow = space.isOpenNow;
+    final secondary = _creativeStatusSubtitle(
+      isOpen: openNow,
+      openNowText: space.openNowText,
+      operatingHours: space.operatingHours,
+    );
+
+    return EntityOpenClosedBanner(
+      isOpen: openNow,
+      secondaryText: secondary,
+    );
+  }
+}
+
+String _creativeStatusSubtitle({
+  required bool isOpen,
+  required String? openNowText,
+  required List<CreativeSpaceOperatingHourDto> operatingHours,
+}) {
+  final trimmed = openNowText?.trim();
+  if (trimmed != null && trimmed.isNotEmpty) return trimmed;
+  if (isOpen) return _creativeClosingSubtitle(operatingHours);
+  return 'Currently closed';
+}
+
+String _creativeClosingSubtitle(List<CreativeSpaceOperatingHourDto> hours) {
+  const orderedDays = <String>[
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  final today = orderedDays[DateTime.now().weekday - 1];
+  for (final h in hours) {
+    if (BusinessUtils.formatDayOfWeek(h.dayOfWeek) != today) continue;
+    if (h.isOpen &&
+        h.closeTime != null &&
+        h.closeTime!.trim().isNotEmpty) {
+      return 'Closes at ${BusinessUtils.formatTime(h.closeTime!.trim())}';
+    }
+  }
+  return '';
+}
+
 String _buildHeaderSubtitle(CreativeSpaceDetailDto space) {
   final creativeType = (space.subCategoryName?.trim().isNotEmpty ?? false)
       ? space.subCategoryName!.trim()
@@ -173,7 +224,6 @@ class _CreativeSpaceDetailBody extends StatelessWidget {
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
           _HoursSection(
             title: CreativeSpacesConstants.operatingHoursTitle,
-            icon: Icons.schedule_rounded,
             hours: space.operatingHours,
             summary: space.bestVisitWindow,
           ),
@@ -182,7 +232,6 @@ class _CreativeSpaceDetailBody extends StatelessWidget {
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
           _HoursSection(
             title: CreativeSpacesConstants.specialHoursTitle,
-            icon: Icons.event_note_rounded,
             hours: space.specialOperatingHours,
             isSpecial: true,
           ),
@@ -387,61 +436,60 @@ class _QuickActionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SectionShell(
+    final canNavigate = (space.latitude != null && space.longitude != null) ||
+        (space.physicalAddress != null &&
+            space.physicalAddress!.trim().isNotEmpty);
+
+    return DetailSectionShell(
       title: CreativeSpacesConstants.quickActionsTitle,
-      icon: Icons.bolt,
+      icon: Icons.bolt_rounded,
       child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
+        spacing: 10,
+        runSpacing: 10,
         children: [
-          if ((space.latitude != null && space.longitude != null) ||
-              (space.physicalAddress != null &&
-                  space.physicalAddress!.trim().isNotEmpty))
-            _QuickActionButton(
-              label: CreativeSpacesConstants.mapActionLabel,
-              icon: Icons.map_rounded,
-              onTap: () => _openMap(context),
-              backgroundColor: CreativeSpacesConstants.quickActionMapBackground,
-              iconColor: CreativeSpacesConstants.quickActionMapIcon,
+          if (canNavigate)
+            DetailQuickActionButton(
+              tooltip: 'Take Me There',
+              icon: Icons.directions_rounded,
+              backgroundColor: DetailQuickActionColors.directionsBackground,
+              iconColor: DetailQuickActionColors.directionsIcon,
+              onPressed: () => _openMap(context),
             ),
           if (space.contactPhone != null &&
               space.contactPhone!.trim().isNotEmpty)
-            _QuickActionButton(
-              label: CreativeSpacesConstants.callActionLabel,
+            DetailQuickActionButton(
+              tooltip: 'Call',
               icon: Icons.call_rounded,
-              onTap: () => ExternalLinkLauncher.callPhone(
+              backgroundColor: DetailQuickActionColors.callBackground,
+              iconColor: DetailQuickActionColors.callIcon,
+              onPressed: () => ExternalLinkLauncher.callPhone(
                 context,
                 space.contactPhone!.trim(),
               ),
-              backgroundColor:
-                  CreativeSpacesConstants.quickActionCallBackground,
-              iconColor: CreativeSpacesConstants.quickActionCallIcon,
             ),
           if (space.contactEmail != null &&
               space.contactEmail!.trim().isNotEmpty)
-            _QuickActionButton(
-              label: CreativeSpacesConstants.emailActionLabel,
+            DetailQuickActionButton(
+              tooltip: 'Email',
               icon: Icons.mail_rounded,
-              onTap: () => ExternalLinkLauncher.sendEmail(
+              backgroundColor: DetailQuickActionColors.emailBackground,
+              iconColor: DetailQuickActionColors.emailIcon,
+              onPressed: () => ExternalLinkLauncher.sendEmail(
                 context,
                 space.contactEmail!.trim(),
               ),
-              backgroundColor:
-                  CreativeSpacesConstants.quickActionEmailBackground,
-              iconColor: CreativeSpacesConstants.quickActionEmailIcon,
             ),
           if (space.contactWebsite != null &&
               space.contactWebsite!.trim().isNotEmpty)
-            _QuickActionButton(
-              label: CreativeSpacesConstants.websiteActionLabel,
+            DetailQuickActionButton(
+              tooltip: 'Website',
               icon: Icons.language_rounded,
-              onTap: () => ExternalLinkLauncher.openWebsite(
+              backgroundColor: DetailQuickActionColors.websiteBackground,
+              iconColor: DetailQuickActionColors.websiteIcon,
+              onPressed: () => ExternalLinkLauncher.openWebsite(
                 context,
                 space.contactWebsite!.trim(),
               ),
-              backgroundColor:
-                  CreativeSpacesConstants.quickActionWebsiteBackground,
-              iconColor: CreativeSpacesConstants.quickActionWebsiteIcon,
             ),
         ],
       ),
@@ -500,7 +548,8 @@ class _GallerySection extends StatelessWidget {
     if (urls.isEmpty) return const SizedBox.shrink();
     final effectiveItemCount = urls.length;
 
-    return _SectionShell(
+    final colorScheme = Theme.of(context).colorScheme;
+    return DetailSectionShell(
       title: CreativeSpacesConstants.galleryTitle,
       icon: Icons.photo_library_outlined,
       child: SizedBox(
@@ -521,9 +570,32 @@ class _GallerySection extends StatelessWidget {
                   child: Image.network(
                     url,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const ColoredBox(
-                      color: Colors.black12,
-                      child: Center(child: Icon(Icons.broken_image)),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: colorScheme.surfaceContainerHighest,
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, _, _) => ColoredBox(
+                      color: colorScheme.surfaceContainerHighest,
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -538,14 +610,12 @@ class _GallerySection extends StatelessWidget {
 
 class _HoursSection extends StatelessWidget {
   final String title;
-  final IconData icon;
   final List<CreativeSpaceOperatingHourDto> hours;
   final bool isSpecial;
   final String? summary;
 
   const _HoursSection({
     required this.title,
-    required this.icon,
     required this.hours,
     this.isSpecial = false,
     this.summary,
@@ -553,33 +623,44 @@ class _HoursSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SectionShell(
-      title: title,
-      icon: icon,
-      child: Column(
-        children: [
-          if (summary != null && summary!.trim().isNotEmpty)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                summary!.trim(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+    if (isSpecial) {
+      return DetailSectionShell(
+        title: title,
+        icon: Icons.event_note_rounded,
+        child: Column(
+          children: hours
+              .map(
+                (hour) => _HourRow(
+                  dayOfWeek: hour.dayOfWeek,
+                  openTime: hour.openTime,
+                  closeTime: hour.closeTime,
+                  isOpen: hour.isOpen,
+                  note: hour.specialHoursNote,
+                  isSpecial: true,
                 ),
-              ),
+              )
+              .toList(),
+        ),
+      );
+    }
+
+    return DetailSectionShell(
+      title: title,
+      icon: Icons.schedule,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (summary != null && summary!.trim().isNotEmpty) ...[
+            Text(
+              summary!.trim(),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
-          if (summary != null && summary!.trim().isNotEmpty)
             const SizedBox(height: 8),
-          ...hours.map(
-            (hour) => _HourRow(
-              dayOfWeek: hour.dayOfWeek,
-              openTime: hour.openTime,
-              closeTime: hour.closeTime,
-              isOpen: hour.isOpen,
-              note: isSpecial ? hour.specialHoursNote : null,
-              isSpecial: isSpecial,
-            ),
-          ),
+          ],
+          if (hours.isNotEmpty)
+            DetailHoursGrid(rows: detailHoursFromCreativeSpace(hours)),
         ],
       ),
     );
@@ -593,7 +674,7 @@ class _ContactSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SectionShell(
+    return DetailSectionShell(
       title: CreativeSpacesConstants.contactTitle,
       icon: Icons.contact_mail_rounded,
       child: Column(
@@ -652,7 +733,7 @@ class _ReviewsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final shownReviews = reviews.take(4).toList();
-    return _SectionShell(
+    return DetailSectionShell(
       title: CreativeSpacesConstants.reviewsTitle,
       icon: Icons.rate_review_rounded,
       child: Column(
@@ -726,55 +807,6 @@ class _ReviewTile extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionShell extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  const _SectionShell({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(
-          CreativeSpacesConstants.sectionRadius,
-        ),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 17, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          child,
         ],
       ),
     );
@@ -869,62 +901,6 @@ class _HourRow extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _QuickActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color backgroundColor;
-  final Color iconColor;
-
-  const _QuickActionButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    required this.backgroundColor,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: label,
-      child: SizedBox(
-        width: 76,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 56,
-              height: 56,
-              child: IconButton(
-                onPressed: onTap,
-                style: IconButton.styleFrom(
-                  backgroundColor: backgroundColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                icon: Icon(icon, size: 24, color: iconColor),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                height: 1.2,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

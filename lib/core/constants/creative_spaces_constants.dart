@@ -73,7 +73,7 @@ class CreativeSpacesConstants {
   static const String quickInfoTitle = 'Quick info';
   static const String quickActionsTitle = 'Quick Actions';
   static const String contactTitle = 'Contact';
-  static const String operatingHoursTitle = 'Operating hours';
+  static const String operatingHoursTitle = 'Operating Hours';
   static const String specialHoursTitle = 'Special hours';
   static const String detailsTitle = 'Details';
   static const String galleryTitle = 'Gallery';
