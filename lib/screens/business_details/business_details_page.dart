@@ -37,30 +37,40 @@ class BusinessDetailsPage extends StatelessWidget {
 class _BusinessDetailsPageContent extends StatelessWidget {
   const _BusinessDetailsPageContent();
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
+  Widget _detailHero(BusinessDetailsState state, BusinessDetailsViewModel viewModel) {
+    final title = state is BusinessDetailsSuccess
+        ? state.business.name
+        : viewModel.businessName;
+    final categoryLine =
+        state is BusinessDetailsSuccess ? state.business.category : 'Business';
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: Icons.storefront_outlined,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: 'Details',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessDetailsViewModel>();
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: state is BusinessDetailsSuccess
-                  ? state.business.name
-                  : viewModel.businessName,
-              subtitle: 'Business Details',
-              height: 112.0,
-              headerType: HeaderType.business,
-            ),
+            _detailHero(state, viewModel),
             if (state is BusinessDetailsSuccess)
               _BusinessOpenClosedBanner(business: state.business),
             Expanded(
               child: _buildContent(context, state, viewModel),
             ),
-            if (state is BusinessDetailsSuccess) const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),

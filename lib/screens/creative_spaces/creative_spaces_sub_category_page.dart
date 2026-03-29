@@ -17,16 +17,18 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
     this.countsAvailable = true,
   });
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(context),
             Expanded(child: _buildBody(context)),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
@@ -39,16 +41,18 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
 
     return Column(
       children: [
-        PageHeader(
-          title: CreativeSpacesConstants.categoryStylesTemplate.replaceAll(
-            '{name}',
-            category.name,
-          ),
-          subtitle: CreativeSpacesConstants.subCategoryHeaderSubtitleTemplate
-              .replaceAll('{category}', category.name)
-              .replaceAll('{town}', town.name),
-          height: CreativeSpacesConstants.pageHeaderHeight,
-          headerType: HeaderType.creative,
+        EntityListingHeroHeader(
+          theme: _theme,
+          categoryIcon: Icons.palette_rounded,
+          subCategoryName: CreativeSpacesConstants.categoryStylesTemplate
+              .replaceAll('{name}', category.name),
+          categoryName: TownFeatureConstants.creativeSpacesTitle,
+          townName: town.name,
+        ),
+        ListingResultsBand(
+          count: category.spaceCount,
+          categoryName: category.name,
+          bandColor: _theme.resultsBand,
         ),
         Container(
           width: double.infinity,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Premium listing-screen palette per TownTrek pillar (hero, results band, card header, accents).
-/// Layout and typography tokens live in the design doc; colors are centralized here.
+/// Listing-screen palette (Entity Listing Screen design system §1).
+/// All entity variants share the same tokens; distinct static names remain for call-site clarity.
 @immutable
 class EntityListingTheme {
   final List<Color> heroGradientStops;
@@ -55,73 +55,18 @@ class EntityListingTheme {
     accent: Color(0xFF1A4F8F),
   );
 
-  /// Equipment rentals — deep bronze / amber (pillar: amber).
-  static const EntityListingTheme equipmentRentals = EntityListingTheme(
-    heroGradientStops: [
-      Color(0xFF3D2914),
-      Color(0xFF5C3D1A),
-      Color(0xFF7A4F18),
-    ],
-    resultsBand: Color(0xFF4A3318),
-    cardHeaderGradientStops: [Color(0xFFF3E8D8), Color(0xFFE8D4BC)],
-    textTitle: Color(0xFF2A1C0C),
-    textLocation: Color(0xFF6B4A28),
-    accent: Color(0xFF8B5A1F),
-  );
+  /// Equipment rentals — same palette as businesses (design doc §8).
+  static const EntityListingTheme equipmentRentals = business;
 
-  /// Services — deep burnt copper (pillar: orange 800).
-  static const EntityListingTheme services = EntityListingTheme(
-    heroGradientStops: [
-      Color(0xFF3D2208),
-      Color(0xFF5C320C),
-      Color(0xFF7A4410),
-    ],
-    resultsBand: Color(0xFF4A280A),
-    cardHeaderGradientStops: [Color(0xFFF5E8DA), Color(0xFFEDD4C4)],
-    textTitle: Color(0xFF2E1806),
-    textLocation: Color(0xFF7A4A22),
-    accent: Color(0xFF9A5010),
-  );
+  /// Services — unified listing palette (design doc §1).
+  static const EntityListingTheme services = business;
 
-  /// Events — deep plum (pillar: purple 800).
-  static const EntityListingTheme events = EntityListingTheme(
-    heroGradientStops: [
-      Color(0xFF2A0D38),
-      Color(0xFF421858),
-      Color(0xFF5A2470),
-    ],
-    resultsBand: Color(0xFF341248),
-    cardHeaderGradientStops: [Color(0xFFEDE6F5), Color(0xFFE0D4F0)],
-    textTitle: Color(0xFF220830),
-    textLocation: Color(0xFF5C4080),
-    accent: Color(0xFF6B3D8C),
-  );
+  /// Events — unified listing palette (design doc §1).
+  static const EntityListingTheme events = business;
 
-  /// Creative spaces — deep wine / rose (pillar: rose 700).
-  static const EntityListingTheme creativeSpaces = EntityListingTheme(
-    heroGradientStops: [
-      Color(0xFF3D0C20),
-      Color(0xFF5C1430),
-      Color(0xFF7A1F42),
-    ],
-    resultsBand: Color(0xFF481028),
-    cardHeaderGradientStops: [Color(0xFFF5DEE8), Color(0xFFF0CEDC)],
-    textTitle: Color(0xFF2E0818),
-    textLocation: Color(0xFF8B4560),
-    accent: Color(0xFF9E3058),
-  );
+  /// Creative spaces — unified listing palette (design doc §1).
+  static const EntityListingTheme creativeSpaces = business;
 
-  /// Properties — deep forest (pillar: green 800).
-  static const EntityListingTheme properties = EntityListingTheme(
-    heroGradientStops: [
-      Color(0xFF0D2810),
-      Color(0xFF1A4520),
-      Color(0xFF245A2E),
-    ],
-    resultsBand: Color(0xFF143818),
-    cardHeaderGradientStops: [Color(0xFFE0EFE4), Color(0xFFCFE8D6)],
-    textTitle: Color(0xFF0A2210),
-    textLocation: Color(0xFF2D6B3A),
-    accent: Color(0xFF1F6B32),
-  );
+  /// Properties — unified listing palette (design doc §1).
+  static const EntityListingTheme properties = business;
 }

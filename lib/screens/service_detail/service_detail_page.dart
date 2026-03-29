@@ -36,30 +36,44 @@ class ServiceDetailPage extends StatelessWidget {
 class _ServiceDetailPageContent extends StatelessWidget {
   const _ServiceDetailPageContent();
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
+  Widget _detailHero(ServiceDetailState state, ServiceDetailViewModel viewModel) {
+    final title = state is ServiceDetailSuccess
+        ? state.serviceDetails.name
+        : viewModel.serviceName;
+    final categoryLine = state is ServiceDetailSuccess
+        ? (state.serviceDetails.categoryName ?? 'Service')
+        : 'Service';
+    final townLine = state is ServiceDetailSuccess
+        ? state.serviceDetails.townName
+        : 'Details';
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: townLine,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ServiceDetailViewModel>();
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: state is ServiceDetailSuccess
-                  ? state.serviceDetails.name
-                  : viewModel.serviceName,
-              subtitle: 'Service Details',
-              height: 112.0,
-              headerType: HeaderType.service,
-            ),
+            _detailHero(state, viewModel),
             if (state is ServiceDetailSuccess)
               _ServiceOpenClosedBanner(service: state.serviceDetails),
             Expanded(
               child: _buildContent(context, state, viewModel),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),

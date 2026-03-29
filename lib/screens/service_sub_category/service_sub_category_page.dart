@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../core/core.dart';
 import '../service_list/service_list_page.dart';
-import '../../core/constants/service_sub_category_constants.dart';
 import 'service_sub_category_state.dart';
 import 'service_sub_category_view_model.dart';
 import 'widgets/widgets.dart';
@@ -21,6 +20,8 @@ class ServiceSubCategoryPage extends StatelessWidget {
     required this.town,
     this.countsAvailable = true,
   });
+
+  static const EntityListingTheme _theme = EntityListingTheme.business;
 
   @override
   Widget build(BuildContext context) {
@@ -41,18 +42,42 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: _buildContent(),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildHero(ServiceSubCategoryViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: ServiceSubCategoryPage._theme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: viewModel.category.name,
+      categoryName: TownFeatureConstants.servicesTitle,
+      townName: viewModel.town.name,
+    );
+  }
+
+  Widget _buildBand(ServiceSubCategoryViewModel viewModel, int serviceCount) {
+    return ListingResultsBand(
+      count: serviceCount,
+      categoryName: viewModel.category.name,
+      bandColor: ServiceSubCategoryPage._theme.resultsBand,
+    );
+  }
+
+  int _serviceCountForBand(ServiceSubCategoryViewModel viewModel) {
+    final c = viewModel.category;
+    if (c.serviceCount > 0) return c.serviceCount;
+    return c.subCategories.fold<int>(0, (sum, s) => sum + s.serviceCount);
   }
 
   Widget _buildContent() {
@@ -61,7 +86,15 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         final state = viewModel.state;
 
         if (state is ServiceSubCategoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Column(
+            children: [
+              _buildHero(viewModel),
+              _buildBand(viewModel, _serviceCountForBand(viewModel)),
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          );
         }
 
         if (state is ServiceSubCategoryError) {
@@ -86,19 +119,34 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     required AppError error,
     required ServiceSubCategoryViewModel viewModel,
   }) {
+    final count = _serviceCountForBand(viewModel);
     if (error.actionText != null && error.action != null) {
-      return ErrorView(error: error);
+      return Column(
+        children: [
+          _buildHero(viewModel),
+          _buildBand(viewModel, count),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(18),
+    return Column(
       children: [
-        ErrorView(error: error),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: viewModel.retry,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Retry'),
+        _buildHero(viewModel),
+        _buildBand(viewModel, count),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.retry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -117,18 +165,17 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
 
     return Column(
       children: [
-        PageHeader(
-          title: state.category.name,
-          subtitle: '${ServiceSubCategoryConstants.subtitlePrefix} ${state.town.name}',
-          height: ServiceSubCategoryConstants.pageHeaderHeight,
-          headerType: HeaderType.service,
+        EntityListingHeroHeader(
+          theme: ServiceSubCategoryPage._theme,
+          categoryIcon: Icons.handyman_rounded,
+          subCategoryName: state.category.name,
+          categoryName: TownFeatureConstants.servicesTitle,
+          townName: state.town.name,
         ),
-        _CategoryInfoBar(
-          icon: Icons.handyman_rounded,
-          text: '$totalServices services \u2022 ${state.category.name}',
-          backgroundColor: const Color(0xFFE3F2FD),
-          textColor: const Color(0xFF0D47A1),
-          borderColor: const Color(0xFFBBDEFB),
+        ListingResultsBand(
+          count: totalServices,
+          categoryName: state.category.name,
+          bandColor: ServiceSubCategoryPage._theme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -175,54 +222,6 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
           subCategory: subCategory,
           town: state.town,
         ),
-      ),
-    );
-  }
-}
-
-class _CategoryInfoBar extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color backgroundColor;
-  final Color textColor;
-  final Color borderColor;
-
-  const _CategoryInfoBar({
-    required this.icon,
-    required this.text,
-    required this.backgroundColor,
-    required this.textColor,
-    required this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ),
-        ],
       ),
     );
   }

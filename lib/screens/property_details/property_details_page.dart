@@ -37,32 +37,48 @@ class PropertyDetailsPage extends StatelessWidget {
 class _PropertyDetailsPageContent extends StatelessWidget {
   const _PropertyDetailsPageContent();
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
+  String _listingTitle(PropertyDetailsState state, PropertyDetailsViewModel viewModel) {
+    if (state is PropertyDetailsSuccess) {
+      final a = state.listing.address.trim();
+      return a.isNotEmpty ? a : state.listing.ownerName;
+    }
+    return viewModel.titleFallback;
+  }
+
+  Widget _detailHero(PropertyDetailsState state, PropertyDetailsViewModel viewModel) {
+    final typeLabel = state is PropertyDetailsSuccess
+        ? (state.listing.listingType == 0 ? 'For rent' : 'For sale')
+        : 'Property';
+    final townLine =
+        state is PropertyDetailsSuccess ? state.listing.townName : 'Details';
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: Icons.home_work_rounded,
+      subCategoryName: _listingTitle(state, viewModel),
+      categoryName: typeLabel,
+      townName: townLine,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<PropertyDetailsViewModel>();
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: state is PropertyDetailsSuccess
-                  ? (state.listing.address.trim().isNotEmpty
-                        ? state.listing.address
-                        : state.listing.ownerName)
-                  : viewModel.titleFallback,
-              subtitle: 'Property listing',
-              height: 112.0,
-              headerType: HeaderType.business,
-            ),
+            _detailHero(state, viewModel),
             if (state is PropertyDetailsSuccess && state.listing.isFeatured)
               const _FeaturedBar(),
             Expanded(
               child: _buildContent(context, state, viewModel),
             ),
-            if (state is PropertyDetailsSuccess) const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),

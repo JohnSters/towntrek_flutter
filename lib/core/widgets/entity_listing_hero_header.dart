@@ -9,6 +9,7 @@ class EntityListingHeroHeader extends StatelessWidget {
   final String subCategoryName;
   final String categoryName;
   final String townName;
+  final Widget? trailing;
 
   const EntityListingHeroHeader({
     super.key,
@@ -17,6 +18,7 @@ class EntityListingHeroHeader extends StatelessWidget {
     required this.subCategoryName,
     required this.categoryName,
     required this.townName,
+    this.trailing,
   });
 
   @override
@@ -81,6 +83,10 @@ class EntityListingHeroHeader extends StatelessWidget {
                 ],
               ),
             ),
+            if (trailing != null) ...[
+              const SizedBox(width: 8),
+              trailing!,
+            ],
           ],
         ),
       ),

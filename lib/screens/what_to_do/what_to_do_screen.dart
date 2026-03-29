@@ -11,6 +11,8 @@ class WhatToDoScreen extends StatelessWidget {
 
   const WhatToDoScreen({super.key, required this.town});
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -32,15 +34,25 @@ class _WhatToDoScreenContent extends StatelessWidget {
     final viewModel = context.watch<WhatToDoViewModel>();
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(child: _buildContent(context, viewModel)),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHero(TownDto town) {
+    return EntityListingHeroHeader(
+      theme: WhatToDoScreen._theme,
+      categoryIcon: Icons.travel_explore_rounded,
+      subCategoryName: '${WhatToDoConstants.titlePrefix} ${town.name}',
+      categoryName: TownFeatureConstants.whatToDoTitle,
+      townName: town.name,
     );
   }
 
@@ -48,39 +60,61 @@ class _WhatToDoScreenContent extends StatelessWidget {
     final state = viewModel.state;
 
     return switch (state) {
-      WhatToDoLoading() => const Center(child: CircularProgressIndicator()),
-      WhatToDoError(error: final error) => ErrorView(error: error),
+      WhatToDoLoading() => Column(
+          children: [
+            _buildHero(viewModel.town),
+            ListingResultsBand(
+              count: 0,
+              categoryName: viewModel.town.name,
+              bandColor: WhatToDoScreen._theme.resultsBand,
+            ),
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      WhatToDoError(error: final error) => Column(
+          children: [
+            _buildHero(viewModel.town),
+            ListingResultsBand(
+              count: 0,
+              categoryName: viewModel.town.name,
+              bandColor: WhatToDoScreen._theme.resultsBand,
+            ),
+            Expanded(child: ErrorView(error: error)),
+          ],
+        ),
       WhatToDoSuccess(town: final town, sections: final sections) => Column(
-        children: [
-          PageHeader(
-            title: '${WhatToDoConstants.titlePrefix} ${town.name}',
-            subtitle: WhatToDoConstants.subtitle,
-            height: WhatToDoConstants.headerHeight,
-            headerType: HeaderType.business,
-          ),
-          Expanded(
-            child: sections.isEmpty
-                ? _buildEmptyState(context)
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(
-                      WhatToDoConstants.pagePadding,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (int i = 0; i < sections.length; i++) ...[
-                          _buildSection(context, sections[i], viewModel),
-                          if (i < sections.length - 1)
-                            const SizedBox(
-                              height: WhatToDoConstants.sectionSpacing,
-                            ),
+          children: [
+            _buildHero(town),
+            ListingResultsBand(
+              count: sections.length,
+              categoryName: town.name,
+              bandColor: WhatToDoScreen._theme.resultsBand,
+            ),
+            Expanded(
+              child: sections.isEmpty
+                  ? _buildEmptyState(context)
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(
+                        WhatToDoConstants.pagePadding,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (int i = 0; i < sections.length; i++) ...[
+                            _buildSection(context, sections[i], viewModel),
+                            if (i < sections.length - 1)
+                              const SizedBox(
+                                height: WhatToDoConstants.sectionSpacing,
+                              ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
     };
   }
 

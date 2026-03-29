@@ -82,15 +82,17 @@ class _TownFeatureSelectionScreenContentState
     };
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: town.name,
-              subtitle: town.province,
-              height: TownFeatureConstants.pageHeaderHeight,
-              headerType: HeaderType.default_,
+            EntityListingHeroHeader(
+              theme: EntityListingTheme.business,
+              categoryIcon: Icons.explore_rounded,
+              // Town hub: main prompt + PROVINCE • TOWN in uppercase line
+              subCategoryName: TownFeatureConstants.pageTitle,
+              categoryName: town.province,
+              townName: town.name,
               trailing: ValueListenableBuilder<TownDto?>(
                 valueListenable: FavouriteTownStorage.favouriteTownNotifier,
                 builder: (context, favouriteTown, _) {
@@ -136,7 +138,7 @@ class _TownFeatureSelectionScreenContentState
                 ),
               ),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),

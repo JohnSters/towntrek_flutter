@@ -36,29 +36,43 @@ class CreativeSpaceDetailPage extends StatelessWidget {
 class _CreativeSpaceDetailPageContent extends StatelessWidget {
   const _CreativeSpaceDetailPageContent();
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final viewModel = context.watch<CreativeSpaceDetailViewModel>();
-    final state = viewModel.state;
-    final headerTitle = state is CreativeSpaceDetailSuccess
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
+  Widget _detailHero(
+    CreativeSpaceDetailState state,
+    CreativeSpaceDetailViewModel viewModel,
+  ) {
+    final title = state is CreativeSpaceDetailSuccess
         ? state.creativeSpace.name
         : viewModel.creativeSpaceName;
-    final headerSubtitle = state is CreativeSpaceDetailSuccess
-        ? _buildHeaderSubtitle(state.creativeSpace)
-        : CreativeSpacesConstants.creativeSpaceDetailsSubtitle;
+    final categoryLine = state is CreativeSpaceDetailSuccess
+        ? (state.creativeSpace.categoryName ?? 'Creative space')
+        : 'Creative space';
+    final townLine = state is CreativeSpaceDetailSuccess
+        ? (state.creativeSpace.townName ??
+            state.creativeSpace.city ??
+            'Details')
+        : 'Details';
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: Icons.palette_rounded,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: townLine,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.watch<CreativeSpaceDetailViewModel>();
+    final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: headerTitle,
-              subtitle: headerSubtitle,
-              height: 112.0,
-              headerType: HeaderType.creative,
-            ),
+            _detailHero(state, viewModel),
             if (state is CreativeSpaceDetailSuccess)
               _CreativeOpenClosedBanner(space: state.creativeSpace),
             Expanded(
@@ -71,7 +85,7 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
                   _CreativeSpaceDetailBody(space: space),
               },
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
@@ -175,31 +189,6 @@ String _creativeClosingSubtitle(List<CreativeSpaceOperatingHourDto> hours) {
     }
   }
   return '';
-}
-
-String _buildHeaderSubtitle(CreativeSpaceDetailDto space) {
-  final creativeType = (space.subCategoryName?.trim().isNotEmpty ?? false)
-      ? space.subCategoryName!.trim()
-      : (space.categoryName?.trim().isNotEmpty ?? false)
-      ? space.categoryName!.trim()
-      : '';
-  final place = (space.townName?.trim().isNotEmpty ?? false)
-      ? space.townName!.trim()
-      : (space.city?.trim().isNotEmpty ?? false)
-      ? space.city!.trim()
-      : '';
-
-  if (creativeType.isNotEmpty && place.isNotEmpty) {
-    return '$creativeType in $place';
-  }
-  if (creativeType.isNotEmpty) {
-    return creativeType;
-  }
-  if (place.isNotEmpty) {
-    return place;
-  }
-
-  return CreativeSpacesConstants.creativeSpaceDetailsSubtitle;
 }
 
 class _CreativeSpaceDetailBody extends StatelessWidget {

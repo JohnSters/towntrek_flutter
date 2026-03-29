@@ -40,14 +40,14 @@ class _ServiceCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: _buildContent(),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
@@ -60,7 +60,25 @@ class _ServiceCategoryPageContent extends StatelessWidget {
         final state = viewModel.state;
 
         if (state is ServiceCategoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Column(
+            children: [
+              EntityListingHeroHeader(
+                theme: EntityListingTheme.business,
+                categoryIcon: Icons.handyman_rounded,
+                subCategoryName: TownFeatureConstants.servicesTitle,
+                categoryName: viewModel.town.name,
+                townName: viewModel.town.province,
+              ),
+              ListingResultsBand(
+                count: 0,
+                categoryName: viewModel.town.name,
+                bandColor: EntityListingTheme.business.resultsBand,
+              ),
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          );
         }
 
         if (state is ServiceCategoryError) {
@@ -85,21 +103,43 @@ class _ServiceCategoryPageContent extends StatelessWidget {
     required AppError error,
     required ServiceCategoryViewModel viewModel,
   }) {
-    if (error.actionText != null && error.action != null) {
-      return ErrorView(error: error);
+    Widget chrome({required Widget child}) {
+      return Column(
+        children: [
+          EntityListingHeroHeader(
+            theme: EntityListingTheme.business,
+            categoryIcon: Icons.handyman_rounded,
+            subCategoryName: TownFeatureConstants.servicesTitle,
+            categoryName: viewModel.town.name,
+            townName: viewModel.town.province,
+          ),
+          ListingResultsBand(
+            count: 0,
+            categoryName: viewModel.town.name,
+            bandColor: EntityListingTheme.business.resultsBand,
+          ),
+          Expanded(child: child),
+        ],
+      );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(18),
-      children: [
-        ErrorView(error: error),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: viewModel.retry,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Retry'),
-        ),
-      ],
+    if (error.actionText != null && error.action != null) {
+      return chrome(child: ErrorView(error: error));
+    }
+
+    return chrome(
+      child: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          ErrorView(error: error),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: viewModel.retry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -111,18 +151,19 @@ class _ServiceCategoryPageContent extends StatelessWidget {
 
     return Column(
       children: [
-        // Page Header
-        PageHeader(
-          title: viewModel.town.name,
-          subtitle: '${viewModel.town.province} • ${ServiceCategoryConstants.servicesSubtitle}',
-          height: ServiceCategoryConstants.pageHeaderHeight,
-          headerType: HeaderType.service,
+        EntityListingHeroHeader(
+          theme: EntityListingTheme.business,
+          categoryIcon: Icons.handyman_rounded,
+          subCategoryName: TownFeatureConstants.servicesTitle,
+          categoryName: viewModel.town.name,
+          townName: viewModel.town.province,
         ),
-
-        // Connected Action Buttons (fills entire width, connects to header)
         _buildConnectedActionButtons(context, viewModel, state),
-
-        // Scrollable content (no top padding since buttons connect to header)
+        ListingResultsBand(
+          count: state.categories.length,
+          categoryName: viewModel.town.name,
+          bandColor: EntityListingTheme.business.resultsBand,
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(

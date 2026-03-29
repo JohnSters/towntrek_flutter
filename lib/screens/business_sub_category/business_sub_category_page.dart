@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/config/business_category_config.dart';
 import '../../core/core.dart';
-import '../../core/utils/business_category_copy.dart';
 import '../../models/models.dart';
 import 'business_sub_category.dart';
 
@@ -16,6 +16,8 @@ class BusinessSubCategoryPage extends StatelessWidget {
     required this.category,
     required this.town,
   });
+
+  static const EntityListingTheme _theme = EntityListingTheme.business;
 
   @override
   Widget build(BuildContext context) {
@@ -35,17 +37,35 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: _buildContent(),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHero(BusinessSubCategoryViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: BusinessSubCategoryPage._theme,
+      categoryIcon: BusinessCategoryConfig.getCategoryIcon(viewModel.category.key),
+      subCategoryName: viewModel.category.name,
+      categoryName: TownFeatureConstants.businessesTitle,
+      townName: viewModel.town.name,
+    );
+  }
+
+  Widget _buildBand(BusinessSubCategoryViewModel viewModel) {
+    return ListingResultsBand(
+      count: viewModel.category.businessCount,
+      categoryName: viewModel.category.name,
+      bandColor: BusinessSubCategoryPage._theme.resultsBand,
     );
   }
 
@@ -55,7 +75,15 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
         final state = viewModel.state;
 
         if (state is BusinessSubCategoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Column(
+            children: [
+              _buildHero(viewModel),
+              _buildBand(viewModel),
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          );
         }
 
         if (state is BusinessSubCategoryError) {
@@ -81,18 +109,32 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
     required BusinessSubCategoryViewModel viewModel,
   }) {
     if (error.actionText != null && error.action != null) {
-      return ErrorView(error: error);
+      return Column(
+        children: [
+          _buildHero(viewModel),
+          _buildBand(viewModel),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(18),
+    return Column(
       children: [
-        ErrorView(error: error),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: viewModel.retry,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Retry'),
+        _buildHero(viewModel),
+        _buildBand(viewModel),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.retry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -104,22 +146,17 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
   ) {
     return Column(
       children: [
-        PageHeader(
-          title: state.category.name,
-          subtitle: '${BusinessSubCategoryConstants.subtitlePrefix} ${state.town.name}',
-          height: BusinessSubCategoryConstants.pageHeaderHeight,
-          headerType: HeaderType.business,
+        EntityListingHeroHeader(
+          theme: BusinessSubCategoryPage._theme,
+          categoryIcon: BusinessCategoryConfig.getCategoryIcon(state.category.key),
+          subCategoryName: state.category.name,
+          categoryName: TownFeatureConstants.businessesTitle,
+          townName: state.town.name,
         ),
-        _CategoryInfoBar(
-          icon: BusinessCategoryCopy.infoBarIcon(state.category.key),
-          text: BusinessCategoryCopy.categoryInfoBarLine(
-            count: state.category.businessCount,
-            categoryName: state.category.name,
-            categoryKey: state.category.key,
-          ),
-          backgroundColor: const Color(0xFFE9F7EF),
-          textColor: const Color(0xFF1D7A38),
-          borderColor: const Color(0xFFBFE5CB),
+        ListingResultsBand(
+          count: state.category.businessCount,
+          categoryName: state.category.name,
+          bandColor: BusinessSubCategoryPage._theme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -185,54 +222,6 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _CategoryInfoBar extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color backgroundColor;
-  final Color textColor;
-  final Color borderColor;
-
-  const _CategoryInfoBar({
-    required this.icon,
-    required this.text,
-    required this.backgroundColor,
-    required this.textColor,
-    required this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

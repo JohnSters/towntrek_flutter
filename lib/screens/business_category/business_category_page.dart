@@ -237,18 +237,14 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            // Main content area
             Expanded(
               child: _buildContent(context, viewModel),
             ),
-
-            // Navigation footer (only show when we have content to navigate back from)
-            if (viewModel.state is BusinessCategorySuccess)
-              const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
@@ -459,18 +455,20 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
 
     return Column(
       children: [
-        // Page Header
-        PageHeader(
-          title: state.town.name,
-          subtitle: '${state.town.province} • ${state.categories.length} Categories',
-          height: BusinessCategoryConstants.headerHeight,
-          headerType: HeaderType.business,
+        // Pillar • TOWN • PROVINCE (design system browse convention)
+        EntityListingHeroHeader(
+          theme: EntityListingTheme.business,
+          categoryIcon: Icons.store_mall_directory_rounded,
+          subCategoryName: TownFeatureConstants.businessesTitle,
+          categoryName: state.town.name,
+          townName: state.town.province,
         ),
-
-        // Connected Action Buttons (fills entire width, connects to header)
         _buildConnectedActionButtons(context, viewModel, state),
-
-        // Scrollable content (no top padding since buttons connect to header)
+        ListingResultsBand(
+          count: state.categories.length,
+          categoryName: state.town.name,
+          bandColor: EntityListingTheme.business.resultsBand,
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(

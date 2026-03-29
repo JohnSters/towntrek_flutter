@@ -28,6 +28,10 @@ class ServiceSubCategoryViewModel extends ChangeNotifier {
   /// Current state of the page
   ServiceSubCategoryState get state => _state;
 
+  ServiceCategoryDto get category => _category;
+
+  TownDto get town => _town;
+
   /// Sorts sub-categories with active ones (with services) first, then alphabetical
   static List<ServiceSubCategoryDto> _sortSubCategories(
     List<ServiceSubCategoryDto> subCategories,

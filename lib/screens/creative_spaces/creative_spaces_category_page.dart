@@ -34,10 +34,22 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
 
   const _CreativeSpacesCategoryPageContent({required this.town});
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
+  Widget _browseHero() {
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: Icons.palette_rounded,
+      subCategoryName: TownFeatureConstants.creativeSpacesTitle,
+      categoryName: town.name,
+      townName: town.province,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -47,7 +59,19 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                   final state = viewModel.state;
 
                   if (state is CreativeSpacesLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Column(
+                      children: [
+                        _browseHero(),
+                        ListingResultsBand(
+                          count: 0,
+                          categoryName: town.name,
+                          bandColor: _theme.resultsBand,
+                        ),
+                        const Expanded(
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      ],
+                    );
                   }
 
                   if (state is CreativeSpacesError) {
@@ -66,62 +90,77 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                   final categories = state.categories;
                   final countsAvailable = viewModel.countsAvailable;
 
-                  return RefreshIndicator(
-                    onRefresh: viewModel.refresh,
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        PageHeader(
-                          title: TownFeatureConstants.creativeSpacesTitle,
-                          subtitle:
-                              'Discover makers, studios, and creative experiences in ${town.name}',
-                          height: CreativeSpacesConstants.pageHeaderHeight,
-                          headerType: HeaderType.creative,
-                        ),
-                        _buildFlavorBanner(context),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            CreativeSpacesConstants.pagePadding,
-                            CreativeSpacesConstants.sectionSpacing,
-                            CreativeSpacesConstants.pagePadding,
-                            CreativeSpacesConstants.sectionSpacing,
-                          ),
-                          child: categories.isEmpty
-                              ? _buildEmptyState(context)
-                              : ListView.separated(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: categories.length,
-                                  separatorBuilder: (context, index) =>
-                                      const SizedBox(
-                                        height: CreativeSpacesConstants
-                                            .sectionSpacing,
-                                      ),
-                                  itemBuilder: (context, index) {
-                                    final category = categories[index];
-                                    return CreativeCategoryCard(
-                                      category: category,
-                                      countsAvailable: countsAvailable,
-                                      onTap: () => _openCategory(
-                                        context,
-                                        category,
-                                        countsAvailable,
-                                      ),
-                                    );
-                                  },
+                  return Column(
+                    children: [
+                      _browseHero(),
+                      ListingResultsBand(
+                        count: categories.length,
+                        categoryName: town.name,
+                        bandColor: _theme.resultsBand,
+                      ),
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: viewModel.refresh,
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(
+                              CreativeSpacesConstants.pagePadding,
+                              CreativeSpacesConstants.sectionSpacing,
+                              CreativeSpacesConstants.pagePadding,
+                              CreativeSpacesConstants.sectionSpacing,
+                            ),
+                            children: [
+                              _buildFlavorBanner(context),
+                              if (categories.isEmpty)
+                                _buildEmptyState(context)
+                              else
+                                ..._categoryCards(
+                                  context,
+                                  categories,
+                                  countsAvailable,
                                 ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   );
                 },
               ),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _categoryCards(
+    BuildContext context,
+    List<CreativeCategoryDto> categories,
+    bool countsAvailable,
+  ) {
+    final out = <Widget>[];
+    for (var i = 0; i < categories.length; i++) {
+      if (i > 0) {
+        out.add(
+          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
+        );
+      }
+      final category = categories[i];
+      out.add(
+        CreativeCategoryCard(
+          category: category,
+          countsAvailable: countsAvailable,
+          onTap: () => _openCategory(
+            context,
+            category,
+            countsAvailable,
+          ),
+        ),
+      );
+    }
+    return out;
   }
 
   Widget _buildFlavorBanner(BuildContext context) {
@@ -225,21 +264,37 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
     required AppError error,
     required CreativeSpacesViewModel viewModel,
   }) {
-    if (error.actionText != null && error.action != null) {
-      return ErrorView(error: error);
+    Widget chrome({required Widget child}) {
+      return Column(
+        children: [
+          _browseHero(),
+          ListingResultsBand(
+            count: 0,
+            categoryName: town.name,
+            bandColor: _CreativeSpacesCategoryPageContent._theme.resultsBand,
+          ),
+          Expanded(child: child),
+        ],
+      );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        ErrorView(error: error),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          onPressed: viewModel.retry,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text(CreativeSpacesConstants.retryLabel),
-        ),
-      ],
+    if (error.actionText != null && error.action != null) {
+      return chrome(child: ErrorView(error: error));
+    }
+
+    return chrome(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          ErrorView(error: error),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: viewModel.retry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text(CreativeSpacesConstants.retryLabel),
+          ),
+        ],
+      ),
     );
   }
 

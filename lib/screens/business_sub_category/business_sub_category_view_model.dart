@@ -24,6 +24,10 @@ class BusinessSubCategoryViewModel extends ChangeNotifier {
   /// Current state of the page
   BusinessSubCategoryState get state => _state;
 
+  CategoryWithCountDto get category => _category;
+
+  TownDto get town => _town;
+
   /// Sorts sub-categories with active ones (with businesses) first, then alphabetical
   static List<SubCategoryWithCountDto> _sortSubCategories(
     List<SubCategoryWithCountDto> subCategories,

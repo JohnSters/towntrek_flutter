@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/widgets/page_header.dart';
-import '../../../core/constants/service_detail_constants.dart';
 
-/// Loading view for service detail page
+/// Body-only loading (hero lives on [ServiceDetailPage]).
 class ServiceDetailLoadingView extends StatelessWidget {
   final String serviceName;
 
@@ -13,20 +11,8 @@ class ServiceDetailLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        PageHeader(
-          title: serviceName,
-          subtitle: ServiceDetailConstants.loadingSubtitle,
-          height: ServiceDetailConstants.pageHeaderHeight,
-          headerType: HeaderType.service,
-        ),
-        const Expanded(
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-      ],
+    return const Center(
+      child: CircularProgressIndicator(),
     );
   }
 }

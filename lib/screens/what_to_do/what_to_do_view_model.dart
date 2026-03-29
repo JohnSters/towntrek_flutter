@@ -14,6 +14,8 @@ class WhatToDoViewModel extends ChangeNotifier {
   WhatToDoState _state = WhatToDoLoading();
   WhatToDoState get state => _state;
 
+  TownDto get town => _town;
+
   WhatToDoViewModel({
     required BusinessRepository businessRepository,
     required ErrorHandler errorHandler,
