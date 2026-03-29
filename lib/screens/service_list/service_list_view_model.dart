@@ -16,7 +16,8 @@ class ServiceListViewModel extends ChangeNotifier {
 
   ServiceListState _state;
   int _currentPage = ServiceListConstants.defaultPage;
-  bool _hasMorePages = true;
+  String? _searchTerm;
+  int? _lastTotalCount;
 
   ServiceListViewModel({
     required ServiceRepository serviceRepository,
@@ -33,9 +34,20 @@ class ServiceListViewModel extends ChangeNotifier {
   /// Current state of the service list
   ServiceListState get state => _state;
 
+  String? get searchTerm => _searchTerm;
+
+  /// Total count from the last successful API response, for the results band.
+  int get bandCount =>
+      _lastTotalCount ?? subCategory.serviceCount;
+
+  bool get _hasSearchTerm {
+    final q = _searchTerm?.trim();
+    return q != null && q.isNotEmpty;
+  }
+
   /// Load services with pagination support
   Future<void> loadServices({bool loadMore = false}) async {
-    if (loadMore && !_hasMorePages) return;
+    if (loadMore && !_canLoadMore()) return;
 
     if (loadMore) {
       if (_state is ServiceListSuccess) {
@@ -53,32 +65,51 @@ class ServiceListViewModel extends ChangeNotifier {
     }
 
     try {
-      final response = await _serviceRepository.getServices(
-        townId: town.id,
-        categoryId: category.id,
-        subCategoryId: subCategory.id,
-        page: loadMore ? _currentPage + 1 : ServiceListConstants.defaultPage,
-        pageSize: ServiceListConstants.defaultPageSize,
-      );
+      final nextPage = loadMore ? _currentPage + 1 : ServiceListConstants.defaultPage;
+      final response = _hasSearchTerm
+          ? await _serviceRepository.searchServices(
+              query: _searchTerm!,
+              townId: town.id,
+              categoryId: category.id,
+              subCategoryId: subCategory.id,
+              page: nextPage,
+              pageSize: ServiceListConstants.defaultPageSize,
+            )
+          : await _serviceRepository.getServices(
+              townId: town.id,
+              categoryId: category.id,
+              subCategoryId: subCategory.id,
+              search: _searchTerm,
+              page: nextPage,
+              pageSize: ServiceListConstants.defaultPageSize,
+            );
+
+      _lastTotalCount = response.totalCount;
 
       if (loadMore) {
         if (_state is ServiceListLoadingMore) {
           final currentState = _state as ServiceListLoadingMore;
-          final updatedServices = [...currentState.services, ...response.services];
+          final updatedServices = [
+            ...currentState.services,
+            ...response.services,
+          ];
 
           _state = ServiceListSuccess(
             services: updatedServices,
-            hasNextPage: response.services.length == ServiceListConstants.defaultPageSize,
-            currentPage: _currentPage + 1,
+            hasNextPage: response.hasNextPage,
+            currentPage: nextPage,
+            totalItemCount: response.totalCount,
           );
-          _currentPage++;
+          _currentPage = nextPage;
         }
       } else {
         _state = ServiceListSuccess(
           services: response.services,
-          hasNextPage: response.services.length == ServiceListConstants.defaultPageSize,
+          hasNextPage: response.hasNextPage,
+          currentPage: nextPage,
+          totalItemCount: response.totalCount,
         );
-        _hasMorePages = response.services.length == ServiceListConstants.defaultPageSize;
+        _currentPage = nextPage;
       }
 
       notifyListeners();
@@ -91,6 +122,25 @@ class ServiceListViewModel extends ChangeNotifier {
 
       notifyListeners();
     }
+  }
+
+  bool _canLoadMore() {
+    final currentState = _state;
+    if (currentState is ServiceListSuccess) {
+      return currentState.hasNextPage;
+    }
+    return false;
+  }
+
+  Future<void> search(String? term) async {
+    final normalizedTerm = term?.trim();
+    if ((normalizedTerm == null || normalizedTerm.isEmpty) &&
+        (_searchTerm == null || _searchTerm!.trim().isEmpty)) {
+      return;
+    }
+    _searchTerm =
+        normalizedTerm == null || normalizedTerm.isEmpty ? null : normalizedTerm;
+    await loadServices(loadMore: false);
   }
 
   /// Refresh services (reload from first page)

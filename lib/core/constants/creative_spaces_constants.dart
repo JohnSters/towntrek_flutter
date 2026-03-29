@@ -47,16 +47,12 @@ class CreativeSpacesConstants {
   static const String exploreCategoryLabel = 'Explore {name}';
   static const String exploreSubCategoryLabel = 'Explore {name} spaces';
   static const String categoryStylesTemplate = '{name} Styles';
-  static const String categoryHeader = 'Browse by category';
-  static const String categoryHeaderHint =
-      'Choose a category to explore makers, studios, and creative experiences.';
   static const String allSpacesLabel = 'All spaces';
   static const String allInContextLabelTemplate = '{label} in {context}';
   static const String contextChipValueTemplate = '{label}: {value}';
   static const String labelValueSuffix = ': ';
   static const String numericValueTemplate = '{count} {label}';
   static const String loadMoreSpacesLabel = 'Load more spaces';
-  static const String clearSearchLabel = 'Clear search';
   static const String retryLabel = 'Retry';
   static const String searchHint = 'Search by name, style, or service';
   static const String searchChipPrefix = 'Search';

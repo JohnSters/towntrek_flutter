@@ -26,6 +26,9 @@ class LandingViewModel extends ChangeNotifier {
         businessCount: stats.businessCount,
         serviceCount: stats.serviceCount,
         eventCount: stats.eventCount,
+        creativeSpaceCount: stats.creativeSpaceCount,
+        propertyListingCount: stats.propertyListingCount,
+        equipmentRentalBusinessCount: stats.equipmentRentalBusinessCount,
       );
       notifyListeners();
     } catch (e) {

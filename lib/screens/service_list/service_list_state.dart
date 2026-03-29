@@ -15,12 +15,14 @@ class ServiceListSuccess extends ServiceListState {
   final bool hasNextPage;
   final bool isLoadingMore;
   final int currentPage;
+  final int totalItemCount;
 
   ServiceListSuccess({
     required this.services,
     required this.hasNextPage,
     this.isLoadingMore = false,
     this.currentPage = 1,
+    required this.totalItemCount,
   });
 
   ServiceListSuccess copyWith({
@@ -28,12 +30,14 @@ class ServiceListSuccess extends ServiceListState {
     bool? hasNextPage,
     bool? isLoadingMore,
     int? currentPage,
+    int? totalItemCount,
   }) {
     return ServiceListSuccess(
       services: services ?? this.services,
       hasNextPage: hasNextPage ?? this.hasNextPage,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       currentPage: currentPage ?? this.currentPage,
+      totalItemCount: totalItemCount ?? this.totalItemCount,
     );
   }
 }

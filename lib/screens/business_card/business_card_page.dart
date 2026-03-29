@@ -35,8 +35,51 @@ class BusinessCardPage extends StatelessWidget {
   }
 }
 
-class _BusinessCardPageContent extends StatelessWidget {
+class _BusinessCardPageContent extends StatefulWidget {
   const _BusinessCardPageContent();
+
+  @override
+  State<_BusinessCardPageContent> createState() =>
+      _BusinessCardPageContentState();
+}
+
+class _BusinessCardPageContentState extends State<_BusinessCardPageContent> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _submitSearch(BusinessCardViewModel viewModel) {
+    viewModel.search(_searchController.text);
+  }
+
+  void _clearSearch(BusinessCardViewModel viewModel) {
+    _searchController.clear();
+    viewModel.search(null);
+  }
+
+  Widget _searchBar(
+    BusinessCardViewModel viewModel,
+    EntityListingTheme listingTheme,
+  ) {
+    return EntityListingSearchBar(
+      controller: _searchController,
+      theme: listingTheme,
+      hintText: BusinessCardConstants.searchHint,
+      onSubmitted: () => _submitSearch(viewModel),
+      onClear: () => _clearSearch(viewModel),
+    );
+  }
+
+  Widget _searchPadding(Widget child) {
+    return Padding(
+      padding: EntityListingConstants.searchBarSectionPadding,
+      child: child,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +110,13 @@ class _BusinessCardPageContent extends StatelessWidget {
     final state = viewModel.state;
 
     if (state is BusinessCardLoading) {
-      return _buildLoadingView(context, viewModel, listingTheme);
+      return BusinessLoadingView(
+        category: viewModel.category,
+        subCategory: viewModel.subCategory,
+        town: viewModel.town,
+        listingTheme: listingTheme,
+        searchBar: _searchBar(viewModel, listingTheme),
+      );
     }
 
     if (state is BusinessCardError) {
@@ -84,23 +133,13 @@ class _BusinessCardPageContent extends StatelessWidget {
     }
 
     if (state is BusinessCardSuccess) {
+      if (state.businesses.isEmpty) {
+        return _buildSearchEmptyView(context, viewModel, listingTheme, state);
+      }
       return _buildBusinessesView(context, viewModel, state, listingTheme);
     }
 
     return const SizedBox();
-  }
-
-  Widget _buildLoadingView(
-    BuildContext context,
-    BusinessCardViewModel viewModel,
-    EntityListingTheme listingTheme,
-  ) {
-    return BusinessLoadingView(
-      category: viewModel.category,
-      subCategory: viewModel.subCategory,
-      town: viewModel.town,
-      listingTheme: listingTheme,
-    );
   }
 
   Widget _buildErrorState(
@@ -121,6 +160,12 @@ class _BusinessCardPageContent extends StatelessWidget {
       return Column(
         children: [
           header,
+          ListingResultsBand(
+            count: viewModel.bandCount(viewModel.state),
+            categoryName: viewModel.subCategory.name,
+            bandColor: listingTheme.resultsBand,
+          ),
+          _searchPadding(_searchBar(viewModel, listingTheme)),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -129,6 +174,12 @@ class _BusinessCardPageContent extends StatelessWidget {
     return Column(
       children: [
         header,
+        ListingResultsBand(
+          count: viewModel.subCategory.businessCount,
+          categoryName: viewModel.subCategory.name,
+          bandColor: listingTheme.resultsBand,
+        ),
+        _searchPadding(_searchBar(viewModel, listingTheme)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),
@@ -166,7 +217,77 @@ class _BusinessCardPageContent extends StatelessWidget {
           categoryName: viewModel.subCategory.name,
           bandColor: listingTheme.resultsBand,
         ),
+        _searchPadding(_searchBar(viewModel, listingTheme)),
         Expanded(child: BusinessEmptyView(category: viewModel.category)),
+      ],
+    );
+  }
+
+  Widget _buildSearchEmptyView(
+    BuildContext context,
+    BusinessCardViewModel viewModel,
+    EntityListingTheme listingTheme,
+    BusinessCardSuccess state,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        BusinessCardHeroHeader(
+          theme: listingTheme,
+          subCategoryName: viewModel.subCategory.name,
+          categoryName: viewModel.category.name,
+          categoryKey: viewModel.category.key,
+          townName: viewModel.town.name,
+        ),
+        ListingResultsBand(
+          count: state.totalItemCount,
+          categoryName: viewModel.subCategory.name,
+          bandColor: listingTheme.resultsBand,
+        ),
+        _searchPadding(_searchBar(viewModel, listingTheme)),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_off_rounded,
+                    size: 52,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    BusinessCardConstants.emptySearchTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    EntityListingConstants.searchNoMatchesHint,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () => _clearSearch(viewModel),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text(EntityListingConstants.clearSearchLabel),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -187,10 +308,11 @@ class _BusinessCardPageContent extends StatelessWidget {
           townName: viewModel.town.name,
         ),
         ListingResultsBand(
-          count: viewModel.subCategory.businessCount,
+          count: state.totalItemCount,
           categoryName: viewModel.subCategory.name,
           bandColor: listingTheme.resultsBand,
         ),
+        _searchPadding(_searchBar(viewModel, listingTheme)),
         Expanded(
           child: _buildBusinessesList(context, viewModel, state, listingTheme),
         ),
@@ -214,7 +336,7 @@ class _BusinessCardPageContent extends StatelessWidget {
         return false;
       },
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: EntityListingConstants.cardListScrollPadding,
         itemCount: state.businesses.length + (state.isLoadingMore ? 1 : 0),
         separatorBuilder: (context, index) => const SizedBox(height: 16),
         itemBuilder: (context, index) {

@@ -171,11 +171,17 @@ class _LandingPageContent extends StatelessWidget {
         businessCount: final businessCount,
         serviceCount: final serviceCount,
         eventCount: final eventCount,
+        creativeSpaceCount: final creativeSpaceCount,
+        propertyListingCount: final propertyListingCount,
+        equipmentRentalBusinessCount: final equipmentRentalBusinessCount,
       ) =>
         PlatformStatsCard(
           businessCount: businessCount,
           serviceCount: serviceCount,
           eventCount: eventCount,
+          creativeSpaceCount: creativeSpaceCount,
+          propertyListingCount: propertyListingCount,
+          equipmentRentalBusinessCount: equipmentRentalBusinessCount,
         ),
       LandingPageError() => const PlatformStatsCard(),
     };

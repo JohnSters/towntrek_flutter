@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/service_list_constants.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
 import 'service_list_state.dart';
@@ -36,8 +37,58 @@ class ServiceListPage extends StatelessWidget {
   }
 }
 
-class _ServiceListPageContent extends StatelessWidget {
+class _ServiceListPageContent extends StatefulWidget {
   const _ServiceListPageContent();
+
+  @override
+  State<_ServiceListPageContent> createState() => _ServiceListPageContentState();
+}
+
+class _ServiceListPageContentState extends State<_ServiceListPageContent> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _submitSearch(ServiceListViewModel viewModel) {
+    viewModel.search(_searchController.text);
+  }
+
+  void _clearSearch(ServiceListViewModel viewModel) {
+    _searchController.clear();
+    viewModel.search(null);
+  }
+
+  Widget _searchBar(ServiceListViewModel viewModel) {
+    return EntityListingSearchBar(
+      controller: _searchController,
+      theme: ServiceListPage._theme,
+      hintText: ServiceListConstants.searchHint,
+      onSubmitted: () => _submitSearch(viewModel),
+      onClear: () => _clearSearch(viewModel),
+    );
+  }
+
+  Widget _serviceHero(ServiceListViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: ServiceListPage._theme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: viewModel.subCategory.name,
+      categoryName: viewModel.category.name,
+      townName: viewModel.town.name,
+    );
+  }
+
+  Widget _resultsBand(ServiceListViewModel viewModel) {
+    return ListingResultsBand(
+      count: viewModel.bandCount,
+      categoryName: viewModel.subCategory.name,
+      bandColor: ServiceListPage._theme.resultsBand,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,13 +117,15 @@ class _ServiceListPageContent extends StatelessWidget {
         hasNextPage: final hasNextPage,
         isLoadingMore: final isLoadingMore,
       ) =>
-        _buildSuccessLayout(
-          context,
-          viewModel,
-          services,
-          hasNextPage,
-          isLoadingMore,
-        ),
+        services.isEmpty
+            ? _buildEmptyLayout(context, viewModel)
+            : _buildSuccessLayout(
+                context,
+                viewModel,
+                services,
+                hasNextPage,
+                isLoadingMore,
+              ),
       ServiceListLoadingMore(services: final services, currentPage: _) =>
         _buildSuccessLayout(context, viewModel, services, true, true),
       ServiceListError(error: final error) =>
@@ -80,21 +133,10 @@ class _ServiceListPageContent extends StatelessWidget {
     };
   }
 
-  Widget _serviceHero(ServiceListViewModel viewModel) {
-    return EntityListingHeroHeader(
-      theme: ServiceListPage._theme,
-      categoryIcon: Icons.handyman_rounded,
-      subCategoryName: viewModel.subCategory.name,
-      categoryName: viewModel.category.name,
-      townName: viewModel.town.name,
-    );
-  }
-
-  Widget _resultsBand(ServiceListViewModel viewModel) {
-    return ListingResultsBand(
-      count: viewModel.subCategory.serviceCount,
-      categoryName: viewModel.subCategory.name,
-      bandColor: ServiceListPage._theme.resultsBand,
+  Widget _searchPadding(Widget child) {
+    return Padding(
+      padding: EntityListingConstants.searchBarSectionPadding,
+      child: child,
     );
   }
 
@@ -103,8 +145,79 @@ class _ServiceListPageContent extends StatelessWidget {
       children: [
         _serviceHero(viewModel),
         _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
         const Expanded(
           child: Center(child: CircularProgressIndicator()),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyLayout(
+    BuildContext context,
+    ServiceListViewModel viewModel,
+  ) {
+    final hasSearch = _searchController.text.trim().isNotEmpty;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    hasSearch
+                        ? Icons.search_off_rounded
+                        : ServiceListConstants.emptyIcon,
+                    size: ServiceListConstants.errorIconSize,
+                    color: colorScheme.onSurface.withValues(
+                      alpha: hasSearch
+                          ? 0.45
+                          : ServiceListConstants.emptyStateIconOpacity,
+                    ),
+                  ),
+                  SizedBox(height: ServiceListConstants.errorSpacing),
+                  Text(
+                    hasSearch
+                        ? ServiceListConstants.emptySearchTitle
+                        : ServiceListConstants.emptyStateTitle,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(
+                        alpha: ServiceListConstants.emptyStateTextOpacity,
+                      ),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: ServiceListConstants.errorSpacing * 0.5),
+                  Text(
+                    hasSearch
+                        ? EntityListingConstants.searchNoMatchesHint
+                        : ServiceListConstants.emptyStateMessage,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (hasSearch) ...[
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => _clearSearch(viewModel),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text(EntityListingConstants.clearSearchLabel),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -117,18 +230,11 @@ class _ServiceListPageContent extends StatelessWidget {
     bool hasMorePages,
     bool isLoadingMore,
   ) {
-    if (services.isEmpty) {
-      return ServiceListEmptyStateView(
-        category: viewModel.category,
-        subCategory: viewModel.subCategory,
-        town: viewModel.town,
-      );
-    }
-
     return Column(
       children: [
         _serviceHero(viewModel),
         _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
         Expanded(
           child: _buildServicesList(
             context,
@@ -152,6 +258,7 @@ class _ServiceListPageContent extends StatelessWidget {
         children: [
           _serviceHero(viewModel),
           _resultsBand(viewModel),
+          _searchPadding(_searchBar(viewModel)),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -161,6 +268,7 @@ class _ServiceListPageContent extends StatelessWidget {
       children: [
         _serviceHero(viewModel),
         _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),
@@ -187,7 +295,7 @@ class _ServiceListPageContent extends StatelessWidget {
     ServiceListViewModel viewModel,
   ) {
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: EntityListingConstants.cardListScrollPadding,
       itemCount: services.length + (hasMorePages ? 1 : 0),
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {

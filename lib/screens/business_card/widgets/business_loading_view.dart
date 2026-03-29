@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/entity_listing_theme.dart';
+import '../../../core/core.dart';
 import '../../../models/models.dart';
 import 'business_card_hero_header.dart';
 
-/// Widget for displaying loading state with header
+/// Widget for displaying loading state with header, results band, and search bar.
 class BusinessLoadingView extends StatelessWidget {
   final CategoryWithCountDto category;
   final SubCategoryWithCountDto subCategory;
   final TownDto town;
   final EntityListingTheme listingTheme;
+  final Widget searchBar;
 
   const BusinessLoadingView({
     super.key,
@@ -16,6 +17,7 @@ class BusinessLoadingView extends StatelessWidget {
     required this.subCategory,
     required this.town,
     required this.listingTheme,
+    required this.searchBar,
   });
 
   @override
@@ -28,6 +30,15 @@ class BusinessLoadingView extends StatelessWidget {
           categoryName: category.name,
           categoryKey: category.key,
           townName: town.name,
+        ),
+        ListingResultsBand(
+          count: subCategory.businessCount,
+          categoryName: subCategory.name,
+          bandColor: listingTheme.resultsBand,
+        ),
+        Padding(
+          padding: EntityListingConstants.searchBarSectionPadding,
+          child: searchBar,
         ),
         const Expanded(
           child: Center(

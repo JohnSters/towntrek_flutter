@@ -110,7 +110,6 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                               CreativeSpacesConstants.sectionSpacing,
                             ),
                             children: [
-                              _buildFlavorBanner(context),
                               if (categories.isEmpty)
                                 _buildEmptyState(context)
                               else
@@ -161,71 +160,6 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
       );
     }
     return out;
-  }
-
-  Widget _buildFlavorBanner(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        CreativeSpacesConstants.pagePadding,
-        CreativeSpacesConstants.sectionSpacing,
-        CreativeSpacesConstants.pagePadding,
-        0,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primaryContainer.withValues(alpha: 0.7),
-            colorScheme.secondaryContainer.withValues(alpha: 0.45),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.18)),
-      ),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: colorScheme.surface.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.auto_awesome_rounded,
-              color: CreativeSpacesConstants.creativePrimary,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  CreativeSpacesConstants.categoryHeader,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurface,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  CreativeSpacesConstants.categoryHeaderHint,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildEmptyState(BuildContext context) {

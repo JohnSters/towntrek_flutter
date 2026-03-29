@@ -32,8 +32,81 @@ class CurrentEventsScreen extends StatelessWidget {
   }
 }
 
-class _CurrentEventsScreenContent extends StatelessWidget {
+class _CurrentEventsScreenContent extends StatefulWidget {
   const _CurrentEventsScreenContent();
+
+  @override
+  State<_CurrentEventsScreenContent> createState() =>
+      _CurrentEventsScreenContentState();
+}
+
+class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  EntityListingTheme get _theme => CurrentEventsScreen._theme;
+
+  List<EventDto> _visibleEvents(List<EventDto> events) {
+    final t = _searchController.text.trim().toLowerCase();
+    if (t.isEmpty) return events;
+    return events.where((e) {
+      return e.name.toLowerCase().contains(t) ||
+          e.eventType.toLowerCase().contains(t) ||
+          (e.shortDescription?.toLowerCase().contains(t) ?? false) ||
+          (e.description?.toLowerCase().contains(t) ?? false) ||
+          (e.venue?.toLowerCase().contains(t) ?? false) ||
+          e.physicalAddress.toLowerCase().contains(t);
+    }).toList();
+  }
+
+  Widget _searchBar() {
+    return EntityListingSearchBar(
+      controller: _searchController,
+      theme: _theme,
+      hintText: EntityListingConstants.eventSearchHint,
+      onSubmitted: () => setState(() {}),
+      onClear: () {
+        _searchController.clear();
+      },
+    );
+  }
+
+  Widget _searchPadding(Widget child) {
+    return Padding(
+      padding: EntityListingConstants.searchBarSectionPadding,
+      child: child,
+    );
+  }
+
+  Widget _eventsHero(CurrentEventsViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: CurrentEventsConstants.defaultEventIcon,
+      subCategoryName:
+          '${CurrentEventsConstants.eventsPrefix} ${viewModel.townName}',
+      categoryName: CurrentEventsConstants.eventsSubtitle,
+      townName: viewModel.townName,
+    );
+  }
+
+  Widget _resultsBand(int count) {
+    return ListingResultsBand(
+      count: count,
+      categoryName: 'Current events',
+      bandColor: _theme.resultsBand,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,30 +127,13 @@ class _CurrentEventsScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _eventsHero(CurrentEventsViewModel viewModel) {
-    return EntityListingHeroHeader(
-      theme: CurrentEventsScreen._theme,
-      categoryIcon: CurrentEventsConstants.defaultEventIcon,
-      subCategoryName: '${CurrentEventsConstants.eventsPrefix} ${viewModel.townName}',
-      categoryName: CurrentEventsConstants.eventsSubtitle,
-      townName: viewModel.townName,
-    );
-  }
-
-  Widget _resultsBand(int count) {
-    return ListingResultsBand(
-      count: count,
-      categoryName: 'Current events',
-      bandColor: CurrentEventsScreen._theme.resultsBand,
-    );
-  }
-
   Widget _buildContent(BuildContext context, CurrentEventsViewModel viewModel) {
     return switch (viewModel.state) {
       CurrentEventsLoading() => Column(
           children: [
             _eventsHero(viewModel),
             _resultsBand(0),
+            _searchPadding(_searchBar()),
             const Expanded(
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -88,7 +144,7 @@ class _CurrentEventsScreenContent extends StatelessWidget {
         hasNextPage: final hasNextPage,
         isLoadingMore: final isLoadingMore,
       ) =>
-        _buildEventsListLayout(
+        _buildSuccessBranch(
           context,
           viewModel,
           events,
@@ -97,14 +153,13 @@ class _CurrentEventsScreenContent extends StatelessWidget {
         ),
       CurrentEventsError(error: final error) =>
         _buildErrorLayout(context, error: error, viewModel: viewModel),
-      CurrentEventsLoadingMore() => Column(
-          children: [
-            _eventsHero(viewModel),
-            _resultsBand(0),
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ],
+      CurrentEventsLoadingMore(events: final events, currentPage: _) =>
+        _buildSuccessBranch(
+          context,
+          viewModel,
+          events,
+          true,
+          true,
         ),
     };
   }
@@ -119,6 +174,7 @@ class _CurrentEventsScreenContent extends StatelessWidget {
         children: [
           _eventsHero(viewModel),
           _resultsBand(0),
+          _searchPadding(_searchBar()),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -128,6 +184,7 @@ class _CurrentEventsScreenContent extends StatelessWidget {
       children: [
         _eventsHero(viewModel),
         _resultsBand(0),
+        _searchPadding(_searchBar()),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),
@@ -146,18 +203,22 @@ class _CurrentEventsScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildEventsListLayout(
+  Widget _buildSuccessBranch(
     BuildContext context,
     CurrentEventsViewModel viewModel,
     List<EventDto> events,
     bool hasNextPage,
     bool isLoadingMore,
   ) {
+    final hasSearch = _searchController.text.trim().isNotEmpty;
+    final visible = _visibleEvents(events);
+
     if (events.isEmpty) {
       return Column(
         children: [
           _eventsHero(viewModel),
           _resultsBand(0),
+          _searchPadding(_searchBar()),
           Expanded(
             child: Center(
               child: Column(
@@ -189,20 +250,74 @@ class _CurrentEventsScreenContent extends StatelessWidget {
       );
     }
 
+    if (hasSearch && visible.isEmpty) {
+      final theme = Theme.of(context);
+      final colorScheme = theme.colorScheme;
+      return Column(
+        children: [
+          _eventsHero(viewModel),
+          _resultsBand(0),
+          _searchPadding(_searchBar()),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off_rounded,
+                      size: CurrentEventsConstants.emptyStateIconSize,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      CurrentEventsConstants.emptySearchTitle,
+                      style: theme.textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      EntityListingConstants.searchNoMatchesHint,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () {
+                        _searchController.clear();
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text(EntityListingConstants.clearSearchLabel),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final bandCount = hasSearch ? visible.length : events.length;
+
     return Column(
       children: [
         _eventsHero(viewModel),
-        _resultsBand(events.length),
+        _resultsBand(bandCount),
+        _searchPadding(_searchBar()),
         Expanded(
           child: RefreshIndicator(
             onRefresh: viewModel.refreshEvents,
             child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              itemCount: events.length + (hasNextPage ? 1 : 0),
+              padding: EntityListingConstants.cardListScrollPadding,
+              itemCount: visible.length + (hasNextPage ? 1 : 0),
               separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
-                if (index == events.length) {
+                if (index == visible.length) {
                   if (!isLoadingMore) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       viewModel.loadMoreEvents();
@@ -219,9 +334,9 @@ class _CurrentEventsScreenContent extends StatelessWidget {
                 }
 
                 return EventCard(
-                  event: events[index],
+                  event: visible[index],
                   townName: viewModel.townName,
-                  listingTheme: CurrentEventsScreen._theme,
+                  listingTheme: _theme,
                 );
               },
             ),

@@ -100,66 +100,12 @@ class _CreativeSpacesListPageContentState
   }
 
   Widget _searchBar(CreativeSpacesViewModel viewModel) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: _searchController,
-      builder: (context, value, child) {
-        return TextField(
-          controller: _searchController,
-          onSubmitted: (_) => _submitSearch(viewModel),
-          textInputAction: TextInputAction.search,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.2),
-          decoration: InputDecoration(
-            hintText: CreativeSpacesConstants.searchHint,
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
-            prefixIcon: Icon(
-              Icons.search_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.clear_rounded, size: 18),
-                    onPressed: () => _clearSearch(viewModel),
-                  ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: CreativeSpacesConstants.searchBarContentPadding,
-            ),
-            hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  height: 1.2,
-                ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                CreativeSpacesConstants.searchBarRadius,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                CreativeSpacesConstants.searchBarRadius,
-              ),
-              borderSide: BorderSide(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.16),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                CreativeSpacesConstants.searchBarRadius,
-              ),
-              borderSide: BorderSide(
-                color: CreativeSpacesListPage._theme.accent.withValues(
-                  alpha: 0.45,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    return EntityListingSearchBar(
+      controller: _searchController,
+      theme: CreativeSpacesListPage._theme,
+      hintText: CreativeSpacesConstants.searchHint,
+      onSubmitted: () => _submitSearch(viewModel),
+      onClear: () => _clearSearch(viewModel),
     );
   }
 
@@ -181,7 +127,7 @@ class _CreativeSpacesListPageContentState
                         _hero(),
                         _band(0),
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                          padding: EntityListingConstants.searchBarSectionPadding,
                           child: _searchBar(viewModel),
                         ),
                         const Expanded(
@@ -219,7 +165,7 @@ class _CreativeSpacesListPageContentState
                       _hero(),
                       _band(totalItemCount),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                        padding: EntityListingConstants.searchBarSectionPadding,
                         child: _searchBar(viewModel),
                       ),
                       Expanded(
@@ -229,9 +175,8 @@ class _CreativeSpacesListPageContentState
                               ? ListView(
                                   physics:
                                       const AlwaysScrollableScrollPhysics(),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
+                                  padding: EntityListingConstants
+                                      .cardListScrollPadding,
                                   children: [
                                     _buildEmptyState(context, viewModel),
                                   ],
@@ -239,12 +184,8 @@ class _CreativeSpacesListPageContentState
                               : ListView.separated(
                                   physics:
                                       const AlwaysScrollableScrollPhysics(),
-                                  padding: const EdgeInsets.fromLTRB(
-                                    16,
-                                    0,
-                                    16,
-                                    20,
-                                  ),
+                                  padding: EntityListingConstants
+                                      .cardListScrollPadding,
                                   itemCount:
                                       spaces.length + (hasNextPage ? 1 : 0),
                                   separatorBuilder: (context, index) =>
@@ -316,7 +257,7 @@ class _CreativeSpacesListPageContentState
           _hero(),
           _band(0),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: EntityListingConstants.searchBarSectionPadding,
             child: _searchBar(viewModel),
           ),
           Expanded(child: ErrorView(error: error)),
@@ -329,13 +270,13 @@ class _CreativeSpacesListPageContentState
         _hero(),
         _band(0),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: EntityListingConstants.searchBarSectionPadding,
           child: _searchBar(viewModel),
         ),
         Expanded(
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: EntityListingConstants.cardListScrollPadding,
             children: [
               ErrorView(error: error),
               const SizedBox(height: 12),
@@ -391,7 +332,7 @@ class _CreativeSpacesListPageContentState
             TextButton.icon(
               onPressed: () => _clearSearch(viewModel),
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text(CreativeSpacesConstants.clearSearchLabel),
+              label: const Text(EntityListingConstants.clearSearchLabel),
             ),
         ],
       ),
