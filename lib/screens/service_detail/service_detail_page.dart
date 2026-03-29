@@ -438,13 +438,10 @@ class _ServiceOpenClosedBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final openNow = ServiceUtils.isServiceCurrentlyOpen(service.operatingHours);
-    final secondary = openNow
-        ? ServiceUtils.getClosingTimeText(service.operatingHours)
-        : 'Currently closed';
 
     return EntityOpenClosedBanner(
       isOpen: openNow,
-      secondaryText: secondary,
+      viewCount: service.viewCount,
     );
   }
 }

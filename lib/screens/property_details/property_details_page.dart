@@ -75,6 +75,13 @@ class _PropertyDetailsPageContent extends StatelessWidget {
             _detailHero(state, viewModel),
             if (state is PropertyDetailsSuccess && state.listing.isFeatured)
               const _FeaturedBar(),
+            if (state is PropertyDetailsSuccess)
+              EntityOpenClosedBanner(
+                isOpen: null,
+                viewCount: state.listing.viewCount > 0
+                    ? state.listing.viewCount
+                    : null,
+              ),
             Expanded(
               child: _buildContent(context, state, viewModel),
             ),
@@ -350,15 +357,6 @@ class _PropertyDetailsBody extends StatelessWidget {
             ],
           ),
         ),
-        if (listing.viewCount > 0) ...[
-          const SizedBox(height: 10),
-          Text(
-            '${listing.viewCount} views',
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-          ),
-        ],
         const SizedBox(height: 10),
         Align(
           alignment: Alignment.centerLeft,

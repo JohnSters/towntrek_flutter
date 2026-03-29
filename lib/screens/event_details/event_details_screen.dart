@@ -90,6 +90,12 @@ class _EventDetailsScreenContent extends StatelessWidget {
             child: Column(
               children: [
                 _eventHero(state, viewModel),
+                if (state is EventDetailsSuccess &&
+                    state.eventDetails.viewCount > 0)
+                  EntityOpenClosedBanner(
+                    isOpen: null,
+                    viewCount: state.eventDetails.viewCount,
+                  ),
                 Expanded(
                   child: _buildBody(context, state, viewModel),
                 ),

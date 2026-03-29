@@ -411,13 +411,10 @@ class _BusinessOpenClosedBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final openNow =
         business.isOpenNow ?? BusinessUtils.isBusinessCurrentlyOpen(business.operatingHours);
-    final secondary = business.openNowText?.trim().isNotEmpty == true
-        ? business.openNowText!
-        : (openNow ? BusinessUtils.getClosingTime(business.operatingHours) : 'Currently closed');
 
     return EntityOpenClosedBanner(
       isOpen: openNow,
-      secondaryText: secondary,
+      viewCount: business.viewCount,
     );
   }
 }

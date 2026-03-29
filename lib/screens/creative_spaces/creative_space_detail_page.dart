@@ -5,7 +5,6 @@ import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import '../business_details/widgets/business_documents_section.dart';
-import '../../core/utils/business_utils.dart';
 import 'creative_space_detail_state.dart';
 import 'creative_space_detail_view_model.dart';
 
@@ -144,51 +143,11 @@ class _CreativeOpenClosedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final openNow = space.isOpenNow;
-    final secondary = _creativeStatusSubtitle(
-      isOpen: openNow,
-      openNowText: space.openNowText,
-      operatingHours: space.operatingHours,
-    );
-
     return EntityOpenClosedBanner(
-      isOpen: openNow,
-      secondaryText: secondary,
+      isOpen: space.isOpenNow,
+      viewCount: space.viewCount,
     );
   }
-}
-
-String _creativeStatusSubtitle({
-  required bool isOpen,
-  required String? openNowText,
-  required List<CreativeSpaceOperatingHourDto> operatingHours,
-}) {
-  final trimmed = openNowText?.trim();
-  if (trimmed != null && trimmed.isNotEmpty) return trimmed;
-  if (isOpen) return _creativeClosingSubtitle(operatingHours);
-  return 'Currently closed';
-}
-
-String _creativeClosingSubtitle(List<CreativeSpaceOperatingHourDto> hours) {
-  const orderedDays = <String>[
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  final today = orderedDays[DateTime.now().weekday - 1];
-  for (final h in hours) {
-    if (BusinessUtils.formatDayOfWeek(h.dayOfWeek) != today) continue;
-    if (h.isOpen &&
-        h.closeTime != null &&
-        h.closeTime!.trim().isNotEmpty) {
-      return 'Closes at ${BusinessUtils.formatTime(h.closeTime!.trim())}';
-    }
-  }
-  return '';
 }
 
 class _CreativeSpaceDetailBody extends StatelessWidget {

@@ -5,6 +5,14 @@ import 'operating_hour_dto.dart';
 import 'review_dto.dart';
 import 'special_operating_hour_dto.dart';
 
+int _businessDetailViewCountFromJson(Map<String, dynamic> json) {
+  final v = json['viewCount'] ?? json['ViewCount'];
+  if (v == null) return 0;
+  if (v is int) return v;
+  if (v is num) return v.round();
+  return 0;
+}
+
 /// Detailed business information for individual business pages
 class BusinessDetailDto {
   final int id;
@@ -99,7 +107,7 @@ class BusinessDetailDto {
       coverImageUrl: json['coverImageUrl'] as String?,
       rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
       totalReviews: json['totalReviews'] as int,
-      viewCount: json['viewCount'] as int,
+      viewCount: _businessDetailViewCountFromJson(json),
       isFeatured: json['isFeatured'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
       isOpenNow: json['isOpenNow'] as bool?,
