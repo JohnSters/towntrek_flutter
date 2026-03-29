@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/business_card_constants.dart';
+import '../theme/entity_listing_theme.dart';
 import '../constants/business_category_constants.dart';
 import '../constants/business_sub_category_constants.dart';
 import '../constants/town_feature_constants.dart';
@@ -14,6 +15,14 @@ class BusinessCategoryCopy {
     final k = categoryKey?.trim().toLowerCase();
     return k == TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase();
   }
+
+  static EntityListingTheme listingTheme(String? categoryKey) =>
+      isEquipmentRentals(categoryKey)
+          ? EntityListingTheme.equipmentRentals
+          : EntityListingTheme.business;
+
+  static String listingBackFooterLabel(String? categoryKey) =>
+      isEquipmentRentals(categoryKey) ? 'Back to rentals' : 'Back to properties';
 
   static String entityPlural(String? categoryKey) =>
       isEquipmentRentals(categoryKey) ? 'listings' : 'businesses';

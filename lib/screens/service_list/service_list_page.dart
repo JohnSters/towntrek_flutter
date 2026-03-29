@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../core/constants/service_list_constants.dart';
 import 'service_list_state.dart';
 import 'service_list_view_model.dart';
 import 'widgets/widgets.dart';
-
 
 /// Service List Page - Shows paginated list of services for a specific sub-category
 class ServiceListPage extends StatelessWidget {
@@ -20,6 +18,8 @@ class ServiceListPage extends StatelessWidget {
     required this.subCategory,
     required this.town,
   });
+
+  static final EntityListingTheme _theme = EntityListingTheme.services;
 
   @override
   Widget build(BuildContext context) {
@@ -44,64 +44,136 @@ class _ServiceListPageContent extends StatelessWidget {
     final viewModel = context.watch<ServiceListViewModel>();
 
     return Scaffold(
-      body: Column(
-        children: [
-          PageHeader(
-            title: viewModel.subCategory.name,
-            subtitle: '${ServiceListConstants.servicesSubtitle} in ${viewModel.town.name}',
-            height: ServiceListConstants.pageHeaderHeight,
-            headerType: HeaderType.service,
-          ),
-          _ListInfoBar(
-            icon: Icons.handyman_rounded,
-            text: '${viewModel.subCategory.serviceCount} services \u2022 ${viewModel.subCategory.name}',
-            backgroundColor: const Color(0xFFE3F2FD),
-            textColor: const Color(0xFF0D47A1),
-            borderColor: const Color(0xFFBBDEFB),
-          ),
-          Expanded(
-            child: _buildContent(context, viewModel),
-          ),
-          const BackNavigationFooter(),
-        ],
+      backgroundColor: EntityListingTheme.pageBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildContent(context, viewModel),
+            ),
+            const ListingBackFooter(label: 'Back to services'),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildContent(BuildContext context, ServiceListViewModel viewModel) {
     return switch (viewModel.state) {
-      ServiceListLoading() => const Center(child: CircularProgressIndicator()),
-      ServiceListSuccess(services: final services, hasNextPage: final hasNextPage, isLoadingMore: final isLoadingMore) =>
-        _buildServicesList(context, services, hasNextPage, isLoadingMore, viewModel),
-      ServiceListLoadingMore(services: final services, currentPage: _) =>
-        _buildServicesList(context, services, true, true, viewModel),
-      ServiceListError(error: final error) =>
-        _buildErrorState(
+      ServiceListLoading() => _buildLoadingLayout(viewModel),
+      ServiceListSuccess(
+        services: final services,
+        hasNextPage: final hasNextPage,
+        isLoadingMore: final isLoadingMore,
+      ) =>
+        _buildSuccessLayout(
           context,
-          error: error,
-          viewModel: viewModel,
+          viewModel,
+          services,
+          hasNextPage,
+          isLoadingMore,
         ),
+      ServiceListLoadingMore(services: final services, currentPage: _) =>
+        _buildSuccessLayout(context, viewModel, services, true, true),
+      ServiceListError(error: final error) =>
+        _buildErrorLayout(context, error: error, viewModel: viewModel),
     };
   }
 
-  Widget _buildErrorState(
+  Widget _serviceHero(ServiceListViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: ServiceListPage._theme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: viewModel.subCategory.name,
+      categoryName: viewModel.category.name,
+      townName: viewModel.town.name,
+    );
+  }
+
+  Widget _resultsBand(ServiceListViewModel viewModel) {
+    return ListingResultsBand(
+      count: viewModel.subCategory.serviceCount,
+      categoryName: viewModel.subCategory.name,
+      bandColor: ServiceListPage._theme.resultsBand,
+    );
+  }
+
+  Widget _buildLoadingLayout(ServiceListViewModel viewModel) {
+    return Column(
+      children: [
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        const Expanded(
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSuccessLayout(
+    BuildContext context,
+    ServiceListViewModel viewModel,
+    List<ServiceDto> services,
+    bool hasMorePages,
+    bool isLoadingMore,
+  ) {
+    if (services.isEmpty) {
+      return ServiceListEmptyStateView(
+        category: viewModel.category,
+        subCategory: viewModel.subCategory,
+        town: viewModel.town,
+      );
+    }
+
+    return Column(
+      children: [
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        Expanded(
+          child: _buildServicesList(
+            context,
+            services,
+            hasMorePages,
+            isLoadingMore,
+            viewModel,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorLayout(
     BuildContext context, {
     required AppError error,
     required ServiceListViewModel viewModel,
   }) {
     if (error.actionText != null && error.action != null) {
-      return ErrorView(error: error);
+      return Column(
+        children: [
+          _serviceHero(viewModel),
+          _resultsBand(viewModel),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(18),
+    return Column(
       children: [
-        ErrorView(error: error),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: viewModel.retry,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Retry'),
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.retry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -114,24 +186,16 @@ class _ServiceListPageContent extends StatelessWidget {
     bool isLoadingMore,
     ServiceListViewModel viewModel,
   ) {
-    if (services.isEmpty) {
-      return ServiceListEmptyStateView(
-        category: viewModel.category,
-        subCategory: viewModel.subCategory,
-        town: viewModel.town,
-      );
-    }
-
-    return ListView.builder(
+    return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: services.length + (hasMorePages ? 1 : 0),
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         if (index == services.length) {
-          // Load more indicator
           if (!isLoadingMore) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                viewModel.loadMore();
-              });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              viewModel.loadMore();
+            });
           }
           return const Center(
             child: Padding(
@@ -141,62 +205,11 @@ class _ServiceListPageContent extends StatelessWidget {
           );
         }
 
-        final service = services[index];
-          return Column(
-            children: [
-              ServiceCard(service: service),
-              if (index < services.length - 1) const SizedBox(height: 16),
-            ],
-          );
+        return ServiceCard(
+          service: services[index],
+          listingTheme: ServiceListPage._theme,
+        );
       },
-    );
-  }
-}
-
-class _ListInfoBar extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color backgroundColor;
-  final Color textColor;
-  final Color borderColor;
-
-  const _ListInfoBar({
-    required this.icon,
-    required this.text,
-    required this.backgroundColor,
-    required this.textColor,
-    required this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

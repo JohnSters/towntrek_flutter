@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/town_feature_constants.dart';
+import '../../../core/theme/entity_listing_theme.dart';
 import '../../../core/utils/url_utils.dart';
+import '../../../core/widgets/listing_info_chip.dart';
 import '../../../models/business_dto.dart';
 
 class BusinessCardWidget extends StatelessWidget {
   final BusinessDto business;
   final VoidCallback? onTap;
   final String? categoryKey;
+  final EntityListingTheme listingTheme;
   final String? townName;
   final String? provinceName;
 
   const BusinessCardWidget({
     super.key,
     required this.business,
+    required this.listingTheme,
     this.onTap,
     this.categoryKey,
     this.townName,
@@ -66,12 +70,8 @@ class BusinessCardWidget extends StatelessWidget {
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFDDEAF9), Color(0xFFC8DDF5)],
-        ),
+      decoration: BoxDecoration(
+        gradient: listingTheme.cardHeaderGradient,
       ),
       child: Row(
         children: [
@@ -97,14 +97,14 @@ class BusinessCardWidget extends StatelessWidget {
                         return Icon(
                           _fallbackIcon,
                           size: 26,
-                          color: const Color(0xFF1A4F8F),
+                          color: listingTheme.accent,
                         );
                       },
                     )
                   : Icon(
                       _fallbackIcon,
                       size: 26,
-                      color: const Color(0xFF1A4F8F),
+                      color: listingTheme.accent,
                     ),
             ),
           ),
@@ -118,10 +118,10 @@ class BusinessCardWidget extends StatelessWidget {
               children: [
                 Text(
                   business.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF0D2D5A),
+                    color: listingTheme.textTitle,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -130,9 +130,9 @@ class BusinessCardWidget extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _locationLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF3D6A9E),
+                      color: listingTheme.textLocation,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -156,7 +156,7 @@ class BusinessCardWidget extends StatelessWidget {
                   : 'No reviews',
               style: const TextStyle(
                 fontSize: 11,
-                color: Color(0xFF3D5068),
+                color: EntityListingTheme.badgeText,
               ),
             ),
           ),
@@ -182,7 +182,7 @@ class BusinessCardWidget extends StatelessWidget {
             textAlign: TextAlign.start,
             style: const TextStyle(
               fontSize: 13,
-              color: Color(0xFF3D5068),
+              color: EntityListingTheme.bodyText,
               height: 1.5,
             ),
             maxLines: 3,
@@ -195,11 +195,11 @@ class BusinessCardWidget extends StatelessWidget {
             alignment: WrapAlignment.start,
             children: [
               if (townName != null)
-                _InfoChip(
+                ListingInfoChip(
                   icon: Icons.location_on_outlined,
                   label: townName!,
                 ),
-              const _InfoChip(
+              const ListingInfoChip(
                 icon: Icons.calendar_today_outlined,
                 label: 'Open today',
               ),
@@ -228,52 +228,13 @@ class BusinessCardWidget extends StatelessWidget {
             _isEquipmentRentalsCategory ? 'Tap to view rental details' : 'Tap to view details',
             style: const TextStyle(
               fontSize: 12,
-              color: Color(0xFF7A90A4),
+              color: EntityListingTheme.footerHint,
             ),
           ),
-          const Icon(
+          Icon(
             Icons.arrow_forward_ios_rounded,
             size: 16,
-            color: Color(0xFF1A4F8F),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F4F8),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 13,
-            color: const Color(0xFF3D5068),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF3D5068),
-            ),
+            color: listingTheme.accent,
           ),
         ],
       ),

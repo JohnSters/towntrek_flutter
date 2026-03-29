@@ -4,226 +4,18 @@ import '../../../core/utils/url_utils.dart';
 import '../../../models/models.dart';
 import '../creative_space_detail_page.dart';
 
+/// Listing card for creative spaces (design doc §5, §8).
 class CreativeSpaceCard extends StatelessWidget {
   final CreativeSpaceDto space;
+  final EntityListingTheme listingTheme;
 
-  const CreativeSpaceCard({super.key, required this.space});
+  const CreativeSpaceCard({
+    super.key,
+    required this.space,
+    required this.listingTheme,
+  });
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final imageUrl = _resolveImageUrl();
-    final description = _buildDescriptionText();
-    final location = _buildLocationText();
-    final isOpen = space.isOpenNow;
-    final statusText = _buildStatusText();
-    final infoPills = <Widget>[
-      if (space.categoryName != null && space.categoryName!.trim().isNotEmpty)
-        _buildInfoPill(
-          icon: Icons.category_rounded,
-          text: space.categoryName!.trim(),
-          iconColor: CreativeSpacesConstants.categoryPillTextColor,
-          background: CreativeSpacesConstants.categoryPillBackgroundColor,
-        ),
-      if (space.subCategoryName != null &&
-          space.subCategoryName!.trim().isNotEmpty)
-        _buildInfoPill(
-          icon: Icons.layers_rounded,
-          text: space.subCategoryName!.trim(),
-          iconColor: CreativeSpacesConstants.subCategoryPillTextColor,
-          background: CreativeSpacesConstants.subCategoryPillBackgroundColor,
-        ),
-      if (space.allowsPurchase)
-        _buildInfoPill(
-          icon: Icons.shopping_bag_rounded,
-          text: CreativeSpacesConstants.purchasesLabel,
-          iconColor: Colors.orange.shade700,
-          background: Colors.orange.shade50,
-        ),
-      if (space.offersWorkshops)
-        _buildInfoPill(
-          icon: Icons.chair_rounded,
-          text: CreativeSpacesConstants.workshopsLabel,
-          iconColor: Colors.teal.shade700,
-          background: Colors.teal.shade50,
-        ),
-      if (space.priceRange != null && space.priceRange!.trim().isNotEmpty)
-        _buildInfoPill(
-          icon: Icons.price_change_rounded,
-          text: space.priceRange!.trim(),
-          iconColor: Colors.green.shade700,
-          background: Colors.green.shade50,
-        ),
-    ];
-
-    return OutlinedButton(
-      onPressed: () => _navigateToDetail(context),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.all(14),
-        side: BorderSide(
-          color: colorScheme.primary.withValues(alpha: 0.22),
-          width: 1.2,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        backgroundColor: colorScheme.surface,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildImage(imageUrl, colorScheme),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            space.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildStatusPill(text: statusText, isOpen: isOpen),
-                        if (space.isFeatured)
-                          _buildInfoPill(
-                            icon: Icons.auto_awesome_rounded,
-                            text: CreativeSpacesConstants.featuredBadge,
-                            iconColor: CreativeSpacesConstants.creativePrimary,
-                            background: CreativeSpacesConstants.creativeTint,
-                          ),
-                        if (space.isVerified)
-                          _buildInfoPill(
-                            icon: Icons.verified_rounded,
-                            text: CreativeSpacesConstants.verifiedBadge,
-                            iconColor: Colors.blue.shade700,
-                            background: Colors.blue.shade50,
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (description.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              description,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.35,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          if (location.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(
-                  Icons.place_rounded,
-                  size: 16,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    location,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ],
-          if (infoPills.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(spacing: 8, runSpacing: 8, children: infoPills),
-          ],
-          const SizedBox(height: 12),
-          _buildRatingRow(colorScheme),
-        ],
-      ),
-    );
-  }
-
-  String _buildDescriptionText() {
-    return space.shortDescription?.trim() ?? '';
-  }
-
-  String _buildLocationText() {
-    final parts = <String>[];
-
-    void addPart(String? value) {
-      final trimmed = value?.trim();
-      if (trimmed == null || trimmed.isEmpty) {
-        return;
-      }
-
-      final exists = parts.any(
-        (existing) => existing.toLowerCase() == trimmed.toLowerCase(),
-      );
-      if (!exists) {
-        parts.add(trimmed);
-      }
-    }
-
-    addPart(space.city);
-    addPart(space.townName);
-
-    return parts.join(CreativeSpacesConstants.itemInfoDivider);
-  }
-
-  String _buildStatusText() {
-    final fallback = space.isOpenNow
-        ? CreativeSpacesConstants.openBadge
-        : CreativeSpacesConstants.closedBadge;
-    final detail = space.openNowText?.trim();
-    if (detail == null || detail.isEmpty) {
-      return fallback;
-    }
-
-    if (_startsWithIgnoreCase(detail, 'open') ||
-        _startsWithIgnoreCase(detail, 'closed') ||
-        _startsWithIgnoreCase(detail, 'currently open') ||
-        _startsWithIgnoreCase(detail, 'currently closed')) {
-      return detail;
-    }
-
-    return '$fallback${CreativeSpacesConstants.closedStatusSuffixDivider}$detail';
-  }
-
-  bool _startsWithIgnoreCase(String value, String prefix) {
-    return value.toLowerCase().startsWith(prefix.toLowerCase());
-  }
-
-  String? _resolveImageUrl() {
+  String? get _imageUrl {
     if (space.thumbnailImage != null &&
         space.thumbnailImage!.url.trim().isNotEmpty) {
       return UrlUtils.resolveImageUrl(space.thumbnailImage!.url.trim());
@@ -237,130 +29,251 @@ class CreativeSpaceCard extends StatelessWidget {
     return null;
   }
 
-  Widget _buildImage(String? imageUrl, ColorScheme colorScheme) {
-    return Container(
-      width: CreativeSpacesConstants.cardImageSize,
-      height: CreativeSpacesConstants.cardImageSize,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.25),
-          width: 1.2,
+  String get _headerLocation {
+    final city = space.city?.trim();
+    final town = space.townName?.trim();
+    final prov = space.province?.trim() ?? '';
+    final line1 = (city != null && city.isNotEmpty)
+        ? city
+        : (town != null && town.isNotEmpty)
+            ? town
+            : '';
+    if (line1.isNotEmpty && prov.isNotEmpty) return '$line1, $prov';
+    if (line1.isNotEmpty) return line1;
+    return prov;
+  }
+
+  String get _locationChipLabel {
+    final city = space.city?.trim();
+    final town = space.townName?.trim();
+    if (city != null && city.isNotEmpty) return city;
+    if (town != null && town.isNotEmpty) return town;
+    return _headerLocation;
+  }
+
+  String get _statusChipLabel {
+    final fallback = space.isOpenNow
+        ? CreativeSpacesConstants.openBadge
+        : CreativeSpacesConstants.closedBadge;
+    final detail = space.openNowText?.trim();
+    if (detail == null || detail.isEmpty) return fallback;
+    if (_startsWithIgnoreCase(detail, 'open') ||
+        _startsWithIgnoreCase(detail, 'closed') ||
+        _startsWithIgnoreCase(detail, 'currently open') ||
+        _startsWithIgnoreCase(detail, 'currently closed')) {
+      return detail;
+    }
+    return '$fallback${CreativeSpacesConstants.closedStatusSuffixDivider}$detail';
+  }
+
+  bool _startsWithIgnoreCase(String value, String prefix) {
+    return value.toLowerCase().startsWith(prefix.toLowerCase());
+  }
+
+  String get _introText => space.shortDescription?.trim() ?? '';
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _navigateToDetail(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: EntityListingTheme.cardBg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.1),
+            width: 0.5,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildHeaderBand(),
+            _buildBody(),
+            _buildFooter(),
+          ],
         ),
       ),
-      child: imageUrl == null
-          ? Icon(
-              Icons.palette_rounded,
-              size: 32,
-              color: colorScheme.onSurfaceVariant,
-            )
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(11),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.palette_rounded,
-                    size: 32,
-                    color: colorScheme.onSurfaceVariant,
-                  );
-                },
-              ),
-            ),
     );
   }
 
-  Widget _buildStatusPill({required String text, required bool isOpen}) {
-    final accent = isOpen ? Colors.green.shade700 : Colors.red.shade700;
-    final background = isOpen ? Colors.green.shade50 : Colors.red.shade50;
-
+  Widget _buildHeaderBand() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: accent,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-  }
-
-  Widget _buildInfoPill({
-    required IconData icon,
-    required String text,
-    required Color iconColor,
-    required Color background,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
+        gradient: listingTheme.cardHeaderGradient,
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: iconColor),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: iconColor,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(
+                color: Colors.black.withValues(alpha: 0.08),
+                width: 0.5,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12.5),
+              child: _imageUrl != null
+                  ? Image.network(
+                      _imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.palette_rounded,
+                          size: 26,
+                          color: listingTheme.accent,
+                        );
+                      },
+                    )
+                  : Icon(
+                      Icons.palette_rounded,
+                      size: 26,
+                      color: listingTheme.accent,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  space.name,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: listingTheme.textTitle,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (_headerLocation.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _headerLocation,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: listingTheme.textLocation,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              space.rating != null
+                  ? '${space.rating!.toStringAsFixed(1)} (${space.totalReviews})'
+                  : CreativeSpacesConstants.noReviewsLabel,
+              style: const TextStyle(
+                fontSize: 11,
+                color: EntityListingTheme.badgeText,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRatingRow(ColorScheme colorScheme) {
-    final rating = space.rating ?? 0.0;
-    return Row(
-      children: [
-        ...List.generate(5, (index) {
-          final starValue = index + 1;
-          final icon = starValue <= rating
-              ? Icons.star_rounded
-              : starValue - 0.5 <= rating
-              ? Icons.star_half_rounded
-              : Icons.star_border_rounded;
-          final isActive = starValue <= rating + 0.5;
-          return Icon(
-            icon,
-            size: 14,
-            color: isActive
-                ? Colors.amber.shade700
-                : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-          );
-        }),
-        const SizedBox(width: 6),
-        Text(
-          space.rating != null
-              ? CreativeSpacesConstants.ratingSummaryTemplate
-                    .replaceAll('{rating}', space.rating!.toStringAsFixed(1))
-                    .replaceAll('{reviews}', space.totalReviews.toString())
-              : CreativeSpacesConstants.noReviewsLabel,
-          style: TextStyle(
-            fontSize: 11,
-            color: colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
+  Widget _buildBody() {
+    final chips = <Widget>[
+      if (_locationChipLabel.isNotEmpty)
+        ListingInfoChip(
+          icon: Icons.location_on_outlined,
+          label: _locationChipLabel,
+        ),
+      ListingInfoChip(
+        icon: Icons.schedule_rounded,
+        label: _statusChipLabel,
+      ),
+      if (space.allowsPurchase)
+        const ListingInfoChip(
+          icon: Icons.shopping_bag_outlined,
+          label: CreativeSpacesConstants.purchasesLabel,
+        ),
+      if (space.offersWorkshops)
+        const ListingInfoChip(
+          icon: Icons.chair_outlined,
+          label: CreativeSpacesConstants.workshopsLabel,
+        ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_introText.isNotEmpty) ...[
+            Text(
+              _introText,
+              textAlign: TextAlign.start,
+              style: const TextStyle(
+                fontSize: 13,
+                color: EntityListingTheme.bodyText,
+                height: 1.5,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+          ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.start,
+            children: chips,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.black.withValues(alpha: 0.07),
+            width: 0.5,
           ),
         ),
-      ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Tap to view space',
+            style: TextStyle(
+              fontSize: 12,
+              color: EntityListingTheme.footerHint,
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 16,
+            color: listingTheme.accent,
+          ),
+        ],
+      ),
     );
   }
 

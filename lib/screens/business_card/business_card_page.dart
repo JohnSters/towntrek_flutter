@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
+import '../../core/utils/business_category_copy.dart';
 import '../../models/models.dart';
 import 'business_card_state.dart';
 import 'business_card_view_model.dart';
@@ -40,52 +41,65 @@ class _BusinessCardPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessCardViewModel>();
+    final listingTheme = BusinessCategoryCopy.listingTheme(viewModel.category.key);
+    final backLabel = BusinessCategoryCopy.listingBackFooterLabel(viewModel.category.key);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            // Main content area
             Expanded(
-              child: _buildContent(context, viewModel),
+              child: _buildContent(context, viewModel, listingTheme),
             ),
-
-            // Navigation footer
-            const _BackToPropertiesFooter(),
+            ListingBackFooter(label: backLabel),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, BusinessCardViewModel viewModel) {
+  Widget _buildContent(
+    BuildContext context,
+    BusinessCardViewModel viewModel,
+    EntityListingTheme listingTheme,
+  ) {
     final state = viewModel.state;
 
     if (state is BusinessCardLoading) {
-      return _buildLoadingView(context, viewModel);
+      return _buildLoadingView(context, viewModel, listingTheme);
     }
 
     if (state is BusinessCardError) {
-      return _buildErrorState(context, error: state.error, viewModel: viewModel);
+      return _buildErrorState(
+        context,
+        error: state.error,
+        viewModel: viewModel,
+        listingTheme: listingTheme,
+      );
     }
 
     if (state is BusinessCardEmpty) {
-      return _buildEmptyView(context, viewModel);
+      return _buildEmptyView(context, viewModel, listingTheme);
     }
 
     if (state is BusinessCardSuccess) {
-      return _buildBusinessesView(context, viewModel, state);
+      return _buildBusinessesView(context, viewModel, state, listingTheme);
     }
 
     return const SizedBox();
   }
 
-  Widget _buildLoadingView(BuildContext context, BusinessCardViewModel viewModel) {
+  Widget _buildLoadingView(
+    BuildContext context,
+    BusinessCardViewModel viewModel,
+    EntityListingTheme listingTheme,
+  ) {
     return BusinessLoadingView(
       category: viewModel.category,
       subCategory: viewModel.subCategory,
       town: viewModel.town,
+      listingTheme: listingTheme,
     );
   }
 
@@ -93,8 +107,10 @@ class _BusinessCardPageContent extends StatelessWidget {
     BuildContext context, {
     required AppError error,
     required BusinessCardViewModel viewModel,
+    required EntityListingTheme listingTheme,
   }) {
     final header = BusinessCardHeroHeader(
+      theme: listingTheme,
       subCategoryName: viewModel.subCategory.name,
       categoryName: viewModel.category.name,
       categoryKey: viewModel.category.key,
@@ -131,31 +147,63 @@ class _BusinessCardPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyView(BuildContext context, BusinessCardViewModel viewModel) {
-    return BusinessEmptyView(category: viewModel.category);
-  }
-
-  Widget _buildBusinessesView(BuildContext context, BusinessCardViewModel viewModel, BusinessCardSuccess state) {
+  Widget _buildEmptyView(
+    BuildContext context,
+    BusinessCardViewModel viewModel,
+    EntityListingTheme listingTheme,
+  ) {
     return Column(
       children: [
         BusinessCardHeroHeader(
+          theme: listingTheme,
           subCategoryName: viewModel.subCategory.name,
           categoryName: viewModel.category.name,
           categoryKey: viewModel.category.key,
           townName: viewModel.town.name,
         ),
-        _ResultsLabel(
+        ListingResultsBand(
           count: viewModel.subCategory.businessCount,
           categoryName: viewModel.subCategory.name,
+          bandColor: listingTheme.resultsBand,
+        ),
+        Expanded(child: BusinessEmptyView(category: viewModel.category)),
+      ],
+    );
+  }
+
+  Widget _buildBusinessesView(
+    BuildContext context,
+    BusinessCardViewModel viewModel,
+    BusinessCardSuccess state,
+    EntityListingTheme listingTheme,
+  ) {
+    return Column(
+      children: [
+        BusinessCardHeroHeader(
+          theme: listingTheme,
+          subCategoryName: viewModel.subCategory.name,
+          categoryName: viewModel.category.name,
+          categoryKey: viewModel.category.key,
+          townName: viewModel.town.name,
+        ),
+        ListingResultsBand(
+          count: viewModel.subCategory.businessCount,
+          categoryName: viewModel.subCategory.name,
+          bandColor: listingTheme.resultsBand,
         ),
         Expanded(
-          child: _buildBusinessesList(context, viewModel, state),
+          child: _buildBusinessesList(context, viewModel, state, listingTheme),
         ),
       ],
     );
   }
 
-  Widget _buildBusinessesList(BuildContext context, BusinessCardViewModel viewModel, BusinessCardSuccess state) {
+  Widget _buildBusinessesList(
+    BuildContext context,
+    BusinessCardViewModel viewModel,
+    BusinessCardSuccess state,
+    EntityListingTheme listingTheme,
+  ) {
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
         if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent &&
@@ -171,10 +219,10 @@ class _BusinessCardPageContent extends StatelessWidget {
         separatorBuilder: (context, index) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
           if (index == state.businesses.length) {
-            return Center(
+            return const Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: const CircularProgressIndicator(),
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: CircularProgressIndicator(),
               ),
             );
           }
@@ -182,115 +230,12 @@ class _BusinessCardPageContent extends StatelessWidget {
           return BusinessCardWidget(
             business: business,
             categoryKey: viewModel.category.key,
+            listingTheme: listingTheme,
             townName: viewModel.town.name,
             provinceName: viewModel.town.province,
             onTap: () => viewModel.onBusinessTap(context, business),
           );
         },
-      ),
-    );
-  }
-}
-
-class _ResultsLabel extends StatelessWidget {
-  final int count;
-  final String categoryName;
-
-  const _ResultsLabel({
-    required this.count,
-    required this.categoryName,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final resultText = count == 1 ? '1 result' : '$count results';
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: const Color(0xFF1A3A62),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            resultText,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            width: 3,
-            height: 3,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.6),
-              shape: BoxShape.circle,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              categoryName,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.85),
-              ),
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BackToPropertiesFooter extends StatelessWidget {
-  const _BackToPropertiesFooter();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFFF0F4F8),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      child: SafeArea(
-        top: false,
-        child: Center(
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.13),
-                  width: 0.5,
-                ),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.arrow_back,
-                    size: 13,
-                    color: Color(0xFF3D5068),
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    'Back to properties',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF3D5068),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

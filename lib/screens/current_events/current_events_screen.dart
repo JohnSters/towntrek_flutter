@@ -16,6 +16,8 @@ class CurrentEventsScreen extends StatelessWidget {
     required this.townName,
   });
 
+  static final EntityListingTheme _theme = EntityListingTheme.events;
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -38,128 +40,194 @@ class _CurrentEventsScreenContent extends StatelessWidget {
     final viewModel = context.watch<CurrentEventsViewModel>();
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            // Page Header
-            PageHeader(
-              title: '${CurrentEventsConstants.eventsPrefix} ${viewModel.townName}',
-              height: 80, // Consistent header height
-              headerType: HeaderType.event,
-            ),
-
-            // Main content area
             Expanded(
               child: _buildContent(context, viewModel),
             ),
-
-            // Navigation footer
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back to events'),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _eventsHero(CurrentEventsViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: CurrentEventsScreen._theme,
+      categoryIcon: CurrentEventsConstants.defaultEventIcon,
+      subCategoryName: '${CurrentEventsConstants.eventsPrefix} ${viewModel.townName}',
+      categoryName: CurrentEventsConstants.eventsSubtitle,
+      townName: viewModel.townName,
+    );
+  }
+
+  Widget _resultsBand(int count) {
+    return ListingResultsBand(
+      count: count,
+      categoryName: 'Current events',
+      bandColor: CurrentEventsScreen._theme.resultsBand,
     );
   }
 
   Widget _buildContent(BuildContext context, CurrentEventsViewModel viewModel) {
     return switch (viewModel.state) {
-      CurrentEventsLoading() => const Center(child: CircularProgressIndicator()),
-      CurrentEventsSuccess(events: final events, hasNextPage: final hasNextPage, isLoadingMore: final isLoadingMore) =>
-        _buildEventsList(context, events, hasNextPage, isLoadingMore, viewModel),
+      CurrentEventsLoading() => Column(
+          children: [
+            _eventsHero(viewModel),
+            _resultsBand(0),
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      CurrentEventsSuccess(
+        events: final events,
+        hasNextPage: final hasNextPage,
+        isLoadingMore: final isLoadingMore,
+      ) =>
+        _buildEventsListLayout(
+          context,
+          viewModel,
+          events,
+          hasNextPage,
+          isLoadingMore,
+        ),
       CurrentEventsError(error: final error) =>
-        _buildErrorState(context, error: error, viewModel: viewModel),
-      CurrentEventsLoadingMore() => const Center(child: CircularProgressIndicator()),
+        _buildErrorLayout(context, error: error, viewModel: viewModel),
+      CurrentEventsLoadingMore() => Column(
+          children: [
+            _eventsHero(viewModel),
+            _resultsBand(0),
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
     };
   }
 
-  Widget _buildErrorState(
+  Widget _buildErrorLayout(
     BuildContext context, {
     required AppError error,
     required CurrentEventsViewModel viewModel,
   }) {
     if (error.actionText != null && error.action != null) {
-      return ErrorView(error: error);
+      return Column(
+        children: [
+          _eventsHero(viewModel),
+          _resultsBand(0),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(18),
+    return Column(
       children: [
-        ErrorView(error: error),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: viewModel.retryLoadEvents,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Retry'),
+        _eventsHero(viewModel),
+        _resultsBand(0),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.retryLoadEvents,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildEventsList(
+  Widget _buildEventsListLayout(
     BuildContext context,
+    CurrentEventsViewModel viewModel,
     List<EventDto> events,
     bool hasNextPage,
     bool isLoadingMore,
-    CurrentEventsViewModel viewModel,
   ) {
     if (events.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              CurrentEventsConstants.emptyIcon,
-              size: CurrentEventsConstants.emptyStateIconSize,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: CurrentEventsConstants.emptyStateIconOpacity),
+      return Column(
+        children: [
+          _eventsHero(viewModel),
+          _resultsBand(0),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    CurrentEventsConstants.emptyIcon,
+                    size: CurrentEventsConstants.emptyStateIconSize,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(
+                          alpha: CurrentEventsConstants.emptyStateIconOpacity,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    CurrentEventsConstants.emptyStateTitle,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${CurrentEventsConstants.emptyStateMessage} ${viewModel.townName}',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              CurrentEventsConstants.emptyStateTitle,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${CurrentEventsConstants.emptyStateMessage} ${viewModel.townName}',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: viewModel.refreshEvents,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(24),
-        itemCount: events.length + (hasNextPage ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == events.length) {
-            // Load more indicator
-            if (!isLoadingMore) {
-              // Trigger load more when reaching the end
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                viewModel.loadMoreEvents();
-              });
-            }
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: CurrentEventsConstants.loadMorePaddingVertical),
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
+    return Column(
+      children: [
+        _eventsHero(viewModel),
+        _resultsBand(events.length),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: viewModel.refreshEvents,
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: events.length + (hasNextPage ? 1 : 0),
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                if (index == events.length) {
+                  if (!isLoadingMore) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      viewModel.loadMoreEvents();
+                    });
+                  }
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: CurrentEventsConstants.loadMorePaddingVertical,
+                      ),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
 
-          final event = events[index];
-          return Column(
-            children: [
-              EventCard(event: event),
-              if (index < events.length - 1) const SizedBox(height: CurrentEventsConstants.cardSpacing),
-            ],
-          );
-        },
-      ),
+                return EventCard(
+                  event: events[index],
+                  townName: viewModel.townName,
+                  listingTheme: CurrentEventsScreen._theme,
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

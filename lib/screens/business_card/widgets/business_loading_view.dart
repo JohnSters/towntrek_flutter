@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/entity_listing_theme.dart';
 import '../../../models/models.dart';
 import 'business_card_hero_header.dart';
 
@@ -7,12 +8,14 @@ class BusinessLoadingView extends StatelessWidget {
   final CategoryWithCountDto category;
   final SubCategoryWithCountDto subCategory;
   final TownDto town;
+  final EntityListingTheme listingTheme;
 
   const BusinessLoadingView({
     super.key,
     required this.category,
     required this.subCategory,
     required this.town,
+    required this.listingTheme,
   });
 
   @override
@@ -20,6 +23,7 @@ class BusinessLoadingView extends StatelessWidget {
     return Column(
       children: [
         BusinessCardHeroHeader(
+          theme: listingTheme,
           subCategoryName: subCategory.name,
           categoryName: category.name,
           categoryKey: category.key,
