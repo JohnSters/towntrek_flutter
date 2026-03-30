@@ -124,7 +124,7 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
         _buildBand(viewModel),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
             children: [
               ErrorView(error: error),
               const SizedBox(height: 16),
@@ -160,7 +160,10 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(
+            padding: const EdgeInsets.fromLTRB(
+              BusinessSubCategoryConstants.contentPadding,
+              0,
+              BusinessSubCategoryConstants.contentPadding,
               BusinessSubCategoryConstants.contentPadding,
             ),
             child: Column(

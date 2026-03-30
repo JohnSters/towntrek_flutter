@@ -4,6 +4,12 @@ import 'package:flutter/widgets.dart';
 class EntityListingConstants {
   EntityListingConstants._();
 
+  /// Space below [ListingResultsBand] before the next row (search, first card,
+  /// loading area). Matches typical vertical gaps between listing cards on browse
+  /// screens (e.g. creative spaces card spacing). Scroll views that sit directly
+  /// under the band should use top padding 0 so this is the only gap.
+  static const double contentBelowResultsBand = 10.0;
+
   /// Padding around the search row (below results band). Bottom is 0 so the gap
   /// to cards is controlled only by [cardListScrollPadding.top].
   static const EdgeInsets searchBarSectionPadding =

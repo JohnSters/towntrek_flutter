@@ -42,7 +42,6 @@ class CreativeSpacesConstants {
   static const String subCategoryLabel = 'Sub-categories';
   static const String resultsLabel = 'results';
   static const String resultCountTemplate = '{count} spaces';
-  static const String resultsForLabel = '{count} spaces in {context}';
   static const String noSpacesAvailableLabel = 'No spaces available';
   static const String exploreCategoryLabel = 'Explore {name}';
   static const String exploreSubCategoryLabel = 'Explore {name} spaces';
@@ -50,13 +49,11 @@ class CreativeSpacesConstants {
   static const String allSpacesLabel = 'All spaces';
   static const String allInContextLabelTemplate = '{label} in {context}';
   static const String contextChipValueTemplate = '{label}: {value}';
-  static const String labelValueSuffix = ': ';
   static const String numericValueTemplate = '{count} {label}';
   static const String loadMoreSpacesLabel = 'Load more spaces';
   static const String retryLabel = 'Retry';
   static const String searchHint = 'Search by name, style, or service';
   static const String searchChipPrefix = 'Search';
-  static const String viewAllLabel = 'View all';
   static const String featuredBadge = 'Featured';
   static const String verifiedBadge = 'Verified';
   static const String openBadge = 'Open now';
@@ -68,7 +65,6 @@ class CreativeSpacesConstants {
   static const String viewDetailsLabel = 'View details';
   static const String quickInfoTitle = 'Quick info';
   static const String quickActionsTitle = 'Quick Actions';
-  static const String contactTitle = 'Contact';
   static const String operatingHoursTitle = 'Operating Hours';
   static const String specialHoursTitle = 'Special hours';
   static const String detailsTitle = 'Details';
@@ -78,11 +74,16 @@ class CreativeSpacesConstants {
   static const String mapActionLabel = 'Take me there';
   static const String creativeSpaceDetailsSubtitle = 'Creative Space Details';
   static const String callActionLabel = 'Call';
+  static const String altCallActionTooltip = 'Call alternate number';
+  static const String socialTitle = 'Social';
+  static const String twitterActionTooltip = 'X (Twitter)';
   static const String emailActionLabel = 'Email';
   static const String websiteActionLabel = 'Website';
   /// Public web route for creative space detail (`PublicController.CreativeSpaceDetails`).
   static const String publicCreativeSpacePath = '/Public/CreativeSpace/';
-  static const String addressLabel = 'Address';
+  /// Hash target on the public creative space page (see `CreativeSpaceDetails.cshtml` `#reviews`).
+  static const String reviewsSectionAnchor = '#reviews';
+  static const String rateCreativeSpaceActionTooltip = 'Rate creative space';
   static const String specialLabel = 'Special';
   static const String openLabel = 'Open';
   static const String noSubCategoryFallbackMessage =

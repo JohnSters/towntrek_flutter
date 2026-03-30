@@ -64,4 +64,17 @@ class CreativeSpaceDetailViewModel extends ChangeNotifier {
       failureMessage: 'Unable to open full creative space details',
     );
   }
+
+  /// Opens the public TownTrek page scrolled to the reviews section (same pattern as business details).
+  Future<void> openReviewsOnWeb(BuildContext context) async {
+    final path =
+        '${CreativeSpacesConstants.publicCreativeSpacePath}$creativeSpaceId'
+        '${CreativeSpacesConstants.reviewsSectionAnchor}';
+    final url = UrlUtils.resolveApiUrl(path);
+    await ExternalLinkLauncher.openWebsite(
+      context,
+      url,
+      failureMessage: 'Unable to open reviews page',
+    );
+  }
 }

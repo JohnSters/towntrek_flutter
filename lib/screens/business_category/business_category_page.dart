@@ -318,7 +318,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               BusinessCategoryConstants.horizontalPadding,
-              BusinessCategoryConstants.smallSpacing, // Small top padding for content separation
+              0,
               BusinessCategoryConstants.horizontalPadding,
               BusinessCategoryConstants.horizontalPadding,
             ),

@@ -96,7 +96,10 @@ class _WhatToDoScreenContent extends StatelessWidget {
               child: sections.isEmpty
                   ? _buildEmptyState(context)
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.all(
+                      padding: const EdgeInsets.fromLTRB(
+                        WhatToDoConstants.pagePadding,
+                        0,
+                        WhatToDoConstants.pagePadding,
                         WhatToDoConstants.pagePadding,
                       ),
                       child: Column(

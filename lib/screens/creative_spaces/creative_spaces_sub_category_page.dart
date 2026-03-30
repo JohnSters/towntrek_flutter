@@ -36,9 +36,6 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Column(
       children: [
         EntityListingHeroHeader(
@@ -53,60 +50,6 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
           count: category.spaceCount,
           categoryName: category.name,
           bandColor: _theme.resultsBand,
-        ),
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.fromLTRB(
-            CreativeSpacesConstants.pagePadding,
-            CreativeSpacesConstants.sectionSpacing,
-            CreativeSpacesConstants.pagePadding,
-            CreativeSpacesConstants.sectionSpacing,
-          ),
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: colorScheme.outline.withValues(alpha: 0.16),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: CreativeSpacesConstants.contextStripActionSpacing,
-                runSpacing: CreativeSpacesConstants.contextStripActionSpacing,
-                children: [
-                  _Pill(
-                    icon: Icons.style,
-                    label: CreativeSpacesConstants.resultsForLabel
-                        .replaceAll('{count}', category.spaceCount.toString())
-                        .replaceAll('{context}', category.name),
-                  ),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.apps_rounded, size: 16),
-                    label: const Text(CreativeSpacesConstants.viewAllLabel),
-                    onPressed: () => _openList(context, category, null),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 0,
-                      ),
-                      minimumSize: const Size.fromHeight(30),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Pick a creative style to see the spaces that match it.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.3,
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -205,47 +148,6 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
         town: town,
         category: category,
         subCategory: subCategory,
-      ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _Pill({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: CreativeSpacesConstants.creativePrimary.withValues(alpha: 0.2),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: CreativeSpacesConstants.contextStripActionSpacing,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: CreativeSpacesConstants.creativePrimary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-              height: 1.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
       ),
     );
   }

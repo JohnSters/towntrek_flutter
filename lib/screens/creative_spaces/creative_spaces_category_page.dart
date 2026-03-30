@@ -105,7 +105,7 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.fromLTRB(
                               CreativeSpacesConstants.pagePadding,
-                              CreativeSpacesConstants.sectionSpacing,
+                              0,
                               CreativeSpacesConstants.pagePadding,
                               CreativeSpacesConstants.sectionSpacing,
                             ),
@@ -218,7 +218,7 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
 
     return chrome(
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: [
           ErrorView(error: error),
           const SizedBox(height: 12),

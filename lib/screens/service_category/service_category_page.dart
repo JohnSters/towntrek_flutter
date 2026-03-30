@@ -129,7 +129,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
 
     return chrome(
       child: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
         children: [
           ErrorView(error: error),
           const SizedBox(height: 16),
@@ -168,7 +168,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               ServiceCategoryConstants.pagePadding,
-              ServiceCategoryConstants.cardSpacing, // Small top padding for content separation
+              0,
               ServiceCategoryConstants.pagePadding,
               ServiceCategoryConstants.pagePadding,
             ),

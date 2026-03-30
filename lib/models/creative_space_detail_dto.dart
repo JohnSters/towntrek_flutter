@@ -35,8 +35,12 @@ class CreativeSpaceDetailDto {
   final String? priceRange;
   final String? bestVisitWindow;
   final String? contactPhone;
+  final String? contactPhoneSecondary;
   final String? contactEmail;
   final String? contactWebsite;
+  final String? facebookUrl;
+  final String? instagramUrl;
+  final String? twitterUrl;
   final bool offersWorkshops;
   final String? contactMessage;
   final bool isOpenNow;
@@ -85,8 +89,12 @@ class CreativeSpaceDetailDto {
     this.priceRange,
     this.bestVisitWindow,
     this.contactPhone,
+    this.contactPhoneSecondary,
     this.contactEmail,
     this.contactWebsite,
+    this.facebookUrl,
+    this.instagramUrl,
+    this.twitterUrl,
     this.offersWorkshops = false,
     this.contactMessage,
     this.isOpenNow = false,
@@ -147,8 +155,12 @@ class CreativeSpaceDetailDto {
       priceRange: json['priceRange'] as String?,
       bestVisitWindow: json['bestVisitWindow'] as String?,
       contactPhone: json['contactPhone'] as String?,
+      contactPhoneSecondary: json['contactPhoneSecondary'] as String?,
       contactEmail: json['contactEmail'] as String?,
       contactWebsite: json['contactWebsite'] as String?,
+      facebookUrl: json['facebookUrl'] as String?,
+      instagramUrl: json['instagramUrl'] as String?,
+      twitterUrl: json['twitterUrl'] as String?,
       offersWorkshops: json['offersWorkshops'] as bool? ?? false,
       contactMessage: json['contactMessage'] as String?,
       isOpenNow: json['isOpenNow'] as bool? ?? false,
@@ -216,8 +228,12 @@ class CreativeSpaceDetailDto {
       'priceRange': priceRange,
       'bestVisitWindow': bestVisitWindow,
       'contactPhone': contactPhone,
+      'contactPhoneSecondary': contactPhoneSecondary,
       'contactEmail': contactEmail,
       'contactWebsite': contactWebsite,
+      'facebookUrl': facebookUrl,
+      'instagramUrl': instagramUrl,
+      'twitterUrl': twitterUrl,
       'offersWorkshops': offersWorkshops,
       'contactMessage': contactMessage,
       'isOpenNow': isOpenNow,

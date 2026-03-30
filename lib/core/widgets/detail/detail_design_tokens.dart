@@ -43,4 +43,7 @@ abstract final class DetailSocialColors {
 
   static const whatsappBackground = Color(0xFFE8F7EC);
   static const whatsappIcon = Color(0xFF25D366);
+
+  static const twitterBackground = Color(0xFFECEFF1);
+  static const twitterIcon = Color(0xFF424242);
 }

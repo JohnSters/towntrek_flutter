@@ -136,7 +136,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         _buildBand(viewModel, count),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
             children: [
               ErrorView(error: error),
               const SizedBox(height: 16),
@@ -179,7 +179,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
