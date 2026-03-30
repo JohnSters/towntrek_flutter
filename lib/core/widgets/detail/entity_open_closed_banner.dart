@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../constants/entity_listing_constants.dart';
+
 /// Strip under the detail hero: open/closed (green / grey) and/or a views pill.
 ///
 /// - When [isOpen] is non-null: shows **Open** or **Closed** only (no duplicate subtitle).
@@ -68,7 +70,9 @@ class EntityOpenClosedBanner extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    open ? 'Open' : 'Closed',
+                    open
+                        ? EntityListingConstants.listingCardOpenNow
+                        : EntityListingConstants.listingCardClosed,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: fg,
                           fontWeight: FontWeight.w700,
@@ -85,7 +89,9 @@ class EntityOpenClosedBanner extends StatelessWidget {
             )
           : Center(
               child: Text(
-                open ? 'Open' : 'Closed',
+                open
+                    ? EntityListingConstants.listingCardOpenNow
+                    : EntityListingConstants.listingCardClosed,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: fg,
                       fontWeight: FontWeight.w700,

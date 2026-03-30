@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/business_utils.dart';
+import '../../../core/utils/operating_hours_display_format.dart';
 
 class OperatingHoursSection extends StatelessWidget {
   final List<OperatingHourDto> operatingHours;
@@ -100,7 +101,7 @@ class OperatingHoursSection extends StatelessWidget {
 
     final dayName = BusinessUtils.formatDayOfWeek(hour.dayOfWeek);
     final timeDisplay = hour.isOpen && hour.openTime != null && hour.closeTime != null
-        ? '${_formatTime24(hour.openTime!)} - ${_formatTime24(hour.closeTime!)}'
+        ? '${formatOperatingHoursTimeForDisplay(hour.openTime!)} - ${formatOperatingHoursTimeForDisplay(hour.closeTime!)}'
         : 'Closed';
 
     return Container(
@@ -171,16 +172,6 @@ class OperatingHoursSection extends StatelessWidget {
     );
   }
 
-  String _formatTime24(String time) {
-    // Accept: "09:00", "09:00:00", "09:00:00.0000000" -> "HH:mm"
-    final main = time.trim().split('.').first;
-    final parts = main.split(':');
-    if (parts.length < 2) return time;
-    final hh = (int.tryParse(parts[0]) ?? 0).toString().padLeft(2, '0');
-    final mm = (int.tryParse(parts[1]) ?? 0).toString().padLeft(2, '0');
-    return '$hh:$mm';
-  }
-
   Widget _buildSpecialOperatingHoursBanners(BuildContext context, List<SpecialOperatingHourDto> items) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -190,7 +181,9 @@ class OperatingHoursSection extends StatelessWidget {
       children: items.map((s) {
         final dateText = DateFormat('MMM d, yyyy').format(s.date);
         final hasRange = (s.openTime?.isNotEmpty ?? false) && (s.closeTime?.isNotEmpty ?? false);
-        final timeText = hasRange ? '${BusinessUtils.formatTime(s.openTime!)} - ${BusinessUtils.formatTime(s.closeTime!)}' : null;
+        final timeText = hasRange
+            ? '${formatOperatingHoursTimeForDisplay(s.openTime!)} - ${formatOperatingHoursTimeForDisplay(s.closeTime!)}'
+            : null;
         final reason = (s.reason?.trim().isNotEmpty ?? false) ? s.reason!.trim() : 'Special hours';
         final notes = (s.notes?.trim().isNotEmpty ?? false) ? s.notes!.trim() : null;
 

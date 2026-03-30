@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
+import '../../core/utils/operating_hours_display_format.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import '../business_details/widgets/business_documents_section.dart';
@@ -151,8 +152,11 @@ class _CreativeOpenClosedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Same source as list cards: server [CreativeSpaceOpenStatusHelper] (SAST, weekly hours only).
+    final openNow = space.isOpenNow;
+
     return EntityOpenClosedBanner(
-      isOpen: space.isOpenNow,
+      isOpen: openNow,
       viewCount: space.viewCount,
     );
   }
@@ -833,8 +837,8 @@ class _HourRow extends StatelessWidget {
               ? CreativeSpacesConstants.openLabel
               : CreativeSpacesConstants.closedBadge)
         : CreativeSpacesConstants.timeRangeTemplate
-              .replaceAll('{start}', openTime!.trim())
-              .replaceAll('{end}', closeTime!.trim());
+              .replaceAll('{start}', formatOperatingHoursTimeForDisplay(openTime!))
+              .replaceAll('{end}', formatOperatingHoursTimeForDisplay(closeTime!));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

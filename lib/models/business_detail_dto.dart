@@ -45,6 +45,10 @@ class BusinessDetailDto {
   final double? hourlyRate;
   final double? dailyRate;
 
+  /// Equipment rentals category: deposit (matches public web when set).
+  final bool isDepositRequired;
+  final double? depositAmount;
+
   final List<OperatingHourDto> operatingHours;
   final List<SpecialOperatingHourDto> specialOperatingHours;
   final List<BusinessServiceDto> services;
@@ -78,6 +82,8 @@ class BusinessDetailDto {
     this.openNowText,
     this.hourlyRate,
     this.dailyRate,
+    this.isDepositRequired = false,
+    this.depositAmount,
     required this.operatingHours,
     required this.specialOperatingHours,
     required this.services,
@@ -114,6 +120,8 @@ class BusinessDetailDto {
       openNowText: json['openNowText'] as String?,
       hourlyRate: json['hourlyRate'] != null ? (json['hourlyRate'] as num).toDouble() : null,
       dailyRate: json['dailyRate'] != null ? (json['dailyRate'] as num).toDouble() : null,
+      isDepositRequired: json['isDepositRequired'] as bool? ?? false,
+      depositAmount: json['depositAmount'] != null ? (json['depositAmount'] as num).toDouble() : null,
       operatingHours: (json['operatingHours'] as List<dynamic>?)
           ?.map((e) => OperatingHourDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
@@ -162,6 +170,10 @@ class BusinessDetailDto {
       'isVerified': isVerified,
       'isOpenNow': isOpenNow,
       'openNowText': openNowText,
+      'hourlyRate': hourlyRate,
+      'dailyRate': dailyRate,
+      'isDepositRequired': isDepositRequired,
+      'depositAmount': depositAmount,
       'operatingHours': operatingHours.map((e) => e.toJson()).toList(),
       'specialOperatingHours': specialOperatingHours.map((e) => e.toJson()).toList(),
       'services': services.map((e) => e.toJson()).toList(),
@@ -198,6 +210,8 @@ class BusinessDetailDto {
     String? openNowText,
     double? hourlyRate,
     double? dailyRate,
+    bool? isDepositRequired,
+    double? depositAmount,
     List<OperatingHourDto>? operatingHours,
     List<SpecialOperatingHourDto>? specialOperatingHours,
     List<BusinessServiceDto>? services,
@@ -231,6 +245,8 @@ class BusinessDetailDto {
       openNowText: openNowText ?? this.openNowText,
       hourlyRate: hourlyRate ?? this.hourlyRate,
       dailyRate: dailyRate ?? this.dailyRate,
+      isDepositRequired: isDepositRequired ?? this.isDepositRequired,
+      depositAmount: depositAmount ?? this.depositAmount,
       operatingHours: operatingHours ?? this.operatingHours,
       specialOperatingHours: specialOperatingHours ?? this.specialOperatingHours,
       services: services ?? this.services,

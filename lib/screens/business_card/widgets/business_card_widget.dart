@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/town_feature_constants.dart';
 import '../../../core/theme/entity_listing_theme.dart';
+import '../../../core/utils/business_utils.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../core/widgets/listing_info_chip.dart';
 import '../../../models/business_dto.dart';
@@ -199,8 +200,7 @@ class BusinessCardWidget extends StatelessWidget {
                   icon: Icons.location_on_outlined,
                   label: townName!,
                 ),
-              if (business.isOpenNow != null)
-                ListingOpenClosedChip(isOpen: business.isOpenNow!),
+              ListingOpenClosedChip(isOpen: BusinessUtils.isBusinessOpenForListingCard(business)),
             ],
           ),
         ],

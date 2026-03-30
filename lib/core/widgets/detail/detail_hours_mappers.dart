@@ -1,4 +1,5 @@
-import '../../utils/business_utils.dart';
+import '../../utils/operating_hours_display_format.dart';
+import '../../utils/operating_hours_open_calc.dart';
 import '../../utils/service_utils.dart';
 import '../../../models/models.dart';
 import 'detail_hours_grid.dart';
@@ -22,7 +23,7 @@ List<DetailHoursDayRow> detailHoursFromBusiness(
       .where((hour) => !hour.isSpecialHours)
       .map(
         (hour) => MapEntry(
-          BusinessUtils.formatDayOfWeek(hour.dayOfWeek),
+          canonicalEnglishDayNameFromApiDayField(hour.dayOfWeek),
           hour,
         ),
       )
@@ -41,7 +42,7 @@ List<DetailHoursDayRow> detailHoursFromBusiness(
         match?.openTime != null &&
         match?.closeTime != null;
     final timeLabel = isOpen
-        ? '${BusinessUtils.formatTime(match!.openTime!)} - ${BusinessUtils.formatTime(match.closeTime!)}'
+        ? '${formatOperatingHoursTimeForDisplay(match!.openTime!)} - ${formatOperatingHoursTimeForDisplay(match.closeTime!)}'
         : 'Closed';
 
     return DetailHoursDayRow(
@@ -68,7 +69,7 @@ List<DetailHoursDayRow> detailHoursFromService(
         match?.startTime != null &&
         match?.endTime != null;
     final timeLabel = isAvailable
-        ? '${ServiceUtils.formatTime24(match!.startTime!)} - ${ServiceUtils.formatTime24(match.endTime!)}'
+        ? '${formatOperatingHoursTimeForDisplay(match!.startTime!)} - ${formatOperatingHoursTimeForDisplay(match.endTime!)}'
         : 'Closed';
 
     return DetailHoursDayRow(
@@ -86,7 +87,7 @@ List<DetailHoursDayRow> detailHoursFromCreativeSpace(
 
   final byDay = <String, CreativeSpaceOperatingHourDto>{};
   for (final hour in hours) {
-    final key = BusinessUtils.formatDayOfWeek(hour.dayOfWeek);
+    final key = canonicalEnglishDayNameFromApiDayField(hour.dayOfWeek);
     byDay[key] = hour;
   }
 
@@ -99,7 +100,8 @@ List<DetailHoursDayRow> detailHoursFromCreativeSpace(
         match.closeTime != null &&
         match.openTime!.trim().isNotEmpty &&
         match.closeTime!.trim().isNotEmpty) {
-      timeLabel = '${match.openTime!.trim()} - ${match.closeTime!.trim()}';
+      timeLabel =
+          '${formatOperatingHoursTimeForDisplay(match.openTime!)} - ${formatOperatingHoursTimeForDisplay(match.closeTime!)}';
     }
 
     return DetailHoursDayRow(

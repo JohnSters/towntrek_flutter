@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
-import '../../core/utils/business_utils.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import 'business_details_state.dart';
 import 'business_details_view_model.dart';
+import 'widgets/equipment_hire_rates_section.dart';
 
 class BusinessDetailsPage extends StatelessWidget {
   final int businessId;
@@ -65,8 +65,10 @@ class _BusinessDetailsPageContent extends StatelessWidget {
         child: Column(
           children: [
             _detailHero(state, viewModel),
-            if (state is BusinessDetailsSuccess)
+            if (state is BusinessDetailsSuccess) ...[
               _BusinessOpenClosedBanner(business: state.business),
+              _BusinessSpecialClosedHint(business: state.business),
+            ],
             Expanded(
               child: _buildContent(context, state, viewModel),
             ),
@@ -221,8 +223,8 @@ class _BusinessDetailsBody extends StatelessWidget {
           const SizedBox(height: 12),
           DetailSectionShell(
             title: 'Hire rates',
-            icon: Icons.payments_outlined,
-            child: _EquipmentHireRatesContent(business: business),
+            icon: Icons.construction_rounded,
+            child: EquipmentHireRatesSection(business: business),
           ),
         ],
         const SizedBox(height: 12),
@@ -357,50 +359,6 @@ class _BusinessDetailsBody extends StatelessWidget {
   }
 }
 
-class _EquipmentHireRatesContent extends StatelessWidget {
-  final BusinessDetailDto business;
-
-  const _EquipmentHireRatesContent({required this.business});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final h = business.hourlyRate;
-    final d = business.dailyRate;
-    final hasHourly = h != null && h > 0;
-    final hasDaily = d != null && d > 0;
-
-    if (!hasHourly && !hasDaily) {
-      return Text(
-        'Ask the business for current hire rates.',
-        style: theme.textTheme.bodyMedium?.copyWith(
-          height: 1.35,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (hasHourly)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(
-              'Hourly: R${h.toStringAsFixed(2)} / hour',
-              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-        if (hasDaily)
-          Text(
-            'Daily (full day): R${d.toStringAsFixed(2)} / day',
-            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-          ),
-      ],
-    );
-  }
-}
-
 class _BusinessOpenClosedBanner extends StatelessWidget {
   final BusinessDetailDto business;
 
@@ -408,12 +366,68 @@ class _BusinessOpenClosedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final openNow =
-        business.isOpenNow ?? BusinessUtils.isBusinessCurrentlyOpen(business.operatingHours);
+    final openNow = business.isOpenNow ??
+        OperatingHoursOpenCalc.businessIsOpenNow(
+          business.operatingHours,
+          business.specialOperatingHours,
+        );
 
     return EntityOpenClosedBanner(
       isOpen: openNow,
       viewCount: business.viewCount,
+    );
+  }
+}
+
+/// Explains “Closed” when [specialOperatingHours] has a **closed** entry for today (SAST).
+class _BusinessSpecialClosedHint extends StatelessWidget {
+  final BusinessDetailDto business;
+
+  const _BusinessSpecialClosedHint({required this.business});
+
+  static String _messageFor(SpecialOperatingHourDto s) {
+    final reason = s.reason?.trim();
+    if (reason != null && reason.isNotEmpty) {
+      return 'Closed today — special hours: $reason';
+    }
+    final notes = s.notes?.trim();
+    if (notes != null && notes.isNotEmpty) {
+      return 'Closed today — special hours: $notes';
+    }
+    return 'Closed today — special hours are in effect.';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final special =
+        OperatingHoursOpenCalc.todaysClosedSpecialEntry(business.specialOperatingHours);
+    if (special == null) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.event_busy_outlined,
+            size: 18,
+            color: colorScheme.tertiary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _messageFor(special),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.86),
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

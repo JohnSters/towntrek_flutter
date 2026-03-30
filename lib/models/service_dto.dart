@@ -88,7 +88,7 @@ class ServiceDto {
       viewCount: json['viewCount'] as int,
       isFeatured: json['isFeatured'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
-      isOpenNow: json['isOpenNow'] as bool?,
+      isOpenNow: json['isOpenNow'] as bool? ?? false,
     );
   }
 }
