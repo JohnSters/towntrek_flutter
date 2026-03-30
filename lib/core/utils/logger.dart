@@ -6,7 +6,8 @@ class Logger {
     printer: logger_package.PrettyPrinter(
       methodCount: 0,
       errorMethodCount: 5,
-      lineLength: 50,
+      // Wider lines so indented JSON from API logging is readable (was 50).
+      lineLength: 120,
       colors: true,
       printEmojis: true,
       dateTimeFormat: logger_package.DateTimeFormat.none,
