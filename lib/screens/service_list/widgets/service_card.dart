@@ -171,10 +171,8 @@ class ServiceCard extends StatelessWidget {
                 icon: Icons.location_on_outlined,
                 label: service.townName,
               ),
-              const ListingInfoChip(
-                icon: Icons.schedule_rounded,
-                label: 'Available now',
-              ),
+              if (service.isOpenNow != null)
+                ListingOpenClosedChip(isOpen: service.isOpenNow!),
             ],
           ),
         ],

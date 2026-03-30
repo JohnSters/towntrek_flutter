@@ -27,6 +27,9 @@ class ServiceDto {
   final bool isFeatured;
   final bool isVerified;
 
+  /// When non-null, listing cards show an open/closed hours pill. Omitted when null.
+  final bool? isOpenNow;
+
   const ServiceDto({
     required this.id,
     required this.name,
@@ -54,6 +57,7 @@ class ServiceDto {
     required this.viewCount,
     required this.isFeatured,
     required this.isVerified,
+    this.isOpenNow,
   });
 
   factory ServiceDto.fromJson(Map<String, dynamic> json) {
@@ -84,6 +88,7 @@ class ServiceDto {
       viewCount: json['viewCount'] as int,
       isFeatured: json['isFeatured'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
+      isOpenNow: json['isOpenNow'] as bool?,
     );
   }
 }

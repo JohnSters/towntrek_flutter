@@ -199,10 +199,8 @@ class BusinessCardWidget extends StatelessWidget {
                   icon: Icons.location_on_outlined,
                   label: townName!,
                 ),
-              const ListingInfoChip(
-                icon: Icons.calendar_today_outlined,
-                label: 'Open today',
-              ),
+              if (business.isOpenNow != null)
+                ListingOpenClosedChip(isOpen: business.isOpenNow!),
             ],
           ),
         ],

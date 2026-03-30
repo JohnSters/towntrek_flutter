@@ -23,6 +23,9 @@ class EntityListingConstants {
   static const double searchBarRadius = 14.0;
   static const double searchBarContentPadding = 12.0;
   static const String clearSearchLabel = 'Clear search';
+  /// Listing cards (business, service, creative space, etc.): hours-style pill.
+  static const String listingCardOpenNow = 'Open now';
+  static const String listingCardClosed = 'Closed';
   static const String searchNoMatchesHint =
       'Try a different keyword or clear your search.';
   static const String propertySearchHint =

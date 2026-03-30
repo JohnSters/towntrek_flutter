@@ -6,6 +6,30 @@ import '../../../models/models.dart';
 import '../../event_details/event_details_screen.dart';
 import '../../../core/constants/current_events_constants.dart';
 
+DateTime _eventListingStartDateTime(EventDto event) {
+  final d = event.startDate;
+  final ts = event.startTime;
+  if (ts != null && ts.trim().isNotEmpty) {
+    final parts = ts.split(':');
+    final h = int.tryParse(parts[0].trim()) ?? 0;
+    final m = parts.length > 1 ? int.tryParse(parts[1].trim()) ?? 0 : 0;
+    return DateTime(d.year, d.month, d.day, h, m);
+  }
+  return DateTime(d.year, d.month, d.day);
+}
+
+bool _eventListingHasStarted(EventDto event) {
+  return !DateTime.now().isBefore(_eventListingStartDateTime(event));
+}
+
+bool _eventListingShowsOpenClosedChip(EventDto event) {
+  return event.isFinished || _eventListingHasStarted(event);
+}
+
+bool _eventListingChipIsOpen(EventDto event) {
+  return !event.isFinished && _eventListingHasStarted(event);
+}
+
 /// Listing card for events — price in header band (design doc §5, §8 Events).
 class EventCard extends StatelessWidget {
   final EventDto event;
@@ -204,6 +228,10 @@ class EventCard extends StatelessWidget {
                 icon: Icons.calendar_today_outlined,
                 label: event.displayDate,
               ),
+              if (_eventListingShowsOpenClosedChip(event))
+                ListingOpenClosedChip(
+                  isOpen: _eventListingChipIsOpen(event),
+                ),
             ],
           ),
         ],

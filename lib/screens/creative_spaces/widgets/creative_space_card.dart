@@ -51,25 +51,6 @@ class CreativeSpaceCard extends StatelessWidget {
     return _headerLocation;
   }
 
-  String get _statusChipLabel {
-    final fallback = space.isOpenNow
-        ? CreativeSpacesConstants.openBadge
-        : CreativeSpacesConstants.closedBadge;
-    final detail = space.openNowText?.trim();
-    if (detail == null || detail.isEmpty) return fallback;
-    if (_startsWithIgnoreCase(detail, 'open') ||
-        _startsWithIgnoreCase(detail, 'closed') ||
-        _startsWithIgnoreCase(detail, 'currently open') ||
-        _startsWithIgnoreCase(detail, 'currently closed')) {
-      return detail;
-    }
-    return '$fallback${CreativeSpacesConstants.closedStatusSuffixDivider}$detail';
-  }
-
-  bool _startsWithIgnoreCase(String value, String prefix) {
-    return value.toLowerCase().startsWith(prefix.toLowerCase());
-  }
-
   String get _introText => space.shortDescription?.trim() ?? '';
 
   @override
@@ -200,10 +181,7 @@ class CreativeSpaceCard extends StatelessWidget {
           icon: Icons.location_on_outlined,
           label: _locationChipLabel,
         ),
-      ListingInfoChip(
-        icon: Icons.schedule_rounded,
-        label: _statusChipLabel,
-      ),
+      ListingOpenClosedChip(isOpen: space.isOpenNow),
       if (space.allowsPurchase)
         const ListingInfoChip(
           icon: Icons.shopping_bag_outlined,

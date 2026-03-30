@@ -21,6 +21,9 @@ class BusinessDto {
   final bool isVerified;
   final double? distanceKm;
 
+  /// When non-null, listing cards show an open/closed hours pill. Omitted when null.
+  final bool? isOpenNow;
+
   const BusinessDto({
     required this.id,
     required this.name,
@@ -42,6 +45,7 @@ class BusinessDto {
     required this.isFeatured,
     required this.isVerified,
     this.distanceKm,
+    this.isOpenNow,
   });
 
   /// Creates a BusinessDto from JSON
@@ -67,6 +71,7 @@ class BusinessDto {
       isFeatured: json['isFeatured'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
       distanceKm: json['distanceKm'] != null ? (json['distanceKm'] as num).toDouble() : null,
+      isOpenNow: json['isOpenNow'] as bool?,
     );
   }
 
@@ -93,6 +98,7 @@ class BusinessDto {
       'isFeatured': isFeatured,
       'isVerified': isVerified,
       'distanceKm': distanceKm,
+      'isOpenNow': isOpenNow,
     };
   }
 
@@ -118,6 +124,7 @@ class BusinessDto {
     bool? isFeatured,
     bool? isVerified,
     double? distanceKm,
+    bool? isOpenNow,
   }) {
     return BusinessDto(
       id: id ?? this.id,
@@ -140,6 +147,7 @@ class BusinessDto {
       isFeatured: isFeatured ?? this.isFeatured,
       isVerified: isVerified ?? this.isVerified,
       distanceKm: distanceKm ?? this.distanceKm,
+      isOpenNow: isOpenNow ?? this.isOpenNow,
     );
   }
 
