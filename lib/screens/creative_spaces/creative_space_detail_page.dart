@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
+import '../../core/utils/listing_aggregate_rating.dart';
 import '../../core/utils/operating_hours_display_format.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
@@ -316,14 +317,15 @@ class _InfoSection extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
-          if (rating != null)
+          if (shouldShowAggregateRating(rating, space.totalReviews))
             Row(
               children: [
                 ...List.generate(5, (index) {
                   final starIndex = index + 1;
-                  final isFilled = starIndex <= rating;
+                  final score = space.rating!;
+                  final isFilled = starIndex <= score;
                   final isHalf =
-                      starIndex - 0.5 <= rating && starIndex > rating;
+                      starIndex - 0.5 <= score && starIndex > score;
                   return Icon(
                     isFilled
                         ? Icons.star_rounded
@@ -338,9 +340,17 @@ class _InfoSection extends StatelessWidget {
                 }),
                 const SizedBox(width: 6),
                 Text(
-                  CreativeSpacesConstants.ratingSummaryTemplate
-                      .replaceAll('{rating}', rating.toStringAsFixed(1))
-                      .replaceAll('{reviews}', space.totalReviews.toString()),
+                  space.totalReviews > 0
+                      ? CreativeSpacesConstants.ratingSummaryTemplate
+                          .replaceAll(
+                            '{rating}',
+                            space.rating!.toStringAsFixed(1),
+                          )
+                          .replaceAll(
+                            '{reviews}',
+                            space.totalReviews.toString(),
+                          )
+                      : space.rating!.toStringAsFixed(1),
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,

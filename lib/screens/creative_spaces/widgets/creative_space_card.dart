@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/core.dart';
+import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../models/models.dart';
 import '../creative_space_detail_page.dart';
@@ -160,9 +161,11 @@ class CreativeSpaceCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              space.rating != null
-                  ? '${space.rating!.toStringAsFixed(1)} (${space.totalReviews})'
-                  : CreativeSpacesConstants.noReviewsLabel,
+              aggregateRatingBadgeLabel(
+                rating: space.rating,
+                totalReviews: space.totalReviews,
+                noReviewsLabel: CreativeSpacesConstants.noReviewsLabel,
+              ),
               style: const TextStyle(
                 fontSize: 11,
                 color: EntityListingTheme.badgeText,

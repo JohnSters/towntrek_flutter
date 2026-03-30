@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/town_feature_constants.dart';
 import '../../../core/theme/entity_listing_theme.dart';
 import '../../../core/utils/business_utils.dart';
+import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../core/widgets/listing_info_chip.dart';
 import '../../../models/business_dto.dart';
@@ -152,9 +153,11 @@ class BusinessCardWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              business.rating != null
-                  ? '${business.rating!.toStringAsFixed(1)} (${business.totalReviews})'
-                  : 'No reviews',
+              aggregateRatingBadgeLabel(
+                rating: business.rating,
+                totalReviews: business.totalReviews,
+                noReviewsLabel: 'No reviews',
+              ),
               style: const TextStyle(
                 fontSize: 11,
                 color: EntityListingTheme.badgeText,

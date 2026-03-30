@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/entity_listing_theme.dart';
+import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../core/widgets/listing_info_chip.dart';
 import '../../../models/models.dart';
@@ -130,9 +131,11 @@ class ServiceCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              service.rating != null
-                  ? '${service.rating!.toStringAsFixed(1)} (${service.totalReviews})'
-                  : 'No reviews',
+              aggregateRatingBadgeLabel(
+                rating: service.rating,
+                totalReviews: service.totalReviews,
+                noReviewsLabel: 'No reviews',
+              ),
               style: const TextStyle(
                 fontSize: 11,
                 color: EntityListingTheme.badgeText,
