@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import '../../models/models.dart';
+import '../constants/entity_listing_constants.dart';
 import 'operating_hours_display_format.dart';
 import 'operating_hours_open_calc.dart';
 
@@ -18,13 +19,43 @@ class BusinessUtils {
   /// List/search cards: if the API sends weekly or special hours, recompute open/closed
   /// on-device (same rules as details) so specials cannot disagree with [isOpenNow].
   static bool isBusinessOpenForListingCard(BusinessDto business) {
+    // Matches detail UX: a "closed today" special wins even if [isOpenNow] is wrong/stale.
+    if (OperatingHoursOpenCalc.todaysClosedSpecialEntry(business.specialOperatingHours) !=
+        null) {
+      return false;
+    }
     if (business.operatingHours.isEmpty && business.specialOperatingHours.isEmpty) {
       return business.isOpenNow ?? false;
     }
-    return OperatingHoursOpenCalc.businessIsOpenNow(
+
+    final fromCalc = OperatingHoursOpenCalc.businessIsOpenNow(
       business.operatingHours,
       business.specialOperatingHours,
     );
+
+    // Server [IsOpenNow] includes DB specials; listing JSON may omit or misparse specials.
+    // If weekly hours say open but the API says closed, trust the API.
+    if (business.isOpenNow == false && fromCalc) {
+      return false;
+    }
+
+    return fromCalc;
+  }
+
+  /// Optional copy for [ListingOpenClosedChip] when closed (special / server override).
+  static String? businessListingClosedChipLabel(BusinessDto business) {
+    if (OperatingHoursOpenCalc.todaysClosedSpecialEntry(business.specialOperatingHours) !=
+        null) {
+      return EntityListingConstants.listingCardClosedSpecialHours;
+    }
+    if (business.isOpenNow == false &&
+        OperatingHoursOpenCalc.businessIsOpenNow(
+          business.operatingHours,
+          business.specialOperatingHours,
+        )) {
+      return EntityListingConstants.listingCardClosedSpecialHours;
+    }
+    return null;
   }
 
   /// Calendar label for grids and copy (Monday … Sunday).
@@ -84,12 +115,13 @@ class BusinessUtils {
   }
 
   static List<SpecialOperatingHourDto> getUpcomingSpecialOperatingHours(List<SpecialOperatingHourDto> all) {
-    final now = DateTime.now();
+    final now = operatingHoursSouthAfricaLocalNow();
     final today = DateTime(now.year, now.month, now.day);
 
     final upcoming = all
         .where((s) {
-          final d = DateTime(s.date.year, s.date.month, s.date.day);
+          final ymd = businessSpecialCalendarYmd(s.date);
+          final d = DateTime(ymd.$1, ymd.$2, ymd.$3);
           return d.isAtSameMomentAs(today) || d.isAfter(today);
         })
         .toList()

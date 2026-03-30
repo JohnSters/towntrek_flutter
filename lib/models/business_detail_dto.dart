@@ -125,9 +125,10 @@ class BusinessDetailDto {
       operatingHours: (json['operatingHours'] as List<dynamic>?)
           ?.map((e) => OperatingHourDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
-      specialOperatingHours: (json['specialOperatingHours'] as List<dynamic>?)
-          ?.map((e) => SpecialOperatingHourDto.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+      specialOperatingHours: specialOperatingHoursListFromJson(
+            json['specialOperatingHours'] ?? json['SpecialOperatingHours'],
+          ) ??
+          [],
       services: (json['services'] as List<dynamic>?)
           ?.map((e) => BusinessServiceDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],

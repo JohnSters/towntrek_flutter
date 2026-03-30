@@ -200,7 +200,10 @@ class BusinessCardWidget extends StatelessWidget {
                   icon: Icons.location_on_outlined,
                   label: townName!,
                 ),
-              ListingOpenClosedChip(isOpen: BusinessUtils.isBusinessOpenForListingCard(business)),
+              ListingOpenClosedChip(
+                isOpen: BusinessUtils.isBusinessOpenForListingCard(business),
+                closedLabel: BusinessUtils.businessListingClosedChipLabel(business),
+              ),
             ],
           ),
         ],

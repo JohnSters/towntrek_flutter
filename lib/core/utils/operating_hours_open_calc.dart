@@ -29,6 +29,20 @@ DateTime operatingHoursSouthAfricaLocalNow() {
   ).add(const Duration(hours: 2));
 }
 
+/// Calendar y/m/d for a special-hours row from the API, aligned with server
+/// [BusinessHoursCalculator] (`s.Date.Date` vs SA `localNow.Date`).
+///
+/// When the API sends a [DateTime.isUtc] instant (e.g. `…T22:00:00Z` = midnight
+/// SAST on the next calendar day), using raw `.year`/`.month`/`.day` misses the
+/// override and listing cards show "Open" while details show "Closed".
+(int, int, int) businessSpecialCalendarYmd(DateTime apiDate) {
+  if (apiDate.isUtc) {
+    final x = apiDate.add(const Duration(hours: 2));
+    return (x.year, x.month, x.day);
+  }
+  return (apiDate.year, apiDate.month, apiDate.day);
+}
+
 /// C# [System.DayOfWeek]: 0 = Sunday … 6 = Saturday.
 ///
 /// Dart [DateTime.weekday]: 1 = Monday … 7 = Sunday — so only Sunday must be
@@ -214,7 +228,8 @@ class OperatingHoursOpenCalc {
   ) {
     final out = <_SpecialDay>[];
     for (final s in specials) {
-      final d = DateTime(s.date.year, s.date.month, s.date.day);
+      final ymd = businessSpecialCalendarYmd(s.date);
+      final d = DateTime.utc(ymd.$1, ymd.$2, ymd.$3);
       if (s.isClosed) {
         out.add(_SpecialDay(dateLocal: d, isClosed: true));
         continue;
@@ -319,8 +334,8 @@ class OperatingHoursOpenCalc {
     final d = n.day;
     SpecialOperatingHourDto? last;
     for (final s in specials) {
-      final dt = s.date;
-      if (dt.year == y && dt.month == m && dt.day == d) {
+      final ymd = businessSpecialCalendarYmd(s.date);
+      if (ymd.$1 == y && ymd.$2 == m && ymd.$3 == d) {
         last = s;
       }
     }

@@ -47,8 +47,14 @@ class ListingInfoChip extends StatelessWidget {
 /// Hours-style open/closed pill for listing cards: green when open, grey when closed.
 class ListingOpenClosedChip extends StatelessWidget {
   final bool isOpen;
+  /// When closed, shown instead of [EntityListingConstants.listingCardClosed].
+  final String? closedLabel;
 
-  const ListingOpenClosedChip({super.key, required this.isOpen});
+  const ListingOpenClosedChip({
+    super.key,
+    required this.isOpen,
+    this.closedLabel,
+  });
 
   static const Color _openBg = Color(0xFFE8F5E9);
   static const Color _openFg = Color(0xFF2E7D32);
@@ -78,7 +84,7 @@ class ListingOpenClosedChip extends StatelessWidget {
           Text(
             isOpen
                 ? EntityListingConstants.listingCardOpenNow
-                : EntityListingConstants.listingCardClosed,
+                : (closedLabel ?? EntityListingConstants.listingCardClosed),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

@@ -26,6 +26,8 @@ class EntityListingConstants {
   /// Listing cards (business, service, creative space, etc.): hours-style pill.
   static const String listingCardOpenNow = 'Open now';
   static const String listingCardClosed = 'Closed';
+  /// Closed due to date override (or server closed while weekly template still says open).
+  static const String listingCardClosedSpecialHours = 'Closed · Special hours';
   static const String searchNoMatchesHint =
       'Try a different keyword or clear your search.';
   static const String propertySearchHint =
