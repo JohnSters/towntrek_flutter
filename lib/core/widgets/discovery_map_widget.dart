@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
@@ -70,15 +72,15 @@ class _DiscoveryMapWidgetState extends State<DiscoveryMapWidget> {
       ),
     );
     await _map?.setCamera(
-      CameraOptions(
-        center: Point(coordinates: Position(lng, lat)),
-        zoom: 14,
-      ),
+      CameraOptions(center: Point(coordinates: Position(lng, lat)), zoom: 14),
     );
   }
 
   Future<void> _onMapCreated(MapboxMap map) async {
     _map = map;
+    await map.gestures.updateSettings(
+      GesturesSettings(rotateEnabled: false, pitchEnabled: false),
+    );
     _circleMgr = await map.annotations.createCircleAnnotationManager();
     if (widget.latitude != null && widget.longitude != null) {
       await _putPin(widget.longitude!, widget.latitude!);
@@ -111,7 +113,16 @@ class _DiscoveryMapWidgetState extends State<DiscoveryMapWidget> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: MapWidget(
-          styleUri: MapboxStyles.MAPBOX_STREETS,
+          styleUri: MapboxStyles.STANDARD,
+          textureView: true,
+          androidHostingMode: AndroidPlatformViewHostingMode.VD,
+          gestureRecognizers: widget.interactive
+              ? {
+                  Factory<OneSequenceGestureRecognizer>(
+                    () => EagerGestureRecognizer(),
+                  ),
+                }
+              : null,
           cameraOptions: CameraOptions(
             center: Point(coordinates: Position(_centerLng, _centerLat)),
             zoom: (widget.latitude != null && widget.longitude != null)

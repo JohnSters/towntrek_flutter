@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../core/constants/discovery_constants.dart';
 import '../../core/utils/external_link_launcher.dart';
+import '../../core/widgets/discovery_map_picker_page.dart';
 import '../../core/widgets/discovery_map_widget.dart';
 import '../../models/models.dart';
 import 'suggest_discovery_view_model.dart';
@@ -70,12 +71,13 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                 border: OutlineInputBorder(),
                               ),
                               maxLength: 150,
-                              validator: (v) =>
-                                  v == null || v.trim().isEmpty ? 'Required' : null,
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? 'Required'
+                                  : null,
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<int>(
-                              value: vm.selectedCategoryId, // ignore: deprecated_member_use
+                              initialValue: vm.selectedCategoryId,
                               decoration: const InputDecoration(
                                 labelText: 'Category',
                                 border: OutlineInputBorder(),
@@ -111,7 +113,8 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             if (vm.selectedCategoryId != null &&
-                                (vm.selectedCategoryId == 1 || vm.selectedCategoryId == 9))
+                                (vm.selectedCategoryId == 1 ||
+                                    vm.selectedCategoryId == 9))
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: Column(
@@ -119,7 +122,9 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                   children: [
                                     Text(
                                       'Difficulty (optional)',
-                                      style: Theme.of(context).textTheme.bodyMedium,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium,
                                     ),
                                     const SizedBox(height: 8),
                                     Wrap(
@@ -130,7 +135,9 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                               label: Text(d),
                                               selected: vm.difficulty == d,
                                               onSelected: (sel) =>
-                                                  vm.setDifficulty(sel ? d : null),
+                                                  vm.setDifficulty(
+                                                    sel ? d : null,
+                                                  ),
                                             ),
                                           )
                                           .toList(),
@@ -171,10 +178,13 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                             FutureBuilder<void>(
                               future: vm.mapboxPrimed,
                               builder: (context, snap) {
-                                if (snap.connectionState != ConnectionState.done) {
+                                if (snap.connectionState !=
+                                    ConnectionState.done) {
                                   return const SizedBox(
                                     height: 200,
-                                    child: Center(child: CircularProgressIndicator()),
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
                                   );
                                 }
                                 return DiscoveryMapWidget(
@@ -196,6 +206,44 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                final selection = await Navigator.of(context)
+                                    .push<DiscoveryLocationSelection>(
+                                      MaterialPageRoute(
+                                        builder: (_) => DiscoveryMapPickerPage(
+                                          title: 'Choose discovery location',
+                                          initialLatitude: vm.pinLat,
+                                          initialLongitude: vm.pinLng,
+                                          fallbackCenterLat: vm.town.latitude,
+                                          fallbackCenterLng: vm.town.longitude,
+                                          selectionEnabled: true,
+                                          enableSearch: true,
+                                          confirmLabel: 'Use this pin',
+                                        ),
+                                      ),
+                                    );
+                                if (selection == null) return;
+                                vm.setPin(
+                                  selection.latitude,
+                                  selection.longitude,
+                                );
+                              },
+                              icon: const Icon(Icons.fullscreen),
+                              label: Text(
+                                vm.pinLat == null || vm.pinLng == null
+                                    ? 'Open full-screen map & search'
+                                    : 'Adjust pin on full-screen map',
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                'Tip: full-screen mode is easier to pan on Android emulators.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Photos (up to 5)',
@@ -222,7 +270,10 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                         right: 0,
                                         top: 0,
                                         child: IconButton(
-                                          icon: const Icon(Icons.close, size: 20),
+                                          icon: const Icon(
+                                            Icons.close,
+                                            size: 20,
+                                          ),
                                           onPressed: () => vm.removeImage(i),
                                         ),
                                       ),
@@ -238,7 +289,9 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                         width: 88,
                                         height: 88,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           border: Border.all(
                                             color: Theme.of(context)
                                                 .colorScheme
@@ -247,7 +300,9 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                             style: BorderStyle.solid,
                                           ),
                                         ),
-                                        child: const Icon(Icons.add_photo_alternate_outlined),
+                                        child: const Icon(
+                                          Icons.add_photo_alternate_outlined,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -257,7 +312,8 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                             TextFormField(
                               controller: vm.creditController,
                               decoration: const InputDecoration(
-                                labelText: 'How should we credit you? (optional)',
+                                labelText:
+                                    'How should we credit you? (optional)',
                                 border: OutlineInputBorder(),
                               ),
                               maxLength: 200,
@@ -282,12 +338,16 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                             ),
                             const SizedBox(height: 20),
                             FilledButton(
-                              onPressed: vm.loading ? null : () => vm.submit(context),
+                              onPressed: vm.loading
+                                  ? null
+                                  : () => vm.submit(context),
                               child: vm.loading
                                   ? const SizedBox(
                                       height: 22,
                                       width: 22,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : const Text('Submit suggestion'),
                             ),
@@ -303,7 +363,10 @@ class _SuggestDiscoveryContent extends StatelessWidget {
     );
   }
 
-  Future<void> _pickSource(BuildContext context, SuggestDiscoveryViewModel vm) async {
+  Future<void> _pickSource(
+    BuildContext context,
+    SuggestDiscoveryViewModel vm,
+  ) async {
     await showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(

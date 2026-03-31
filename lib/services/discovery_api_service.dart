@@ -21,8 +21,12 @@ class DiscoveryApiService {
 
   final ApiClient _apiClient;
 
+  String _formatCoordinate(double value) => value.toStringAsFixed(6);
+
   Future<List<DiscoveryCategoryDto>> getCategories() async {
-    final response = await _apiClient.get<List<dynamic>>('/api/discoveries/categories');
+    final response = await _apiClient.get<List<dynamic>>(
+      '/api/discoveries/categories',
+    );
     final list = response.data ?? [];
     return list
         .map((e) => DiscoveryCategoryDto.fromJson(e as Map<String, dynamic>))
@@ -37,7 +41,10 @@ class DiscoveryApiService {
     return (response.data?['count'] as num?)?.toInt() ?? 0;
   }
 
-  Future<List<TownDiscoveryDto>> getFeatured(int townId, {int count = 5}) async {
+  Future<List<TownDiscoveryDto>> getFeatured(
+    int townId, {
+    int count = 5,
+  }) async {
     final response = await _apiClient.get<List<dynamic>>(
       '/api/discoveries/featured',
       queryParameters: {'townId': townId, 'count': count},
@@ -105,9 +112,10 @@ class DiscoveryApiService {
       if (entryInfo != null) 'EntryInfo': entryInfo,
       if (seasonalNote != null) 'SeasonalNote': seasonalNote,
       if (directionsHint != null) 'DirectionsHint': directionsHint,
-      if (latitude != null) 'Latitude': latitude.toString(),
-      if (longitude != null) 'Longitude': longitude.toString(),
-      if (submitterDisplayName != null) 'SubmitterDisplayName': submitterDisplayName,
+      if (latitude != null) 'Latitude': _formatCoordinate(latitude),
+      if (longitude != null) 'Longitude': _formatCoordinate(longitude),
+      if (submitterDisplayName != null)
+        'SubmitterDisplayName': submitterDisplayName,
     });
 
     for (var i = 0; i < images.length && i < 5; i++) {
@@ -127,6 +135,7 @@ class DiscoveryApiService {
         '/api/discoveries/suggest',
         data: form,
         options: Options(
+          contentType: Headers.multipartFormDataContentType,
           validateStatus: (s) => s != null && s < 600,
         ),
       );

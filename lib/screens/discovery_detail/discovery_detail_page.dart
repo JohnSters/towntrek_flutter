@@ -7,6 +7,7 @@ import '../../core/core.dart';
 import '../../core/constants/discovery_constants.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
+import '../../core/widgets/discovery_map_picker_page.dart';
 import '../../core/widgets/discovery_map_widget.dart';
 import '../../models/models.dart';
 import 'discovery_detail_view_model.dart';
@@ -37,10 +38,7 @@ class DiscoveryDetailPage extends StatelessWidget {
 }
 
 class _DiscoveryDetailBody extends StatelessWidget {
-  const _DiscoveryDetailBody({
-    required this.initialTitle,
-    required this.town,
-  });
+  const _DiscoveryDetailBody({required this.initialTitle, required this.town});
 
   final String initialTitle;
   final TownDto town;
@@ -80,12 +78,14 @@ class _DiscoveryDetailBody extends StatelessWidget {
     DiscoveryDetailViewModel vm,
   ) {
     return switch (state) {
-      DiscoveryDetailLoading() => const Center(child: CircularProgressIndicator()),
+      DiscoveryDetailLoading() => const Center(
+        child: CircularProgressIndicator(),
+      ),
       DiscoveryDetailError(error: final e) => ErrorView(error: e),
       DiscoveryDetailSuccess(discovery: final d) => _SuccessScroll(
-          discovery: d,
-          town: town,
-        ),
+        discovery: d,
+        town: town,
+      ),
     };
   }
 }
@@ -126,9 +126,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
   @override
   Widget build(BuildContext context) {
     final d = widget.discovery;
-    final images = d.images.isNotEmpty
-        ? d.images
-        : <DiscoveryImageDto>[];
+    final images = d.images.isNotEmpty ? d.images : <DiscoveryImageDto>[];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -236,16 +234,23 @@ class _SuccessScrollState extends State<_SuccessScroll> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.35),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.lightbulb_outline, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.lightbulb_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(child: Text(d.quickTip!.trim())),
                 ],
@@ -285,12 +290,36 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                     },
                   ),
                   const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DiscoveryMapPickerPage(
+                            title: d.title,
+                            initialLatitude: d.latitude,
+                            initialLongitude: d.longitude,
+                            fallbackCenterLat: widget.town.latitude,
+                            fallbackCenterLng: widget.town.longitude,
+                            selectionEnabled: false,
+                            enableSearch: false,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.fullscreen),
+                    label: const Text('Expand map'),
+                  ),
+                  const SizedBox(height: 10),
                   FilledButton.icon(
                     onPressed: () async {
-                      final q = Uri.encodeComponent('${d.latitude},${d.longitude}');
+                      final q = Uri.encodeComponent(
+                        '${d.latitude},${d.longitude}',
+                      );
                       await ExternalLinkLauncher.openUri(
                         context,
-                        Uri.parse('https://www.google.com/maps/search/?api=1&query=$q'),
+                        Uri.parse(
+                          'https://www.google.com/maps/search/?api=1&query=$q',
+                        ),
                       );
                     },
                     icon: const Icon(Icons.open_in_new),
