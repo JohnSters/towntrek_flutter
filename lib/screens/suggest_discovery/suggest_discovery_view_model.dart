@@ -24,6 +24,8 @@ class SuggestDiscoveryViewModel extends ChangeNotifier {
   final quickTipController = TextEditingController();
   final durationController = TextEditingController();
   final entryInfoController = TextEditingController();
+  final seasonalNoteController = TextEditingController();
+  final directionsHintController = TextEditingController();
   final creditController = TextEditingController(text: 'A local resident');
 
   final image_picker.ImagePicker _picker = image_picker.ImagePicker();
@@ -72,6 +74,8 @@ class SuggestDiscoveryViewModel extends ChangeNotifier {
     quickTipController.dispose();
     durationController.dispose();
     entryInfoController.dispose();
+    seasonalNoteController.dispose();
+    directionsHintController.dispose();
     creditController.dispose();
     super.dispose();
   }
@@ -141,6 +145,12 @@ class SuggestDiscoveryViewModel extends ChangeNotifier {
         entryInfo: !isFreeAccess && entryInfoController.text.trim().isNotEmpty
             ? entryInfoController.text.trim()
             : null,
+        seasonalNote: seasonalNoteController.text.trim().isEmpty
+            ? null
+            : seasonalNoteController.text.trim(),
+        directionsHint: directionsHintController.text.trim().isEmpty
+            ? null
+            : directionsHintController.text.trim(),
         latitude: pinLat,
         longitude: pinLng,
         submitterDisplayName: creditController.text.trim().isEmpty

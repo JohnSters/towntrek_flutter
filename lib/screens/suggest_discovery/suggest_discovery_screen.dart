@@ -36,9 +36,13 @@ class SuggestDiscoveryScreen extends StatelessWidget {
 class _SuggestDiscoveryContent extends StatelessWidget {
   const _SuggestDiscoveryContent();
 
+  static const double _sectionGap = 12;
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<SuggestDiscoveryViewModel>();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: EntityListingTheme.pageBg,
@@ -56,79 +60,106 @@ class _SuggestDiscoveryContent extends StatelessWidget {
               child: vm.loadingCategories
                   ? const Center(child: CircularProgressIndicator())
                   : vm.loadError != null
-                  ? Center(child: Text(vm.loadError!))
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(
+                        child: Text(
+                          vm.loadError!,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ),
+                    )
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
                       child: Form(
                         key: vm.formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            TextFormField(
-                              controller: vm.titleController,
-                              decoration: const InputDecoration(
-                                labelText: 'Title',
-                                border: OutlineInputBorder(),
+                            Text(
+                              'Share a place or activity for the community map.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                height: 1.4,
                               ),
-                              maxLength: 150,
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'Required'
-                                  : null,
                             ),
-                            const SizedBox(height: 12),
-                            DropdownButtonFormField<int>(
-                              initialValue: vm.selectedCategoryId,
-                              decoration: const InputDecoration(
-                                labelText: 'Category',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: vm.categories
-                                  .map(
-                                    (c) => DropdownMenuItem(
-                                      value: c.id,
-                                      child: Text(c.name),
+                            const SizedBox(height: 16),
+                            DetailSectionShell(
+                              icon: Icons.edit_note_outlined,
+                              title: 'Title & description',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextFormField(
+                                    controller: vm.titleController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Title',
                                     ),
-                                  )
-                                  .toList(),
-                              onChanged: vm.setCategory,
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: vm.descriptionController,
-                              decoration: const InputDecoration(
-                                labelText: 'Description',
-                                border: OutlineInputBorder(),
+                                    maxLength: 150,
+                                    validator: (v) =>
+                                        v == null || v.trim().isEmpty
+                                        ? 'Required'
+                                        : null,
+                                  ),
+                                  const SizedBox(height: _sectionGap),
+                                  DropdownButtonFormField<int>(
+                                    initialValue: vm.selectedCategoryId,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Category',
+                                    ),
+                                    items: vm.categories
+                                        .map(
+                                          (c) => DropdownMenuItem(
+                                            value: c.id,
+                                            child: Text(c.name),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: vm.setCategory,
+                                  ),
+                                  const SizedBox(height: _sectionGap),
+                                  TextFormField(
+                                    controller: vm.descriptionController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Description',
+                                      alignLabelWithHint: true,
+                                    ),
+                                    maxLines: 4,
+                                    maxLength: 1000,
+                                  ),
+                                ],
                               ),
-                              maxLines: 4,
-                              maxLength: 1000,
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: vm.quickTipController,
-                              decoration: const InputDecoration(
-                                labelText: 'Quick tip (optional)',
-                                border: OutlineInputBorder(),
-                              ),
-                              maxLength: 300,
-                            ),
-                            const SizedBox(height: 12),
-                            if (vm.selectedCategoryId != null &&
-                                (vm.selectedCategoryId == 1 ||
-                                    vm.selectedCategoryId == 9))
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                            const SizedBox(height: _sectionGap),
+                            DetailSectionShell(
+                              icon: Icons.tips_and_updates_outlined,
+                              title: 'Tips & access',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextFormField(
+                                    controller: vm.quickTipController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Quick tip (optional)',
+                                    ),
+                                    maxLength: 300,
+                                  ),
+                                  if (vm.selectedCategoryId != null &&
+                                      (vm.selectedCategoryId == 1 ||
+                                          vm.selectedCategoryId == 9)) ...[
+                                    const SizedBox(height: _sectionGap),
                                     Text(
                                       'Difficulty (optional)',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                     const SizedBox(height: 8),
                                     Wrap(
                                       spacing: 8,
+                                      runSpacing: 8,
                                       children: ['Easy', 'Moderate', 'Hard']
                                           .map(
                                             (d) => ChoiceChip(
@@ -143,213 +174,269 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                           .toList(),
                                     ),
                                   ],
-                                ),
-                              ),
-                            TextFormField(
-                              controller: vm.durationController,
-                              decoration: const InputDecoration(
-                                labelText: 'Duration (optional)',
-                                border: OutlineInputBorder(),
-                                hintText: 'e.g. ~1 hour',
-                              ),
-                              maxLength: 100,
-                            ),
-                            const SizedBox(height: 12),
-                            SwitchListTile(
-                              title: const Text('Free access'),
-                              value: vm.isFreeAccess,
-                              onChanged: vm.setFreeAccess,
-                            ),
-                            if (!vm.isFreeAccess)
-                              TextFormField(
-                                controller: vm.entryInfoController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Entry info',
-                                  border: OutlineInputBorder(),
-                                ),
-                                maxLength: 200,
-                              ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Location on map',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            const SizedBox(height: 8),
-                            FutureBuilder<void>(
-                              future: vm.mapboxPrimed,
-                              builder: (context, snap) {
-                                if (snap.connectionState !=
-                                    ConnectionState.done) {
-                                  return const SizedBox(
-                                    height: 200,
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
+                                  const SizedBox(height: _sectionGap),
+                                  TextFormField(
+                                    controller: vm.durationController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Duration (optional)',
+                                      hintText: 'e.g. ~1 hour',
                                     ),
-                                  );
-                                }
-                                return DiscoveryMapWidget(
-                                  height: 220,
-                                  latitude: vm.pinLat,
-                                  longitude: vm.pinLng,
-                                  fallbackCenterLat: vm.town.latitude,
-                                  fallbackCenterLng: vm.town.longitude,
-                                  interactive: true,
-                                  onLocationSelected: vm.setPin,
-                                );
-                              },
-                            ),
-                            if (vm.pinLat != null && vm.pinLng != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                  'Pin: ${vm.pinLat!.toStringAsFixed(5)}, ${vm.pinLng!.toStringAsFixed(5)}',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
+                                    maxLength: 100,
+                                  ),
+                                  const SizedBox(height: _sectionGap),
+                                  TextFormField(
+                                    controller: vm.seasonalNoteController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Seasonal note (optional)',
+                                      hintText:
+                                          'e.g. Best after rain, closed in winter',
+                                      alignLabelWithHint: true,
+                                    ),
+                                    maxLines: 2,
+                                    maxLength:
+                                        DiscoveryConstants.seasonalNoteMaxLength,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  SwitchListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: const Text('Free access'),
+                                    value: vm.isFreeAccess,
+                                    onChanged: vm.setFreeAccess,
+                                  ),
+                                  if (!vm.isFreeAccess) ...[
+                                    const SizedBox(height: 4),
+                                    TextFormField(
+                                      controller: vm.entryInfoController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Entry info',
+                                      ),
+                                      maxLength: 200,
+                                    ),
+                                  ],
+                                ],
                               ),
-                            const SizedBox(height: 8),
-                            OutlinedButton.icon(
-                              onPressed: () async {
-                                final selection = await Navigator.of(context)
-                                    .push<DiscoveryLocationSelection>(
-                                      MaterialPageRoute(
-                                        builder: (_) => DiscoveryMapPickerPage(
-                                          title: 'Choose discovery location',
-                                          initialLatitude: vm.pinLat,
-                                          initialLongitude: vm.pinLng,
-                                          fallbackCenterLat: vm.town.latitude,
-                                          fallbackCenterLng: vm.town.longitude,
-                                          selectionEnabled: true,
-                                          enableSearch: true,
-                                          confirmLabel: 'Use this pin',
+                            ),
+                            const SizedBox(height: _sectionGap),
+                            DetailSectionShell(
+                              icon: Icons.map_outlined,
+                              title: 'Location on map',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextFormField(
+                                    controller: vm.directionsHintController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Directions hint (optional)',
+                                      hintText:
+                                          'How to find it — parking, gate, landmark',
+                                      alignLabelWithHint: true,
+                                    ),
+                                    maxLines: 2,
+                                    maxLength: DiscoveryConstants
+                                        .directionsHintMaxLength,
+                                  ),
+                                  const SizedBox(height: _sectionGap),
+                                  FutureBuilder<void>(
+                                    future: vm.mapboxPrimed,
+                                    builder: (context, snap) {
+                                      if (snap.connectionState !=
+                                          ConnectionState.done) {
+                                        return const SizedBox(
+                                          height: 200,
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      }
+                                      return DiscoveryMapWidget(
+                                        height: 220,
+                                        latitude: vm.pinLat,
+                                        longitude: vm.pinLng,
+                                        fallbackCenterLat: vm.town.latitude,
+                                        fallbackCenterLng: vm.town.longitude,
+                                        interactive: true,
+                                        onLocationSelected: vm.setPin,
+                                      );
+                                    },
+                                  ),
+                                  if (vm.pinLat != null && vm.pinLng != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 10),
+                                      child: Text(
+                                        'Pin: ${vm.pinLat!.toStringAsFixed(5)}, ${vm.pinLng!.toStringAsFixed(5)}',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
                                         ),
                                       ),
-                                    );
-                                if (selection == null) return;
-                                vm.setPin(
-                                  selection.latitude,
-                                  selection.longitude,
-                                );
-                              },
-                              icon: const Icon(Icons.fullscreen),
-                              label: Text(
-                                vm.pinLat == null || vm.pinLng == null
-                                    ? 'Open full-screen map & search'
-                                    : 'Adjust pin on full-screen map',
+                                    ),
+                                  const SizedBox(height: 10),
+                                  OutlinedButton.icon(
+                                    onPressed: () async {
+                                      final selection = await Navigator.of(
+                                        context,
+                                      ).push<DiscoveryLocationSelection>(
+                                        MaterialPageRoute(
+                                          builder: (_) => DiscoveryMapPickerPage(
+                                            title: 'Choose discovery location',
+                                            initialLatitude: vm.pinLat,
+                                            initialLongitude: vm.pinLng,
+                                            fallbackCenterLat: vm.town.latitude,
+                                            fallbackCenterLng:
+                                                vm.town.longitude,
+                                            selectionEnabled: true,
+                                            enableSearch: true,
+                                            confirmLabel: 'Use this pin',
+                                          ),
+                                        ),
+                                      );
+                                      if (selection == null) return;
+                                      vm.setPin(
+                                        selection.latitude,
+                                        selection.longitude,
+                                      );
+                                    },
+                                    icon: const Icon(Icons.fullscreen),
+                                    label: Text(
+                                      vm.pinLat == null || vm.pinLng == null
+                                          ? 'Open full-screen map & search'
+                                          : 'Adjust pin on full-screen map',
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      'Tip: full-screen mode is easier to pan on Android emulators.',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Text(
-                                'Tip: full-screen mode is easier to pan on Android emulators.',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Photos (up to 5)',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                for (var i = 0; i < vm.images.length; i++)
-                                  Stack(
-                                    children: [
-                                      ClipRRect(
+                            const SizedBox(height: _sectionGap),
+                            DetailSectionShell(
+                              icon: Icons.photo_library_outlined,
+                              title: 'Photos (up to 5)',
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  for (var i = 0; i < vm.images.length; i++)
+                                    Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: Image.file(
+                                            vm.images[i],
+                                            width: 88,
+                                            height: 88,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        Positioned(
+                                          right: 0,
+                                          top: 0,
+                                          child: IconButton(
+                                            icon: const Icon(
+                                              Icons.close,
+                                              size: 20,
+                                            ),
+                                            onPressed: () => vm.removeImage(i),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  if (vm.images.length < 5)
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () => _pickSource(context, vm),
                                         borderRadius: BorderRadius.circular(12),
-                                        child: Image.file(
-                                          vm.images[i],
+                                        child: Container(
                                           width: 88,
                                           height: 88,
-                                          fit: BoxFit.cover,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            color: colorScheme
+                                                .surfaceContainerHighest
+                                                .withValues(alpha: 0.5),
+                                            border: Border.all(
+                                              color: colorScheme.outline
+                                                  .withValues(alpha: 0.35),
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.add_photo_alternate_outlined,
+                                            color: colorScheme.primary,
+                                          ),
                                         ),
                                       ),
-                                      Positioned(
-                                        right: 0,
-                                        top: 0,
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.close,
-                                            size: 20,
-                                          ),
-                                          onPressed: () => vm.removeImage(i),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: _sectionGap),
+                            DetailSectionShell(
+                              icon: Icons.person_outline,
+                              title: 'Credit & submit',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextFormField(
+                                    controller: vm.creditController,
+                                    decoration: const InputDecoration(
+                                      labelText:
+                                          'How should we credit you? (optional)',
+                                    ),
+                                    maxLength: 200,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 4,
+                                    children: [
+                                      Text(
+                                        'By submitting, you agree to our',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
                                         ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            ExternalLinkLauncher.openUri(
+                                          context,
+                                          Uri.parse(
+                                            DiscoveryConstants.termsOfUseUrl,
+                                          ),
+                                        ),
+                                        child: const Text('Terms of Use'),
                                       ),
                                     ],
                                   ),
-                                if (vm.images.length < 5)
-                                  Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () => _pickSource(context, vm),
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Container(
-                                        width: 88,
-                                        height: 88,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .outline
-                                                .withValues(alpha: 0.4),
-                                            style: BorderStyle.solid,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.add_photo_alternate_outlined,
-                                        ),
-                                      ),
-                                    ),
+                                  const SizedBox(height: 16),
+                                  FilledButton(
+                                    onPressed: vm.loading
+                                        ? null
+                                        : () => vm.submit(context),
+                                    child: vm.loading
+                                        ? const SizedBox(
+                                            height: 22,
+                                            width: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text('Submit suggestion'),
                                   ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: vm.creditController,
-                              decoration: const InputDecoration(
-                                labelText:
-                                    'How should we credit you? (optional)',
-                                border: OutlineInputBorder(),
+                                ],
                               ),
-                              maxLength: 200,
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 4,
-                              children: [
-                                Text(
-                                  'By submitting, you agree to our',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                TextButton(
-                                  onPressed: () => ExternalLinkLauncher.openUri(
-                                    context,
-                                    Uri.parse(DiscoveryConstants.termsOfUseUrl),
-                                  ),
-                                  child: const Text('Terms of Use'),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            FilledButton(
-                              onPressed: vm.loading
-                                  ? null
-                                  : () => vm.submit(context),
-                              child: vm.loading
-                                  ? const SizedBox(
-                                      height: 22,
-                                      width: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text('Submit suggestion'),
                             ),
                           ],
                         ),
