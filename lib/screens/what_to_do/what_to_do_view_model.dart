@@ -2,149 +2,156 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../repositories/repositories.dart';
-import '../business_details/business_details_page.dart';
+import '../../services/discovery_api_service.dart';
+import '../discovery_detail/discovery_detail_page.dart';
+import '../suggest_discovery/suggest_discovery_screen.dart';
 import 'what_to_do_state.dart';
 
 class WhatToDoViewModel extends ChangeNotifier {
-  final BusinessRepository _businessRepository;
+  WhatToDoViewModel({
+    required DiscoveryApiService discoveryApiService,
+    required ErrorHandler errorHandler,
+    required TownDto town,
+  }) : _discoveryApiService = discoveryApiService,
+       _errorHandler = errorHandler,
+       _town = town {
+    load();
+  }
+
+  final DiscoveryApiService _discoveryApiService;
   final ErrorHandler _errorHandler;
   final TownDto _town;
 
   WhatToDoState _state = WhatToDoLoading();
   WhatToDoState get state => _state;
-
   TownDto get town => _town;
 
-  WhatToDoViewModel({
-    required BusinessRepository businessRepository,
-    required ErrorHandler errorHandler,
-    required TownDto town,
-  }) : _businessRepository = businessRepository,
-       _errorHandler = errorHandler,
-       _town = town {
-    loadWhatToDo();
-  }
-
-  Future<void> loadWhatToDo() async {
+  Future<void> load() async {
     _state = WhatToDoLoading();
     notifyListeners();
 
     try {
-      // Audit finding: Existing API + DTOs already support this feature via:
-      // - categories with subcategory counts for a town
-      // - business list filters by town/category/subcategory
-      final categories = await _businessRepository.getCategoriesWithCounts(
+      final categories = await _discoveryApiService.getCategories();
+      final count = await _discoveryApiService.getDiscoveryCount(_town.id);
+      final featured = await _discoveryApiService.getFeatured(_town.id, count: 5);
+      final first = await _discoveryApiService.getDiscoveries(
         _town.id,
+        page: 1,
+        pageSize: WhatToDoConstants.pageSize,
       );
-      final tourismCategory = _findTourismCategory(categories);
 
-      if (tourismCategory == null || tourismCategory.businessCount == 0) {
-        _state = WhatToDoSuccess(town: _town, sections: const []);
-        notifyListeners();
-        return;
-      }
-
-      final sections = await _buildSections(tourismCategory);
-      _state = WhatToDoSuccess(town: _town, sections: sections);
+      _state = WhatToDoSuccess(
+        town: _town,
+        totalCount: count,
+        categories: categories,
+        featured: featured,
+        items: first.items,
+        selectedCategoryId: null,
+        hasNextPage: first.hasNextPage,
+        page: 1,
+      );
       notifyListeners();
     } catch (error) {
-      final appError = await _errorHandler.handleError(
-        error,
-        retryAction: loadWhatToDo,
-      );
+      final appError = await _errorHandler.handleError(error, retryAction: load);
       _state = WhatToDoError(appError);
       notifyListeners();
     }
   }
 
-  void openBusinessDetails(BuildContext context, BusinessDto business) {
+  Future<void> selectCategory(int? categoryId) async {
+    final s = _state;
+    if (s is! WhatToDoSuccess) return;
+
+    _state = WhatToDoSuccess(
+      town: s.town,
+      totalCount: s.totalCount,
+      categories: s.categories,
+      featured: s.featured,
+      items: [],
+      selectedCategoryId: categoryId,
+      hasNextPage: false,
+      page: 1,
+      loadingMore: true,
+    );
+    notifyListeners();
+
+    try {
+      final res = await _discoveryApiService.getDiscoveries(
+        _town.id,
+        category: categoryId,
+        page: 1,
+        pageSize: WhatToDoConstants.pageSize,
+      );
+      final cur = _state as WhatToDoSuccess;
+      _state = WhatToDoSuccess(
+        town: cur.town,
+        totalCount: cur.totalCount,
+        categories: cur.categories,
+        featured: cur.featured,
+        items: res.items,
+        selectedCategoryId: categoryId,
+        hasNextPage: res.hasNextPage,
+        page: 1,
+        loadingMore: false,
+      );
+      notifyListeners();
+    } catch (error) {
+      final appError = await _errorHandler.handleError(error, retryAction: () => selectCategory(categoryId));
+      _state = WhatToDoError(appError);
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMore() async {
+    final s = _state;
+    if (s is! WhatToDoSuccess || !s.hasNextPage || s.loadingMore) return;
+
+    _state = s.copyWith(loadingMore: true);
+    notifyListeners();
+
+    try {
+      final nextPage = s.page + 1;
+      final res = await _discoveryApiService.getDiscoveries(
+        _town.id,
+        category: s.selectedCategoryId,
+        page: nextPage,
+        pageSize: WhatToDoConstants.pageSize,
+      );
+      final cur = _state as WhatToDoSuccess;
+      _state = cur.copyWith(
+        items: [...cur.items, ...res.items],
+        hasNextPage: res.hasNextPage,
+        page: nextPage,
+        loadingMore: false,
+      );
+      notifyListeners();
+    } catch (error) {
+      final cur = _state;
+      if (cur is WhatToDoSuccess) {
+        _state = cur.copyWith(loadingMore: false);
+      }
+      notifyListeners();
+      debugPrint('loadMore failed: $error');
+    }
+  }
+
+  void openDiscoveryDetail(BuildContext context, int id, String title) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BusinessDetailsPage(
-          businessId: business.id,
-          businessName: business.name,
+        builder: (context) => DiscoveryDetailPage(
+          discoveryId: id,
+          title: title,
+          town: _town,
         ),
       ),
     );
   }
 
-  CategoryWithCountDto? _findTourismCategory(
-    List<CategoryWithCountDto> categories,
-  ) {
-    for (final category in categories) {
-      final key = category.key.toLowerCase();
-      final name = category.name.toLowerCase();
-      final matchesTourism =
-          key.contains('tourism') ||
-          key.contains('visitor') ||
-          name.contains('tourism') ||
-          name.contains('visitor');
-      if (matchesTourism) {
-        return category;
-      }
-    }
-    return null;
-  }
-
-  Future<List<WhatToDoSection>> _buildSections(
-    CategoryWithCountDto tourismCategory,
-  ) async {
-    final activeSubCategories = tourismCategory.subCategories
-        .where((subCategory) => subCategory.businessCount > 0)
-        .toList();
-
-    if (activeSubCategories.isEmpty) {
-      final businesses = await _fetchAllBusinesses(
-        categoryKey: tourismCategory.key,
-      );
-      if (businesses.isEmpty) return [];
-      return [
-        WhatToDoSection(
-          title: WhatToDoConstants.fallbackSectionTitle,
-          businesses: businesses,
-        ),
-      ];
-    }
-
-    final sectionResults = await Future.wait(
-      activeSubCategories.map((subCategory) async {
-        final businesses = await _fetchAllBusinesses(
-          categoryKey: tourismCategory.key,
-          subCategoryKey: subCategory.key,
-        );
-        if (businesses.isEmpty) {
-          return null;
-        }
-        return WhatToDoSection(title: subCategory.name, businesses: businesses);
-      }),
+  void openSuggest(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SuggestDiscoveryScreen(town: _town),
+      ),
     );
-
-    return sectionResults.whereType<WhatToDoSection>().toList();
-  }
-
-  Future<List<BusinessDto>> _fetchAllBusinesses({
-    required String categoryKey,
-    String? subCategoryKey,
-  }) async {
-    var page = 1;
-    var hasNextPage = true;
-    final allBusinesses = <BusinessDto>[];
-
-    while (hasNextPage) {
-      final response = await _businessRepository.getBusinesses(
-        townId: _town.id,
-        category: categoryKey,
-        subCategory: subCategoryKey,
-        page: page,
-        pageSize: WhatToDoConstants.pageSize,
-      );
-
-      allBusinesses.addAll(response.businesses);
-      hasNextPage = response.hasNextPage;
-      page += 1;
-    }
-
-    return allBusinesses;
   }
 }

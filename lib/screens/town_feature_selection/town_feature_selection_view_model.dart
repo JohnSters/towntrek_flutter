@@ -27,6 +27,7 @@ class TownFeatureViewModel extends ChangeNotifier {
   int? pulseCreativeTotal;
   int? pulsePropertiesTotal;
   int? pulseEquipmentTotal;
+  int? pulseDiscoveriesCount;
   bool pulseLoading = true;
 
   bool _alive = true;
@@ -55,6 +56,7 @@ class TownFeatureViewModel extends ChangeNotifier {
       _fetchCreativeTotal(town),
       _fetchPropertiesTotal(town),
       _fetchEquipmentTotal(town),
+      _fetchDiscoveriesCount(town),
     ]);
 
     if (!_alive) return;
@@ -111,6 +113,14 @@ class TownFeatureViewModel extends ChangeNotifier {
       );
       if (!_alive) return;
       pulsePropertiesTotal = list.totalCount;
+    } catch (_) {}
+  }
+
+  Future<void> _fetchDiscoveriesCount(TownDto town) async {
+    try {
+      final n = await serviceLocator.discoveryApiService.getDiscoveryCount(town.id);
+      if (!_alive) return;
+      pulseDiscoveriesCount = n;
     } catch (_) {}
   }
 

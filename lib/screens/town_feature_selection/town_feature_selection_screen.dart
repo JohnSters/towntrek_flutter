@@ -131,6 +131,7 @@ class _TownFeatureSelectionScreenContentState
                       creativeTotal: viewModel.pulseCreativeTotal,
                       propertiesTotal: viewModel.pulsePropertiesTotal,
                       equipmentTotal: viewModel.pulseEquipmentTotal,
+                      discoveriesTotal: viewModel.pulseDiscoveriesCount,
                       onNavigate: (destination) => _onPulseNavigate(
                         context,
                         viewModel,

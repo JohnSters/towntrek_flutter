@@ -12,9 +12,9 @@ class WhatToDoConstants {
   static const IconData emptyIcon = Icons.travel_explore;
 
   static const String titlePrefix = 'What to do in';
-  static const String subtitle = 'Tourism & Visitor Information';
-  static const String emptyTitle = 'No visitor information yet';
-  static const String emptyDescription =
-      'No tourism businesses are registered for this town yet. Please check back soon.';
-  static const String fallbackSectionTitle = 'Recommended Places';
+  static const String subtitle = 'Discoveries & local gems';
+  static const String emptyTitle = 'No discoveries yet';
+  static String emptyDescription(String townName) =>
+      'No discoveries yet for $townName. Know a hidden gem? Suggest one for review.';
+  static const String fallbackSectionTitle = 'Discoveries';
 }
