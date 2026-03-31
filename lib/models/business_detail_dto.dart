@@ -5,6 +5,14 @@ import 'operating_hour_dto.dart';
 import 'review_dto.dart';
 import 'special_operating_hour_dto.dart';
 
+int _businessDetailViewCountFromJson(Map<String, dynamic> json) {
+  final v = json['viewCount'] ?? json['ViewCount'];
+  if (v == null) return 0;
+  if (v is int) return v;
+  if (v is num) return v.round();
+  return 0;
+}
+
 /// Detailed business information for individual business pages
 class BusinessDetailDto {
   final int id;
@@ -32,6 +40,14 @@ class BusinessDetailDto {
   /// Optional server-calculated status (preferred for production consistency)
   final bool? isOpenNow;
   final String? openNowText;
+
+  /// Equipment rentals category: advertised rates (ZAR), when returned by the API.
+  final double? hourlyRate;
+  final double? dailyRate;
+
+  /// Equipment rentals category: deposit (matches public web when set).
+  final bool isDepositRequired;
+  final double? depositAmount;
 
   final List<OperatingHourDto> operatingHours;
   final List<SpecialOperatingHourDto> specialOperatingHours;
@@ -64,6 +80,10 @@ class BusinessDetailDto {
     required this.isVerified,
     this.isOpenNow,
     this.openNowText,
+    this.hourlyRate,
+    this.dailyRate,
+    this.isDepositRequired = false,
+    this.depositAmount,
     required this.operatingHours,
     required this.specialOperatingHours,
     required this.services,
@@ -93,17 +113,22 @@ class BusinessDetailDto {
       coverImageUrl: json['coverImageUrl'] as String?,
       rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
       totalReviews: json['totalReviews'] as int,
-      viewCount: json['viewCount'] as int,
+      viewCount: _businessDetailViewCountFromJson(json),
       isFeatured: json['isFeatured'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
       isOpenNow: json['isOpenNow'] as bool?,
       openNowText: json['openNowText'] as String?,
+      hourlyRate: json['hourlyRate'] != null ? (json['hourlyRate'] as num).toDouble() : null,
+      dailyRate: json['dailyRate'] != null ? (json['dailyRate'] as num).toDouble() : null,
+      isDepositRequired: json['isDepositRequired'] as bool? ?? false,
+      depositAmount: json['depositAmount'] != null ? (json['depositAmount'] as num).toDouble() : null,
       operatingHours: (json['operatingHours'] as List<dynamic>?)
           ?.map((e) => OperatingHourDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
-      specialOperatingHours: (json['specialOperatingHours'] as List<dynamic>?)
-          ?.map((e) => SpecialOperatingHourDto.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+      specialOperatingHours: specialOperatingHoursListFromJson(
+            json['specialOperatingHours'] ?? json['SpecialOperatingHours'],
+          ) ??
+          [],
       services: (json['services'] as List<dynamic>?)
           ?.map((e) => BusinessServiceDto.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
@@ -146,6 +171,10 @@ class BusinessDetailDto {
       'isVerified': isVerified,
       'isOpenNow': isOpenNow,
       'openNowText': openNowText,
+      'hourlyRate': hourlyRate,
+      'dailyRate': dailyRate,
+      'isDepositRequired': isDepositRequired,
+      'depositAmount': depositAmount,
       'operatingHours': operatingHours.map((e) => e.toJson()).toList(),
       'specialOperatingHours': specialOperatingHours.map((e) => e.toJson()).toList(),
       'services': services.map((e) => e.toJson()).toList(),
@@ -180,6 +209,10 @@ class BusinessDetailDto {
     bool? isVerified,
     bool? isOpenNow,
     String? openNowText,
+    double? hourlyRate,
+    double? dailyRate,
+    bool? isDepositRequired,
+    double? depositAmount,
     List<OperatingHourDto>? operatingHours,
     List<SpecialOperatingHourDto>? specialOperatingHours,
     List<BusinessServiceDto>? services,
@@ -211,6 +244,10 @@ class BusinessDetailDto {
       isVerified: isVerified ?? this.isVerified,
       isOpenNow: isOpenNow ?? this.isOpenNow,
       openNowText: openNowText ?? this.openNowText,
+      hourlyRate: hourlyRate ?? this.hourlyRate,
+      dailyRate: dailyRate ?? this.dailyRate,
+      isDepositRequired: isDepositRequired ?? this.isDepositRequired,
+      depositAmount: depositAmount ?? this.depositAmount,
       operatingHours: operatingHours ?? this.operatingHours,
       specialOperatingHours: specialOperatingHours ?? this.specialOperatingHours,
       services: services ?? this.services,

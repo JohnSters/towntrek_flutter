@@ -58,6 +58,8 @@ class BusinessCardConstants {
   static const double loadingIndicatorPadding = 16.0;
 
   // Strings
+  static const String searchHint = 'Search by name or keyword';
+  static const String emptySearchTitle = 'No matching businesses';
   static const String noBusinessesFound = 'No businesses found';
   static const String noBusinessesMessage = 'There are no businesses in this category yet';
   static const String businessDetailsLabel = 'Business Details';

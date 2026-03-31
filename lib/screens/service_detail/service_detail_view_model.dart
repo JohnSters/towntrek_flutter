@@ -72,4 +72,15 @@ class ServiceDetailViewModel extends ChangeNotifier {
       failureMessage: ServiceDetailConstants.openReviewsFailedMessage,
     );
   }
+
+  Future<void> openFullServiceDetails(BuildContext context, ServiceDetailDto service) async {
+    final servicePath = '${ServiceDetailConstants.publicServicePath}${service.id}';
+    final serviceUrl = UrlUtils.resolveApiUrl(servicePath);
+
+    await ExternalLinkLauncher.openWebsite(
+      context,
+      serviceUrl,
+      failureMessage: 'Unable to open full service details',
+    );
+  }
 }

@@ -21,71 +21,75 @@ class FeatureTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4.0),
+        margin: const EdgeInsets.symmetric(horizontal: 2.0),
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusMedium),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.22),
+            width: 1.4,
+          ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Flexible(
-                flex: 3,
-                child: Center(
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: LandingPageConstants.featureIconSize,
-                  ),
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 12,
                 ),
               ),
-              Flexible(
-                flex: 2,
+              const SizedBox(height: 2),
+              Expanded(
                 child: Center(
-                  child: Text(
-                    label,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 11.0,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
               if (count != null && !isLoading) ...[
-              Flexible(
-                flex: 2,
-                child: Center(
+                FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Text(
                     '$count+',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: Colors.white.withValues(alpha: 0.95),
-                      fontSize: 14.0,
+                      color: color,
+                      fontSize: 12.0,
                     ),
                   ),
                 ),
-              ),
               ] else if (count != null && isLoading) ...[
-                Flexible(
-                  flex: 2,
-                  child: Center(
-                    child: SizedBox(
-                      width: LandingPageConstants.loadingIndicatorSize,
-                      height: LandingPageConstants.loadingIndicatorSize,
-                      child: CircularProgressIndicator(
-                        strokeWidth: LandingPageConstants.loadingIndicatorStrokeWidth,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
+                SizedBox(
+                  width: LandingPageConstants.loadingIndicatorSize,
+                  height: LandingPageConstants.loadingIndicatorSize,
+                  child: CircularProgressIndicator(
+                    strokeWidth: LandingPageConstants.loadingIndicatorStrokeWidth,
+                    color: color.withValues(alpha: 0.8),
                   ),
                 ),
               ],

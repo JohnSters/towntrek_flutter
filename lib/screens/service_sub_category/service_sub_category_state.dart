@@ -1,4 +1,5 @@
 import '../../models/models.dart';
+import '../../core/core.dart';
 
 /// State classes for Service Sub-Category page
 /// Following the established pattern with sealed classes for type-safe state management
@@ -39,7 +40,7 @@ class ServiceSubCategorySuccess extends ServiceSubCategoryState {
 
 /// Error state when sub-category processing fails
 class ServiceSubCategoryError extends ServiceSubCategoryState {
-  final String message;
+  final AppError error;
 
-  ServiceSubCategoryError(this.message);
+  ServiceSubCategoryError(this.error);
 }

@@ -7,12 +7,14 @@ import '../../../models/models.dart';
 class SubCategoryCard extends StatelessWidget {
   final ServiceSubCategoryDto subCategory;
   final bool countsAvailable;
+  final String? townName;
   final VoidCallback? onTap;
 
   const SubCategoryCard({
     super.key,
     required this.subCategory,
     required this.countsAvailable,
+    this.townName,
     this.onTap,
   });
 
@@ -21,16 +23,19 @@ class SubCategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDisabled = countsAvailable && subCategory.serviceCount == 0;
+    final intro = townName != null && townName!.trim().isNotEmpty
+        ? '${subCategory.name} services in ${townName!.trim()}'
+        : 'Browse ${subCategory.name} services';
 
     return OutlinedButton(
       onPressed: isDisabled ? null : onTap,
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.all(14),
         side: BorderSide(
           color: isDisabled
               ? colorScheme.outline.withValues(alpha: 0.2)
               : colorScheme.primary.withValues(alpha: 0.25),
-          width: 1.0,
+          width: 1.2,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -40,25 +45,26 @@ class SubCategoryCard extends StatelessWidget {
             : colorScheme.primary.withValues(alpha: 0.05),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: isDisabled
                   ? colorScheme.surfaceContainerHighest
                   : colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.build,
-              size: 24,
+              size: 22,
               color: isDisabled
                   ? colorScheme.onSurfaceVariant
                   : colorScheme.onSecondaryContainer,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,10 +80,21 @@ class SubCategoryCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
                 Text(
                   _getSubtitleText(),
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  intro,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

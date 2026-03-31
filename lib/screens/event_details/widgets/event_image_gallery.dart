@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../core/core.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/url_utils.dart';
-import '../../../core/constants/event_details_constants.dart';
 
-/// Image preview gallery for events - shows thumbnails that open full-screen viewer
+/// Horizontal gallery matching [business_details_page] gallery (TappableImage, 158×104, radius 10).
 class EventImageGallery extends StatelessWidget {
   final List<EventImageDto> images;
 
@@ -16,238 +16,116 @@ class EventImageGallery extends StatelessWidget {
   Widget build(BuildContext context) {
     if (images.isEmpty) return const SizedBox.shrink();
 
-    // Sort images with primary first, then by sort order
     final sortedImages = [...images]..sort((a, b) {
-      if (a.isPrimary && !b.isPrimary) return -1;
-      if (!a.isPrimary && b.isPrimary) return 1;
-      return a.sortOrder.compareTo(b.sortOrder);
-    });
+          if (a.isPrimary && !b.isPrimary) return -1;
+          if (!a.isPrimary && b.isPrimary) return 1;
+          return a.sortOrder.compareTo(b.sortOrder);
+        });
 
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: EventDetailsConstants.contentHorizontalPadding,
-        vertical: EventDetailsConstants.sectionSpacing,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section title
-          Padding(
-            padding: const EdgeInsets.only(
-              left: EventDetailsConstants.contentHorizontalPadding,
-              bottom: EventDetailsConstants.sectionTitleSpacing,
-            ),
-            child: Text(
-              'Event Images',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: EventDetailsConstants.sectionTitleFontWeight,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ),
-          // Image previews
-          SizedBox(
-            height: EventDetailsConstants.imagePreviewSize,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(
-                horizontal: EventDetailsConstants.contentHorizontalPadding,
-              ),
-              itemCount: sortedImages.length,
-              itemBuilder: (context, index) {
-                return _buildImagePreview(context, sortedImages[index], sortedImages, index);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    final allUrls = sortedImages
+        .map((img) => UrlUtils.resolveImageUrl(img.url))
+        .toList();
 
-  Widget _buildImagePreview(
-    BuildContext context,
-    EventImageDto image,
-    List<EventImageDto> allImages,
-    int index,
-  ) {
-    return GestureDetector(
-      onTap: () => _showFullScreenImageViewer(context, allImages, index),
-      child: Container(
-        width: EventDetailsConstants.imagePreviewSize,
-        height: EventDetailsConstants.imagePreviewSize,
-        margin: EdgeInsets.only(right: EventDetailsConstants.imagePreviewSpacing),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(EventDetailsConstants.cardBorderRadius),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.network(
-                UrlUtils.resolveImageUrl(image.url),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      size: 32,
-                      color: Colors.grey,
-                    ),
-                  );
-                },
-              ),
-              // Overlay with tap indicator
-              Positioned.fill(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(EventDetailsConstants.cardBorderRadius),
-                    onTap: () => _showFullScreenImageViewer(context, allImages, index),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(EventDetailsConstants.cardBorderRadius),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withValues(
-                            alpha: EventDetailsConstants.outlineOpacity,
-                          ),
-                          width: 1,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: DetailSectionShell(
+        expandTitle: true,
+        title: 'Gallery',
+        icon: Icons.photo_library_outlined,
+        child: SizedBox(
+          height: 104,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: sortedImages.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final image = sortedImages[index];
+              final resolvedUrl = allUrls[index];
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  TappableImage(
+                    imageUrls: allUrls,
+                    initialIndex: index,
+                    heroTag: 'event_gallery_$index',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: 158,
+                        height: 104,
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Image.network(
+                          resolvedUrl,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Loading image...',
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, _, _) {
+                            return Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              // Primary indicator
-              if (image.isPrimary)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
+                  if (image.isPrimary)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: IgnorePointer(
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Icon(
-                      EventDetailsConstants.starIcon,
-                      size: 12,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
-
-  void _showFullScreenImageViewer(BuildContext context, List<EventImageDto> images, int initialIndex) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => EventFullScreenImageViewer(
-          images: images,
-          initialIndex: initialIndex,
-        ),
-        fullscreenDialog: true,
-      ),
-    );
-  }
 }
-
-/// Full-screen image viewer for event images
-class EventFullScreenImageViewer extends StatefulWidget {
-  final List<EventImageDto> images;
-  final int initialIndex;
-
-  const EventFullScreenImageViewer({
-    super.key,
-    required this.images,
-    this.initialIndex = 0,
-  });
-
-  @override
-  State<EventFullScreenImageViewer> createState() => _EventFullScreenImageViewerState();
-}
-
-class _EventFullScreenImageViewerState extends State<EventFullScreenImageViewer> {
-  late PageController _pageController;
-  late int _currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black.withValues(alpha: 0.8),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          '${_currentIndex + 1} of ${widget.images.length}',
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-      body: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        itemCount: widget.images.length,
-        itemBuilder: (context, index) {
-          final image = widget.images[index];
-          return InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: Center(
-              child: Hero(
-                tag: 'event_image_${image.id}',
-                child: Image.network(
-                  UrlUtils.resolveImageUrl(image.url),
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-

@@ -2,5 +2,7 @@
 export 'business_repository.dart';
 export 'town_repository.dart';
 export 'event_repository.dart';
+export 'creative_space_repository.dart';
 export 'service_repository.dart';
 export 'stats_repository.dart';
+export 'property_repository.dart';

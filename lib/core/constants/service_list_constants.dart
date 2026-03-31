@@ -67,6 +67,8 @@ class ServiceListConstants {
   static const TextOverflow textOverflow = TextOverflow.ellipsis;
 
   // Strings
+  static const String searchHint = 'Search by name or service';
+  static const String emptySearchTitle = 'No matching services';
   static const String loadingMessage = 'Loading services...';
   static const String loadMoreButtonText = 'Load More Services';
   static const String tryAgainButtonText = 'Try Again';

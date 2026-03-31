@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
 import '../../../core/constants/service_detail_constants.dart';
+import '../../../core/utils/operating_hours_display_format.dart';
 
 /// Operating hours section for service details
 class OperatingHoursSection extends StatelessWidget {
@@ -119,7 +120,7 @@ class OperatingHoursSection extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '${_formatTime(hour.startTime!)} - ${_formatTime(hour.endTime!)}',
+                          '${formatOperatingHoursTimeForDisplay(hour.startTime!)} - ${formatOperatingHoursTimeForDisplay(hour.endTime!)}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurface,
                             fontWeight: FontWeight.w500,
@@ -177,15 +178,5 @@ class OperatingHoursSection extends StatelessWidget {
 
     // Fallback for unexpected values
     return 'Day $dayOfWeek';
-  }
-
-  String _formatTime(String time) {
-    // Accept: "09:00", "09:00:00", "09:00:00.0000000" -> "HH:mm"
-    final main = time.trim().split('.').first;
-    final parts = main.split(':');
-    if (parts.length < 2) return time;
-    final hh = (int.tryParse(parts[0]) ?? 0).toString().padLeft(2, '0');
-    final mm = (int.tryParse(parts[1]) ?? 0).toString().padLeft(2, '0');
-    return '$hh:$mm';
   }
 }

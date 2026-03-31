@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
-import '../../core/widgets/navigation_footer.dart';
-import '../../core/widgets/page_header.dart';
+import '../../core/core.dart';
 import '../service_list/service_list_page.dart';
-import '../../core/constants/service_sub_category_constants.dart';
 import 'service_sub_category_state.dart';
 import 'service_sub_category_view_model.dart';
 import 'widgets/widgets.dart';
@@ -22,6 +20,8 @@ class ServiceSubCategoryPage extends StatelessWidget {
     required this.town,
     this.countsAvailable = true,
   });
+
+  static const EntityListingTheme _theme = EntityListingTheme.business;
 
   @override
   Widget build(BuildContext context) {
@@ -42,18 +42,42 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: EntityListingTheme.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: _buildContent(),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildHero(ServiceSubCategoryViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: ServiceSubCategoryPage._theme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: viewModel.category.name,
+      categoryName: TownFeatureConstants.servicesTitle,
+      townName: viewModel.town.name,
+    );
+  }
+
+  Widget _buildBand(ServiceSubCategoryViewModel viewModel, int serviceCount) {
+    return ListingResultsBand(
+      count: serviceCount,
+      categoryName: viewModel.category.name,
+      bandColor: ServiceSubCategoryPage._theme.resultsBand,
+    );
+  }
+
+  int _serviceCountForBand(ServiceSubCategoryViewModel viewModel) {
+    final c = viewModel.category;
+    if (c.serviceCount > 0) return c.serviceCount;
+    return c.subCategories.fold<int>(0, (sum, s) => sum + s.serviceCount);
   }
 
   Widget _buildContent() {
@@ -62,15 +86,22 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         final state = viewModel.state;
 
         if (state is ServiceSubCategoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Column(
+            children: [
+              _buildHero(viewModel),
+              _buildBand(viewModel, _serviceCountForBand(viewModel)),
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          );
         }
 
         if (state is ServiceSubCategoryError) {
-          return Center(
-            child: Text(
-              state.message,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+          return _buildErrorState(
+            context,
+            error: state.error,
+            viewModel: viewModel,
           );
         }
 
@@ -83,28 +114,75 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     );
   }
 
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required ServiceSubCategoryViewModel viewModel,
+  }) {
+    final count = _serviceCountForBand(viewModel);
+    if (error.actionText != null && error.action != null) {
+      return Column(
+        children: [
+          _buildHero(viewModel),
+          _buildBand(viewModel, count),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        _buildHero(viewModel),
+        _buildBand(viewModel, count),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.retry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSubCategoriesView(
     BuildContext context,
     ServiceSubCategorySuccess state,
   ) {
+    final totalServices = state.category.serviceCount > 0
+        ? state.category.serviceCount
+        : state.sortedSubCategories.fold<int>(
+            0,
+            (sum, subCategory) => sum + subCategory.serviceCount,
+          );
+
     return Column(
       children: [
-        PageHeader(
-          title: state.category.name,
-          subtitle: '${ServiceSubCategoryConstants.subtitlePrefix} ${state.town.name}',
-          height: ServiceSubCategoryConstants.pageHeaderHeight,
-          headerType: HeaderType.service,
+        EntityListingHeroHeader(
+          theme: ServiceSubCategoryPage._theme,
+          categoryIcon: Icons.handyman_rounded,
+          subCategoryName: state.category.name,
+          categoryName: TownFeatureConstants.servicesTitle,
+          townName: state.town.name,
+        ),
+        ListingResultsBand(
+          count: totalServices,
+          categoryName: state.category.name,
+          bandColor: ServiceSubCategoryPage._theme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CategoryInfoBadge(
-                  subCategoryCount: state.sortedSubCategories.length,
-                ),
-                const SizedBox(height: 16),
                 if (state.sortedSubCategories.isEmpty)
                   const ServiceEmptyStateView()
                 else
@@ -115,7 +193,12 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
                     separatorBuilder: (context, index) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final subCategory = state.sortedSubCategories[index];
-                      return _buildSubCategoryCard(context, subCategory, state.countsAvailable, state);
+                      return SubCategoryCard(
+                        subCategory: subCategory,
+                        countsAvailable: state.countsAvailable,
+                        townName: state.town.name,
+                        onTap: () => _navigateToServiceList(context, state, subCategory),
+                      );
                     },
                   ),
                 const SizedBox(height: 32),
@@ -125,100 +208,6 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildSubCategoryCard(
-    BuildContext context,
-    ServiceSubCategoryDto subCategory,
-    bool countsAvailable,
-    ServiceSubCategorySuccess state,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDisabled = countsAvailable && subCategory.serviceCount == 0;
-
-    return OutlinedButton(
-      onPressed: isDisabled ? null : () => _navigateToServiceList(context, state, subCategory),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        side: BorderSide(
-          color: isDisabled
-              ? colorScheme.outline.withValues(alpha: 0.2)
-              : colorScheme.primary.withValues(alpha: 0.25),
-          width: 1.0,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        backgroundColor: isDisabled
-            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
-            : colorScheme.primary.withValues(alpha: 0.05),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isDisabled
-                  ? colorScheme.surfaceContainerHighest
-                  : colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.build,
-              size: 24,
-              color: isDisabled
-                  ? colorScheme.onSurfaceVariant
-                  : colorScheme.onSecondaryContainer,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subCategory.name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDisabled
-                        ? colorScheme.onSurface.withValues(alpha: 0.6)
-                        : colorScheme.onSurface,
-                  ),
-                ),
-                Text(
-                  _getSubCategorySubtitle(subCategory, countsAvailable, isDisabled),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.chevron_right,
-            color: isDisabled
-                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
-                : colorScheme.primary.withValues(alpha: 0.6),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getSubCategorySubtitle(ServiceSubCategoryDto subCategory, bool countsAvailable, bool isDisabled) {
-    if (isDisabled) {
-      return 'No services available';
-    }
-
-    if (countsAvailable) {
-      return '${subCategory.serviceCount} services';
-    }
-
-    return 'View services';
   }
 
   void _navigateToServiceList(

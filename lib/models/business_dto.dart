@@ -1,3 +1,6 @@
+import 'operating_hour_dto.dart';
+import 'special_operating_hour_dto.dart';
+
 /// Data transfer object for business information in listings
 class BusinessDto {
   final int id;
@@ -9,7 +12,7 @@ class BusinessDto {
   final String? phoneNumber;
   final String? emailAddress;
   final String? website;
-  final String? physicalAddress;
+  final String physicalAddress;
   final double? latitude;
   final double? longitude;
   final String? logoUrl;
@@ -21,7 +24,20 @@ class BusinessDto {
   final bool isVerified;
   final double? distanceKm;
 
-  const BusinessDto({
+  /// From API when hours are not used for client-side recompute.
+  final bool? isOpenNow;
+
+  final List<OperatingHourDto>? _operatingHours;
+  final List<SpecialOperatingHourDto>? _specialOperatingHours;
+
+  /// Never null (empty when missing / hot-reload legacy instances).
+  List<OperatingHourDto> get operatingHours => _operatingHours ?? const [];
+
+  /// Never null (empty when missing / hot-reload legacy instances).
+  List<SpecialOperatingHourDto> get specialOperatingHours =>
+      _specialOperatingHours ?? const [];
+
+  BusinessDto({
     required this.id,
     required this.name,
     required this.description,
@@ -31,7 +47,7 @@ class BusinessDto {
     this.phoneNumber,
     this.emailAddress,
     this.website,
-    this.physicalAddress,
+    required this.physicalAddress,
     this.latitude,
     this.longitude,
     this.logoUrl,
@@ -42,35 +58,79 @@ class BusinessDto {
     required this.isFeatured,
     required this.isVerified,
     this.distanceKm,
-  });
+    this.isOpenNow,
+    List<OperatingHourDto>? operatingHours,
+    List<SpecialOperatingHourDto>? specialOperatingHours,
+  })  : _operatingHours = operatingHours,
+        _specialOperatingHours = specialOperatingHours;
 
   /// Creates a BusinessDto from JSON
   factory BusinessDto.fromJson(Map<String, dynamic> json) {
     return BusinessDto(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      shortDescription: json['shortDescription'] as String?,
-      category: json['category'] as String,
-      subCategory: json['subCategory'] as String?,
-      phoneNumber: json['phoneNumber'] as String?,
-      emailAddress: json['emailAddress'] as String?,
-      website: json['website'] as String?,
-      physicalAddress: json['physicalAddress'] as String?,
-      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
-      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
-      logoUrl: json['logoUrl'] as String?,
-      coverImageUrl: json['coverImageUrl'] as String?,
-      rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
-      totalReviews: json['totalReviews'] as int,
-      viewCount: json['viewCount'] as int,
-      isFeatured: json['isFeatured'] as bool? ?? false,
-      isVerified: json['isVerified'] as bool? ?? false,
-      distanceKm: json['distanceKm'] != null ? (json['distanceKm'] as num).toDouble() : null,
+      id: (json['id'] ?? json['Id']) as int,
+      name: (json['name'] ?? json['Name']) as String,
+      description: (json['description'] ?? json['Description']) as String? ?? '',
+      shortDescription: (json['shortDescription'] ?? json['ShortDescription']) as String?,
+      category: (json['category'] ?? json['Category']) as String,
+      subCategory: (json['subCategory'] ?? json['SubCategory']) as String?,
+      phoneNumber: (json['phoneNumber'] ?? json['PhoneNumber']) as String?,
+      emailAddress: (json['emailAddress'] ?? json['EmailAddress']) as String?,
+      website: (json['website'] ?? json['Website']) as String?,
+      physicalAddress: (json['physicalAddress'] ?? json['PhysicalAddress']) as String? ?? '',
+      latitude: _readDouble(json['latitude'] ?? json['Latitude']),
+      longitude: _readDouble(json['longitude'] ?? json['Longitude']),
+      logoUrl: (json['logoUrl'] ?? json['LogoUrl']) as String?,
+      coverImageUrl: (json['coverImageUrl'] ?? json['CoverImageUrl']) as String?,
+      rating: _readDouble(json['rating'] ?? json['Rating']),
+      totalReviews: _readInt(json['totalReviews'] ?? json['TotalReviews']) ?? 0,
+      viewCount: _readInt(json['viewCount'] ?? json['ViewCount']) ?? 0,
+      isFeatured: (json['isFeatured'] ?? json['IsFeatured']) as bool? ?? false,
+      isVerified: (json['isVerified'] ?? json['IsVerified']) as bool? ?? false,
+      distanceKm: _readDouble(json['distanceKm'] ?? json['DistanceKm']),
+      isOpenNow: _readBoolNullable(json['isOpenNow'] ?? json['IsOpenNow']),
+      operatingHours: _parseOperatingHoursList(
+        json['operatingHours'] ?? json['OperatingHours'],
+      ),
+      specialOperatingHours: specialOperatingHoursListFromJson(
+        json['specialOperatingHours'] ?? json['SpecialOperatingHours'],
+      ),
     );
   }
 
-  /// Converts BusinessDto to JSON
+  static double? _readDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return null;
+  }
+
+  static int? _readInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.round();
+    return null;
+  }
+
+  static bool? _readBoolNullable(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    if (v is String) {
+      final s = v.trim().toLowerCase();
+      if (s == 'true' || s == '1' || s == 'yes') return true;
+      if (s == 'false' || s == '0' || s == 'no') return false;
+    }
+    return null;
+  }
+
+  static List<OperatingHourDto>? _parseOperatingHoursList(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is! List) return const [];
+    return raw
+        .map((e) => OperatingHourDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Converts a BusinessDto to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -93,10 +153,13 @@ class BusinessDto {
       'isFeatured': isFeatured,
       'isVerified': isVerified,
       'distanceKm': distanceKm,
+      'isOpenNow': isOpenNow,
+      'operatingHours': operatingHours.map((e) => e.toJson()).toList(),
+      'specialOperatingHours': specialOperatingHours.map((e) => e.toJson()).toList(),
     };
   }
 
-  /// Creates a copy of BusinessDto with modified fields
+  /// Creates a copy of a BusinessDto with modified fields
   BusinessDto copyWith({
     int? id,
     String? name,
@@ -118,6 +181,9 @@ class BusinessDto {
     bool? isFeatured,
     bool? isVerified,
     double? distanceKm,
+    bool? isOpenNow,
+    List<OperatingHourDto>? operatingHours,
+    List<SpecialOperatingHourDto>? specialOperatingHours,
   }) {
     return BusinessDto(
       id: id ?? this.id,
@@ -140,6 +206,9 @@ class BusinessDto {
       isFeatured: isFeatured ?? this.isFeatured,
       isVerified: isVerified ?? this.isVerified,
       distanceKm: distanceKm ?? this.distanceKm,
+      isOpenNow: isOpenNow ?? this.isOpenNow,
+      operatingHours: operatingHours ?? _operatingHours,
+      specialOperatingHours: specialOperatingHours ?? _specialOperatingHours,
     );
   }
 

@@ -17,10 +17,11 @@ class ServiceLocator {
   late final BusinessApiService _businessApiService;
   late final TownApiService _townApiService;
   late final EventApiService _eventApiService;
+  late final CreativeSpaceApiService _creativeSpaceApiService;
   late final ServiceApiService _serviceApiService;
   late final StatsApiService _statsApiService;
+  late final PropertyApiService _propertyApiService;
   late final GeolocationService _geolocationService;
-  late final MapboxService _mapboxService;
   late final NavigationService _navigationService;
   late final ErrorHandler _errorHandler;
 
@@ -28,8 +29,10 @@ class ServiceLocator {
   late final BusinessRepository _businessRepository;
   late final TownRepository _townRepository;
   late final EventRepository _eventRepository;
+  late final CreativeSpaceRepository _creativeSpaceRepository;
   late final ServiceRepository _serviceRepository;
   late final StatsRepository _statsRepository;
+  late final PropertyRepository _propertyRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -43,18 +46,21 @@ class ServiceLocator {
     _businessApiService = BusinessApiService(_apiClient);
     _townApiService = TownApiService(_apiClient);
     _eventApiService = EventApiService(_apiClient);
+    _creativeSpaceApiService = CreativeSpaceApiService(_apiClient);
     _serviceApiService = ServiceApiService(_apiClient);
     _statsApiService = StatsApiService(_apiClient);
+    _propertyApiService = PropertyApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
-    _mapboxService = MapboxServiceImpl();
-    _navigationService = NavigationServiceImpl(_geolocationService, _mapboxService);
+    _navigationService = NavigationServiceImpl();
 
     // Initialize repositories
     _businessRepository = BusinessRepositoryImpl(_businessApiService);
     _townRepository = TownRepositoryImpl(_townApiService);
     _eventRepository = EventRepositoryImpl(_eventApiService);
+    _creativeSpaceRepository = CreativeSpaceRepositoryImpl(_creativeSpaceApiService);
     _serviceRepository = ServiceRepositoryImpl(_serviceApiService);
     _statsRepository = StatsRepositoryImpl(_statsApiService);
+    _propertyRepository = PropertyRepositoryImpl(_propertyApiService);
 
     _isInitialized = true;
   }
@@ -82,6 +88,12 @@ class ServiceLocator {
     return _townApiService;
   }
 
+  /// Get the creative space API service
+  CreativeSpaceApiService get creativeSpaceApiService {
+    _ensureInitialized();
+    return _creativeSpaceApiService;
+  }
+
   /// Get the service API service
   ServiceApiService get serviceApiService {
     _ensureInitialized();
@@ -106,6 +118,12 @@ class ServiceLocator {
     return _eventRepository;
   }
 
+  /// Get the creative space repository
+  CreativeSpaceRepository get creativeSpaceRepository {
+    _ensureInitialized();
+    return _creativeSpaceRepository;
+  }
+
   /// Get the service repository
   ServiceRepository get serviceRepository {
     _ensureInitialized();
@@ -118,16 +136,16 @@ class ServiceLocator {
     return _statsRepository;
   }
 
+  /// Get the property repository
+  PropertyRepository get propertyRepository {
+    _ensureInitialized();
+    return _propertyRepository;
+  }
+
   /// Get the geolocation service
   GeolocationService get geolocationService {
     _ensureInitialized();
     return _geolocationService;
-  }
-
-  /// Get the Mapbox service
-  MapboxService get mapboxService {
-    _ensureInitialized();
-    return _mapboxService;
   }
 
   /// Get the navigation service
@@ -145,7 +163,7 @@ class ServiceLocator {
   void _ensureInitialized() {
     if (!_isInitialized) {
       throw StateError(
-        'ServiceLocator has not been initialized. Call initialize() in main() before accessing repositories.'
+        'ServiceLocator has not been initialized. Call initialize() in main() before accessing repositories.',
       );
     }
   }

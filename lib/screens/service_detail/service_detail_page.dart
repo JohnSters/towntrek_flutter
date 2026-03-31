@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
+import '../../core/utils/external_link_launcher.dart';
+import '../../core/utils/service_utils.dart';
+import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import 'service_detail_state.dart';
 import 'service_detail_view_model.dart';
-import 'widgets/widgets.dart';
-import 'widgets/service_logo_section.dart';
-import 'widgets/service_status_indicator.dart';
 
-
-/// Service Detail Page - Shows comprehensive service information
 class ServiceDetailPage extends StatelessWidget {
   final int serviceId;
   final String serviceName;
@@ -37,49 +36,83 @@ class ServiceDetailPage extends StatelessWidget {
 class _ServiceDetailPageContent extends StatelessWidget {
   const _ServiceDetailPageContent();
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
+  Widget _detailHero(ServiceDetailState state, ServiceDetailViewModel viewModel) {
+    final title = state is ServiceDetailSuccess
+        ? state.serviceDetails.name
+        : viewModel.serviceName;
+    final categoryLine = state is ServiceDetailSuccess
+        ? (state.serviceDetails.categoryName ?? 'Service')
+        : 'Service';
+    final townLine = state is ServiceDetailSuccess
+        ? state.serviceDetails.townName
+        : 'Details';
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: townLine,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ServiceDetailViewModel>();
+    final state = viewModel.state;
 
     return Scaffold(
-      body: Column(
-        children: [
-          PageHeader(
-            title: viewModel.serviceName,
-            subtitle: 'Service Details',
-            height: 120.0,
-            headerType: HeaderType.service,
-          ),
-
-          // Open/Closed indicator (right under the banner)
-          if (viewModel.state is ServiceDetailSuccess)
-            ServiceStatusIndicator(
-              service: (viewModel.state as ServiceDetailSuccess).serviceDetails,
+      backgroundColor: EntityListingTheme.pageBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _detailHero(state, viewModel),
+            if (state is ServiceDetailSuccess)
+              _ServiceOpenClosedBanner(service: state.serviceDetails),
+            Expanded(
+              child: _buildContent(context, state, viewModel),
             ),
-
-          Expanded(
-            child: _buildContent(context, viewModel),
-          ),
-          const BackNavigationFooter(),
-        ],
+            const ListingBackFooter(label: 'Back'),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, ServiceDetailViewModel viewModel) {
-    return switch (viewModel.state) {
-      ServiceDetailLoading() => const Center(child: CircularProgressIndicator()),
-      ServiceDetailSuccess(serviceDetails: final serviceDetails) =>
-        _buildServiceDetail(context, serviceDetails, viewModel),
-      ServiceDetailError(title: final title, message: final message) =>
-        _buildErrorView(title, message),
+  Widget _buildContent(
+    BuildContext context,
+    ServiceDetailState state,
+    ServiceDetailViewModel viewModel,
+  ) {
+    return switch (state) {
+      ServiceDetailLoading() => const _ServiceDetailsLoadingView(),
+      ServiceDetailSuccess(serviceDetails: final serviceDetails) => _ServiceDetailBody(
+        service: serviceDetails,
+        viewModel: viewModel,
+      ),
+      ServiceDetailError(title: final title, message: final message) => _ErrorStateView(
+        title: title,
+        message: message,
+      ),
     };
   }
+}
 
-  Widget _buildErrorView(String title, String message) {
+class _ErrorStateView extends StatelessWidget {
+  final String title;
+  final String message;
+
+  const _ErrorStateView({
+    required this.title,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -107,61 +140,401 @@ class _ServiceDetailPageContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildServiceDetail(
-    BuildContext context,
-    ServiceDetailDto serviceDetails,
-    ServiceDetailViewModel viewModel,
-  ) {
-    return CustomScrollView(
-      slivers: [
-        // Service Logo (moved to top right)
-        SliverToBoxAdapter(
-          child: ServiceLogoSection(service: serviceDetails),
-        ),
+class _ServiceDetailsLoadingView extends StatelessWidget {
+  const _ServiceDetailsLoadingView();
 
-        // Service Info Card (Description and Service Area)
-        SliverToBoxAdapter(
-          child: ServiceInfoCard(service: serviceDetails),
-        ),
-
-        // Service Features (Pricing, availability, etc.)
-        SliverToBoxAdapter(
-          child: ServiceFeaturesSection(service: serviceDetails),
-        ),
-
-        // Image Gallery
-        if (serviceDetails.images.isNotEmpty)
-          SliverToBoxAdapter(
-            child: ServiceImageGallery(images: serviceDetails.images),
-          ),
-
-        // Documents
-        if (serviceDetails.documents.isNotEmpty)
-          SliverToBoxAdapter(
-            child: ServiceDocumentsSection(documents: serviceDetails.documents),
-          ),
-
-        // Operating Hours
-        SliverToBoxAdapter(
-          child: OperatingHoursSection(
-            operatingHours: serviceDetails.operatingHours,
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
+      children: [
+        _LoadingBlock(height: 106, color: colorScheme.surfaceContainerHigh),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 96,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: 3,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (_, _) => SizedBox(
+              width: 142,
+              child: _LoadingBlock(
+                height: 96,
+                color: colorScheme.surfaceContainerHighest,
+              ),
+            ),
           ),
         ),
-
-        // Contact & Actions
-        SliverToBoxAdapter(
-          child: ContactActionsSection(
-            service: serviceDetails,
-            onRateService: () => viewModel.rateService(context, serviceDetails),
-          ),
-        ),
-
-        // Bottom spacing for proper Material 3 layout
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 24),
-        ),
+        const SizedBox(height: 12),
+        _LoadingBlock(height: 160, color: colorScheme.surfaceContainerLow),
       ],
+    );
+  }
+}
+
+class _ServiceDetailBody extends StatelessWidget {
+  final ServiceDetailDto service;
+  final ServiceDetailViewModel viewModel;
+
+  const _ServiceDetailBody({
+    required this.service,
+    required this.viewModel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final description = (service.shortDescription?.trim().isNotEmpty == true)
+        ? service.shortDescription!.trim()
+        : service.description.trim();
+
+    final serviceTags = <String>[
+      if (service.serviceArea?.trim().isNotEmpty == true) service.serviceArea!.trim(),
+      if (service.priceRange?.trim().isNotEmpty == true) service.priceRange!.trim(),
+      if (service.hourlyRate != null) 'R${service.hourlyRate!.toStringAsFixed(0)}/hr',
+      if (service.offersQuotes) 'Quotes',
+      if (service.mobileService) 'Mobile',
+      if (service.onSiteService) 'On-site',
+      if (service.availableWeekends) 'Weekends',
+      if (service.availableAfterHours) 'After Hours',
+      if (service.emergencyService) 'Emergency',
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              colors: [
+                colorScheme.primaryContainer.withValues(alpha: 0.72),
+                colorScheme.tertiaryContainer.withValues(alpha: 0.45),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: 0.18),
+            ),
+          ),
+          child: Text(
+            description.isEmpty ? 'No description available yet.' : description,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.4,
+                  color: colorScheme.onSurface.withValues(alpha: 0.88),
+                ),
+          ),
+        ),
+        if (service.images.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Gallery',
+            icon: Icons.photo_library_outlined,
+            child: SizedBox(
+              height: 104,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: service.images.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final allUrls = service.images
+                      .map((img) => UrlUtils.resolveImageUrl(img.url))
+                      .toList();
+                  return _GalleryTile(
+                    image: service.images[index],
+                    allImageUrls: allUrls,
+                    index: index,
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+        DetailSectionShell(
+          title: 'Operating Hours',
+          icon: Icons.schedule,
+          child: DetailHoursGrid(
+            rows: detailHoursFromService(service.operatingHours),
+          ),
+        ),
+        const SizedBox(height: 12),
+        DetailSectionShell(
+          title: 'Quick Actions',
+          icon: Icons.bolt_rounded,
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              DetailQuickActionButton(
+                tooltip: DetailTownTrekWebAction.tooltip,
+                assetImagePath: DetailTownTrekWebAction.assetPath,
+                backgroundColor: DetailQuickActionColors.towntrekWebBackground,
+                iconColor: DetailQuickActionColors.websiteIcon,
+                onPressed: () =>
+                    viewModel.openFullServiceDetails(context, service),
+              ),
+              if (service.latitude != null && service.longitude != null)
+                DetailQuickActionButton(
+                  tooltip: 'Take Me There',
+                  icon: Icons.directions_rounded,
+                  backgroundColor: DetailQuickActionColors.directionsBackground,
+                  iconColor: DetailQuickActionColors.directionsIcon,
+                  onPressed: () => _openMaps(context),
+                ),
+              if (service.phoneNumber.trim().isNotEmpty)
+                DetailQuickActionButton(
+                  tooltip: 'Call',
+                  icon: Icons.call_rounded,
+                  backgroundColor: DetailQuickActionColors.callBackground,
+                  iconColor: DetailQuickActionColors.callIcon,
+                  onPressed: () =>
+                      ExternalLinkLauncher.callPhone(context, service.phoneNumber),
+                ),
+              if (service.phoneNumber2?.trim().isNotEmpty == true)
+                DetailQuickActionButton(
+                  tooltip: 'Call Alternative',
+                  icon: Icons.call_split_rounded,
+                  backgroundColor: DetailQuickActionColors.callAltBackground,
+                  iconColor: DetailQuickActionColors.callAltIcon,
+                  onPressed: () => ExternalLinkLauncher.callPhone(
+                    context,
+                    service.phoneNumber2!,
+                  ),
+                ),
+              if (service.emailAddress?.trim().isNotEmpty == true)
+                DetailQuickActionButton(
+                  tooltip: 'Email',
+                  icon: Icons.mail_rounded,
+                  backgroundColor: DetailQuickActionColors.emailBackground,
+                  iconColor: DetailQuickActionColors.emailIcon,
+                  onPressed: () =>
+                      ExternalLinkLauncher.sendEmail(context, service.emailAddress!),
+                ),
+              if (service.website?.trim().isNotEmpty == true)
+                DetailQuickActionButton(
+                  tooltip: 'Website',
+                  icon: Icons.language_rounded,
+                  backgroundColor: DetailQuickActionColors.websiteBackground,
+                  iconColor: DetailQuickActionColors.websiteIcon,
+                  onPressed: () =>
+                      ExternalLinkLauncher.openWebsite(context, service.website!),
+                ),
+              DetailQuickActionButton(
+                tooltip: 'Rate Service',
+                icon: Icons.star_rounded,
+                backgroundColor: DetailQuickActionColors.rateBackground,
+                iconColor: DetailQuickActionColors.rateIcon,
+                onPressed: () => viewModel.rateService(context, service),
+              ),
+            ],
+          ),
+        ),
+        if (service.facebook?.trim().isNotEmpty == true ||
+            service.instagram?.trim().isNotEmpty == true ||
+            service.whatsApp?.trim().isNotEmpty == true) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Social',
+            icon: Icons.share_outlined,
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                if (service.facebook?.trim().isNotEmpty == true)
+                  DetailSocialIconButton(
+                    tooltip: 'Facebook',
+                    icon: FontAwesomeIcons.facebookF,
+                    backgroundColor: DetailSocialColors.facebookBackground,
+                    iconColor: DetailSocialColors.facebookIcon,
+                    onPressed: () =>
+                        ExternalLinkLauncher.openRaw(context, service.facebook!),
+                  ),
+                if (service.instagram?.trim().isNotEmpty == true)
+                  DetailSocialIconButton(
+                    tooltip: 'Instagram',
+                    icon: FontAwesomeIcons.instagram,
+                    backgroundColor: DetailSocialColors.instagramBackground,
+                    iconColor: DetailSocialColors.instagramIcon,
+                    onPressed: () =>
+                        ExternalLinkLauncher.openRaw(context, service.instagram!),
+                  ),
+                if (service.whatsApp?.trim().isNotEmpty == true)
+                  DetailSocialIconButton(
+                    tooltip: 'WhatsApp',
+                    icon: FontAwesomeIcons.whatsapp,
+                    backgroundColor: DetailSocialColors.whatsappBackground,
+                    iconColor: DetailSocialColors.whatsappIcon,
+                    onPressed: () =>
+                        ExternalLinkLauncher.openRaw(context, service.whatsApp!),
+                  ),
+              ],
+            ),
+          ),
+        ],
+        if (serviceTags.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Services & Features',
+            icon: Icons.grid_view_rounded,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: serviceTags
+                  .take(9)
+                  .map(
+                    (tag) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: colorScheme.outline.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Text(
+                        tag,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _openMaps(BuildContext context) async {
+    if (service.latitude == null || service.longitude == null) return;
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${service.latitude},${service.longitude}',
+    );
+    await ExternalLinkLauncher.openUri(
+      context,
+      uri,
+      failureMessage: 'Unable to open maps',
+    );
+  }
+}
+
+class _ServiceOpenClosedBanner extends StatelessWidget {
+  final ServiceDetailDto service;
+
+  const _ServiceOpenClosedBanner({required this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    final openNow = ServiceUtils.isServiceCurrentlyOpen(service.operatingHours);
+
+    return EntityOpenClosedBanner(
+      isOpen: openNow,
+      viewCount: service.viewCount,
+    );
+  }
+}
+
+class _GalleryTile extends StatelessWidget {
+  final ServiceImageDto image;
+  final List<String> allImageUrls;
+  final int index;
+
+  const _GalleryTile({
+    required this.image,
+    required this.allImageUrls,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final resolvedUrl = UrlUtils.resolveImageUrl(image.url);
+
+    return TappableImage(
+      imageUrls: allImageUrls,
+      initialIndex: index,
+      heroTag: 'service_gallery_$index',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 158,
+          color: colorScheme.surfaceContainerHighest,
+          child: Image.network(
+            resolvedUrl,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading image...',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
+                ),
+              );
+            },
+            errorBuilder: (context, _, _) {
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingBlock extends StatelessWidget {
+  final double height;
+  final Color color;
+
+  const _LoadingBlock({
+    required this.height,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
     );
   }
 }

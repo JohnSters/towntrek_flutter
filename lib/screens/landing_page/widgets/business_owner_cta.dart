@@ -4,10 +4,14 @@ import '../../../core/constants/landing_page_constants.dart';
 /// Business Owner Call-to-Action widget
 class BusinessOwnerCTA extends StatelessWidget {
   final VoidCallback onTap;
+  final String buttonText;
+  final bool compact;
 
   const BusinessOwnerCTA({
     super.key,
     required this.onTap,
+    this.buttonText = LandingPageConstants.businessOwnerTitle,
+    this.compact = false,
   });
 
   @override
@@ -19,7 +23,10 @@ class BusinessOwnerCTA extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: Color(LandingPageConstants.gradientStartColor),
         foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, LandingPageConstants.buttonHeight),
+        minimumSize: Size(
+          double.infinity,
+          compact ? LandingPageConstants.compactButtonHeight : LandingPageConstants.buttonHeight,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusMedium),
         ),
@@ -29,7 +36,7 @@ class BusinessOwnerCTA extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(LandingPageConstants.verticalSpacingSmall),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusSmall),
@@ -37,25 +44,25 @@ class BusinessOwnerCTA extends StatelessWidget {
             child: const Icon(
               Icons.add_business,
               color: Colors.white,
-              size: LandingPageConstants.featureIconSize - 12,
+              size: 16,
             ),
           ),
-          const SizedBox(width: LandingPageConstants.verticalSpacingSmall),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              LandingPageConstants.businessOwnerTitle,
-              style: theme.textTheme.titleLarge?.copyWith(
+              buttonText,
+              style: (compact ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
-              textAlign: TextAlign.start,
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: LandingPageConstants.verticalSpacingSmall),
+          const SizedBox(width: 10),
           const Icon(
             Icons.arrow_forward,
             color: Colors.white,
-            size: LandingPageConstants.featureIconSize - 12,
+            size: 16,
           ),
         ],
       ),

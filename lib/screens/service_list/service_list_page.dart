@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/service_list_constants.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../core/constants/service_list_constants.dart';
 import 'service_list_state.dart';
 import 'service_list_view_model.dart';
 import 'widgets/widgets.dart';
-
 
 /// Service List Page - Shows paginated list of services for a specific sub-category
 class ServiceListPage extends StatelessWidget {
@@ -20,6 +19,8 @@ class ServiceListPage extends StatelessWidget {
     required this.subCategory,
     required this.town,
   });
+
+  static final EntityListingTheme _theme = EntityListingTheme.services;
 
   @override
   Widget build(BuildContext context) {
@@ -36,72 +37,253 @@ class ServiceListPage extends StatelessWidget {
   }
 }
 
-class _ServiceListPageContent extends StatelessWidget {
+class _ServiceListPageContent extends StatefulWidget {
   const _ServiceListPageContent();
+
+  @override
+  State<_ServiceListPageContent> createState() => _ServiceListPageContentState();
+}
+
+class _ServiceListPageContentState extends State<_ServiceListPageContent> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _submitSearch(ServiceListViewModel viewModel) {
+    viewModel.search(_searchController.text);
+  }
+
+  void _clearSearch(ServiceListViewModel viewModel) {
+    _searchController.clear();
+    viewModel.search(null);
+  }
+
+  Widget _searchBar(ServiceListViewModel viewModel) {
+    return EntityListingSearchBar(
+      controller: _searchController,
+      theme: ServiceListPage._theme,
+      hintText: ServiceListConstants.searchHint,
+      onSubmitted: () => _submitSearch(viewModel),
+      onClear: () => _clearSearch(viewModel),
+    );
+  }
+
+  Widget _serviceHero(ServiceListViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: ServiceListPage._theme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: viewModel.subCategory.name,
+      categoryName: viewModel.category.name,
+      townName: viewModel.town.name,
+    );
+  }
+
+  Widget _resultsBand(ServiceListViewModel viewModel) {
+    return ListingResultsBand(
+      count: viewModel.bandCount,
+      categoryName: viewModel.subCategory.name,
+      bandColor: ServiceListPage._theme.resultsBand,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ServiceListViewModel>();
 
     return Scaffold(
-      body: Column(
-        children: [
-          PageHeader(
-            title: viewModel.subCategory.name,
-            subtitle: '${ServiceListConstants.servicesSubtitle} in ${viewModel.town.name}',
-            height: ServiceListConstants.pageHeaderHeight,
-            headerType: HeaderType.service,
-          ),
-          Expanded(
-            child: _buildContent(context, viewModel),
-          ),
-          const BackNavigationFooter(),
-        ],
+      backgroundColor: EntityListingTheme.pageBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildContent(context, viewModel),
+            ),
+            const ListingBackFooter(label: 'Back to services'),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildContent(BuildContext context, ServiceListViewModel viewModel) {
     return switch (viewModel.state) {
-      ServiceListLoading() => const Center(child: CircularProgressIndicator()),
-      ServiceListSuccess(services: final services, hasNextPage: final hasNextPage, isLoadingMore: final isLoadingMore) =>
-        _buildServicesList(context, services, hasNextPage, isLoadingMore, viewModel),
+      ServiceListLoading() => _buildLoadingLayout(viewModel),
+      ServiceListSuccess(
+        services: final services,
+        hasNextPage: final hasNextPage,
+        isLoadingMore: final isLoadingMore,
+      ) =>
+        services.isEmpty
+            ? _buildEmptyLayout(context, viewModel)
+            : _buildSuccessLayout(
+                context,
+                viewModel,
+                services,
+                hasNextPage,
+                isLoadingMore,
+              ),
       ServiceListLoadingMore(services: final services, currentPage: _) =>
-        _buildServicesList(context, services, true, true, viewModel),
-      ServiceListError(title: final title, message: final message) =>
-        _buildErrorView(title, message),
+        _buildSuccessLayout(context, viewModel, services, true, true),
+      ServiceListError(error: final error) =>
+        _buildErrorLayout(context, error: error, viewModel: viewModel),
     };
   }
 
-  Widget _buildErrorView(String title, String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-            ),
-          ],
+  Widget _searchPadding(Widget child) {
+    return Padding(
+      padding: EntityListingConstants.searchBarSectionPadding,
+      child: child,
+    );
+  }
+
+  Widget _buildLoadingLayout(ServiceListViewModel viewModel) {
+    return Column(
+      children: [
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
+        const Expanded(
+          child: Center(child: CircularProgressIndicator()),
         ),
-      ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyLayout(
+    BuildContext context,
+    ServiceListViewModel viewModel,
+  ) {
+    final hasSearch = _searchController.text.trim().isNotEmpty;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    hasSearch
+                        ? Icons.search_off_rounded
+                        : ServiceListConstants.emptyIcon,
+                    size: ServiceListConstants.errorIconSize,
+                    color: colorScheme.onSurface.withValues(
+                      alpha: hasSearch
+                          ? 0.45
+                          : ServiceListConstants.emptyStateIconOpacity,
+                    ),
+                  ),
+                  SizedBox(height: ServiceListConstants.errorSpacing),
+                  Text(
+                    hasSearch
+                        ? ServiceListConstants.emptySearchTitle
+                        : ServiceListConstants.emptyStateTitle,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(
+                        alpha: ServiceListConstants.emptyStateTextOpacity,
+                      ),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: ServiceListConstants.errorSpacing * 0.5),
+                  Text(
+                    hasSearch
+                        ? EntityListingConstants.searchNoMatchesHint
+                        : ServiceListConstants.emptyStateMessage,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (hasSearch) ...[
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => _clearSearch(viewModel),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text(EntityListingConstants.clearSearchLabel),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSuccessLayout(
+    BuildContext context,
+    ServiceListViewModel viewModel,
+    List<ServiceDto> services,
+    bool hasMorePages,
+    bool isLoadingMore,
+  ) {
+    return Column(
+      children: [
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
+        Expanded(
+          child: _buildServicesList(
+            context,
+            services,
+            hasMorePages,
+            isLoadingMore,
+            viewModel,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorLayout(
+    BuildContext context, {
+    required AppError error,
+    required ServiceListViewModel viewModel,
+  }) {
+    if (error.actionText != null && error.action != null) {
+      return Column(
+        children: [
+          _serviceHero(viewModel),
+          _resultsBand(viewModel),
+          _searchPadding(_searchBar(viewModel)),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        _serviceHero(viewModel),
+        _resultsBand(viewModel),
+        _searchPadding(_searchBar(viewModel)),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.retry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -112,22 +294,16 @@ class _ServiceListPageContent extends StatelessWidget {
     bool isLoadingMore,
     ServiceListViewModel viewModel,
   ) {
-    if (services.isEmpty) {
-      return const Center(
-        child: Text('No services found'),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
+    return ListView.separated(
+      padding: EntityListingConstants.cardListScrollPadding,
       itemCount: services.length + (hasMorePages ? 1 : 0),
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         if (index == services.length) {
-          // Load more indicator
           if (!isLoadingMore) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                viewModel.loadMore();
-              });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              viewModel.loadMore();
+            });
           }
           return const Center(
             child: Padding(
@@ -137,13 +313,10 @@ class _ServiceListPageContent extends StatelessWidget {
           );
         }
 
-        final service = services[index];
-          return Column(
-            children: [
-              ServiceCard(service: service),
-              if (index < services.length - 1) const SizedBox(height: 16),
-            ],
-          );
+        return ServiceCard(
+          service: services[index],
+          listingTheme: ServiceListPage._theme,
+        );
       },
     );
   }

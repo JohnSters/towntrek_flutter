@@ -18,13 +18,14 @@ class OperatingHourDto {
 
   /// Creates an OperatingHourDto from JSON
   factory OperatingHourDto.fromJson(Map<String, dynamic> json) {
+    final dow = json['dayOfWeek'] ?? json['DayOfWeek'];
     return OperatingHourDto(
-      dayOfWeek: json['dayOfWeek'].toString(), // Handle both int and String
-      openTime: json['openTime'] as String?,
-      closeTime: json['closeTime'] as String?,
-      isOpen: json['isOpen'] as bool? ?? false,
-      isSpecialHours: json['isSpecialHours'] as bool? ?? false,
-      specialHoursNote: json['specialHoursNote'] as String?,
+      dayOfWeek: dow?.toString() ?? '',
+      openTime: (json['openTime'] ?? json['OpenTime']) as String?,
+      closeTime: (json['closeTime'] ?? json['CloseTime']) as String?,
+      isOpen: (json['isOpen'] ?? json['IsOpen']) as bool? ?? false,
+      isSpecialHours: (json['isSpecialHours'] ?? json['IsSpecialHours']) as bool? ?? false,
+      specialHoursNote: (json['specialHoursNote'] ?? json['SpecialHoursNote']) as String?,
     );
   }
 

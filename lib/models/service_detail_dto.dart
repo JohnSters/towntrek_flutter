@@ -7,6 +7,9 @@ class ServiceDetailDto extends ServiceDto {
   final String? phoneNumber2;
   final String? emailAddress;
   final String? website;
+  final String? whatsApp;
+  final String? facebook;
+  final String? instagram;
   final bool availableWeekends;
   final bool availableAfterHours;
   final bool emergencyService;
@@ -47,6 +50,9 @@ class ServiceDetailDto extends ServiceDto {
     this.phoneNumber2,
     this.emailAddress,
     this.website,
+    this.whatsApp,
+    this.facebook,
+    this.instagram,
     required this.availableWeekends,
     required this.availableAfterHours,
     required this.emergencyService,
@@ -69,17 +75,27 @@ class ServiceDetailDto extends ServiceDto {
       subCategoryId: json['subCategoryId'] as int?,
       subCategoryName: json['subCategoryName'] as String?,
       serviceArea: json['serviceArea'] as String?,
-      serviceRadius: json['serviceRadius'] != null ? (json['serviceRadius'] as num).toDouble() : null,
-      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
-      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
-      hourlyRate: json['hourlyRate'] != null ? (json['hourlyRate'] as num).toDouble() : null,
+      serviceRadius: json['serviceRadius'] != null
+          ? (json['serviceRadius'] as num).toDouble()
+          : null,
+      latitude: json['latitude'] != null
+          ? (json['latitude'] as num).toDouble()
+          : null,
+      longitude: json['longitude'] != null
+          ? (json['longitude'] as num).toDouble()
+          : null,
+      hourlyRate: json['hourlyRate'] != null
+          ? (json['hourlyRate'] as num).toDouble()
+          : null,
       priceRange: json['priceRange'] as String?,
       offersQuotes: json['offersQuotes'] as bool? ?? false,
       mobileService: json['mobileService'] as bool? ?? false,
       onSiteService: json['onSiteService'] as bool? ?? false,
       logoUrl: json['logoUrl'] as String?,
       coverImageUrl: json['coverImageUrl'] as String?,
-      rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
+      rating: json['rating'] != null
+          ? (json['rating'] as num).toDouble()
+          : null,
       totalReviews: json['totalReviews'] as int,
       viewCount: json['viewCount'] as int,
       isFeatured: json['isFeatured'] as bool? ?? false,
@@ -89,19 +105,28 @@ class ServiceDetailDto extends ServiceDto {
       phoneNumber2: json['phoneNumber2'] as String?,
       emailAddress: json['emailAddress'] as String?,
       website: json['website'] as String?,
+      whatsApp: json['whatsApp'] as String?,
+      facebook: json['facebook'] as String?,
+      instagram: json['instagram'] as String?,
       availableWeekends: json['availableWeekends'] as bool? ?? false,
       availableAfterHours: json['availableAfterHours'] as bool? ?? false,
       emergencyService: json['emergencyService'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      images: (json['images'] as List<dynamic>?)
+      images:
+          (json['images'] as List<dynamic>?)
               ?.map((e) => ServiceImageDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      operatingHours: (json['operatingHours'] as List<dynamic>?)
-              ?.map((e) => ServiceOperatingHourDto.fromJson(e as Map<String, dynamic>))
+      operatingHours:
+          (json['operatingHours'] as List<dynamic>?)
+              ?.map(
+                (e) =>
+                    ServiceOperatingHourDto.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
-      documents: (json['documents'] as List<dynamic>?)
+      documents:
+          (json['documents'] as List<dynamic>?)
               ?.map((e) => DocumentDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -163,4 +188,3 @@ class ServiceOperatingHourDto {
     );
   }
 }
-

@@ -1,4 +1,4 @@
-# TownTrek Style Guide
+# TownTrek Style Guide (Outdated)
 
 ## Overview
 

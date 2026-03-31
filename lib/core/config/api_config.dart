@@ -17,8 +17,14 @@ enum AppEnvironment {
 ///   - `--dart-define=TT_ENV=production|localHost|localNetwork`
 ///   - `--dart-define=TT_API_BASE_URL=https://your-api-host` (highest priority)
 class ApiConfig {
-  static const String _dartDefineEnv = String.fromEnvironment('TT_ENV', defaultValue: '');
-  static const String _dartDefineBaseUrl = String.fromEnvironment('TT_API_BASE_URL', defaultValue: '');
+  static const String _dartDefineEnv = String.fromEnvironment(
+    'TT_ENV',
+    defaultValue: '',
+  );
+  static const String _dartDefineBaseUrl = String.fromEnvironment(
+    'TT_API_BASE_URL',
+    defaultValue: '',
+  );
 
   // Runtime override (used for smart dev resolution without affecting release builds)
   static String? _runtimeBaseUrlOverride;
@@ -27,7 +33,8 @@ class ApiConfig {
   static AppEnvironment _currentEnvironment = _resolveInitialEnvironment();
 
   // Base URLs
-  static const String azureUrl = 'https://towntrek-hedwejadesagbaf6.southafricanorth-01.azurewebsites.net';
+  static const String azureUrl =
+      'https://towntrek-hedwejadesagbaf6.southafricanorth-01.azurewebsites.net';
 
   // Local Development URLs
   // VS Studio typically runs on port 7125 for HTTPS
@@ -38,12 +45,6 @@ class ApiConfig {
   // static const String _iosSimulatorUrl = 'https://localhost:7125';
   // Physical device needs your LAN IP
   static const String _localNetworkUrl = 'https://192.168.1.104:7125';
-
-  // Mapbox configuration
-  // WARNING: This key is exposed in the client app.
-  // Ensure your Mapbox token is restricted to your application bundle ID/package name in the Mapbox dashboard.
-  static const String mapboxAccessToken =
-      'pk.eyJ1Ijoiam9obnN0ZXJzIiwiYSI6ImNtZ2oxeXp2MzBjcTYybHNscDNrYnBuZmoifQ.sRTsjeym9YHrR1cxjHPmXw';
 
   // Dynamic base URL getter
   static String get baseUrl {
@@ -106,7 +107,9 @@ class ApiConfig {
     }
   }
 
-  static Future<String?> _pickFirstReachableBaseUrl(List<String> baseUrls) async {
+  static Future<String?> _pickFirstReachableBaseUrl(
+    List<String> baseUrls,
+  ) async {
     for (final raw in baseUrls) {
       final candidate = raw.trim();
       if (candidate.isEmpty) continue;
@@ -114,7 +117,11 @@ class ApiConfig {
       final uri = Uri.tryParse(candidate);
       if (uri == null || uri.host.isEmpty || uri.port == 0) continue;
 
-      final ok = await canConnect(uri.host, uri.port, timeout: const Duration(milliseconds: 750));
+      final ok = await canConnect(
+        uri.host,
+        uri.port,
+        timeout: const Duration(milliseconds: 750),
+      );
       if (ok) return candidate;
     }
     return null;
@@ -158,9 +165,11 @@ class ApiConfig {
   // Endpoints
   static const String businessesEndpoint = 'businesses';
   static const String servicesEndpoint = 'services';
+  static const String creativeSpacesEndpoint = 'creativespaces';
   static const String townsEndpoint = 'towns';
   static const String eventsEndpoint = 'events';
   static const String statsEndpoint = 'stats';
+  static const String propertiesEndpoint = 'properties';
 
   // Timeout configurations - reduced for development
   static const Duration connectTimeout = Duration(seconds: 10);
@@ -196,7 +205,11 @@ class ApiConfig {
     final uri = Uri.parse('$baseUrl/$apiVersion/$endpoint');
     if (queryParams != null && queryParams.isNotEmpty) {
       return uri
-          .replace(queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString())))
+          .replace(
+            queryParameters: queryParams.map(
+              (key, value) => MapEntry(key, value.toString()),
+            ),
+          )
           .toString();
     }
     return uri.toString();
@@ -228,17 +241,71 @@ class ApiConfig {
   }
 
   /// Builds specific service endpoint URL
-  static String serviceDetailUrl(int serviceId, [Map<String, dynamic>? queryParams]) {
+  static String serviceDetailUrl(
+    int serviceId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
     return buildUrl('$servicesEndpoint/$serviceId', queryParams);
   }
 
   /// Builds service subcategories endpoint URL
-  static String serviceSubCategoriesUrl(int categoryId, [Map<String, dynamic>? queryParams]) {
-    return buildUrl('$servicesEndpoint/categories/$categoryId/subcategories', queryParams);
+  static String serviceSubCategoriesUrl(
+    int categoryId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl(
+      '$servicesEndpoint/categories/$categoryId/subcategories',
+      queryParams,
+    );
+  }
+
+  /// Builds creative spaces endpoint URL
+  static String creativeSpacesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(creativeSpacesEndpoint, queryParams);
+  }
+
+  /// Builds creative spaces search endpoint URL
+  static String creativeSpacesSearchUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$creativeSpacesEndpoint/search', queryParams);
+  }
+
+  /// Builds creative space categories endpoint URL
+  static String creativeSpaceCategoriesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$creativeSpacesEndpoint/categories', queryParams);
+  }
+
+  /// Builds creative space categories with counts for town endpoint URL
+  static String creativeSpaceCategoriesWithCountsUrl(
+    int townId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$creativeSpacesEndpoint/categories/town/$townId', queryParams);
+  }
+
+  /// Builds specific creative space endpoint URL
+  static String creativeSpaceDetailUrl(
+    int creativeSpaceId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$creativeSpacesEndpoint/$creativeSpaceId', queryParams);
+  }
+
+  /// Builds creative space subcategories endpoint URL
+  static String creativeSpaceSubCategoriesUrl(
+    int categoryId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl(
+      '$creativeSpacesEndpoint/categories/$categoryId/subcategories',
+      queryParams,
+    );
   }
 
   /// Builds services categories with counts for town endpoint URL
-  static String serviceCategoriesWithCountsUrl(int townId, [Map<String, dynamic>? queryParams]) {
+  static String serviceCategoriesWithCountsUrl(
+    int townId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
     return buildUrl('$servicesEndpoint/categories/town/$townId', queryParams);
   }
 
@@ -248,12 +315,18 @@ class ApiConfig {
   }
 
   /// Builds categories with counts for town endpoint URL
-  static String categoriesWithCountsUrl(int townId, [Map<String, dynamic>? queryParams]) {
+  static String categoriesWithCountsUrl(
+    int townId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
     return buildUrl('$businessesEndpoint/categories/town/$townId', queryParams);
   }
 
   /// Builds specific business endpoint URL
-  static String businessDetailUrl(int businessId, [Map<String, dynamic>? queryParams]) {
+  static String businessDetailUrl(
+    int businessId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
     return buildUrl('$businessesEndpoint/$businessId', queryParams);
   }
 
@@ -288,13 +361,29 @@ class ApiConfig {
   }
 
   /// Builds specific event endpoint URL
-  static String eventDetailUrl(int eventId, [Map<String, dynamic>? queryParams]) {
+  static String eventDetailUrl(
+    int eventId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
     return buildUrl('$eventsEndpoint/$eventId', queryParams);
   }
 
   /// Builds stats summary endpoint URL (used by the mobile landing page)
   static String statsSummaryUrl([Map<String, dynamic>? queryParams]) {
     return buildUrl('$statsEndpoint/summary', queryParams);
+  }
+
+  /// Builds public properties list endpoint URL
+  static String propertiesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(propertiesEndpoint, queryParams);
+  }
+
+  /// Builds public property listing detail URL
+  static String propertyDetailUrl(
+    int propertyListingId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$propertiesEndpoint/$propertyListingId', queryParams);
   }
 
   /// Get the appropriate base URL for the current environment
@@ -313,5 +402,3 @@ class ApiConfig {
   /// Get current environment
   static AppEnvironment get environment => _currentEnvironment;
 }
-
-

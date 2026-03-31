@@ -1,3 +1,4 @@
+import '../../core/errors/app_error.dart';
 import '../../models/models.dart';
 
 /// Sealed class for Current Events screen states
@@ -38,13 +39,9 @@ class CurrentEventsSuccess extends CurrentEventsState {
 
 /// Error state for events loading failure
 class CurrentEventsError extends CurrentEventsState {
-  final String title;
-  final String message;
+  final AppError error;
 
-  CurrentEventsError({
-    required this.title,
-    required this.message,
-  });
+  CurrentEventsError(this.error);
 }
 
 /// Loading more state for pagination

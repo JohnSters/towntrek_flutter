@@ -45,177 +45,134 @@ class EventDetailsScreen extends StatelessWidget {
 class _EventDetailsScreenContent extends StatelessWidget {
   const _EventDetailsScreenContent();
 
+  static const EntityListingTheme _theme = EntityListingTheme.business;
+
+  Widget _eventHero(EventDetailsState state, EventDetailsViewModel viewModel) {
+    final title = switch (state) {
+      EventDetailsSuccess(:final eventDetails) => eventDetails.name,
+      _ => viewModel.eventName,
+    };
+    final typeLine = switch (state) {
+      EventDetailsSuccess(:final eventDetails) => eventDetails.eventType,
+      _ => viewModel.eventType ?? 'Event',
+    };
+    final placeLine = switch (state) {
+      EventDetailsSuccess(:final eventDetails) => _placeLine(eventDetails),
+      _ => 'Details',
+    };
+    return EntityListingHeroHeader(
+      theme: _theme,
+      categoryIcon: Icons.event_rounded,
+      subCategoryName: title,
+      categoryName: typeLine,
+      townName: placeLine,
+    );
+  }
+
+  String _placeLine(EventDetailDto event) {
+    if (event.venue != null && event.venue!.trim().isNotEmpty) {
+      return event.venue!.trim();
+    }
+    if (event.physicalAddress.trim().isNotEmpty) {
+      return event.physicalAddress.trim();
+    }
+    return 'Details';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          const Expanded(
-            child: _Content(),
+    return Consumer<EventDetailsViewModel>(
+      builder: (context, viewModel, _) {
+        final state = viewModel.state;
+        return Scaffold(
+          backgroundColor: EntityListingTheme.pageBg,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _eventHero(state, viewModel),
+                if (state is EventDetailsSuccess &&
+                    state.eventDetails.viewCount > 0)
+                  EntityOpenClosedBanner(
+                    isOpen: null,
+                    viewCount: state.eventDetails.viewCount,
+                  ),
+                Expanded(
+                  child: _buildBody(context, state, viewModel),
+                ),
+                const ListingBackFooter(label: 'Back'),
+              ],
+            ),
           ),
-          Consumer<EventDetailsViewModel>(
-            builder: (context, viewModel, child) {
-              return viewModel.state is EventDetailsSuccess
-                  ? const BackNavigationFooter()
-                  : const SizedBox();
-            },
-          ),
-        ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    EventDetailsState state,
+    EventDetailsViewModel viewModel,
+  ) {
+    if (state is EventDetailsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state is EventDetailsError) {
+      return _ErrorBody(
+        title: state.title,
+        message: state.message,
+      );
+    }
+
+    if (state is EventDetailsSuccess) {
+      return _EventDetailsScrollContent(eventDetails: state.eventDetails);
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+class _ErrorBody extends StatelessWidget {
+  final String title;
+  final String message;
+
+  const _ErrorBody({
+    required this.title,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ErrorView(
+      error: ServerError(
+        title: title,
+        message: message,
       ),
     );
   }
 }
 
-class _Content extends StatelessWidget {
-  const _Content();
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<EventDetailsViewModel>(
-      builder: (context, viewModel, child) {
-        final state = viewModel.state;
-
-        if (state is EventDetailsLoading) {
-          return _LoadingView(
-            eventName: viewModel.eventName,
-            eventType: viewModel.eventType,
-            initialImageUrl: viewModel.initialImageUrl,
-          );
-        }
-
-        if (state is EventDetailsError) {
-          return _ErrorView(
-            eventName: viewModel.eventName,
-            title: state.title,
-            message: state.message,
-            onRetry: viewModel.retryLoadEventDetails,
-          );
-        }
-
-        if (state is EventDetailsSuccess) {
-          return _EventDetailsView(eventDetails: state.eventDetails);
-        }
-
-        return const SizedBox();
-      },
-    );
-  }
-}
-
-class _LoadingView extends StatelessWidget {
-  final String eventName;
-  final String? eventType;
-  final String? initialImageUrl;
-
-  const _LoadingView({
-    required this.eventName,
-    required this.eventType,
-    this.initialImageUrl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: PageHeader(
-            title: eventName,
-            subtitle: eventType ?? EventDetailsConstants.loadingSubtitle,
-            backgroundImage: initialImageUrl,
-            headerType: HeaderType.event,
-          ),
-        ),
-        const SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String eventName;
-  final String title;
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorView({
-    required this.eventName,
-    required this.title,
-    required this.message,
-    required this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        PageHeader(
-          title: eventName,
-          subtitle: EventDetailsConstants.errorSubtitle,
-          headerType: HeaderType.event,
-        ),
-        Expanded(
-          child: ErrorView(
-            error: ServerError(
-              title: title,
-              message: message,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EventDetailsView extends StatelessWidget {
+class _EventDetailsScrollContent extends StatelessWidget {
   final EventDetailDto eventDetails;
 
-  const _EventDetailsView({
+  const _EventDetailsScrollContent({
     required this.eventDetails,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // Event Header
-        SliverToBoxAdapter(
-          child: PageHeader(
-            title: eventDetails.name,
-            subtitle: eventDetails.eventType,
-            backgroundImage: eventDetails.coverImageUrl,
-            headerType: HeaderType.event,
-          ),
-        ),
-
-        // Info Card (Date, Time, Price, Description)
-        SliverToBoxAdapter(
-          child: EventInfoCard(event: eventDetails),
-        ),
-
-        // Image Gallery
-        if (eventDetails.images.isNotEmpty)
-          SliverToBoxAdapter(
-            child: EventImageGallery(images: eventDetails.images),
-          ),
-
-        // Location Section
-        SliverToBoxAdapter(
-          child: EventLocationSection(event: eventDetails),
-        ),
-
-        // Contact Section
-        SliverToBoxAdapter(
-          child: EventContactSection(event: eventDetails),
-        ),
-
-        // Reviews Section
-        if (eventDetails.reviews.isNotEmpty)
-          SliverToBoxAdapter(
-            child: EventReviewsSection(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          EventInfoCard(event: eventDetails),
+          if (eventDetails.images.isNotEmpty)
+            EventImageGallery(images: eventDetails.images),
+          EventLocationSection(event: eventDetails),
+          EventContactSection(event: eventDetails),
+          if (eventDetails.reviews.isNotEmpty)
+            EventReviewsSection(
               reviews: eventDetails.reviews,
               onViewAllPressed: () {
                 Navigator.of(context).push(
@@ -228,14 +185,9 @@ class _EventDetailsView extends StatelessWidget {
                 );
               },
             ),
-          ),
-
-        // Bottom padding
-        const SliverToBoxAdapter(
-          child: SizedBox(height: EventDetailsConstants.bottomPadding),
-        ),
-      ],
+          const SizedBox(height: EventDetailsConstants.bottomPadding),
+        ],
+      ),
     );
   }
 }
-
