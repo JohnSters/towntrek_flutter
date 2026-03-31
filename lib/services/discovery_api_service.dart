@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import '../core/network/api_client.dart';
+import '../core/core.dart';
 import '../models/discovery_dto.dart';
 
 class DiscoverySubmitException implements Exception {
@@ -15,13 +15,36 @@ class DiscoverySubmitException implements Exception {
   String toString() => message;
 }
 
+class DiscoveryVoteException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  DiscoveryVoteException(this.message, [this.statusCode]);
+
+  @override
+  String toString() => message;
+}
+
 /// Town discoveries API (`/api/discoveries`).
 class DiscoveryApiService {
   DiscoveryApiService(this._apiClient);
 
   final ApiClient _apiClient;
+  static const String _installIdHeaderName = 'X-TownTrek-Install-Id';
 
   String _formatCoordinate(double value) => value.toStringAsFixed(6);
+
+  Future<Options> _installIdOptions({
+    String? contentType,
+    bool Function(int?)? validateStatus,
+  }) async {
+    final installId = await DiscoveryInstallIdStorage.getInstallId();
+    return Options(
+      contentType: contentType,
+      validateStatus: validateStatus,
+      headers: {_installIdHeaderName: installId},
+    );
+  }
 
   Future<List<DiscoveryCategoryDto>> getCategories() async {
     final response = await _apiClient.get<List<dynamic>>(
@@ -45,9 +68,11 @@ class DiscoveryApiService {
     int townId, {
     int count = 5,
   }) async {
+    final options = await _installIdOptions();
     final response = await _apiClient.get<List<dynamic>>(
       '/api/discoveries/featured',
       queryParameters: {'townId': townId, 'count': count},
+      options: options,
     );
     final list = response.data ?? [];
     return list
@@ -68,18 +93,60 @@ class DiscoveryApiService {
     };
     if (category != null) qp['category'] = category;
 
+    final options = await _installIdOptions();
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/discoveries',
       queryParameters: qp,
+      options: options,
     );
     return DiscoveryListResponse.fromJson(response.data!);
   }
 
   Future<TownDiscoveryDetailDto> getDetail(int id) async {
+    final options = await _installIdOptions();
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/discoveries/$id',
+      options: options,
     );
     return TownDiscoveryDetailDto.fromJson(response.data!);
+  }
+
+  Future<TownDiscoveryVoteSummaryDto> voteDiscovery(int id, String vote) async {
+    try {
+      final options = await _installIdOptions(
+        validateStatus: (status) => status != null && status < 600,
+      );
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/discoveries/$id/vote',
+        data: {'vote': vote},
+        options: options,
+      );
+
+      final statusCode = response.statusCode ?? 0;
+      if (statusCode != 200) {
+        throw DiscoveryVoteException(
+          response.data?['error']?.toString() ?? 'Vote failed',
+          statusCode,
+        );
+      }
+
+      final data = response.data;
+      if (data == null) {
+        throw DiscoveryVoteException('Vote response was empty', statusCode);
+      }
+
+      return TownDiscoveryVoteSummaryDto.fromJson(data);
+    } on DiscoveryVoteException {
+      rethrow;
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final responseData = e.response?.data;
+      String message = e.message ?? 'Vote failed';
+      if (responseData is Map<String, dynamic>) {
+        message = responseData['error']?.toString() ?? message;
+      }
+      throw DiscoveryVoteException(message, statusCode);
+    }
   }
 
   /// Multipart suggest (anonymous). Throws [DiscoverySubmitException] on 429 / errors.

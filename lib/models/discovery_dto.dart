@@ -13,6 +13,10 @@ class TownDiscoveryDto {
   final bool isFeatured;
   final double? latitude;
   final double? longitude;
+  final int voteScore;
+  final int upvoteCount;
+  final int downvoteCount;
+  final int? currentDeviceVote;
 
   const TownDiscoveryDto({
     required this.id,
@@ -28,6 +32,10 @@ class TownDiscoveryDto {
     required this.isFeatured,
     this.latitude,
     this.longitude,
+    this.voteScore = 0,
+    this.upvoteCount = 0,
+    this.downvoteCount = 0,
+    this.currentDeviceVote,
   });
 
   factory TownDiscoveryDto.fromJson(Map<String, dynamic> json) {
@@ -45,6 +53,53 @@ class TownDiscoveryDto {
       isFeatured: json['isFeatured'] as bool? ?? false,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      voteScore: (json['voteScore'] as num?)?.toInt() ?? 0,
+      upvoteCount: (json['upvoteCount'] as num?)?.toInt() ?? 0,
+      downvoteCount: (json['downvoteCount'] as num?)?.toInt() ?? 0,
+      currentDeviceVote: (json['currentDeviceVote'] as num?)?.toInt(),
+    );
+  }
+
+  TownDiscoveryDto copyWith({
+    int? id,
+    String? title,
+    int? category,
+    String? categoryName,
+    String? coverImageUrl,
+    String? thumbnailUrl,
+    String? quickTip,
+    String? difficulty,
+    String? duration,
+    bool? isFreeAccess,
+    bool? isFeatured,
+    double? latitude,
+    double? longitude,
+    int? voteScore,
+    int? upvoteCount,
+    int? downvoteCount,
+    int? currentDeviceVote,
+    bool clearCurrentDeviceVote = false,
+  }) {
+    return TownDiscoveryDto(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      categoryName: categoryName ?? this.categoryName,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      quickTip: quickTip ?? this.quickTip,
+      difficulty: difficulty ?? this.difficulty,
+      duration: duration ?? this.duration,
+      isFreeAccess: isFreeAccess ?? this.isFreeAccess,
+      isFeatured: isFeatured ?? this.isFeatured,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      voteScore: voteScore ?? this.voteScore,
+      upvoteCount: upvoteCount ?? this.upvoteCount,
+      downvoteCount: downvoteCount ?? this.downvoteCount,
+      currentDeviceVote: clearCurrentDeviceVote
+          ? null
+          : (currentDeviceVote ?? this.currentDeviceVote),
     );
   }
 }
@@ -104,7 +159,8 @@ class TownDiscoveryDetailDto extends TownDiscoveryDto {
 
   factory TownDiscoveryDetailDto.fromJson(Map<String, dynamic> json) {
     final base = TownDiscoveryDto.fromJson(json);
-    final imgs = (json['images'] as List<dynamic>?)
+    final imgs =
+        (json['images'] as List<dynamic>?)
             ?.map((e) => DiscoveryImageDto.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
@@ -177,6 +233,35 @@ class DiscoveryCategoryDto {
       id: json['id'] as int,
       name: json['name'] as String,
       iconClass: json['iconClass'] as String? ?? '',
+    );
+  }
+}
+
+class TownDiscoveryVoteSummaryDto {
+  final int discoveryId;
+  final int voteScore;
+  final int upvoteCount;
+  final int downvoteCount;
+  final int? currentDeviceVote;
+  final bool isCommunityHidden;
+
+  const TownDiscoveryVoteSummaryDto({
+    required this.discoveryId,
+    required this.voteScore,
+    required this.upvoteCount,
+    required this.downvoteCount,
+    required this.currentDeviceVote,
+    required this.isCommunityHidden,
+  });
+
+  factory TownDiscoveryVoteSummaryDto.fromJson(Map<String, dynamic> json) {
+    return TownDiscoveryVoteSummaryDto(
+      discoveryId: (json['discoveryId'] as num).toInt(),
+      voteScore: (json['voteScore'] as num?)?.toInt() ?? 0,
+      upvoteCount: (json['upvoteCount'] as num?)?.toInt() ?? 0,
+      downvoteCount: (json['downvoteCount'] as num?)?.toInt() ?? 0,
+      currentDeviceVote: (json['currentDeviceVote'] as num?)?.toInt(),
+      isCommunityHidden: json['isCommunityHidden'] as bool? ?? false,
     );
   }
 }

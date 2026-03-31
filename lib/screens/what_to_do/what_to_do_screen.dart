@@ -74,27 +74,27 @@ class _WhatToDoScreenContent extends StatelessWidget {
 
     return switch (state) {
       WhatToDoLoading() => Column(
-          children: [
-            _buildHero(viewModel.town),
-            ListingResultsBand(
-              count: 0,
-              categoryName: viewModel.town.name,
-              bandColor: WhatToDoScreen._theme.resultsBand,
-            ),
-            const Expanded(child: Center(child: CircularProgressIndicator())),
-          ],
-        ),
+        children: [
+          _buildHero(viewModel.town),
+          ListingResultsBand(
+            count: 0,
+            categoryName: viewModel.town.name,
+            bandColor: WhatToDoScreen._theme.resultsBand,
+          ),
+          const Expanded(child: Center(child: CircularProgressIndicator())),
+        ],
+      ),
       WhatToDoError(error: final error) => Column(
-          children: [
-            _buildHero(viewModel.town),
-            ListingResultsBand(
-              count: 0,
-              categoryName: viewModel.town.name,
-              bandColor: WhatToDoScreen._theme.resultsBand,
-            ),
-            Expanded(child: ErrorView(error: error)),
-          ],
-        ),
+        children: [
+          _buildHero(viewModel.town),
+          ListingResultsBand(
+            count: 0,
+            categoryName: viewModel.town.name,
+            bandColor: WhatToDoScreen._theme.resultsBand,
+          ),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      ),
       WhatToDoSuccess(
         town: final town,
         totalCount: final totalCount,
@@ -129,8 +129,8 @@ class _WhatToDoScreenContent extends StatelessWidget {
                     child: Text(
                       'Featured',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -142,7 +142,8 @@ class _WhatToDoScreenContent extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: featured.length,
-                      separatorBuilder: (context, _) => const SizedBox(width: 10),
+                      separatorBuilder: (context, _) =>
+                          const SizedBox(width: 10),
                       itemBuilder: (context, i) {
                         final d = featured[i];
                         return _FeaturedCard(
@@ -211,6 +212,17 @@ class _WhatToDoScreenContent extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 10),
                           child: _DiscoveryListCard(
                             discovery: d,
+                            votePending: viewModel.isVotePending(d.id),
+                            onVoteUp: () => viewModel.vote(
+                              context,
+                              d,
+                              d.currentDeviceVote == 1 ? 0 : 1,
+                            ),
+                            onVoteDown: () => viewModel.vote(
+                              context,
+                              d,
+                              d.currentDeviceVote == -1 ? 0 : -1,
+                            ),
                             onTap: () => viewModel.openDiscoveryDetail(
                               context,
                               d.id,
@@ -219,7 +231,8 @@ class _WhatToDoScreenContent extends StatelessWidget {
                           ),
                         );
                       },
-                      childCount: items.length + (loadingMore && hasNext ? 1 : 0),
+                      childCount:
+                          items.length + (loadingMore && hasNext ? 1 : 0),
                     ),
                   ),
                 ),
@@ -240,7 +253,9 @@ class _FeaturedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final raw = discovery.thumbnailUrl ?? discovery.coverImageUrl;
-    final url = raw != null && raw.isNotEmpty ? UrlUtils.resolveImageUrl(raw) : null;
+    final url = raw != null && raw.isNotEmpty
+        ? UrlUtils.resolveImageUrl(raw)
+        : null;
 
     return Material(
       color: EntityListingTheme.cardBg,
@@ -275,8 +290,8 @@ class _FeaturedCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const Spacer(),
                       ListingInfoChip(
@@ -296,16 +311,27 @@ class _FeaturedCard extends StatelessWidget {
 }
 
 class _DiscoveryListCard extends StatelessWidget {
-  const _DiscoveryListCard({required this.discovery, required this.onTap});
+  const _DiscoveryListCard({
+    required this.discovery,
+    required this.onTap,
+    required this.onVoteUp,
+    required this.onVoteDown,
+    this.votePending = false,
+  });
 
   final TownDiscoveryDto discovery;
   final VoidCallback onTap;
+  final VoidCallback onVoteUp;
+  final VoidCallback onVoteDown;
+  final bool votePending;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final raw = discovery.thumbnailUrl ?? discovery.coverImageUrl;
-    final url = raw != null && raw.isNotEmpty ? UrlUtils.resolveImageUrl(raw) : null;
+    final url = raw != null && raw.isNotEmpty
+        ? UrlUtils.resolveImageUrl(raw)
+        : null;
 
     return Material(
       color: EntityListingTheme.cardBg,
@@ -322,7 +348,9 @@ class _DiscoveryListCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.horizontal(left: Radius.circular(11)),
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(11),
+                ),
                 child: SizedBox(
                   width: 108,
                   height: 108,
@@ -403,6 +431,13 @@ class _DiscoveryListCard extends StatelessWidget {
                   ),
                 ),
               ),
+              DiscoveryVoteRail(
+                voteScore: discovery.voteScore,
+                currentDeviceVote: discovery.currentDeviceVote,
+                votePending: votePending,
+                onVoteUp: onVoteUp,
+                onVoteDown: onVoteDown,
+              ),
             ],
           ),
         ),
@@ -434,7 +469,9 @@ class _EmptyDiscoveries extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             WhatToDoConstants.emptyTitle,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
