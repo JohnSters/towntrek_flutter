@@ -44,7 +44,7 @@ class ApiConfig {
   // iOS Simulator uses localhost
   // static const String _iosSimulatorUrl = 'https://localhost:7125';
   // Physical device needs your LAN IP
-  static const String _localNetworkUrl = 'https://192.168.1.104:7125';
+  static const String _localNetworkUrl = 'https://192.168.1.102:7125';
 
   // Dynamic base URL getter
   static String get baseUrl {
@@ -60,13 +60,9 @@ class ApiConfig {
       case AppEnvironment.production:
         return azureUrl;
       case AppEnvironment.localHost:
-        // NOTE:
-        // - Android Emulator: use 10.0.2.2
-        // - Physical device (USB): prefer adb reverse + localhost (resolved at runtime in initialize())
-        // - iOS Simulator: localhost
-        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-          return _androidEmulatorUrl;
-        }
+        // Default host for dev. `initialize()` sets `_runtimeBaseUrlOverride` when a probe succeeds
+        // (e.g. Android emulator → 10.0.2.2, LAN → 192.168.x.x), which is returned above.
+        // Physical Android: use `adb reverse tcp:7125 tcp:7125` so localhost reaches the PC.
         return _localhostUrl;
       case AppEnvironment.localNetwork:
         return _localNetworkUrl;
@@ -93,13 +89,13 @@ class ApiConfig {
     // For iOS Simulator, localhost works directly.
     candidates.add(_localhostUrl);
 
-    // Android emulator host mapping.
+    // LAN before 10.0.2.2: on a real phone, 10.0.2.2 is wrong (emulator-only); try same-network IP first.
+    candidates.add(_localNetworkUrl);
+
+    // Android emulator host mapping (try after LAN so a wrong hardcoded LAN IP does not block 10.0.2.2).
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       candidates.add(_androidEmulatorUrl);
     }
-
-    // LAN fallback (requires API to bind to LAN interface and firewall to allow 7125).
-    candidates.add(_localNetworkUrl);
 
     final resolved = await _pickFirstReachableBaseUrl(candidates);
     if (resolved != null) {
