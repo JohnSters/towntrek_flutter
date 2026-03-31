@@ -12,6 +12,44 @@ import '../../core/widgets/discovery_map_widget.dart';
 import '../../models/models.dart';
 import 'discovery_detail_view_model.dart';
 
+/// Meta chips aligned with [WhatToDoScreen] list cards.
+List<Widget> _discoveryDetailQuickFactChips(TownDiscoveryDetailDto d) {
+  final chips = <Widget>[
+    ListingInfoChip(icon: Icons.sell_outlined, label: d.categoryName),
+  ];
+  if (d.difficulty != null && d.difficulty!.trim().isNotEmpty) {
+    chips.add(
+      ListingInfoChip(
+        icon: Icons.terrain_outlined,
+        label: d.difficulty!.trim(),
+      ),
+    );
+  }
+  if (d.duration != null && d.duration!.trim().isNotEmpty) {
+    chips.add(
+      ListingInfoChip(
+        icon: Icons.schedule_outlined,
+        label: d.duration!.trim(),
+      ),
+    );
+  }
+  chips.add(
+    ListingInfoChip(
+      icon: d.isFreeAccess ? Icons.money_off_outlined : Icons.payments_outlined,
+      label: d.isFreeAccess ? 'Free' : 'Paid',
+    ),
+  );
+  if (d.seasonalNote != null && d.seasonalNote!.trim().isNotEmpty) {
+    chips.add(
+      ListingInfoChip(
+        icon: Icons.wb_sunny_outlined,
+        label: d.seasonalNote!.trim(),
+      ),
+    );
+  }
+  return chips;
+}
+
 class DiscoveryDetailPage extends StatelessWidget {
   const DiscoveryDetailPage({
     super.key,
@@ -57,11 +95,11 @@ class _DiscoveryDetailBody extends StatelessWidget {
           children: [
             EntityListingHeroHeader(
               theme: _theme,
-              categoryIcon: Icons.explore_outlined,
+              categoryIcon: Icons.travel_explore_rounded,
               subCategoryName: state is DiscoveryDetailSuccess
                   ? state.discovery.title
                   : initialTitle,
-              categoryName: 'Discovery',
+              categoryName: TownFeatureConstants.whatToDoTitle,
               townName: town.name,
             ),
             Expanded(child: _buildContent(context, state, vm)),
@@ -78,8 +116,10 @@ class _DiscoveryDetailBody extends StatelessWidget {
     DiscoveryDetailViewModel vm,
   ) {
     return switch (state) {
-      DiscoveryDetailLoading() => const Center(
-        child: CircularProgressIndicator(),
+      DiscoveryDetailLoading() => Center(
+        child: CircularProgressIndicator(
+          color: EntityListingTheme.business.accent,
+        ),
       ),
       DiscoveryDetailError(error: final e) => ErrorView(error: e),
       DiscoveryDetailSuccess(discovery: final d) => _SuccessScroll(
@@ -104,6 +144,10 @@ class _SuccessScrollState extends State<_SuccessScroll> {
   final PageController _pageController = PageController();
   int _pageIndex = 0;
 
+  static const EntityListingTheme _listingTheme = EntityListingTheme.business;
+  static const double _galleryRadius = 14;
+  static const double _sectionGap = 12;
+
   late final Future<void> _mapboxReady;
 
   @override
@@ -126,10 +170,12 @@ class _SuccessScrollState extends State<_SuccessScroll> {
   @override
   Widget build(BuildContext context) {
     final d = widget.discovery;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final images = d.images.isNotEmpty ? d.images : <DiscoveryImageDto>[];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -137,7 +183,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
             AspectRatio(
               aspectRatio: 16 / 10,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(_galleryRadius),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -152,10 +198,20 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                         return CachedNetworkImage(
                           imageUrl: url,
                           fit: BoxFit.cover,
-                          placeholder: (context, progress) =>
-                              const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.image_not_supported),
+                          placeholder: (context, progress) => Center(
+                            child: CircularProgressIndicator(
+                              color: _listingTheme.accent,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => ColoredBox(
+                            color: colorScheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: _listingTheme.accent,
+                              size: 40,
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -175,7 +231,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                               shape: BoxShape.circle,
                               color: i == _pageIndex
                                   ? Colors.white
-                                  : Colors.white54,
+                                  : Colors.white70,
                             ),
                           ),
                         ),
@@ -187,78 +243,105 @@ class _SuccessScrollState extends State<_SuccessScroll> {
             )
           else
             Container(
-              height: 160,
+              height: 168,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+                color: EntityListingTheme.cardBg,
+                borderRadius: BorderRadius.circular(_galleryRadius),
+                border: Border.all(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  width: 0.5,
+                ),
               ),
               child: Icon(
                 WhatToDoConstants.emptyIcon,
                 size: 48,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: _listingTheme.accent,
               ),
             ),
-          const SizedBox(height: 16),
+          if (d.isFeatured) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.star_rounded, size: 18, color: colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  'Featured in ${widget.town.name}',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: _sectionGap),
           DetailSectionShell(
             icon: Icons.info_outline,
             title: 'Quick facts',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (d.difficulty != null && d.difficulty!.isNotEmpty)
-                  Text('Difficulty: ${d.difficulty}'),
-                if (d.duration != null && d.duration!.isNotEmpty)
-                  Text('Duration: ${d.duration}'),
-                Text(
-                  d.isFreeAccess
-                      ? 'Free access'
-                      : 'Entry: ${d.entryInfo?.trim().isNotEmpty == true ? d.entryInfo : 'See venue'}',
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _discoveryDetailQuickFactChips(d),
                 ),
-                if (d.seasonalNote != null && d.seasonalNote!.isNotEmpty)
-                  Text('Season: ${d.seasonalNote}'),
+                if (!d.isFreeAccess &&
+                    d.entryInfo != null &&
+                    d.entryInfo!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    d.entryInfo!.trim(),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+                if (d.submitterDisplayName != null &&
+                    d.submitterDisplayName!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    'Suggested by ${d.submitterDisplayName!.trim()}',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
           if (d.description != null && d.description!.trim().isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: _sectionGap),
             DetailSectionShell(
               icon: Icons.notes_outlined,
               title: 'About',
-              child: Text(d.description!.trim()),
+              child: Text(
+                d.description!.trim(),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  height: 1.45,
+                  color: colorScheme.onSurface.withValues(alpha: 0.92),
+                ),
+              ),
             ),
           ],
           if (d.quickTip != null && d.quickTip!.trim().isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outline.withValues(alpha: 0.2),
+            const SizedBox(height: _sectionGap),
+            DetailSectionShell(
+              icon: Icons.lightbulb_outline,
+              title: 'Quick tip',
+              child: Text(
+                d.quickTip!.trim(),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.45,
+                  color: colorScheme.onSurface.withValues(alpha: 0.9),
                 ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.lightbulb_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(d.quickTip!.trim())),
-                ],
               ),
             ),
           ],
           if (d.latitude != null && d.longitude != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: _sectionGap),
             DetailSectionShell(
               icon: Icons.map_outlined,
               title: 'Location',
@@ -267,25 +350,38 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                 children: [
                   if (d.directionsHint != null && d.directionsHint!.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(d.directionsHint!.trim()),
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        d.directionsHint!.trim(),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.45,
+                          color: colorScheme.onSurface.withValues(alpha: 0.9),
+                        ),
+                      ),
                     ),
                   FutureBuilder<void>(
                     future: _mapboxReady,
                     builder: (context, snap) {
                       if (snap.connectionState != ConnectionState.done) {
-                        return const SizedBox(
+                        return SizedBox(
                           height: 180,
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: _listingTheme.accent,
+                            ),
+                          ),
                         );
                       }
-                      return DiscoveryMapWidget(
-                        height: 200,
-                        latitude: d.latitude,
-                        longitude: d.longitude,
-                        fallbackCenterLat: widget.town.latitude,
-                        fallbackCenterLng: widget.town.longitude,
-                        interactive: false,
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: DiscoveryMapWidget(
+                          height: 200,
+                          latitude: d.latitude,
+                          longitude: d.longitude,
+                          fallbackCenterLat: widget.town.latitude,
+                          fallbackCenterLng: widget.town.longitude,
+                          interactive: false,
+                        ),
                       );
                     },
                   ),
@@ -309,7 +405,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                     icon: const Icon(Icons.fullscreen),
                     label: const Text('Expand map'),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   FilledButton.icon(
                     onPressed: () async {
                       final q = Uri.encodeComponent(
@@ -330,12 +426,17 @@ class _SuccessScrollState extends State<_SuccessScroll> {
             ),
           ],
           const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => ExternalLinkLauncher.openUri(
-              context,
-              Uri.parse(DiscoveryConstants.reportDiscoveryMailto(d.id)),
+          Center(
+            child: TextButton(
+              onPressed: () => ExternalLinkLauncher.openUri(
+                context,
+                Uri.parse(DiscoveryConstants.reportDiscoveryMailto(d.id)),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: colorScheme.onSurfaceVariant,
+              ),
+              child: const Text('Report this content'),
             ),
-            child: const Text('Report this content'),
           ),
         ],
       ),

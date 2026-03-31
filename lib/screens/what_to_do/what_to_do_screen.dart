@@ -125,12 +125,28 @@ class _WhatToDoScreenContent extends StatelessWidget {
               if (featured.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                    child: Text(
-                      'Featured',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: WhatToDoScreen._theme.accent,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Featured',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: WhatToDoScreen._theme.textTitle,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -140,13 +156,14 @@ class _WhatToDoScreenContent extends StatelessWidget {
                     height: 140,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
                       itemCount: featured.length,
                       separatorBuilder: (context, _) =>
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 12),
                       itemBuilder: (context, i) {
                         final d = featured[i];
                         return _FeaturedCard(
+                          listingTheme: WhatToDoScreen._theme,
                           discovery: d,
                           onTap: () => viewModel.openDiscoveryDetail(
                             context,
@@ -160,26 +177,30 @@ class _WhatToDoScreenContent extends StatelessWidget {
                 ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: const Text('All'),
+                          child: _WhatToDoCategoryChip(
+                            label: 'All',
                             selected: selectedCat == null,
-                            onSelected: (_) => viewModel.selectCategory(null),
+                            onSelected: (sel) {
+                              if (sel) viewModel.selectCategory(null);
+                            },
                           ),
                         ),
                         for (final c in categories)
                           Padding(
                             padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text(c.name),
+                            child: _WhatToDoCategoryChip(
+                              label: c.name,
                               selected: selectedCat == c.id,
-                              onSelected: (_) => viewModel.selectCategory(c.id),
+                              onSelected: (sel) {
+                                if (sel) viewModel.selectCategory(c.id);
+                              },
                             ),
                           ),
                       ],
@@ -197,7 +218,7 @@ class _WhatToDoScreenContent extends StatelessWidget {
                 )
               else ...[
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -209,8 +230,9 @@ class _WhatToDoScreenContent extends StatelessWidget {
                         }
                         final d = items[index];
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: _DiscoveryListCard(
+                            listingTheme: WhatToDoScreen._theme,
                             discovery: d,
                             votePending: viewModel.isVotePending(d.id),
                             onVoteUp: () => viewModel.vote(
@@ -244,65 +266,142 @@ class _WhatToDoScreenContent extends StatelessWidget {
   }
 }
 
-class _FeaturedCard extends StatelessWidget {
-  const _FeaturedCard({required this.discovery, required this.onTap});
+class _WhatToDoCategoryChip extends StatelessWidget {
+  const _WhatToDoCategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
 
-  final TownDiscoveryDto discovery;
-  final VoidCallback onTap;
+  final String label;
+  final bool selected;
+  final ValueChanged<bool> onSelected;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final borderColor = selected
+        ? colorScheme.primary
+        : colorScheme.outline.withValues(alpha: 0.38);
+
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: onSelected,
+      showCheckmark: true,
+      checkmarkColor: Colors.white,
+      selectedColor: colorScheme.primary,
+      backgroundColor: EntityListingTheme.cardBg,
+      side: BorderSide(color: borderColor, width: 0.5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+      labelStyle: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: selected ? Colors.white : colorScheme.onSurface,
+      ),
+    );
+  }
+}
+
+class _FeaturedCard extends StatelessWidget {
+  const _FeaturedCard({
+    required this.listingTheme,
+    required this.discovery,
+    required this.onTap,
+  });
+
+  final EntityListingTheme listingTheme;
+  final TownDiscoveryDto discovery;
+  final VoidCallback onTap;
+
+  static const double _radius = 18;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final raw = discovery.thumbnailUrl ?? discovery.coverImageUrl;
     final url = raw != null && raw.isNotEmpty
         ? UrlUtils.resolveImageUrl(raw)
         : null;
 
     return Material(
-      color: EntityListingTheme.cardBg,
-      borderRadius: BorderRadius.circular(12),
-      clipBehavior: Clip.antiAlias,
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(
-          width: 200,
-          child: Row(
-            children: [
-              SizedBox(
-                width: 88,
-                height: double.infinity,
-                child: url != null
-                    ? CachedNetworkImage(
-                        imageUrl: url,
-                        fit: BoxFit.cover,
-                        errorWidget: (context, url, error) =>
-                            const ColoredBox(color: Color(0xFFE0E0E0)),
-                      )
-                    : const ColoredBox(color: Color(0xFFE0E0E0)),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        discovery.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+        borderRadius: BorderRadius.circular(_radius),
+        child: Ink(
+          width: 208,
+          decoration: BoxDecoration(
+            color: EntityListingTheme.cardBg,
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.1),
+              width: 0.5,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(_radius - 0.5),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 88,
+                  child: ColoredBox(
+                      color: colorScheme.surfaceContainerHighest,
+                      child: url != null
+                          ? CachedNetworkImage(
+                              imageUrl: url,
+                              fit: BoxFit.cover,
+                              placeholder: (context, progress) => Center(
+                                child: SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: listingTheme.accent,
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, _) => Icon(
+                                WhatToDoConstants.emptyIcon,
+                                color: listingTheme.accent,
+                              ),
+                            )
+                          : Icon(
+                              WhatToDoConstants.emptyIcon,
+                              color: listingTheme.accent,
+                              size: 32,
+                            ),
+                    ),
+                  ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          discovery.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: listingTheme.textTitle,
+                            height: 1.25,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      ListingInfoChip(
-                        icon: Icons.category_outlined,
-                        label: discovery.categoryName,
-                      ),
-                    ],
+                        const Spacer(),
+                        ListingInfoChip(
+                          icon: Icons.category_outlined,
+                          label: discovery.categoryName,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -310,8 +409,85 @@ class _FeaturedCard extends StatelessWidget {
   }
 }
 
+/// Single-line meta pill for discovery cards (compact vs [ListingInfoChip]).
+class _DiscoveryCompactMetaChip extends StatelessWidget {
+  const _DiscoveryCompactMetaChip({
+    required this.icon,
+    required this.label,
+    required this.maxWidth,
+  });
+
+  final IconData icon;
+  final String label;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = maxWidth.clamp(28.0, 400.0);
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: w),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: EntityListingTheme.chipBg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 12,
+              color: EntityListingTheme.chipIconAndLabel,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                  color: EntityListingTheme.chipIconAndLabel,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+List<({IconData icon, String label})> _discoveryMetaEntries(
+  TownDiscoveryDto d,
+) {
+  final list = <({IconData icon, String label})>[
+    (icon: Icons.sell_outlined, label: d.categoryName),
+  ];
+  if (d.difficulty != null && d.difficulty!.trim().isNotEmpty) {
+    list.add((icon: Icons.terrain_outlined, label: d.difficulty!.trim()));
+  }
+  if (d.duration != null && d.duration!.trim().isNotEmpty) {
+    list.add((icon: Icons.schedule_outlined, label: d.duration!.trim()));
+  }
+  list.add(
+    (
+      icon: d.isFreeAccess ? Icons.money_off_outlined : Icons.payments_outlined,
+      label: d.isFreeAccess ? 'Free' : 'Paid',
+    ),
+  );
+  return list;
+}
+
 class _DiscoveryListCard extends StatelessWidget {
   const _DiscoveryListCard({
+    required this.listingTheme,
     required this.discovery,
     required this.onTap,
     required this.onVoteUp,
@@ -319,126 +495,232 @@ class _DiscoveryListCard extends StatelessWidget {
     this.votePending = false,
   });
 
+  final EntityListingTheme listingTheme;
   final TownDiscoveryDto discovery;
   final VoidCallback onTap;
   final VoidCallback onVoteUp;
   final VoidCallback onVoteDown;
   final bool votePending;
 
+  static const double _radius = 18;
+  static const double _thumbWidth = 108;
+  static const double _minCardHeight = 108;
+  /// Tall source images must not drive list row height via intrinsic sizing.
+  static const double _maxThumbHeight = 240;
+  static const double _voteRailWidth = 60;
+  static const double _dividerWidth = 1;
+  /// Horizontal padding on meta chip strip (6 + 6); subtract from `midW` for slot math.
+  static const double _metaChipRowHPadding = 12;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final raw = discovery.thumbnailUrl ?? discovery.coverImageUrl;
     final url = raw != null && raw.isNotEmpty
         ? UrlUtils.resolveImageUrl(raw)
         : null;
+    final dividerColor = colorScheme.outline.withValues(alpha: 0.12);
+    final metaEntries = _discoveryMetaEntries(discovery);
 
     return Material(
-      color: EntityListingTheme.cardBg,
-      borderRadius: BorderRadius.circular(12),
-      clipBehavior: Clip.antiAlias,
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: Container(
+        borderRadius: BorderRadius.circular(_radius),
+        child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+            color: EntityListingTheme.cardBg,
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.1),
+              width: 0.5,
+            ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(11),
-                ),
-                child: SizedBox(
-                  width: 108,
-                  height: 108,
-                  child: url != null
-                      ? CachedNetworkImage(
-                          imageUrl: url,
-                          fit: BoxFit.cover,
-                          placeholder: (context, progress) =>
-                              const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.image_not_supported),
-                        )
-                      : ColoredBox(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            WhatToDoConstants.emptyIcon,
-                            color: theme.colorScheme.onSurfaceVariant,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(_radius - 0.5),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: _minCardHeight),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final midW = (constraints.maxWidth -
+                          _thumbWidth -
+                          _dividerWidth -
+                          _voteRailWidth)
+                      .clamp(48.0, double.infinity);
+                  final n = metaEntries.length;
+                  final chipRowW =
+                      (midW - _metaChipRowHPadding).clamp(0.0, double.infinity);
+                  final metaSlotW = n > 0 ? chipRowW / n : 0.0;
+
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minHeight: _minCardHeight,
+                            maxHeight: _maxThumbHeight,
+                          ),
+                          child: SizedBox(
+                            width: _thumbWidth,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.horizontal(
+                                left: Radius.circular(17),
+                              ),
+                              child: url != null
+                                  ? CachedNetworkImage(
+                                    imageUrl: url,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, progress) =>
+                                        ColoredBox(
+                                      color: colorScheme.surfaceContainerHighest,
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: listingTheme.accent,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    errorWidget: (context, failedUrl, error) =>
+                                        ColoredBox(
+                                      color: colorScheme.surfaceContainerHighest,
+                                      child: Icon(
+                                        Icons.image_not_supported_outlined,
+                                        color: listingTheme.accent,
+                                      ),
+                                    ),
+                                    imageBuilder: (context, imageProvider) =>
+                                        SizedBox.expand(
+                                      child: Image(
+                                        image: imageProvider,
+                                        fit: BoxFit.cover,
+                                        alignment: Alignment.center,
+                                      ),
+                                    ),
+                                  )
+                                  : ColoredBox(
+                                      color: colorScheme.surfaceContainerHighest,
+                                      child: Center(
+                                        child: Icon(
+                                          WhatToDoConstants.emptyIcon,
+                                          color: listingTheme.accent,
+                                          size: 36,
+                                        ),
+                                      ),
+                                    ),
+                            ),
                           ),
                         ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        discovery.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        SizedBox(
+                          width: midW,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surfaceContainerLow
+                                      .withValues(alpha: 0.72),
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: colorScheme.outline
+                                          .withValues(alpha: 0.1),
+                                    ),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
+                                    horizontal: 6,
+                                  ),
+                                  child: n == 0
+                                      ? const SizedBox.shrink()
+                                      : Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            for (var i = 0; i < n; i++)
+                                              SizedBox(
+                                                width: metaSlotW,
+                                                child: Center(
+                                                  child:
+                                                      _DiscoveryCompactMetaChip(
+                                                    icon: metaEntries[i].icon,
+                                                    label:
+                                                        metaEntries[i].label,
+                                                    maxWidth: (metaSlotW - 4)
+                                                        .clamp(20.0, 400.0),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 10, 8, 12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      discovery.title,
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: listingTheme.textTitle,
+                                        height: 1.25,
+                                        letterSpacing: -0.15,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (discovery.quickTip != null &&
+                                        discovery.quickTip!.trim().isNotEmpty)
+                                      ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          discovery.quickTip!.trim(),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                      ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          ListingInfoChip(
-                            icon: Icons.sell_outlined,
-                            label: discovery.categoryName,
-                          ),
-                          if (discovery.difficulty != null &&
-                              discovery.difficulty!.isNotEmpty)
-                            ListingInfoChip(
-                              icon: Icons.terrain_outlined,
-                              label: discovery.difficulty!,
-                            ),
-                          if (discovery.duration != null &&
-                              discovery.duration!.isNotEmpty)
-                            ListingInfoChip(
-                              icon: Icons.schedule_outlined,
-                              label: discovery.duration!,
-                            ),
-                          ListingInfoChip(
-                            icon: discovery.isFreeAccess
-                                ? Icons.money_off_outlined
-                                : Icons.payments_outlined,
-                            label: discovery.isFreeAccess ? 'Free' : 'Paid',
-                          ),
-                        ],
-                      ),
-                      if (discovery.quickTip != null &&
-                          discovery.quickTip!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          discovery.quickTip!.trim(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                        SizedBox(
+                          width: _dividerWidth,
+                          child: ColoredBox(color: dividerColor),
+                        ),
+                        SizedBox(
+                          width: _voteRailWidth,
+                          child: DiscoveryVoteRail(
+                            voteScore: discovery.voteScore,
+                            currentDeviceVote: discovery.currentDeviceVote,
+                            votePending: votePending,
+                            onVoteUp: onVoteUp,
+                            onVoteDown: onVoteDown,
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
-              DiscoveryVoteRail(
-                voteScore: discovery.voteScore,
-                currentDeviceVote: discovery.currentDeviceVote,
-                votePending: votePending,
-                onVoteUp: onVoteUp,
-                onVoteDown: onVoteDown,
-              ),
-            ],
+            ),
           ),
         ),
       ),
