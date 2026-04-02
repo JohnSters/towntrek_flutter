@@ -3,4 +3,5 @@ export 'app_logo.dart';
 export 'business_owner_cta.dart';
 export 'feature_grid.dart';
 export 'feature_tile.dart';
+export 'landing_message_banner.dart';
 export 'platform_stats_card.dart';

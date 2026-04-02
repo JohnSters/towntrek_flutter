@@ -4,7 +4,6 @@ import '../../core/core.dart';
 import '../../models/models.dart';
 import 'landing_page_state.dart';
 import 'landing_page_view_model.dart';
-import '../creative_spaces/creative_spaces_category_page.dart';
 import '../town_loader/town_loader_screen.dart';
 import '../town_feature_selection/town_feature_selection_screen.dart';
 import 'widgets/widgets.dart';
@@ -48,11 +47,14 @@ class _LandingPageContent extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+              child: RefreshIndicator(
+                onRefresh: () => context.read<LandingViewModel>().loadStats(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
                     const SizedBox(height: 8),
                     const AppLogo(),
                     const SizedBox(height: 16),
@@ -74,6 +76,7 @@ class _LandingPageContent extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    _buildLandingBanners(viewModel.state),
                     const SizedBox(height: 20),
                     ActionButton(
                       onPressed: () async {
@@ -101,48 +104,26 @@ class _LandingPageContent extends StatelessWidget {
 
                         return Padding(
                           padding: const EdgeInsets.only(top: 10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              ActionButton(
-                                onPressed: () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => TownFeatureSelectionScreen(
-                                        town: favouriteTown,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                buttonText: 'Favourite Town: ${favouriteTown.name}',
-                                leadingIcon: Icons.star_rounded,
-                                backgroundColor: const Color(0xFF1E88E5),
-                                compact: true,
-                              ),
-                              const SizedBox(height: 10),
-                              ActionButton(
-                                onPressed: () async {
-                                  await CreativeSpacesNavigation.pushCategoryPage(
-                                    context,
-                                    pageBuilder: (_) => CreativeSpacesCategoryPage(
-                                      town: favouriteTown,
-                                    ),
-                                  );
-                                },
-                                buttonText:
-                                    '${TownFeatureConstants.creativeSpacesTitle} in ${favouriteTown.name}',
-                                leadingIcon: Icons.palette_rounded,
-                                backgroundColor: const Color(
-                                  TownFeatureConstants.creativeSpacesColor,
+                          child: ActionButton(
+                            onPressed: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => TownFeatureSelectionScreen(
+                                    town: favouriteTown,
+                                  ),
                                 ),
-                                compact: true,
-                              ),
-                            ],
+                              );
+                            },
+                            buttonText: 'Favourite Town: ${favouriteTown.name}',
+                            leadingIcon: Icons.star_rounded,
+                            backgroundColor: const Color(0xFF1E88E5),
+                            compact: true,
                           ),
                         );
                       },
                     ),
                   ],
+                ),
                 ),
               ),
             ),
@@ -185,6 +166,63 @@ class _LandingPageContent extends StatelessWidget {
         ),
       LandingPageError() => const PlatformStatsCard(),
     };
+  }
+
+  Widget _buildLandingBanners(LandingPageState state) {
+    return switch (state) {
+      LandingPageSuccess(
+        infoBannerMessage: final infoBannerMessage,
+        issueBannerMessage: final issueBannerMessage,
+      ) =>
+        _LandingBannerStack(
+          infoBannerMessage: infoBannerMessage,
+          issueBannerMessage: issueBannerMessage,
+        ),
+      _ => const SizedBox.shrink(),
+    };
+  }
+}
+
+class _LandingBannerStack extends StatelessWidget {
+  final String? infoBannerMessage;
+  final String? issueBannerMessage;
+
+  const _LandingBannerStack({
+    required this.infoBannerMessage,
+    required this.issueBannerMessage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final banners = <Widget>[
+      if (infoBannerMessage != null)
+        LandingMessageBanner(
+          message: infoBannerMessage!,
+          tone: LandingMessageBannerTone.info,
+        ),
+      if (issueBannerMessage != null)
+        LandingMessageBanner(
+          message: issueBannerMessage!,
+          tone: LandingMessageBannerTone.issue,
+        ),
+    ];
+
+    if (banners.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < banners.length; i++) ...[
+            banners[i],
+            if (i < banners.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
   }
 }
 
