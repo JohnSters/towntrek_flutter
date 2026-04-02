@@ -13,6 +13,7 @@ import '../../models/models.dart';
 import 'discovery_detail_view_model.dart';
 
 /// Meta chips aligned with [WhatToDoScreen] list cards.
+/// Seasonal notes are shown in full in a dedicated section (not as a chip).
 List<Widget> _discoveryDetailQuickFactChips(TownDiscoveryDetailDto d) {
   final chips = <Widget>[
     ListingInfoChip(icon: Icons.sell_outlined, label: d.categoryName),
@@ -39,15 +40,25 @@ List<Widget> _discoveryDetailQuickFactChips(TownDiscoveryDetailDto d) {
       label: d.isFreeAccess ? 'Free' : 'Paid',
     ),
   );
-  if (d.seasonalNote != null && d.seasonalNote!.trim().isNotEmpty) {
-    chips.add(
-      ListingInfoChip(
-        icon: Icons.wb_sunny_outlined,
-        label: d.seasonalNote!.trim(),
-      ),
-    );
-  }
   return chips;
+}
+
+/// Gallery from API [images], or a single slide from cover/thumbnail when list is empty.
+List<DiscoveryImageDto> _galleryImagesForDetail(TownDiscoveryDetailDto d) {
+  if (d.images.isNotEmpty) return d.images;
+  final raw = d.coverImageUrl ?? d.thumbnailUrl;
+  if (raw != null && raw.trim().isNotEmpty) {
+    return [
+      DiscoveryImageDto(
+        url: raw.trim(),
+        thumbnailUrl: d.thumbnailUrl?.trim().isNotEmpty == true
+            ? d.thumbnailUrl!.trim()
+            : null,
+        sortOrder: 0,
+      ),
+    ];
+  }
+  return const [];
 }
 
 class DiscoveryDetailPage extends StatelessWidget {
@@ -172,7 +183,11 @@ class _SuccessScrollState extends State<_SuccessScroll> {
     final d = widget.discovery;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final images = d.images.isNotEmpty ? d.images : <DiscoveryImageDto>[];
+    final images = _galleryImagesForDetail(d);
+    final hasPin = d.latitude != null && d.longitude != null;
+    final directionsText = d.directionsHint?.trim();
+    final hasDirectionsText =
+        directionsText != null && directionsText.isNotEmpty;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
@@ -292,6 +307,14 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                     d.entryInfo!.trim().isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Text(
+                    'Entry',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
                     d.entryInfo!.trim(),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
@@ -326,6 +349,20 @@ class _SuccessScrollState extends State<_SuccessScroll> {
               ),
             ),
           ],
+          if (d.seasonalNote != null && d.seasonalNote!.trim().isNotEmpty) ...[
+            const SizedBox(height: _sectionGap),
+            DetailSectionShell(
+              icon: Icons.wb_sunny_outlined,
+              title: 'Seasonal note',
+              child: Text(
+                d.seasonalNote!.trim(),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.45,
+                  color: colorScheme.onSurface.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+          ],
           if (d.quickTip != null && d.quickTip!.trim().isNotEmpty) ...[
             const SizedBox(height: _sectionGap),
             DetailSectionShell(
@@ -340,7 +377,21 @@ class _SuccessScrollState extends State<_SuccessScroll> {
               ),
             ),
           ],
-          if (d.latitude != null && d.longitude != null) ...[
+          if (hasDirectionsText && !hasPin) ...[
+            const SizedBox(height: _sectionGap),
+            DetailSectionShell(
+              icon: Icons.directions_outlined,
+              title: 'Directions',
+              child: Text(
+                directionsText,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.45,
+                  color: colorScheme.onSurface.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+          ],
+          if (hasPin) ...[
             const SizedBox(height: _sectionGap),
             DetailSectionShell(
               icon: Icons.map_outlined,
@@ -348,15 +399,30 @@ class _SuccessScrollState extends State<_SuccessScroll> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (d.directionsHint != null && d.directionsHint!.isNotEmpty)
+                  if (hasDirectionsText)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        d.directionsHint!.trim(),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          height: 1.45,
-                          color: colorScheme.onSurface.withValues(alpha: 0.9),
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Directions',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            directionsText,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.45,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.9,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   FutureBuilder<void>(
