@@ -6,7 +6,7 @@ class DiscoveryConstants {
   static const int directionsHintMaxLength = 500;
   static const int seasonalNoteMaxLength = 300;
 
-  static const String termsOfUseUrl = 'https://towntrek.co.za/terms';
+  static const String termsOfUseUrl = 'https://towntrek.co.za/Home/Privacy';
   static const String reportEmail = 'support@towntrek.co.za';
 
   static String reportDiscoveryMailto(int discoveryId) =>

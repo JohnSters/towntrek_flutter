@@ -1,3 +1,12 @@
+int _townInt(Map<String, dynamic> json, String camel, String pascal) {
+  final v = json[camel] ?? json[pascal];
+  if (v == null) return 0;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v.trim()) ?? 0;
+  return 0;
+}
+
 /// Data transfer object for town information
 class TownDto {
   final int id;
@@ -11,6 +20,9 @@ class TownDto {
   final int businessCount;
   final int servicesCount;
   final int eventsCount;
+  final int propertyListingCount;
+  final int creativeSpaceCount;
+  final int equipmentRentalBusinessCount;
 
   const TownDto({
     required this.id,
@@ -24,6 +36,9 @@ class TownDto {
     required this.businessCount,
     this.servicesCount = 0,
     this.eventsCount = 0,
+    this.propertyListingCount = 0,
+    this.creativeSpaceCount = 0,
+    this.equipmentRentalBusinessCount = 0,
   });
 
   /// Creates a TownDto from JSON
@@ -40,6 +55,21 @@ class TownDto {
       businessCount: json['businessCount'] as int,
       servicesCount: (json['serviceCount'] as int?) ?? 0,
       eventsCount: (json['eventCount'] as int?) ?? 0,
+      propertyListingCount: _townInt(
+        json,
+        'propertyListingCount',
+        'PropertyListingCount',
+      ),
+      creativeSpaceCount: _townInt(
+        json,
+        'creativeSpaceCount',
+        'CreativeSpaceCount',
+      ),
+      equipmentRentalBusinessCount: _townInt(
+        json,
+        'equipmentRentalBusinessCount',
+        'EquipmentRentalBusinessCount',
+      ),
     );
   }
 
@@ -57,6 +87,9 @@ class TownDto {
       'businessCount': businessCount,
       'serviceCount': servicesCount,
       'eventCount': eventsCount,
+      'propertyListingCount': propertyListingCount,
+      'creativeSpaceCount': creativeSpaceCount,
+      'equipmentRentalBusinessCount': equipmentRentalBusinessCount,
     };
   }
 
@@ -73,6 +106,9 @@ class TownDto {
     int? businessCount,
     int? servicesCount,
     int? eventsCount,
+    int? propertyListingCount,
+    int? creativeSpaceCount,
+    int? equipmentRentalBusinessCount,
   }) {
     return TownDto(
       id: id ?? this.id,
@@ -86,12 +122,16 @@ class TownDto {
       businessCount: businessCount ?? this.businessCount,
       servicesCount: servicesCount ?? this.servicesCount,
       eventsCount: eventsCount ?? this.eventsCount,
+      propertyListingCount: propertyListingCount ?? this.propertyListingCount,
+      creativeSpaceCount: creativeSpaceCount ?? this.creativeSpaceCount,
+      equipmentRentalBusinessCount:
+          equipmentRentalBusinessCount ?? this.equipmentRentalBusinessCount,
     );
   }
 
   @override
   String toString() {
-    return 'TownDto(id: $id, name: $name, province: $province, businessCount: $businessCount, servicesCount: $servicesCount, eventsCount: $eventsCount)';
+    return 'TownDto(id: $id, name: $name, province: $province, businessCount: $businessCount, servicesCount: $servicesCount, eventsCount: $eventsCount, propertyListingCount: $propertyListingCount, creativeSpaceCount: $creativeSpaceCount, equipmentRentalBusinessCount: $equipmentRentalBusinessCount)';
   }
 
   @override
