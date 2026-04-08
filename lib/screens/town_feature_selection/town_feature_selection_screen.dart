@@ -217,6 +217,14 @@ class _TownFeatureSelectionScreenContentState
       onTap: () => viewModel.navigateToEquipmentRentals(context, town),
     );
 
+    final parcels = FeatureData(
+      title: TownFeatureConstants.parcelsTitle,
+      description: TownFeatureConstants.parcelsDescription,
+      icon: Icons.local_shipping_outlined,
+      color: const Color(TownFeatureConstants.parcelsColor),
+      onTap: () => viewModel.navigateToParcels(context, town),
+    );
+
     const gap = SizedBox(height: TownFeatureConstants.gridGap);
     const hGap = SizedBox(width: TownFeatureConstants.gridGap);
 
@@ -256,6 +264,10 @@ class _TownFeatureSelectionScreenContentState
             ],
           ),
         ),
+        if (town.isParcelBoardEnabled) ...[
+          gap,
+          FeatureHeroCard(feature: parcels),
+        ],
       ],
     );
   }

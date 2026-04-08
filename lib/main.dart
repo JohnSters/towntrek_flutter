@@ -19,6 +19,7 @@ void main() async {
 
   // Initialize service locator and dependencies
   serviceLocator.initialize();
+  await serviceLocator.mobileSessionManager.initialize();
 
   runApp(const TownTrekApp());
 }

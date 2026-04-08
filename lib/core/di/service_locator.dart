@@ -4,6 +4,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../../repositories/repositories.dart';
 import '../../services/services.dart';
+import '../auth/mobile_session_manager.dart';
 import '../network/api_client.dart';
 import '../errors/error_handler.dart';
 
@@ -27,9 +28,13 @@ class ServiceLocator {
   late final PropertyApiService _propertyApiService;
   late final ConfigService _configService;
   late final DiscoveryApiService _discoveryApiService;
+  late final MobileAuthApiService _mobileAuthApiService;
+  late final MemberApiService _memberApiService;
+  late final ParcelApiService _parcelApiService;
   late final GeolocationService _geolocationService;
   late final NavigationService _navigationService;
   late final ErrorHandler _errorHandler;
+  late final MobileSessionManager _mobileSessionManager;
 
   // Repository dependencies
   late final BusinessRepository _businessRepository;
@@ -39,6 +44,9 @@ class ServiceLocator {
   late final ServiceRepository _serviceRepository;
   late final StatsRepository _statsRepository;
   late final PropertyRepository _propertyRepository;
+  late final MobileAuthRepository _mobileAuthRepository;
+  late final MemberRepository _memberRepository;
+  late final ParcelRepository _parcelRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -58,6 +66,9 @@ class ServiceLocator {
     _propertyApiService = PropertyApiService(_apiClient);
     _configService = ConfigService(_apiClient);
     _discoveryApiService = DiscoveryApiService(_apiClient);
+    _mobileAuthApiService = MobileAuthApiService(_apiClient);
+    _memberApiService = MemberApiService(_apiClient);
+    _parcelApiService = ParcelApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _navigationService = NavigationServiceImpl();
 
@@ -69,6 +80,14 @@ class ServiceLocator {
     _serviceRepository = ServiceRepositoryImpl(_serviceApiService);
     _statsRepository = StatsRepositoryImpl(_statsApiService);
     _propertyRepository = PropertyRepositoryImpl(_propertyApiService);
+    _mobileAuthRepository = MobileAuthRepositoryImpl(_mobileAuthApiService);
+    _memberRepository = MemberRepositoryImpl(_memberApiService);
+    _parcelRepository = ParcelRepositoryImpl(_parcelApiService);
+    _mobileSessionManager = MobileSessionManager(
+      mobileAuthRepository: _mobileAuthRepository,
+      memberRepository: _memberRepository,
+      apiClient: _apiClient,
+    );
 
     _isInitialized = true;
 
@@ -164,6 +183,26 @@ class ServiceLocator {
   ConfigService get configService {
     _ensureInitialized();
     return _configService;
+  }
+
+  MobileAuthRepository get mobileAuthRepository {
+    _ensureInitialized();
+    return _mobileAuthRepository;
+  }
+
+  MemberRepository get memberRepository {
+    _ensureInitialized();
+    return _memberRepository;
+  }
+
+  ParcelRepository get parcelRepository {
+    _ensureInitialized();
+    return _parcelRepository;
+  }
+
+  MobileSessionManager get mobileSessionManager {
+    _ensureInitialized();
+    return _mobileSessionManager;
   }
 
   DiscoveryApiService get discoveryApiService {
