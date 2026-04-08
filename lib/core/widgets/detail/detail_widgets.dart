@@ -1,4 +1,4 @@
-export 'detail_design_tokens.dart';
+export 'detail_towntrek_web_action.dart';
 export 'detail_hours_grid.dart';
 export 'detail_hours_mappers.dart';
 export 'detail_quick_action_button.dart';

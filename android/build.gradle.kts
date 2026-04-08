@@ -2,6 +2,17 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri("https://api.mapbox.com/downloads/v2/releases/maven")
+            credentials.username = "mapbox"
+            credentials.password = providers.gradleProperty("SDK_REGISTRY_TOKEN")
+                .orElse(providers.environmentVariable("SDK_REGISTRY_TOKEN"))
+                .orElse("")
+                .get()
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+        }
     }
 }
 

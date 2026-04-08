@@ -47,6 +47,7 @@ class TownPulseCard extends StatelessWidget {
   final int? creativeTotal;
   final int? propertiesTotal;
   final int? equipmentTotal;
+  final int? discoveriesTotal;
   final void Function(TownPulseDestination destination) onNavigate;
 
   const TownPulseCard({
@@ -58,6 +59,7 @@ class TownPulseCard extends StatelessWidget {
     required this.creativeTotal,
     required this.propertiesTotal,
     required this.equipmentTotal,
+    required this.discoveriesTotal,
     required this.onNavigate,
   });
 
@@ -184,7 +186,7 @@ class TownPulseCard extends StatelessWidget {
               context,
               theme,
               icon: Icons.travel_explore_rounded,
-              value: '·',
+              value: _countOrDash(discoveriesTotal),
               label: 'What to do',
               color: _PulseConstants.whatToDoColor,
               onTap: () => onNavigate(TownPulseDestination.whatToDo),

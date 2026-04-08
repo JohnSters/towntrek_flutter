@@ -30,13 +30,14 @@ class EntityOpenClosedBanner extends StatelessWidget {
     }
 
     if (isOpen == null) {
+      final cs = Theme.of(context).colorScheme;
       return Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8EEF3),
-          border: Border.all(color: const Color(0xFFD0D8E0)),
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.85),
+          border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -44,6 +45,7 @@ class EntityOpenClosedBanner extends StatelessWidget {
             _ViewsPill(
               count: viewCount ?? 0,
               variant: _ViewsPillVariant.neutral,
+              colorScheme: Theme.of(context).colorScheme,
             ),
           ],
         ),
@@ -84,6 +86,7 @@ class EntityOpenClosedBanner extends StatelessWidget {
                   variant: open
                       ? _ViewsPillVariant.onOpenBar
                       : _ViewsPillVariant.onClosedBar,
+                  colorScheme: Theme.of(context).colorScheme,
                 ),
               ],
             )
@@ -107,10 +110,12 @@ enum _ViewsPillVariant { neutral, onOpenBar, onClosedBar }
 class _ViewsPill extends StatelessWidget {
   final int count;
   final _ViewsPillVariant variant;
+  final ColorScheme colorScheme;
 
   const _ViewsPill({
     required this.count,
     required this.variant,
+    required this.colorScheme,
   });
 
   @override
@@ -118,20 +123,27 @@ class _ViewsPill extends StatelessWidget {
     late final Color bg;
     late final Color fg;
     late final Color borderColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     switch (variant) {
       case _ViewsPillVariant.neutral:
-        bg = Colors.white;
-        fg = const Color(0xFF3D5068);
-        borderColor = Colors.black.withValues(alpha: 0.1);
+        bg = colorScheme.surface;
+        fg = colorScheme.onSurfaceVariant;
+        borderColor = colorScheme.outline.withValues(alpha: 0.28);
       case _ViewsPillVariant.onOpenBar:
-        bg = Colors.white.withValues(alpha: 0.95);
+        bg = colorScheme.surface.withValues(alpha: 0.95);
         fg = const Color(0xFF146C2E);
         borderColor = const Color(0xFFBFE5CB);
       case _ViewsPillVariant.onClosedBar:
-        bg = Colors.white.withValues(alpha: 0.14);
-        fg = Colors.white;
-        borderColor = Colors.white.withValues(alpha: 0.35);
+        if (isDark) {
+          bg = colorScheme.surfaceContainerHighest.withValues(alpha: 0.55);
+          fg = colorScheme.onSurface;
+          borderColor = colorScheme.outline.withValues(alpha: 0.4);
+        } else {
+          bg = Colors.white.withValues(alpha: 0.14);
+          fg = Colors.white;
+          borderColor = Colors.white.withValues(alpha: 0.35);
+        }
     }
 
     return Container(

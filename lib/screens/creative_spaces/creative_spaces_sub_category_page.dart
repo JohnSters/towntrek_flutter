@@ -17,12 +17,10 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
     this.countsAvailable = true,
   });
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -39,7 +37,7 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
     return Column(
       children: [
         EntityListingHeroHeader(
-          theme: _theme,
+          theme: context.entityListingTheme,
           categoryIcon: Icons.palette_rounded,
           subCategoryName: CreativeSpacesConstants.categoryStylesTemplate
               .replaceAll('{name}', category.name),
@@ -49,7 +47,7 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
         ListingResultsBand(
           count: category.spaceCount,
           categoryName: category.name,
-          bandColor: _theme.resultsBand,
+          bandColor: context.entityListingTheme.resultsBand,
         ),
       ],
     );

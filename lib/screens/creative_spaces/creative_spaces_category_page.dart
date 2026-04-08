@@ -34,11 +34,9 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
 
   const _CreativeSpacesCategoryPageContent({required this.town});
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
-  Widget _browseHero() {
+  Widget _browseHero(BuildContext context) {
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.palette_rounded,
       subCategoryName: TownFeatureConstants.creativeSpacesTitle,
       categoryName: town.name,
@@ -49,7 +47,7 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -61,11 +59,11 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
                   if (state is CreativeSpacesLoading) {
                     return Column(
                       children: [
-                        _browseHero(),
+                        _browseHero(context),
                         ListingResultsBand(
                           count: 0,
                           categoryName: town.name,
-                          bandColor: _theme.resultsBand,
+                          bandColor: context.entityListingTheme.resultsBand,
                         ),
                         const Expanded(
                           child: Center(child: CircularProgressIndicator()),
@@ -92,11 +90,11 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
 
                   return Column(
                     children: [
-                      _browseHero(),
+                      _browseHero(context),
                       ListingResultsBand(
                         count: categories.length,
                         categoryName: town.name,
-                        bandColor: _theme.resultsBand,
+                        bandColor: context.entityListingTheme.resultsBand,
                       ),
                       Expanded(
                         child: RefreshIndicator(
@@ -201,11 +199,11 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
     Widget chrome({required Widget child}) {
       return Column(
         children: [
-          _browseHero(),
+          _browseHero(context),
           ListingResultsBand(
             count: 0,
             categoryName: town.name,
-            bandColor: _CreativeSpacesCategoryPageContent._theme.resultsBand,
+            bandColor: context.entityListingTheme.resultsBand,
           ),
           Expanded(child: child),
         ],

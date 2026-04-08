@@ -92,4 +92,12 @@ class TownSelectionConstants {
   static const String businessLabel = 'Business';
   static const String servicesLabel = 'Services';
   static const String eventsLabel = 'Active Events';
+  static const String propertiesLabel = 'Properties';
+  static const String creativeSpacesLabel = 'Creative Spaces';
+  static const String equipmentRentalsLabel = 'Equipment Rentals';
+
+  /// Accent colors for stat pills (theme primary/secondary/tertiary used for first three).
+  static const int propertiesPillColor = 0xFF2E7D32;
+  static const int creativeSpacesPillColor = 0xFF7B1FA2;
+  static const int equipmentRentalsPillColor = 0xFF00838F;
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/entity_listing_theme.dart';
+import 'package:towntrek_flutter/theme/entity_listing_theme_extension.dart';
 
 /// Pinned pill footer for listing screens (design doc §6).
 class ListingBackFooter extends StatelessWidget {
@@ -13,9 +13,11 @@ class ListingBackFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final listing = context.entityListing;
+    final outline = Theme.of(context).colorScheme.outline;
     return Container(
       width: double.infinity,
-      color: EntityListingTheme.pageBg,
+      color: listing.pageBg,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       child: SafeArea(
         top: false,
@@ -25,10 +27,10 @@ class ListingBackFooter extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: listing.cardBg,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.13),
+                  color: outline.withValues(alpha: 0.22),
                   width: 0.5,
                 ),
               ),
@@ -38,14 +40,14 @@ class ListingBackFooter extends StatelessWidget {
                   Icon(
                     Icons.arrow_back,
                     size: 13,
-                    color: EntityListingTheme.backFooterLabel,
+                    color: listing.backFooterLabel,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: EntityListingTheme.backFooterLabel,
+                      color: listing.backFooterLabel,
                       fontWeight: FontWeight.w400,
                     ),
                   ),

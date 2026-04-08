@@ -13,8 +13,6 @@ class PropertyListScreen extends StatelessWidget {
 
   const PropertyListScreen({super.key, required this.town});
 
-  static const EntityListingTheme _theme = EntityListingTheme.properties;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -52,8 +50,6 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     super.dispose();
   }
 
-  EntityListingTheme get _theme => PropertyListScreen._theme;
-
   List<PropertyListingCardDto> _visibleItems(
     List<PropertyListingCardDto> items,
   ) {
@@ -68,10 +64,10 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     }).toList();
   }
 
-  Widget _searchBar() {
+  Widget _searchBar(BuildContext context) {
     return EntityListingSearchBar(
       controller: _searchController,
-      theme: _theme,
+      theme: context.entityListingTheme,
       hintText: EntityListingConstants.propertySearchHint,
       onSubmitted: () => setState(() {}),
       onClear: () {
@@ -100,9 +96,9 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     );
   }
 
-  Widget _hero() {
+  Widget _hero(BuildContext context) {
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.home_work_rounded,
       subCategoryName: 'Property listings',
       categoryName: 'Properties',
@@ -110,11 +106,11 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     );
   }
 
-  Widget _band(int count) {
+  Widget _band(BuildContext context, int count) {
     return ListingResultsBand(
       count: count,
       categoryName: '${widget.town.name} · ${widget.town.province}',
-      bandColor: _theme.resultsBand,
+      bandColor: context.entityListingTheme.resultsBand,
     );
   }
 
@@ -123,7 +119,7 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     final viewModel = context.watch<PropertyListViewModel>();
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -139,9 +135,9 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     return switch (viewModel.state) {
       PropertyListLoading() => Column(
           children: [
-            _hero(),
-            _band(0),
-            _searchPadding(_searchBar()),
+            _hero(context),
+            _band(context, 0),
+            _searchPadding(_searchBar(context)),
             const Expanded(
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -180,9 +176,9 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     if (items.isEmpty) {
       return Column(
         children: [
-          _hero(),
-          _band(0),
-          _searchPadding(_searchBar()),
+          _hero(context),
+          _band(context, 0),
+          _searchPadding(_searchBar(context)),
           Expanded(
             child: Center(
               child: Padding(
@@ -206,9 +202,9 @@ class _PropertyListContentState extends State<_PropertyListContent> {
       final colorScheme = theme.colorScheme;
       return Column(
         children: [
-          _hero(),
-          _band(0),
-          _searchPadding(_searchBar()),
+          _hero(context),
+          _band(context, 0),
+          _searchPadding(_searchBar(context)),
           Expanded(
             child: Center(
               child: Padding(
@@ -259,9 +255,9 @@ class _PropertyListContentState extends State<_PropertyListContent> {
 
     return Column(
       children: [
-        _hero(),
-        _band(bandCount),
-        _searchPadding(_searchBar()),
+        _hero(context),
+        _band(context, bandCount),
+        _searchPadding(_searchBar(context)),
         Expanded(
           child: ListView.separated(
             padding: EntityListingConstants.cardListScrollPadding,
@@ -281,7 +277,7 @@ class _PropertyListContentState extends State<_PropertyListContent> {
               }
               return PropertyListingCardWidget(
                 listing: visible[index],
-                listingTheme: _theme,
+                listingTheme: context.entityListingTheme,
                 onTap: () => _openDetails(context, visible[index]),
               );
             },
@@ -299,18 +295,18 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     if (error.actionText != null && error.action != null) {
       return Column(
         children: [
-          _hero(),
-          _band(0),
-          _searchPadding(_searchBar()),
+          _hero(context),
+          _band(context, 0),
+          _searchPadding(_searchBar(context)),
           Expanded(child: ErrorView(error: error)),
         ],
       );
     }
     return Column(
       children: [
-        _hero(),
-        _band(0),
-        _searchPadding(_searchBar()),
+        _hero(context),
+        _band(context, 0),
+        _searchPadding(_searchBar(context)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),

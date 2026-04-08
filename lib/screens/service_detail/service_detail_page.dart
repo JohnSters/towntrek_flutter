@@ -36,9 +36,11 @@ class ServiceDetailPage extends StatelessWidget {
 class _ServiceDetailPageContent extends StatelessWidget {
   const _ServiceDetailPageContent();
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
-  Widget _detailHero(ServiceDetailState state, ServiceDetailViewModel viewModel) {
+  Widget _detailHero(
+    BuildContext context,
+    ServiceDetailState state,
+    ServiceDetailViewModel viewModel,
+  ) {
     final title = state is ServiceDetailSuccess
         ? state.serviceDetails.name
         : viewModel.serviceName;
@@ -49,7 +51,7 @@ class _ServiceDetailPageContent extends StatelessWidget {
         ? state.serviceDetails.townName
         : 'Details';
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.handyman_rounded,
       subCategoryName: title,
       categoryName: categoryLine,
@@ -63,11 +65,11 @@ class _ServiceDetailPageContent extends StatelessWidget {
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(state, viewModel),
+            _detailHero(context, state, viewModel),
             if (state is ServiceDetailSuccess)
               _ServiceOpenClosedBanner(service: state.serviceDetails),
             Expanded(
@@ -187,6 +189,7 @@ class _ServiceDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final qa = context.detailQuickActions;
     final description = (service.shortDescription?.trim().isNotEmpty == true)
         ? service.shortDescription!.trim()
         : service.description.trim();
@@ -277,8 +280,8 @@ class _ServiceDetailBody extends StatelessWidget {
               DetailQuickActionButton(
                 tooltip: DetailTownTrekWebAction.tooltip,
                 assetImagePath: DetailTownTrekWebAction.assetPath,
-                backgroundColor: DetailQuickActionColors.towntrekWebBackground,
-                iconColor: DetailQuickActionColors.websiteIcon,
+                backgroundColor: qa.towntrekWebBackground,
+                iconColor: qa.websiteIcon,
                 onPressed: () =>
                     viewModel.openFullServiceDetails(context, service),
               ),
@@ -286,16 +289,16 @@ class _ServiceDetailBody extends StatelessWidget {
                 DetailQuickActionButton(
                   tooltip: 'Take Me There',
                   icon: Icons.directions_rounded,
-                  backgroundColor: DetailQuickActionColors.directionsBackground,
-                  iconColor: DetailQuickActionColors.directionsIcon,
+                  backgroundColor: qa.directionsBackground,
+                  iconColor: qa.directionsIcon,
                   onPressed: () => _openMaps(context),
                 ),
               if (service.phoneNumber.trim().isNotEmpty)
                 DetailQuickActionButton(
                   tooltip: 'Call',
                   icon: Icons.call_rounded,
-                  backgroundColor: DetailQuickActionColors.callBackground,
-                  iconColor: DetailQuickActionColors.callIcon,
+                  backgroundColor: qa.callBackground,
+                  iconColor: qa.callIcon,
                   onPressed: () =>
                       ExternalLinkLauncher.callPhone(context, service.phoneNumber),
                 ),
@@ -303,8 +306,8 @@ class _ServiceDetailBody extends StatelessWidget {
                 DetailQuickActionButton(
                   tooltip: 'Call Alternative',
                   icon: Icons.call_split_rounded,
-                  backgroundColor: DetailQuickActionColors.callAltBackground,
-                  iconColor: DetailQuickActionColors.callAltIcon,
+                  backgroundColor: qa.callAltBackground,
+                  iconColor: qa.callAltIcon,
                   onPressed: () => ExternalLinkLauncher.callPhone(
                     context,
                     service.phoneNumber2!,
@@ -314,8 +317,8 @@ class _ServiceDetailBody extends StatelessWidget {
                 DetailQuickActionButton(
                   tooltip: 'Email',
                   icon: Icons.mail_rounded,
-                  backgroundColor: DetailQuickActionColors.emailBackground,
-                  iconColor: DetailQuickActionColors.emailIcon,
+                  backgroundColor: qa.emailBackground,
+                  iconColor: qa.emailIcon,
                   onPressed: () =>
                       ExternalLinkLauncher.sendEmail(context, service.emailAddress!),
                 ),
@@ -323,16 +326,16 @@ class _ServiceDetailBody extends StatelessWidget {
                 DetailQuickActionButton(
                   tooltip: 'Website',
                   icon: Icons.language_rounded,
-                  backgroundColor: DetailQuickActionColors.websiteBackground,
-                  iconColor: DetailQuickActionColors.websiteIcon,
+                  backgroundColor: qa.websiteBackground,
+                  iconColor: qa.websiteIcon,
                   onPressed: () =>
                       ExternalLinkLauncher.openWebsite(context, service.website!),
                 ),
               DetailQuickActionButton(
                 tooltip: 'Rate Service',
                 icon: Icons.star_rounded,
-                backgroundColor: DetailQuickActionColors.rateBackground,
-                iconColor: DetailQuickActionColors.rateIcon,
+                backgroundColor: qa.rateBackground,
+                iconColor: qa.rateIcon,
                 onPressed: () => viewModel.rateService(context, service),
               ),
             ],
@@ -353,8 +356,8 @@ class _ServiceDetailBody extends StatelessWidget {
                   DetailSocialIconButton(
                     tooltip: 'Facebook',
                     icon: FontAwesomeIcons.facebookF,
-                    backgroundColor: DetailSocialColors.facebookBackground,
-                    iconColor: DetailSocialColors.facebookIcon,
+                    backgroundColor: qa.facebookBackground,
+                    iconColor: qa.facebookIcon,
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.facebook!),
                   ),
@@ -362,8 +365,8 @@ class _ServiceDetailBody extends StatelessWidget {
                   DetailSocialIconButton(
                     tooltip: 'Instagram',
                     icon: FontAwesomeIcons.instagram,
-                    backgroundColor: DetailSocialColors.instagramBackground,
-                    iconColor: DetailSocialColors.instagramIcon,
+                    backgroundColor: qa.instagramBackground,
+                    iconColor: qa.instagramIcon,
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.instagram!),
                   ),
@@ -371,8 +374,8 @@ class _ServiceDetailBody extends StatelessWidget {
                   DetailSocialIconButton(
                     tooltip: 'WhatsApp',
                     icon: FontAwesomeIcons.whatsapp,
-                    backgroundColor: DetailSocialColors.whatsappBackground,
-                    iconColor: DetailSocialColors.whatsappIcon,
+                    backgroundColor: qa.whatsappBackground,
+                    iconColor: qa.whatsappIcon,
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.whatsApp!),
                   ),

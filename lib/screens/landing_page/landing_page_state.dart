@@ -10,6 +10,8 @@ class LandingPageSuccess extends LandingPageState {
   final int creativeSpaceCount;
   final int propertyListingCount;
   final int equipmentRentalBusinessCount;
+  final String? infoBannerMessage;
+  final String? issueBannerMessage;
 
   LandingPageSuccess({
     required this.businessCount,
@@ -18,6 +20,8 @@ class LandingPageSuccess extends LandingPageState {
     required this.creativeSpaceCount,
     required this.propertyListingCount,
     required this.equipmentRentalBusinessCount,
+    this.infoBannerMessage,
+    this.issueBannerMessage,
   });
 }
 

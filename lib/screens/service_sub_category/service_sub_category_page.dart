@@ -21,8 +21,6 @@ class ServiceSubCategoryPage extends StatelessWidget {
     this.countsAvailable = true,
   });
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -42,12 +40,12 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              child: _buildContent(),
+              child: _buildContent(context),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -56,9 +54,9 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(ServiceSubCategoryViewModel viewModel) {
+  Widget _buildHero(BuildContext context, ServiceSubCategoryViewModel viewModel) {
     return EntityListingHeroHeader(
-      theme: ServiceSubCategoryPage._theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.handyman_rounded,
       subCategoryName: viewModel.category.name,
       categoryName: TownFeatureConstants.servicesTitle,
@@ -66,11 +64,15 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildBand(ServiceSubCategoryViewModel viewModel, int serviceCount) {
+  Widget _buildBand(
+    BuildContext context,
+    ServiceSubCategoryViewModel viewModel,
+    int serviceCount,
+  ) {
     return ListingResultsBand(
       count: serviceCount,
       categoryName: viewModel.category.name,
-      bandColor: ServiceSubCategoryPage._theme.resultsBand,
+      bandColor: context.entityListingTheme.resultsBand,
     );
   }
 
@@ -80,7 +82,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     return c.subCategories.fold<int>(0, (sum, s) => sum + s.serviceCount);
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context) {
     return Consumer<ServiceSubCategoryViewModel>(
       builder: (context, viewModel, child) {
         final state = viewModel.state;
@@ -88,8 +90,8 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         if (state is ServiceSubCategoryLoading) {
           return Column(
             children: [
-              _buildHero(viewModel),
-              _buildBand(viewModel, _serviceCountForBand(viewModel)),
+              _buildHero(context, viewModel),
+              _buildBand(context, viewModel, _serviceCountForBand(viewModel)),
               const Expanded(
                 child: Center(child: CircularProgressIndicator()),
               ),
@@ -123,8 +125,8 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     if (error.actionText != null && error.action != null) {
       return Column(
         children: [
-          _buildHero(viewModel),
-          _buildBand(viewModel, count),
+          _buildHero(context, viewModel),
+          _buildBand(context, viewModel, count),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -132,8 +134,8 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
 
     return Column(
       children: [
-        _buildHero(viewModel),
-        _buildBand(viewModel, count),
+        _buildHero(context, viewModel),
+        _buildBand(context, viewModel, count),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
@@ -166,7 +168,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     return Column(
       children: [
         EntityListingHeroHeader(
-          theme: ServiceSubCategoryPage._theme,
+          theme: context.entityListingTheme,
           categoryIcon: Icons.handyman_rounded,
           subCategoryName: state.category.name,
           categoryName: TownFeatureConstants.servicesTitle,
@@ -175,7 +177,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
         ListingResultsBand(
           count: totalServices,
           categoryName: state.category.name,
-          bandColor: ServiceSubCategoryPage._theme.resultsBand,
+          bandColor: context.entityListingTheme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:towntrek_flutter/theme/entity_listing_theme_extension.dart';
 
 import '../constants/business_card_constants.dart';
 import '../theme/entity_listing_theme.dart';
@@ -16,10 +17,12 @@ class BusinessCategoryCopy {
     return k == TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase();
   }
 
-  static EntityListingTheme listingTheme(String? categoryKey) =>
-      isEquipmentRentals(categoryKey)
-          ? EntityListingTheme.equipmentRentals
-          : EntityListingTheme.business;
+  /// Listing gradients/text roles for current theme brightness (same palette for all categories).
+  static EntityListingTheme listingThemeOf(
+    BuildContext context,
+    String? categoryKey,
+  ) =>
+      context.entityListingTheme;
 
   static String listingBackFooterLabel(String? categoryKey) =>
       isEquipmentRentals(categoryKey) ? 'Back to rentals' : 'Back to properties';

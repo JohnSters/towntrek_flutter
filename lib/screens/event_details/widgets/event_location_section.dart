@@ -48,10 +48,11 @@ class EventLocationSection extends StatelessWidget {
       );
 
       if (result.isFailure && context.mounted) {
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.error ?? 'Unable to open navigation'),
-            backgroundColor: Colors.red,
+            backgroundColor: cs.error,
           ),
         );
       }
@@ -67,10 +68,11 @@ class EventLocationSection extends StatelessWidget {
 
     if (query.isEmpty) {
       if (context.mounted) {
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location not available for this event'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Location not available for this event'),
+            backgroundColor: cs.error,
           ),
         );
       }
@@ -84,19 +86,21 @@ class EventLocationSection extends StatelessWidget {
     try {
       final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
       if (!launched && context.mounted) {
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No maps app available'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No maps app available'),
+            backgroundColor: cs.error,
           ),
         );
       }
     } catch (_) {
       if (context.mounted) {
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open maps'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Unable to open maps'),
+            backgroundColor: cs.error,
           ),
         );
       }
@@ -113,6 +117,7 @@ class EventLocationSection extends StatelessWidget {
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final qa = context.detailQuickActions;
 
     final canOpenMaps = hasCoords || hasAddress;
     final addressLines = _dedupedAddressLines(
@@ -155,8 +160,8 @@ class EventLocationSection extends StatelessWidget {
                 DetailQuickActionButton(
                   tooltip: 'Take Me There',
                   icon: Icons.directions_rounded,
-                  backgroundColor: DetailQuickActionColors.directionsBackground,
-                  iconColor: DetailQuickActionColors.directionsIcon,
+                  backgroundColor: qa.directionsBackground,
+                  iconColor: qa.directionsIcon,
                   onPressed: canOpenMaps ? () => _openMap(context) : null,
                 ),
               ],

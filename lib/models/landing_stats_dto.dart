@@ -8,6 +8,14 @@ int _landingStatInt(Map<String, dynamic> json, String camel, String pascal) {
   return 0;
 }
 
+String? _landingStatString(Map<String, dynamic> json, String camel, String pascal) {
+  final v = json[camel] ?? json[pascal];
+  if (v == null) return null;
+  final normalized = v.toString().trim();
+  if (normalized.isEmpty) return null;
+  return normalized;
+}
+
 class LandingStatsDto {
   final int businessCount;
   final int serviceCount;
@@ -16,6 +24,8 @@ class LandingStatsDto {
   final int propertyListingCount;
   final int equipmentRentalBusinessCount;
   final int totalListingCount;
+  final String? infoBannerMessage;
+  final String? issueBannerMessage;
   final DateTime? generatedAtUtc;
 
   const LandingStatsDto({
@@ -26,6 +36,8 @@ class LandingStatsDto {
     this.propertyListingCount = 0,
     this.equipmentRentalBusinessCount = 0,
     this.totalListingCount = 0,
+    this.infoBannerMessage,
+    this.issueBannerMessage,
     this.generatedAtUtc,
   });
 
@@ -47,6 +59,16 @@ class LandingStatsDto {
     final total = hasTotalKey
         ? _landingStatInt(json, 'totalListingCount', 'TotalListingCount')
         : business + services + events + creative + properties;
+    final infoBannerMessage = _landingStatString(
+      json,
+      'infoBannerMessage',
+      'InfoBannerMessage',
+    );
+    final issueBannerMessage = _landingStatString(
+      json,
+      'issueBannerMessage',
+      'IssueBannerMessage',
+    );
 
     final genRaw = json['generatedAtUtc'] ?? json['GeneratedAtUtc'];
     DateTime? generatedAtUtc;
@@ -62,6 +84,8 @@ class LandingStatsDto {
       propertyListingCount: properties,
       equipmentRentalBusinessCount: equipment,
       totalListingCount: total,
+      infoBannerMessage: infoBannerMessage,
+      issueBannerMessage: issueBannerMessage,
       generatedAtUtc: generatedAtUtc,
     );
   }

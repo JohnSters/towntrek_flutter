@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+
 import '../../repositories/repositories.dart';
 import '../../services/services.dart';
 import '../network/api_client.dart';
@@ -21,6 +25,8 @@ class ServiceLocator {
   late final ServiceApiService _serviceApiService;
   late final StatsApiService _statsApiService;
   late final PropertyApiService _propertyApiService;
+  late final ConfigService _configService;
+  late final DiscoveryApiService _discoveryApiService;
   late final GeolocationService _geolocationService;
   late final NavigationService _navigationService;
   late final ErrorHandler _errorHandler;
@@ -50,6 +56,8 @@ class ServiceLocator {
     _serviceApiService = ServiceApiService(_apiClient);
     _statsApiService = StatsApiService(_apiClient);
     _propertyApiService = PropertyApiService(_apiClient);
+    _configService = ConfigService(_apiClient);
+    _discoveryApiService = DiscoveryApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _navigationService = NavigationServiceImpl();
 
@@ -63,6 +71,17 @@ class ServiceLocator {
     _propertyRepository = PropertyRepositoryImpl(_propertyApiService);
 
     _isInitialized = true;
+
+    unawaited(_primeMapboxToken());
+  }
+
+  Future<void> _primeMapboxToken() async {
+    try {
+      final token = await _configService.getMapboxAccessToken();
+      if (token != null && token.isNotEmpty) {
+        MapboxOptions.setAccessToken(token);
+      }
+    } catch (_) {}
   }
 
   bool get isInitialized => _isInitialized;
@@ -140,6 +159,16 @@ class ServiceLocator {
   PropertyRepository get propertyRepository {
     _ensureInitialized();
     return _propertyRepository;
+  }
+
+  ConfigService get configService {
+    _ensureInitialized();
+    return _configService;
+  }
+
+  DiscoveryApiService get discoveryApiService {
+    _ensureInitialized();
+    return _discoveryApiService;
   }
 
   /// Get the geolocation service

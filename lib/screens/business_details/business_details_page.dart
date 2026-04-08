@@ -37,16 +37,18 @@ class BusinessDetailsPage extends StatelessWidget {
 class _BusinessDetailsPageContent extends StatelessWidget {
   const _BusinessDetailsPageContent();
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
-  Widget _detailHero(BusinessDetailsState state, BusinessDetailsViewModel viewModel) {
+  Widget _detailHero(
+    BuildContext context,
+    BusinessDetailsState state,
+    BusinessDetailsViewModel viewModel,
+  ) {
     final title = state is BusinessDetailsSuccess
         ? state.business.name
         : viewModel.businessName;
     final categoryLine =
         state is BusinessDetailsSuccess ? state.business.category : 'Business';
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.storefront_outlined,
       subCategoryName: title,
       categoryName: categoryLine,
@@ -60,11 +62,11 @@ class _BusinessDetailsPageContent extends StatelessWidget {
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(state, viewModel),
+            _detailHero(context, state, viewModel),
             if (state is BusinessDetailsSuccess) ...[
               _BusinessOpenClosedBanner(business: state.business),
               _BusinessSpecialClosedHint(business: state.business),
@@ -142,6 +144,7 @@ class _BusinessDetailsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final qa = context.detailQuickActions;
 
     final availableServices = business.services
         .where((service) => service.isAvailable)
@@ -238,8 +241,8 @@ class _BusinessDetailsBody extends StatelessWidget {
               DetailQuickActionButton(
                 tooltip: DetailTownTrekWebAction.tooltip,
                 assetImagePath: DetailTownTrekWebAction.assetPath,
-                backgroundColor: DetailQuickActionColors.towntrekWebBackground,
-                iconColor: DetailQuickActionColors.websiteIcon,
+                backgroundColor: qa.towntrekWebBackground,
+                iconColor: qa.websiteIcon,
                 onPressed: () =>
                     viewModel.openFullBusinessDetails(context, business),
               ),
@@ -247,39 +250,39 @@ class _BusinessDetailsBody extends StatelessWidget {
                 DetailQuickActionButton(
                   tooltip: 'Take Me There',
                   icon: Icons.directions_rounded,
-                  backgroundColor: DetailQuickActionColors.directionsBackground,
-                  iconColor: DetailQuickActionColors.directionsIcon,
+                  backgroundColor: qa.directionsBackground,
+                  iconColor: qa.directionsIcon,
                   onPressed: () => viewModel.navigateToBusiness(context, business),
                 ),
               if (business.phoneNumber != null)
                 DetailQuickActionButton(
                   tooltip: 'Call',
                   icon: Icons.call_rounded,
-                  backgroundColor: DetailQuickActionColors.callBackground,
-                  iconColor: DetailQuickActionColors.callIcon,
+                  backgroundColor: qa.callBackground,
+                  iconColor: qa.callIcon,
                   onPressed: () => ExternalLinkLauncher.callPhone(context, business.phoneNumber!),
                 ),
               if (business.emailAddress != null)
                 DetailQuickActionButton(
                   tooltip: 'Email',
                   icon: Icons.mail_rounded,
-                  backgroundColor: DetailQuickActionColors.emailBackground,
-                  iconColor: DetailQuickActionColors.emailIcon,
+                  backgroundColor: qa.emailBackground,
+                  iconColor: qa.emailIcon,
                   onPressed: () => ExternalLinkLauncher.sendEmail(context, business.emailAddress!),
                 ),
               if (business.website != null)
                 DetailQuickActionButton(
                   tooltip: 'Website',
                   icon: Icons.language_rounded,
-                  backgroundColor: DetailQuickActionColors.websiteBackground,
-                  iconColor: DetailQuickActionColors.websiteIcon,
+                  backgroundColor: qa.websiteBackground,
+                  iconColor: qa.websiteIcon,
                   onPressed: () => ExternalLinkLauncher.openWebsite(context, business.website!),
                 ),
               DetailQuickActionButton(
                 tooltip: 'Rate Business',
                 icon: Icons.star_rounded,
-                backgroundColor: DetailQuickActionColors.rateBackground,
-                iconColor: DetailQuickActionColors.rateIcon,
+                backgroundColor: qa.rateBackground,
+                iconColor: qa.rateIcon,
                 onPressed: () => viewModel.rateBusiness(context, business),
               ),
             ],
@@ -298,24 +301,24 @@ class _BusinessDetailsBody extends StatelessWidget {
                   DetailSocialIconButton(
                     tooltip: 'Facebook',
                     icon: FontAwesomeIcons.facebookF,
-                    backgroundColor: DetailSocialColors.facebookBackground,
-                    iconColor: DetailSocialColors.facebookIcon,
+                    backgroundColor: qa.facebookBackground,
+                    iconColor: qa.facebookIcon,
                     onPressed: () => ExternalLinkLauncher.openRaw(context, business.facebook!),
                   ),
                 if (business.instagram != null)
                   DetailSocialIconButton(
                     tooltip: 'Instagram',
                     icon: FontAwesomeIcons.instagram,
-                    backgroundColor: DetailSocialColors.instagramBackground,
-                    iconColor: DetailSocialColors.instagramIcon,
+                    backgroundColor: qa.instagramBackground,
+                    iconColor: qa.instagramIcon,
                     onPressed: () => ExternalLinkLauncher.openRaw(context, business.instagram!),
                   ),
                 if (business.whatsApp != null)
                   DetailSocialIconButton(
                     tooltip: 'WhatsApp',
                     icon: FontAwesomeIcons.whatsapp,
-                    backgroundColor: DetailSocialColors.whatsappBackground,
-                    iconColor: DetailSocialColors.whatsappIcon,
+                    backgroundColor: qa.whatsappBackground,
+                    iconColor: qa.whatsappIcon,
                     onPressed: () => ExternalLinkLauncher.openRaw(context, business.whatsApp!),
                   ),
               ],

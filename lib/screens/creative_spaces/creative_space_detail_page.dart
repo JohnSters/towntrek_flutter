@@ -45,9 +45,8 @@ class CreativeSpaceDetailPage extends StatelessWidget {
 class _CreativeSpaceDetailPageContent extends StatelessWidget {
   const _CreativeSpaceDetailPageContent();
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   Widget _detailHero(
+    BuildContext context,
     CreativeSpaceDetailState state,
     CreativeSpaceDetailViewModel viewModel,
   ) {
@@ -63,7 +62,7 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
             'Details')
         : 'Details';
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.palette_rounded,
       subCategoryName: title,
       categoryName: categoryLine,
@@ -77,11 +76,11 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(state, viewModel),
+            _detailHero(context, state, viewModel),
             if (state is CreativeSpaceDetailSuccess)
               _CreativeOpenClosedBanner(space: state.creativeSpace),
             Expanded(
@@ -414,6 +413,7 @@ class _QuickActionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final qa = context.detailQuickActions;
     final canNavigate = (space.latitude != null && space.longitude != null) ||
         (space.physicalAddress != null &&
             space.physicalAddress!.trim().isNotEmpty);
@@ -428,8 +428,8 @@ class _QuickActionsSection extends StatelessWidget {
           DetailQuickActionButton(
             tooltip: DetailTownTrekWebAction.tooltip,
             assetImagePath: DetailTownTrekWebAction.assetPath,
-            backgroundColor: DetailQuickActionColors.towntrekWebBackground,
-            iconColor: DetailQuickActionColors.websiteIcon,
+            backgroundColor: qa.towntrekWebBackground,
+            iconColor: qa.websiteIcon,
             onPressed: () => context
                 .read<CreativeSpaceDetailViewModel>()
                 .openFullDetailsOnWeb(context),
@@ -438,8 +438,8 @@ class _QuickActionsSection extends StatelessWidget {
             DetailQuickActionButton(
               tooltip: CreativeSpacesConstants.mapActionLabel,
               icon: Icons.directions_rounded,
-              backgroundColor: DetailQuickActionColors.directionsBackground,
-              iconColor: DetailQuickActionColors.directionsIcon,
+              backgroundColor: qa.directionsBackground,
+              iconColor: qa.directionsIcon,
               onPressed: () => _openMap(context),
             ),
           if (space.contactPhone != null &&
@@ -447,8 +447,8 @@ class _QuickActionsSection extends StatelessWidget {
             DetailQuickActionButton(
               tooltip: CreativeSpacesConstants.callActionLabel,
               icon: Icons.call_rounded,
-              backgroundColor: DetailQuickActionColors.callBackground,
-              iconColor: DetailQuickActionColors.callIcon,
+              backgroundColor: qa.callBackground,
+              iconColor: qa.callIcon,
               onPressed: () => ExternalLinkLauncher.callPhone(
                 context,
                 space.contactPhone!.trim(),
@@ -459,8 +459,8 @@ class _QuickActionsSection extends StatelessWidget {
             DetailQuickActionButton(
               tooltip: CreativeSpacesConstants.altCallActionTooltip,
               icon: Icons.phone_callback_rounded,
-              backgroundColor: DetailQuickActionColors.callAltBackground,
-              iconColor: DetailQuickActionColors.callAltIcon,
+              backgroundColor: qa.callAltBackground,
+              iconColor: qa.callAltIcon,
               onPressed: () => ExternalLinkLauncher.callPhone(
                 context,
                 space.contactPhoneSecondary!.trim(),
@@ -471,8 +471,8 @@ class _QuickActionsSection extends StatelessWidget {
             DetailQuickActionButton(
               tooltip: CreativeSpacesConstants.emailActionLabel,
               icon: Icons.mail_rounded,
-              backgroundColor: DetailQuickActionColors.emailBackground,
-              iconColor: DetailQuickActionColors.emailIcon,
+              backgroundColor: qa.emailBackground,
+              iconColor: qa.emailIcon,
               onPressed: () => ExternalLinkLauncher.sendEmail(
                 context,
                 space.contactEmail!.trim(),
@@ -483,8 +483,8 @@ class _QuickActionsSection extends StatelessWidget {
             DetailQuickActionButton(
               tooltip: CreativeSpacesConstants.websiteActionLabel,
               icon: Icons.language_rounded,
-              backgroundColor: DetailQuickActionColors.websiteBackground,
-              iconColor: DetailQuickActionColors.websiteIcon,
+              backgroundColor: qa.websiteBackground,
+              iconColor: qa.websiteIcon,
               onPressed: () => ExternalLinkLauncher.openWebsite(
                 context,
                 space.contactWebsite!.trim(),
@@ -493,8 +493,8 @@ class _QuickActionsSection extends StatelessWidget {
           DetailQuickActionButton(
             tooltip: CreativeSpacesConstants.rateCreativeSpaceActionTooltip,
             icon: Icons.star_rounded,
-            backgroundColor: DetailQuickActionColors.rateBackground,
-            iconColor: DetailQuickActionColors.rateIcon,
+            backgroundColor: qa.rateBackground,
+            iconColor: qa.rateIcon,
             onPressed: () => context
                 .read<CreativeSpaceDetailViewModel>()
                 .openReviewsOnWeb(context),
@@ -549,6 +549,7 @@ class _CreativeSocialSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final qa = context.detailQuickActions;
     return DetailSectionShell(
       title: CreativeSpacesConstants.socialTitle,
       icon: Icons.share_outlined,
@@ -561,8 +562,8 @@ class _CreativeSocialSection extends StatelessWidget {
             DetailSocialIconButton(
               tooltip: 'Facebook',
               icon: FontAwesomeIcons.facebookF,
-              backgroundColor: DetailSocialColors.facebookBackground,
-              iconColor: DetailSocialColors.facebookIcon,
+              backgroundColor: qa.facebookBackground,
+              iconColor: qa.facebookIcon,
               onPressed: () => ExternalLinkLauncher.openRaw(
                 context,
                 space.facebookUrl!.trim(),
@@ -573,8 +574,8 @@ class _CreativeSocialSection extends StatelessWidget {
             DetailSocialIconButton(
               tooltip: 'Instagram',
               icon: FontAwesomeIcons.instagram,
-              backgroundColor: DetailSocialColors.instagramBackground,
-              iconColor: DetailSocialColors.instagramIcon,
+              backgroundColor: qa.instagramBackground,
+              iconColor: qa.instagramIcon,
               onPressed: () => ExternalLinkLauncher.openRaw(
                 context,
                 space.instagramUrl!.trim(),
@@ -584,8 +585,8 @@ class _CreativeSocialSection extends StatelessWidget {
             DetailSocialIconButton(
               tooltip: CreativeSpacesConstants.twitterActionTooltip,
               icon: FontAwesomeIcons.xTwitter,
-              backgroundColor: DetailSocialColors.twitterBackground,
-              iconColor: DetailSocialColors.twitterIcon,
+              backgroundColor: qa.twitterBackground,
+              iconColor: qa.twitterIcon,
               onPressed: () => ExternalLinkLauncher.openRaw(
                 context,
                 space.twitterUrl!.trim(),

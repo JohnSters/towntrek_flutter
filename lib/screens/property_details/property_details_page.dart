@@ -37,8 +37,6 @@ class PropertyDetailsPage extends StatelessWidget {
 class _PropertyDetailsPageContent extends StatelessWidget {
   const _PropertyDetailsPageContent();
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   String _listingTitle(PropertyDetailsState state, PropertyDetailsViewModel viewModel) {
     if (state is PropertyDetailsSuccess) {
       final a = state.listing.address.trim();
@@ -47,14 +45,18 @@ class _PropertyDetailsPageContent extends StatelessWidget {
     return viewModel.titleFallback;
   }
 
-  Widget _detailHero(PropertyDetailsState state, PropertyDetailsViewModel viewModel) {
+  Widget _detailHero(
+    BuildContext context,
+    PropertyDetailsState state,
+    PropertyDetailsViewModel viewModel,
+  ) {
     final typeLabel = state is PropertyDetailsSuccess
         ? (state.listing.listingType == 0 ? 'For rent' : 'For sale')
         : 'Property';
     final townLine =
         state is PropertyDetailsSuccess ? state.listing.townName : 'Details';
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.home_work_rounded,
       subCategoryName: _listingTitle(state, viewModel),
       categoryName: typeLabel,
@@ -68,11 +70,11 @@ class _PropertyDetailsPageContent extends StatelessWidget {
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(state, viewModel),
+            _detailHero(context, state, viewModel),
             if (state is PropertyDetailsSuccess && state.listing.isFeatured)
               const _FeaturedBar(),
             if (state is PropertyDetailsSuccess)
@@ -187,6 +189,7 @@ class _PropertyDetailsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final qa = context.detailQuickActions;
     final sortedImages = [...listing.images]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     final galleryPairs = <({PropertyListingImageDto img, String url})>[];
     for (final img in sortedImages) {
@@ -338,24 +341,24 @@ class _PropertyDetailsBody extends StatelessWidget {
               DetailQuickActionButton(
                 tooltip: DetailTownTrekWebAction.tooltip,
                 assetImagePath: DetailTownTrekWebAction.assetPath,
-                backgroundColor: DetailQuickActionColors.towntrekWebBackground,
-                iconColor: DetailQuickActionColors.websiteIcon,
+                backgroundColor: qa.towntrekWebBackground,
+                iconColor: qa.websiteIcon,
                 onPressed: () => viewModel.openFullListingOnWeb(context),
               ),
               if (listing.latitude != null && listing.longitude != null)
                 DetailQuickActionButton(
                   tooltip: 'Take Me There',
                   icon: Icons.directions_rounded,
-                  backgroundColor: DetailQuickActionColors.directionsBackground,
-                  iconColor: DetailQuickActionColors.directionsIcon,
+                  backgroundColor: qa.directionsBackground,
+                  iconColor: qa.directionsIcon,
                   onPressed: () => viewModel.openDirections(context, listing),
                 ),
               if (listing.telephoneNumber.trim().isNotEmpty)
                 DetailQuickActionButton(
                   tooltip: 'Call',
                   icon: Icons.call_rounded,
-                  backgroundColor: DetailQuickActionColors.callBackground,
-                  iconColor: DetailQuickActionColors.callIcon,
+                  backgroundColor: qa.callBackground,
+                  iconColor: qa.callIcon,
                   onPressed: () => ExternalLinkLauncher.callPhone(
                     context,
                     listing.telephoneNumber.trim(),

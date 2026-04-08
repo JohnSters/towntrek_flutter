@@ -79,38 +79,39 @@ class EventContactSection extends StatelessWidget {
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final qa = context.detailQuickActions;
 
     final actions = <Widget>[
       if (_hasValue(event.phoneNumber))
         DetailQuickActionButton(
           tooltip: 'Call',
           icon: Icons.call_rounded,
-          backgroundColor: DetailQuickActionColors.callBackground,
-          iconColor: DetailQuickActionColors.callIcon,
+          backgroundColor: qa.callBackground,
+          iconColor: qa.callIcon,
           onPressed: () => ExternalLinkLauncher.callPhone(context, event.phoneNumber!),
         ),
       if (_hasValue(event.emailAddress))
         DetailQuickActionButton(
           tooltip: 'Email',
           icon: Icons.mail_rounded,
-          backgroundColor: DetailQuickActionColors.emailBackground,
-          iconColor: DetailQuickActionColors.emailIcon,
+          backgroundColor: qa.emailBackground,
+          iconColor: qa.emailIcon,
           onPressed: () => ExternalLinkLauncher.sendEmail(context, event.emailAddress!),
         ),
       if (_hasValue(event.website))
         DetailQuickActionButton(
           tooltip: 'Website',
           icon: Icons.language_rounded,
-          backgroundColor: DetailQuickActionColors.websiteBackground,
-          iconColor: DetailQuickActionColors.websiteIcon,
+          backgroundColor: qa.websiteBackground,
+          iconColor: qa.websiteIcon,
           onPressed: () => _openWebsite(context, event.website!),
         ),
       if (event.requiresTickets)
         DetailQuickActionButton(
           tooltip: 'Get tickets',
           icon: Icons.confirmation_number_rounded,
-          backgroundColor: DetailQuickActionColors.ticketsBackground,
-          iconColor: DetailQuickActionColors.ticketsIcon,
+          backgroundColor: qa.ticketsBackground,
+          iconColor: qa.ticketsIcon,
           onPressed: () => _handleGetTickets(context),
         ),
     ];
