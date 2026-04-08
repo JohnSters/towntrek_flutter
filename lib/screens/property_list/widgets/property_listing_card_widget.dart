@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/entity_listing_theme.dart';
+import '../../../theme/entity_listing_theme_extension.dart';
 import '../../../core/utils/property_listing_format.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../core/widgets/listing_info_chip.dart';
@@ -42,14 +43,17 @@ class PropertyListingCardWidget extends StatelessWidget {
           )
         : null;
 
+    final listingColors = context.entityListing;
+    final outline = Theme.of(context).colorScheme.outline;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: EntityListingTheme.cardBg,
+          color: listingColors.cardBg,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: outline.withValues(alpha: 0.25),
             width: 0.5,
           ),
         ),
@@ -62,12 +66,13 @@ class PropertyListingCardWidget extends StatelessWidget {
               children: [
                 _buildHeaderBand(
                   context,
+                  listingColors,
                   imageUrl: imageUrl,
                   title: title,
                   locationLine: locationLine,
                 ),
-                _buildBody(introText, priceLabel),
-                _buildFooter(),
+                _buildBody(introText, priceLabel, listingColors),
+                _buildFooter(listingColors, outline),
               ],
             ),
             if (listing.isFeatured)
@@ -100,7 +105,8 @@ class PropertyListingCardWidget extends StatelessWidget {
   }
 
   Widget _buildHeaderBand(
-    BuildContext context, {
+    BuildContext context,
+    EntityListingThemeExtension listingColors, {
     required String? imageUrl,
     required String title,
     required String locationLine,
@@ -117,10 +123,10 @@ class PropertyListingCardWidget extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: listingColors.cardBg,
               borderRadius: BorderRadius.circular(13),
               border: Border.all(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                 width: 0.5,
               ),
             ),
@@ -180,14 +186,14 @@ class PropertyListingCardWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: listingColors.cardBg.withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               propertyListingTypeLabel(listing.listingType),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: EntityListingTheme.badgeText,
+                color: listingColors.badgeText,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -198,7 +204,11 @@ class PropertyListingCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(String introText, String? priceLabel) {
+  Widget _buildBody(
+    String introText,
+    String? priceLabel,
+    EntityListingThemeExtension listingColors,
+  ) {
     final chips = <Widget>[
       if (listing.townName.trim().isNotEmpty)
         ListingInfoChip(
@@ -220,9 +230,9 @@ class PropertyListingCardWidget extends StatelessWidget {
           Text(
             introText,
             textAlign: TextAlign.start,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: EntityListingTheme.bodyText,
+              color: listingColors.bodyText,
               height: 1.5,
             ),
             maxLines: 3,
@@ -242,12 +252,15 @@ class PropertyListingCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(
+    EntityListingThemeExtension listingColors,
+    Color outline,
+  ) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: Colors.black.withValues(alpha: 0.07),
+            color: outline.withValues(alpha: 0.2),
             width: 0.5,
           ),
         ),
@@ -256,11 +269,11 @@ class PropertyListingCardWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Tap to view listing',
             style: TextStyle(
               fontSize: 12,
-              color: EntityListingTheme.footerHint,
+              color: listingColors.footerHint,
             ),
           ),
           Icon(

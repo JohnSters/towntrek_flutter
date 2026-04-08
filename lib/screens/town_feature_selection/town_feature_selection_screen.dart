@@ -82,12 +82,12 @@ class _TownFeatureSelectionScreenContentState
     };
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             EntityListingHeroHeader(
-              theme: EntityListingTheme.business,
+              theme: context.entityListingTheme,
               categoryIcon: Icons.explore_rounded,
               // Town hub: main prompt + PROVINCE • TOWN in uppercase line
               subCategoryName: TownFeatureConstants.pageTitle,
@@ -105,13 +105,16 @@ class _TownFeatureSelectionScreenContentState
                         ? 'Remove favourite town'
                         : 'Set as favourite town',
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      backgroundColor:
+                          Theme.of(context).colorScheme.onPrimary.withValues(
+                                alpha: 0.2,
+                              ),
                     ),
                     icon: Icon(
                       isFavourite
                           ? Icons.star_rounded
                           : Icons.star_border_rounded,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   );
                 },

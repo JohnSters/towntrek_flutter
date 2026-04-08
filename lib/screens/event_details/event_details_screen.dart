@@ -45,9 +45,11 @@ class EventDetailsScreen extends StatelessWidget {
 class _EventDetailsScreenContent extends StatelessWidget {
   const _EventDetailsScreenContent();
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
-  Widget _eventHero(EventDetailsState state, EventDetailsViewModel viewModel) {
+  Widget _eventHero(
+    BuildContext context,
+    EventDetailsState state,
+    EventDetailsViewModel viewModel,
+  ) {
     final title = switch (state) {
       EventDetailsSuccess(:final eventDetails) => eventDetails.name,
       _ => viewModel.eventName,
@@ -61,7 +63,7 @@ class _EventDetailsScreenContent extends StatelessWidget {
       _ => 'Details',
     };
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.event_rounded,
       subCategoryName: title,
       categoryName: typeLine,
@@ -85,11 +87,11 @@ class _EventDetailsScreenContent extends StatelessWidget {
       builder: (context, viewModel, _) {
         final state = viewModel.state;
         return Scaffold(
-          backgroundColor: EntityListingTheme.pageBg,
+          backgroundColor: context.entityListing.pageBg,
           body: SafeArea(
             child: Column(
               children: [
-                _eventHero(state, viewModel),
+                _eventHero(context, state, viewModel),
                 if (state is EventDetailsSuccess &&
                     state.eventDetails.viewCount > 0)
                   EntityOpenClosedBanner(

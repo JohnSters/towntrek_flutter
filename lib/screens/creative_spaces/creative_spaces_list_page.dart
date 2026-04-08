@@ -19,7 +19,6 @@ class CreativeSpacesListPage extends StatelessWidget {
     this.subCategory,
   });
 
-  static const EntityListingTheme _theme = EntityListingTheme.creativeSpaces;
   static const String _heroCategoryName = 'Creative Spaces';
 
   @override
@@ -81,9 +80,9 @@ class _CreativeSpacesListPageContentState
 
   String get _resultsBandLabel => _titleName;
 
-  Widget _hero() {
+  Widget _hero(BuildContext context) {
     return EntityListingHeroHeader(
-      theme: CreativeSpacesListPage._theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.palette_rounded,
       subCategoryName: _titleName,
       categoryName: CreativeSpacesListPage._heroCategoryName,
@@ -91,18 +90,18 @@ class _CreativeSpacesListPageContentState
     );
   }
 
-  Widget _band(int count) {
+  Widget _band(BuildContext context, int count) {
     return ListingResultsBand(
       count: count,
       categoryName: _resultsBandLabel,
-      bandColor: CreativeSpacesListPage._theme.resultsBand,
+      bandColor: context.entityListingTheme.resultsBand,
     );
   }
 
-  Widget _searchBar(CreativeSpacesViewModel viewModel) {
+  Widget _searchBar(BuildContext context, CreativeSpacesViewModel viewModel) {
     return EntityListingSearchBar(
       controller: _searchController,
-      theme: CreativeSpacesListPage._theme,
+      theme: context.entityListingTheme,
       hintText: CreativeSpacesConstants.searchHint,
       onSubmitted: () => _submitSearch(viewModel),
       onClear: () => _clearSearch(viewModel),
@@ -112,7 +111,7 @@ class _CreativeSpacesListPageContentState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -124,11 +123,11 @@ class _CreativeSpacesListPageContentState
                   if (state is CreativeSpacesLoading) {
                     return Column(
                       children: [
-                        _hero(),
-                        _band(0),
+                        _hero(context),
+                        _band(context, 0),
                         Padding(
                           padding: EntityListingConstants.searchBarSectionPadding,
-                          child: _searchBar(viewModel),
+                          child: _searchBar(context, viewModel),
                         ),
                         const Expanded(
                           child: Center(
@@ -162,11 +161,11 @@ class _CreativeSpacesListPageContentState
 
                   return Column(
                     children: [
-                      _hero(),
-                      _band(totalItemCount),
+                      _hero(context),
+                      _band(context, totalItemCount),
                       Padding(
                         padding: EntityListingConstants.searchBarSectionPadding,
-                        child: _searchBar(viewModel),
+                        child: _searchBar(context, viewModel),
                       ),
                       Expanded(
                         child: RefreshIndicator(
@@ -217,8 +216,8 @@ class _CreativeSpacesListPageContentState
                                             minimumSize:
                                                 const Size.fromHeight(44),
                                             side: BorderSide(
-                                              color: CreativeSpacesListPage
-                                                  ._theme.accent
+                                              color: context
+                                                  .entityListingTheme.accent
                                                   .withValues(alpha: 0.35),
                                             ),
                                           ),
@@ -228,7 +227,7 @@ class _CreativeSpacesListPageContentState
                                     return CreativeSpaceCard(
                                       space: spaces[index],
                                       listingTheme:
-                                          CreativeSpacesListPage._theme,
+                                          context.entityListingTheme,
                                     );
                                   },
                                 ),
@@ -254,11 +253,11 @@ class _CreativeSpacesListPageContentState
     if (error.actionText != null && error.action != null) {
       return Column(
         children: [
-          _hero(),
-          _band(0),
+          _hero(context),
+          _band(context, 0),
           Padding(
             padding: EntityListingConstants.searchBarSectionPadding,
-            child: _searchBar(viewModel),
+            child: _searchBar(context, viewModel),
           ),
           Expanded(child: ErrorView(error: error)),
         ],
@@ -267,11 +266,11 @@ class _CreativeSpacesListPageContentState
 
     return Column(
       children: [
-        _hero(),
-        _band(0),
+        _hero(context),
+        _band(context, 0),
         Padding(
           padding: EntityListingConstants.searchBarSectionPadding,
-          child: _searchBar(viewModel),
+          child: _searchBar(context, viewModel),
         ),
         Expanded(
           child: ListView(

@@ -82,7 +82,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
     }
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -148,7 +148,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
             child: Icon(
               Icons.location_searching,
               size: BusinessCategoryConstants.iconSizeLarge,
-              color: Colors.white,
+              color: colorScheme.onPrimary,
             ),
           ),
           SizedBox(height: BusinessCategoryConstants.extraLargeSpacing),
@@ -220,7 +220,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
             child: Icon(
               Icons.location_city,
               size: BusinessCategoryConstants.iconSizeLarge,
-              color: Colors.white,
+              color: colorScheme.onPrimary,
             ),
           ),
           SizedBox(height: BusinessCategoryConstants.extraLargeSpacing),
@@ -302,7 +302,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
       children: [
         // Pillar • TOWN • PROVINCE (design system browse convention)
         EntityListingHeroHeader(
-          theme: EntityListingTheme.business,
+          theme: context.entityListingTheme,
           categoryIcon: Icons.store_mall_directory_rounded,
           subCategoryName: TownFeatureConstants.businessesTitle,
           categoryName: state.town.name,
@@ -312,7 +312,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
         ListingResultsBand(
           count: state.categories.length,
           categoryName: state.town.name,
-          bandColor: EntityListingTheme.business.resultsBand,
+          bandColor: context.entityListingTheme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(

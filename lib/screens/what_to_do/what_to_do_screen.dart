@@ -13,8 +13,6 @@ class WhatToDoScreen extends StatelessWidget {
 
   const WhatToDoScreen({super.key, required this.town});
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -36,7 +34,7 @@ class _WhatToDoScreenContent extends StatelessWidget {
     final viewModel = context.watch<WhatToDoViewModel>();
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -59,9 +57,9 @@ class _WhatToDoScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(TownDto town) {
+  Widget _buildHero(BuildContext context, TownDto town) {
     return EntityListingHeroHeader(
-      theme: WhatToDoScreen._theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.travel_explore_rounded,
       subCategoryName: '${WhatToDoConstants.titlePrefix} ${town.name}',
       categoryName: TownFeatureConstants.whatToDoTitle,
@@ -75,22 +73,22 @@ class _WhatToDoScreenContent extends StatelessWidget {
     return switch (state) {
       WhatToDoLoading() => Column(
         children: [
-          _buildHero(viewModel.town),
+          _buildHero(context, viewModel.town),
           ListingResultsBand(
             count: 0,
             categoryName: viewModel.town.name,
-            bandColor: WhatToDoScreen._theme.resultsBand,
+            bandColor: context.entityListingTheme.resultsBand,
           ),
           const Expanded(child: Center(child: CircularProgressIndicator())),
         ],
       ),
       WhatToDoError(error: final error) => Column(
         children: [
-          _buildHero(viewModel.town),
+          _buildHero(context, viewModel.town),
           ListingResultsBand(
             count: 0,
             categoryName: viewModel.town.name,
-            bandColor: WhatToDoScreen._theme.resultsBand,
+            bandColor: context.entityListingTheme.resultsBand,
           ),
           Expanded(child: ErrorView(error: error)),
         ],
@@ -114,12 +112,12 @@ class _WhatToDoScreenContent extends StatelessWidget {
           },
           child: CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(child: _buildHero(town)),
+              SliverToBoxAdapter(child: _buildHero(context, town)),
               SliverToBoxAdapter(
                 child: ListingResultsBand(
                   count: totalCount,
                   categoryName: town.name,
-                  bandColor: WhatToDoScreen._theme.resultsBand,
+                  bandColor: context.entityListingTheme.resultsBand,
                 ),
               ),
               if (featured.isNotEmpty)
@@ -132,7 +130,7 @@ class _WhatToDoScreenContent extends StatelessWidget {
                           width: 4,
                           height: 22,
                           decoration: BoxDecoration(
-                            color: WhatToDoScreen._theme.accent,
+                            color: context.entityListingTheme.accent,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -142,7 +140,7 @@ class _WhatToDoScreenContent extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: WhatToDoScreen._theme.textTitle,
+                            color: context.entityListingTheme.textTitle,
                             letterSpacing: 0.2,
                           ),
                         ),
@@ -163,7 +161,7 @@ class _WhatToDoScreenContent extends StatelessWidget {
                       itemBuilder: (context, i) {
                         final d = featured[i];
                         return _FeaturedCard(
-                          listingTheme: WhatToDoScreen._theme,
+                          listingTheme: context.entityListingTheme,
                           discovery: d,
                           onTap: () => viewModel.openDiscoveryDetail(
                             context,
@@ -232,7 +230,7 @@ class _WhatToDoScreenContent extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _DiscoveryListCard(
-                            listingTheme: WhatToDoScreen._theme,
+                            listingTheme: context.entityListingTheme,
                             discovery: d,
                             votePending: viewModel.isVotePending(d.id),
                             onVoteUp: () => viewModel.vote(
@@ -289,15 +287,15 @@ class _WhatToDoCategoryChip extends StatelessWidget {
       selected: selected,
       onSelected: onSelected,
       showCheckmark: true,
-      checkmarkColor: Colors.white,
+      checkmarkColor: colorScheme.onPrimary,
       selectedColor: colorScheme.primary,
-      backgroundColor: EntityListingTheme.cardBg,
+      backgroundColor: context.entityListing.cardBg,
       side: BorderSide(color: borderColor, width: 0.5),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
       labelStyle: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: selected ? Colors.white : colorScheme.onSurface,
+        color: selected ? colorScheme.onPrimary : colorScheme.onSurface,
       ),
     );
   }
@@ -333,10 +331,10 @@ class _FeaturedCard extends StatelessWidget {
         child: Ink(
           width: 208,
           decoration: BoxDecoration(
-            color: EntityListingTheme.cardBg,
+            color: context.entityListing.cardBg,
             borderRadius: BorderRadius.circular(_radius),
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: colorScheme.outline.withValues(alpha: 0.2),
               width: 0.5,
             ),
           ),
@@ -429,7 +427,7 @@ class _DiscoveryCompactMetaChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
-          color: EntityListingTheme.chipBg,
+          color: context.entityListing.chipBg,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
@@ -441,7 +439,7 @@ class _DiscoveryCompactMetaChip extends StatelessWidget {
             Icon(
               icon,
               size: 12,
-              color: EntityListingTheme.chipIconAndLabel,
+              color: context.entityListing.chipIconAndLabel,
             ),
             const SizedBox(width: 4),
             Expanded(
@@ -449,11 +447,11 @@ class _DiscoveryCompactMetaChip extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   height: 1.2,
-                  color: EntityListingTheme.chipIconAndLabel,
+                  color: context.entityListing.chipIconAndLabel,
                 ),
               ),
             ),
@@ -530,10 +528,10 @@ class _DiscoveryListCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(_radius),
         child: Ink(
           decoration: BoxDecoration(
-            color: EntityListingTheme.cardBg,
+            color: context.entityListing.cardBg,
             borderRadius: BorderRadius.circular(_radius),
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: colorScheme.outline.withValues(alpha: 0.2),
               width: 0.5,
             ),
           ),

@@ -22,17 +22,16 @@ class ServiceListErrorView extends StatelessWidget {
     required this.onRetry,
   });
 
-  static final EntityListingTheme _theme = EntityListingTheme.services;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final listingTheme = context.entityListingTheme;
 
     return Column(
       children: [
         EntityListingHeroHeader(
-          theme: _theme,
+          theme: listingTheme,
           categoryIcon: Icons.handyman_rounded,
           subCategoryName: subCategory.name,
           categoryName: category.name,
@@ -41,7 +40,7 @@ class ServiceListErrorView extends StatelessWidget {
         ListingResultsBand(
           count: subCategory.serviceCount,
           categoryName: subCategory.name,
-          bandColor: _theme.resultsBand,
+          bandColor: listingTheme.resultsBand,
         ),
         Expanded(
           child: Center(

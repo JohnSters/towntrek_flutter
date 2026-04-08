@@ -20,8 +20,6 @@ class ServiceListPage extends StatelessWidget {
     required this.town,
   });
 
-  static final EntityListingTheme _theme = EntityListingTheme.services;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -62,19 +60,19 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
     viewModel.search(null);
   }
 
-  Widget _searchBar(ServiceListViewModel viewModel) {
+  Widget _searchBar(BuildContext context, ServiceListViewModel viewModel) {
     return EntityListingSearchBar(
       controller: _searchController,
-      theme: ServiceListPage._theme,
+      theme: context.entityListingTheme,
       hintText: ServiceListConstants.searchHint,
       onSubmitted: () => _submitSearch(viewModel),
       onClear: () => _clearSearch(viewModel),
     );
   }
 
-  Widget _serviceHero(ServiceListViewModel viewModel) {
+  Widget _serviceHero(BuildContext context, ServiceListViewModel viewModel) {
     return EntityListingHeroHeader(
-      theme: ServiceListPage._theme,
+      theme: context.entityListingTheme,
       categoryIcon: Icons.handyman_rounded,
       subCategoryName: viewModel.subCategory.name,
       categoryName: viewModel.category.name,
@@ -82,11 +80,11 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
     );
   }
 
-  Widget _resultsBand(ServiceListViewModel viewModel) {
+  Widget _resultsBand(BuildContext context, ServiceListViewModel viewModel) {
     return ListingResultsBand(
       count: viewModel.bandCount,
       categoryName: viewModel.subCategory.name,
-      bandColor: ServiceListPage._theme.resultsBand,
+      bandColor: context.entityListingTheme.resultsBand,
     );
   }
 
@@ -95,7 +93,7 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
     final viewModel = context.watch<ServiceListViewModel>();
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -111,7 +109,7 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
 
   Widget _buildContent(BuildContext context, ServiceListViewModel viewModel) {
     return switch (viewModel.state) {
-      ServiceListLoading() => _buildLoadingLayout(viewModel),
+      ServiceListLoading() => _buildLoadingLayout(context, viewModel),
       ServiceListSuccess(
         services: final services,
         hasNextPage: final hasNextPage,
@@ -140,12 +138,12 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
     );
   }
 
-  Widget _buildLoadingLayout(ServiceListViewModel viewModel) {
+  Widget _buildLoadingLayout(BuildContext context, ServiceListViewModel viewModel) {
     return Column(
       children: [
-        _serviceHero(viewModel),
-        _resultsBand(viewModel),
-        _searchPadding(_searchBar(viewModel)),
+        _serviceHero(context, viewModel),
+        _resultsBand(context, viewModel),
+        _searchPadding(_searchBar(context, viewModel)),
         const Expanded(
           child: Center(child: CircularProgressIndicator()),
         ),
@@ -163,9 +161,9 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
 
     return Column(
       children: [
-        _serviceHero(viewModel),
-        _resultsBand(viewModel),
-        _searchPadding(_searchBar(viewModel)),
+        _serviceHero(context, viewModel),
+        _resultsBand(context, viewModel),
+        _searchPadding(_searchBar(context, viewModel)),
         Expanded(
           child: Center(
             child: Padding(
@@ -232,9 +230,9 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
   ) {
     return Column(
       children: [
-        _serviceHero(viewModel),
-        _resultsBand(viewModel),
-        _searchPadding(_searchBar(viewModel)),
+        _serviceHero(context, viewModel),
+        _resultsBand(context, viewModel),
+        _searchPadding(_searchBar(context, viewModel)),
         Expanded(
           child: _buildServicesList(
             context,
@@ -256,9 +254,9 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
     if (error.actionText != null && error.action != null) {
       return Column(
         children: [
-          _serviceHero(viewModel),
-          _resultsBand(viewModel),
-          _searchPadding(_searchBar(viewModel)),
+          _serviceHero(context, viewModel),
+          _resultsBand(context, viewModel),
+          _searchPadding(_searchBar(context, viewModel)),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -266,9 +264,9 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
 
     return Column(
       children: [
-        _serviceHero(viewModel),
-        _resultsBand(viewModel),
-        _searchPadding(_searchBar(viewModel)),
+        _serviceHero(context, viewModel),
+        _resultsBand(context, viewModel),
+        _searchPadding(_searchBar(context, viewModel)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),
@@ -315,7 +313,7 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
 
         return ServiceCard(
           service: services[index],
-          listingTheme: ServiceListPage._theme,
+          listingTheme: context.entityListingTheme,
         );
       },
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/entity_listing_theme.dart';
+import '../../../theme/entity_listing_theme_extension.dart';
 import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../core/widgets/listing_info_chip.dart';
@@ -28,14 +29,16 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final listingColors = context.entityListing;
+    final outline = Theme.of(context).colorScheme.outline;
     return GestureDetector(
       onTap: () => _navigateToServiceDetails(context),
       child: Container(
         decoration: BoxDecoration(
-          color: EntityListingTheme.cardBg,
+          color: listingColors.cardBg,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: outline.withValues(alpha: 0.25),
             width: 0.5,
           ),
         ),
@@ -44,16 +47,19 @@ class ServiceCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeaderBand(),
-            _buildBody(),
-            _buildFooter(),
+            _buildHeaderBand(context, listingColors),
+            _buildBody(context, listingColors),
+            _buildFooter(context, listingColors, outline),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeaderBand() {
+  Widget _buildHeaderBand(
+    BuildContext context,
+    EntityListingThemeExtension listingColors,
+  ) {
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -66,10 +72,10 @@ class ServiceCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: listingColors.cardBg,
               borderRadius: BorderRadius.circular(13),
               border: Border.all(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                 width: 0.5,
               ),
             ),
@@ -127,7 +133,7 @@ class ServiceCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: listingColors.cardBg.withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -136,9 +142,9 @@ class ServiceCard extends StatelessWidget {
                 totalReviews: service.totalReviews,
                 noReviewsLabel: 'No reviews',
               ),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: EntityListingTheme.badgeText,
+                color: listingColors.badgeText,
               ),
             ),
           ),
@@ -147,7 +153,10 @@ class ServiceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(
+    BuildContext context,
+    EntityListingThemeExtension listingColors,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       child: Column(
@@ -156,9 +165,9 @@ class ServiceCard extends StatelessWidget {
           Text(
             _introText,
             textAlign: TextAlign.start,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: EntityListingTheme.bodyText,
+              color: listingColors.bodyText,
               height: 1.5,
             ),
             maxLines: 3,
@@ -182,12 +191,16 @@ class ServiceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(
+    BuildContext context,
+    EntityListingThemeExtension listingColors,
+    Color outline,
+  ) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: Colors.black.withValues(alpha: 0.07),
+            color: outline.withValues(alpha: 0.2),
             width: 0.5,
           ),
         ),
@@ -196,11 +209,11 @@ class ServiceCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Tap to view service',
             style: TextStyle(
               fontSize: 12,
-              color: EntityListingTheme.footerHint,
+              color: listingColors.footerHint,
             ),
           ),
           Icon(

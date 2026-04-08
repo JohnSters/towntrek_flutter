@@ -8,6 +8,8 @@ export 'constants/town_selection_constants.dart';
 export 'constants/business_card_constants.dart';
 export 'constants/entity_listing_constants.dart';
 export 'theme/entity_listing_theme.dart';
+export 'package:towntrek_flutter/theme/entity_listing_theme_extension.dart';
+export 'package:towntrek_flutter/theme/detail_quick_action_theme_extension.dart';
 export 'widgets/entity_listing_hero_header.dart';
 export 'widgets/entity_listing_search_bar.dart';
 export 'widgets/listing_results_band.dart';

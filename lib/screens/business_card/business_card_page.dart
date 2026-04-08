@@ -84,11 +84,12 @@ class _BusinessCardPageContentState extends State<_BusinessCardPageContent> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessCardViewModel>();
-    final listingTheme = BusinessCategoryCopy.listingTheme(viewModel.category.key);
+    final listingTheme =
+        BusinessCategoryCopy.listingThemeOf(context, viewModel.category.key);
     final backLabel = BusinessCategoryCopy.listingBackFooterLabel(viewModel.category.key);
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [

@@ -92,20 +92,18 @@ class _DiscoveryDetailBody extends StatelessWidget {
   final String initialTitle;
   final TownDto town;
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DiscoveryDetailViewModel>();
     final state = vm.state;
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             EntityListingHeroHeader(
-              theme: _theme,
+              theme: context.entityListingTheme,
               categoryIcon: Icons.travel_explore_rounded,
               subCategoryName: state is DiscoveryDetailSuccess
                   ? state.discovery.title
@@ -129,7 +127,7 @@ class _DiscoveryDetailBody extends StatelessWidget {
     return switch (state) {
       DiscoveryDetailLoading() => Center(
         child: CircularProgressIndicator(
-          color: EntityListingTheme.business.accent,
+          color: context.entityListingTheme.accent,
         ),
       ),
       DiscoveryDetailError(error: final e) => ErrorView(error: e),
@@ -155,7 +153,6 @@ class _SuccessScrollState extends State<_SuccessScroll> {
   final PageController _pageController = PageController();
   int _pageIndex = 0;
 
-  static const EntityListingTheme _listingTheme = EntityListingTheme.business;
   static const double _galleryRadius = 14;
   static const double _sectionGap = 12;
 
@@ -183,6 +180,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
     final d = widget.discovery;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final listingTheme = context.entityListingTheme;
     final images = _galleryImagesForDetail(d);
     final hasPin = d.latitude != null && d.longitude != null;
     final directionsText = d.directionsHint?.trim();
@@ -215,7 +213,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                           fit: BoxFit.cover,
                           placeholder: (context, progress) => Center(
                             child: CircularProgressIndicator(
-                              color: _listingTheme.accent,
+                              color: listingTheme.accent,
                               strokeWidth: 2,
                             ),
                           ),
@@ -223,7 +221,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                             color: colorScheme.surfaceContainerHighest,
                             child: Icon(
                               Icons.image_not_supported_outlined,
-                              color: _listingTheme.accent,
+                              color: listingTheme.accent,
                               size: 40,
                             ),
                           ),
@@ -245,8 +243,8 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: i == _pageIndex
-                                  ? Colors.white
-                                  : Colors.white70,
+                                  ? colorScheme.surface.withValues(alpha: 0.95)
+                                  : colorScheme.surface.withValues(alpha: 0.55),
                             ),
                           ),
                         ),
@@ -261,17 +259,17 @@ class _SuccessScrollState extends State<_SuccessScroll> {
               height: 168,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: EntityListingTheme.cardBg,
+                color: context.entityListing.cardBg,
                 borderRadius: BorderRadius.circular(_galleryRadius),
                 border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: colorScheme.outline.withValues(alpha: 0.2),
                   width: 0.5,
                 ),
               ),
               child: Icon(
                 WhatToDoConstants.emptyIcon,
                 size: 48,
-                color: _listingTheme.accent,
+                color: listingTheme.accent,
               ),
             ),
           if (d.isFeatured) ...[
@@ -433,7 +431,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                           height: 180,
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: _listingTheme.accent,
+                              color: listingTheme.accent,
                             ),
                           ),
                         );

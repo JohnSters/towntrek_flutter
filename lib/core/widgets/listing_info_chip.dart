@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/entity_listing_constants.dart';
-import '../theme/entity_listing_theme.dart';
+import 'package:towntrek_flutter/theme/entity_listing_theme_extension.dart';
 
 /// Info chip for listing card bodies (design doc §5b).
 class ListingInfoChip extends StatelessWidget {
@@ -19,7 +19,7 @@ class ListingInfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: EntityListingTheme.chipBg,
+        color: context.entityListing.chipBg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -28,14 +28,14 @@ class ListingInfoChip extends StatelessWidget {
           Icon(
             icon,
             size: 13,
-            color: EntityListingTheme.chipIconAndLabel,
+            color: context.entityListing.chipIconAndLabel,
           ),
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: EntityListingTheme.chipIconAndLabel,
+              color: context.entityListing.chipIconAndLabel,
             ),
           ),
         ],

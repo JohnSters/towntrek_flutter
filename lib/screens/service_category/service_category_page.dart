@@ -40,12 +40,12 @@ class _ServiceCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              child: _buildContent(),
+              child: _buildContent(context),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -54,7 +54,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context) {
     return Consumer<ServiceCategoryViewModel>(
       builder: (context, viewModel, child) {
         final state = viewModel.state;
@@ -63,7 +63,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
           return Column(
             children: [
               EntityListingHeroHeader(
-                theme: EntityListingTheme.business,
+                theme: context.entityListingTheme,
                 categoryIcon: Icons.handyman_rounded,
                 subCategoryName: TownFeatureConstants.servicesTitle,
                 categoryName: viewModel.town.name,
@@ -72,7 +72,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
               ListingResultsBand(
                 count: 0,
                 categoryName: viewModel.town.name,
-                bandColor: EntityListingTheme.business.resultsBand,
+                bandColor: context.entityListingTheme.resultsBand,
               ),
               const Expanded(
                 child: Center(child: CircularProgressIndicator()),
@@ -107,7 +107,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
       return Column(
         children: [
           EntityListingHeroHeader(
-            theme: EntityListingTheme.business,
+            theme: context.entityListingTheme,
             categoryIcon: Icons.handyman_rounded,
             subCategoryName: TownFeatureConstants.servicesTitle,
             categoryName: viewModel.town.name,
@@ -116,7 +116,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
           ListingResultsBand(
             count: 0,
             categoryName: viewModel.town.name,
-            bandColor: EntityListingTheme.business.resultsBand,
+            bandColor: context.entityListingTheme.resultsBand,
           ),
           Expanded(child: child),
         ],
@@ -152,7 +152,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
     return Column(
       children: [
         EntityListingHeroHeader(
-          theme: EntityListingTheme.business,
+          theme: context.entityListingTheme,
           categoryIcon: Icons.handyman_rounded,
           subCategoryName: TownFeatureConstants.servicesTitle,
           categoryName: viewModel.town.name,
@@ -162,7 +162,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
         ListingResultsBand(
           count: state.categories.length,
           categoryName: viewModel.town.name,
-          bandColor: EntityListingTheme.business.resultsBand,
+          bandColor: context.entityListingTheme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(

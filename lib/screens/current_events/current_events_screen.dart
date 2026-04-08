@@ -16,8 +16,6 @@ class CurrentEventsScreen extends StatelessWidget {
     required this.townName,
   });
 
-  static final EntityListingTheme _theme = EntityListingTheme.events;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -55,8 +53,6 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     super.dispose();
   }
 
-  EntityListingTheme get _theme => CurrentEventsScreen._theme;
-
   List<EventDto> _visibleEvents(List<EventDto> events) {
     final t = _searchController.text.trim().toLowerCase();
     if (t.isEmpty) return events;
@@ -70,10 +66,10 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     }).toList();
   }
 
-  Widget _searchBar() {
+  Widget _searchBar(BuildContext context) {
     return EntityListingSearchBar(
       controller: _searchController,
-      theme: _theme,
+      theme: context.entityListingTheme,
       hintText: EntityListingConstants.eventSearchHint,
       onSubmitted: () => setState(() {}),
       onClear: () {
@@ -89,9 +85,9 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     );
   }
 
-  Widget _eventsHero(CurrentEventsViewModel viewModel) {
+  Widget _eventsHero(BuildContext context, CurrentEventsViewModel viewModel) {
     return EntityListingHeroHeader(
-      theme: _theme,
+      theme: context.entityListingTheme,
       categoryIcon: CurrentEventsConstants.defaultEventIcon,
       subCategoryName:
           '${CurrentEventsConstants.eventsPrefix} ${viewModel.townName}',
@@ -100,11 +96,11 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     );
   }
 
-  Widget _resultsBand(int count) {
+  Widget _resultsBand(BuildContext context, int count) {
     return ListingResultsBand(
       count: count,
       categoryName: 'Current events',
-      bandColor: _theme.resultsBand,
+      bandColor: context.entityListingTheme.resultsBand,
     );
   }
 
@@ -113,7 +109,7 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     final viewModel = context.watch<CurrentEventsViewModel>();
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -131,9 +127,9 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     return switch (viewModel.state) {
       CurrentEventsLoading() => Column(
           children: [
-            _eventsHero(viewModel),
-            _resultsBand(0),
-            _searchPadding(_searchBar()),
+            _eventsHero(context, viewModel),
+            _resultsBand(context, 0),
+            _searchPadding(_searchBar(context)),
             const Expanded(
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -172,9 +168,9 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     if (error.actionText != null && error.action != null) {
       return Column(
         children: [
-          _eventsHero(viewModel),
-          _resultsBand(0),
-          _searchPadding(_searchBar()),
+          _eventsHero(context, viewModel),
+          _resultsBand(context, 0),
+          _searchPadding(_searchBar(context)),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -182,9 +178,9 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
 
     return Column(
       children: [
-        _eventsHero(viewModel),
-        _resultsBand(0),
-        _searchPadding(_searchBar()),
+        _eventsHero(context, viewModel),
+        _resultsBand(context, 0),
+        _searchPadding(_searchBar(context)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),
@@ -216,9 +212,9 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     if (events.isEmpty) {
       return Column(
         children: [
-          _eventsHero(viewModel),
-          _resultsBand(0),
-          _searchPadding(_searchBar()),
+          _eventsHero(context, viewModel),
+          _resultsBand(context, 0),
+          _searchPadding(_searchBar(context)),
           Expanded(
             child: Center(
               child: Column(
@@ -255,9 +251,9 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
       final colorScheme = theme.colorScheme;
       return Column(
         children: [
-          _eventsHero(viewModel),
-          _resultsBand(0),
-          _searchPadding(_searchBar()),
+          _eventsHero(context, viewModel),
+          _resultsBand(context, 0),
+          _searchPadding(_searchBar(context)),
           Expanded(
             child: Center(
               child: Padding(
@@ -305,9 +301,9 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
 
     return Column(
       children: [
-        _eventsHero(viewModel),
-        _resultsBand(bandCount),
-        _searchPadding(_searchBar()),
+        _eventsHero(context, viewModel),
+        _resultsBand(context, bandCount),
+        _searchPadding(_searchBar(context)),
         Expanded(
           child: RefreshIndicator(
             onRefresh: viewModel.refreshEvents,
@@ -336,7 +332,7 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
                 return EventCard(
                   event: visible[index],
                   townName: viewModel.townName,
-                  listingTheme: _theme,
+                  listingTheme: context.entityListingTheme,
                 );
               },
             ),

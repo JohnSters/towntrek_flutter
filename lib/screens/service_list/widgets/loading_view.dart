@@ -15,14 +15,13 @@ class ServiceListLoadingView extends StatelessWidget {
     required this.town,
   });
 
-  static final EntityListingTheme _theme = EntityListingTheme.services;
-
   @override
   Widget build(BuildContext context) {
+    final listingTheme = context.entityListingTheme;
     return Column(
       children: [
         EntityListingHeroHeader(
-          theme: _theme,
+          theme: listingTheme,
           categoryIcon: Icons.handyman_rounded,
           subCategoryName: subCategory.name,
           categoryName: category.name,
@@ -31,7 +30,7 @@ class ServiceListLoadingView extends StatelessWidget {
         ListingResultsBand(
           count: subCategory.serviceCount,
           categoryName: subCategory.name,
-          bandColor: _theme.resultsBand,
+          bandColor: listingTheme.resultsBand,
         ),
         const Expanded(
           child: Center(

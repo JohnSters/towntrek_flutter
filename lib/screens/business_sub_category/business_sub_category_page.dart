@@ -17,8 +17,6 @@ class BusinessSubCategoryPage extends StatelessWidget {
     required this.town,
   });
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -37,12 +35,12 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              child: _buildContent(),
+              child: _buildContent(context),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -51,9 +49,9 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(BusinessSubCategoryViewModel viewModel) {
+  Widget _buildHero(BuildContext context, BusinessSubCategoryViewModel viewModel) {
     return EntityListingHeroHeader(
-      theme: BusinessSubCategoryPage._theme,
+      theme: context.entityListingTheme,
       categoryIcon: BusinessCategoryConfig.getCategoryIcon(viewModel.category.key),
       subCategoryName: viewModel.category.name,
       categoryName: TownFeatureConstants.businessesTitle,
@@ -61,15 +59,15 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildBand(BusinessSubCategoryViewModel viewModel) {
+  Widget _buildBand(BuildContext context, BusinessSubCategoryViewModel viewModel) {
     return ListingResultsBand(
       count: viewModel.category.businessCount,
       categoryName: viewModel.category.name,
-      bandColor: BusinessSubCategoryPage._theme.resultsBand,
+      bandColor: context.entityListingTheme.resultsBand,
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context) {
     return Consumer<BusinessSubCategoryViewModel>(
       builder: (context, viewModel, child) {
         final state = viewModel.state;
@@ -77,8 +75,8 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
         if (state is BusinessSubCategoryLoading) {
           return Column(
             children: [
-              _buildHero(viewModel),
-              _buildBand(viewModel),
+              _buildHero(context, viewModel),
+              _buildBand(context, viewModel),
               const Expanded(
                 child: Center(child: CircularProgressIndicator()),
               ),
@@ -111,8 +109,8 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
     if (error.actionText != null && error.action != null) {
       return Column(
         children: [
-          _buildHero(viewModel),
-          _buildBand(viewModel),
+          _buildHero(context, viewModel),
+          _buildBand(context, viewModel),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -120,8 +118,8 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
 
     return Column(
       children: [
-        _buildHero(viewModel),
-        _buildBand(viewModel),
+        _buildHero(context, viewModel),
+        _buildBand(context, viewModel),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
@@ -147,7 +145,7 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
     return Column(
       children: [
         EntityListingHeroHeader(
-          theme: BusinessSubCategoryPage._theme,
+          theme: context.entityListingTheme,
           categoryIcon: BusinessCategoryConfig.getCategoryIcon(state.category.key),
           subCategoryName: state.category.name,
           categoryName: TownFeatureConstants.businessesTitle,
@@ -156,7 +154,7 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
         ListingResultsBand(
           count: state.category.businessCount,
           categoryName: state.category.name,
-          bandColor: BusinessSubCategoryPage._theme.resultsBand,
+          bandColor: context.entityListingTheme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(

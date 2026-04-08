@@ -15,8 +15,6 @@ class SuggestDiscoveryScreen extends StatelessWidget {
 
   final TownDto town;
 
-  static const EntityListingTheme _theme = EntityListingTheme.business;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -45,12 +43,12 @@ class _SuggestDiscoveryContent extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: EntityListingTheme.pageBg,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             EntityListingHeroHeader(
-              theme: SuggestDiscoveryScreen._theme,
+              theme: context.entityListingTheme,
               categoryIcon: Icons.add_location_alt_outlined,
               subCategoryName: 'Suggest a discovery',
               categoryName: vm.town.name,

@@ -44,7 +44,7 @@ class ApiConfig {
   // iOS Simulator uses localhost
   // static const String _iosSimulatorUrl = 'https://localhost:7125';
   // Physical device needs your LAN IP
-  static const String _localNetworkUrl = 'https://192.168.1.102:7125';
+  static const String _localNetworkUrl = 'https://192.168.1.1:7125';
 
   // Dynamic base URL getter
   static String get baseUrl {
@@ -85,17 +85,17 @@ class ApiConfig {
 
     final candidates = <String>[];
 
-    // For Android physical devices, `adb reverse tcp:7125 tcp:7125` allows localhost to work.
-    // For iOS Simulator, localhost works directly.
+    // Physical Android with `adb reverse tcp:7125 tcp:7125` and iOS Simulator can use localhost.
     candidates.add(_localhostUrl);
 
-    // LAN before 10.0.2.2: on a real phone, 10.0.2.2 is wrong (emulator-only); try same-network IP first.
-    candidates.add(_localNetworkUrl);
-
-    // Android emulator host mapping (try after LAN so a wrong hardcoded LAN IP does not block 10.0.2.2).
+    // Android emulator: 10.0.2.2 forwards to the host loopback. Try before `_localNetworkUrl`
+    // so a stale hardcoded LAN IP does not delay or block picking the emulator host.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       candidates.add(_androidEmulatorUrl);
     }
+
+    // Physical device on same LAN (update `_localNetworkUrl` or pass `--dart-define=TT_API_BASE_URL=...`).
+    candidates.add(_localNetworkUrl);
 
     final resolved = await _pickFirstReachableBaseUrl(candidates);
     if (resolved != null) {
