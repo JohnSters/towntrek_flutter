@@ -35,6 +35,7 @@ class BusinessCategoryConfig {
     'real estate': Icons.home,
     'legal': Icons.gavel,
     'transportation': Icons.directions_car,
+    'equipment-rentals': Icons.construction,
   };
 
   /// Maps category keys to container colors using Material Design 3 color tokens
@@ -66,6 +67,7 @@ class BusinessCategoryConfig {
     'real estate': _ColorMapping.secondaryContainer,
     'legal': _ColorMapping.tertiaryContainer,
     'transportation': _ColorMapping.secondaryContainer,
+    'equipment-rentals': _ColorMapping.tertiaryContainer,
   };
 
   /// Maps category keys to icon colors using Material Design 3 on-color tokens
@@ -97,6 +99,7 @@ class BusinessCategoryConfig {
     'real estate': _ColorMapping.onSecondaryContainer,
     'legal': _ColorMapping.onTertiaryContainer,
     'transportation': _ColorMapping.onSecondaryContainer,
+    'equipment-rentals': _ColorMapping.onTertiaryContainer,
   };
 
   /// Get the icon for a category key

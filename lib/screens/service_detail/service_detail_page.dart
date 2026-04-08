@@ -36,30 +36,46 @@ class ServiceDetailPage extends StatelessWidget {
 class _ServiceDetailPageContent extends StatelessWidget {
   const _ServiceDetailPageContent();
 
+  Widget _detailHero(
+    BuildContext context,
+    ServiceDetailState state,
+    ServiceDetailViewModel viewModel,
+  ) {
+    final title = state is ServiceDetailSuccess
+        ? state.serviceDetails.name
+        : viewModel.serviceName;
+    final categoryLine = state is ServiceDetailSuccess
+        ? (state.serviceDetails.categoryName ?? 'Service')
+        : 'Service';
+    final townLine = state is ServiceDetailSuccess
+        ? state.serviceDetails.townName
+        : 'Details';
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: townLine,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ServiceDetailViewModel>();
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: state is ServiceDetailSuccess
-                  ? state.serviceDetails.name
-                  : viewModel.serviceName,
-              subtitle: 'Service Details',
-              height: 112.0,
-              headerType: HeaderType.service,
-            ),
+            _detailHero(context, state, viewModel),
             if (state is ServiceDetailSuccess)
-              _TopStatusBar(service: state.serviceDetails),
+              _ServiceOpenClosedBanner(service: state.serviceDetails),
             Expanded(
               child: _buildContent(context, state, viewModel),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
@@ -173,6 +189,7 @@ class _ServiceDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final qa = context.detailQuickActions;
     final description = (service.shortDescription?.trim().isNotEmpty == true)
         ? service.shortDescription!.trim()
         : service.description.trim();
@@ -221,7 +238,7 @@ class _ServiceDetailBody extends StatelessWidget {
         ),
         if (service.images.isNotEmpty) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Gallery',
             icon: Icons.photo_library_outlined,
             child: SizedBox(
@@ -231,75 +248,94 @@ class _ServiceDetailBody extends StatelessWidget {
                 itemCount: service.images.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
-                  return _GalleryTile(image: service.images[index]);
+                  final allUrls = service.images
+                      .map((img) => UrlUtils.resolveImageUrl(img.url))
+                      .toList();
+                  return _GalleryTile(
+                    image: service.images[index],
+                    allImageUrls: allUrls,
+                    index: index,
+                  );
                 },
               ),
             ),
           ),
         ],
         const SizedBox(height: 12),
-        _SectionShell(
+        DetailSectionShell(
           title: 'Operating Hours',
           icon: Icons.schedule,
-          child: _ServiceHoursGrid(operatingHours: service.operatingHours),
+          child: DetailHoursGrid(
+            rows: detailHoursFromService(service.operatingHours),
+          ),
         ),
         const SizedBox(height: 12),
-        _SectionShell(
+        DetailSectionShell(
           title: 'Quick Actions',
           icon: Icons.bolt_rounded,
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
-              _QuickActionIconButton(
-                tooltip: 'Call',
-                icon: Icons.call_rounded,
-                color: const Color(0xFFE8F5E9),
-                iconColor: const Color(0xFF2E7D32),
-                onPressed: () => ExternalLinkLauncher.callPhone(context, service.phoneNumber),
+              DetailQuickActionButton(
+                tooltip: DetailTownTrekWebAction.tooltip,
+                assetImagePath: DetailTownTrekWebAction.assetPath,
+                backgroundColor: qa.towntrekWebBackground,
+                iconColor: qa.websiteIcon,
+                onPressed: () =>
+                    viewModel.openFullServiceDetails(context, service),
               ),
+              if (service.latitude != null && service.longitude != null)
+                DetailQuickActionButton(
+                  tooltip: 'Take Me There',
+                  icon: Icons.directions_rounded,
+                  backgroundColor: qa.directionsBackground,
+                  iconColor: qa.directionsIcon,
+                  onPressed: () => _openMaps(context),
+                ),
+              if (service.phoneNumber.trim().isNotEmpty)
+                DetailQuickActionButton(
+                  tooltip: 'Call',
+                  icon: Icons.call_rounded,
+                  backgroundColor: qa.callBackground,
+                  iconColor: qa.callIcon,
+                  onPressed: () =>
+                      ExternalLinkLauncher.callPhone(context, service.phoneNumber),
+                ),
               if (service.phoneNumber2?.trim().isNotEmpty == true)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Call Alternative',
                   icon: Icons.call_split_rounded,
-                  color: const Color(0xFFDDEEE0),
-                  iconColor: const Color(0xFF1B5E20),
+                  backgroundColor: qa.callAltBackground,
+                  iconColor: qa.callAltIcon,
                   onPressed: () => ExternalLinkLauncher.callPhone(
                     context,
                     service.phoneNumber2!,
                   ),
                 ),
               if (service.emailAddress?.trim().isNotEmpty == true)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Email',
                   icon: Icons.mail_rounded,
-                  color: const Color(0xFFE3F2FD),
-                  iconColor: const Color(0xFF1565C0),
+                  backgroundColor: qa.emailBackground,
+                  iconColor: qa.emailIcon,
                   onPressed: () =>
                       ExternalLinkLauncher.sendEmail(context, service.emailAddress!),
                 ),
               if (service.website?.trim().isNotEmpty == true)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Website',
                   icon: Icons.language_rounded,
-                  color: const Color(0xFFF3E5F5),
-                  iconColor: const Color(0xFF6A1B9A),
+                  backgroundColor: qa.websiteBackground,
+                  iconColor: qa.websiteIcon,
                   onPressed: () =>
                       ExternalLinkLauncher.openWebsite(context, service.website!),
                 ),
-              if (service.latitude != null && service.longitude != null)
-                _QuickActionIconButton(
-                  tooltip: 'Take Me There',
-                  icon: Icons.directions_rounded,
-                  color: const Color(0xFFE0F2F1),
-                  iconColor: const Color(0xFF00695C),
-                  onPressed: () => _openMaps(context),
-                ),
-              _QuickActionIconButton(
+              DetailQuickActionButton(
                 tooltip: 'Rate Service',
                 icon: Icons.star_rounded,
-                color: const Color(0xFFFFF3E0),
-                iconColor: const Color(0xFFEF6C00),
+                backgroundColor: qa.rateBackground,
+                iconColor: qa.rateIcon,
                 onPressed: () => viewModel.rateService(context, service),
               ),
             ],
@@ -309,7 +345,7 @@ class _ServiceDetailBody extends StatelessWidget {
             service.instagram?.trim().isNotEmpty == true ||
             service.whatsApp?.trim().isNotEmpty == true) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Social',
             icon: Icons.share_outlined,
             child: Wrap(
@@ -317,23 +353,29 @@ class _ServiceDetailBody extends StatelessWidget {
               runSpacing: 10,
               children: [
                 if (service.facebook?.trim().isNotEmpty == true)
-                  _SocialIconButton(
+                  DetailSocialIconButton(
+                    tooltip: 'Facebook',
                     icon: FontAwesomeIcons.facebookF,
-                    color: const Color(0xFF1877F2),
+                    backgroundColor: qa.facebookBackground,
+                    iconColor: qa.facebookIcon,
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.facebook!),
                   ),
                 if (service.instagram?.trim().isNotEmpty == true)
-                  _SocialIconButton(
+                  DetailSocialIconButton(
+                    tooltip: 'Instagram',
                     icon: FontAwesomeIcons.instagram,
-                    color: const Color(0xFFC13584),
+                    backgroundColor: qa.instagramBackground,
+                    iconColor: qa.instagramIcon,
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.instagram!),
                   ),
                 if (service.whatsApp?.trim().isNotEmpty == true)
-                  _SocialIconButton(
+                  DetailSocialIconButton(
+                    tooltip: 'WhatsApp',
                     icon: FontAwesomeIcons.whatsapp,
-                    color: const Color(0xFF25D366),
+                    backgroundColor: qa.whatsappBackground,
+                    iconColor: qa.whatsappIcon,
                     onPressed: () =>
                         ExternalLinkLauncher.openRaw(context, service.whatsApp!),
                   ),
@@ -343,7 +385,7 @@ class _ServiceDetailBody extends StatelessWidget {
         ],
         if (serviceTags.isNotEmpty) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Services & Features',
             icon: Icons.grid_view_rounded,
             child: Wrap(
@@ -373,15 +415,6 @@ class _ServiceDetailBody extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () => viewModel.openFullServiceDetails(context, service),
-            icon: const Icon(Icons.open_in_new_rounded, size: 18),
-            label: const Text('View full details and reviews on web'),
-          ),
-        ),
       ],
     );
   }
@@ -399,319 +432,90 @@ class _ServiceDetailBody extends StatelessWidget {
   }
 }
 
-class _TopStatusBar extends StatelessWidget {
+class _ServiceOpenClosedBanner extends StatelessWidget {
   final ServiceDetailDto service;
 
-  const _TopStatusBar({required this.service});
+  const _ServiceOpenClosedBanner({required this.service});
 
   @override
   Widget build(BuildContext context) {
     final openNow = ServiceUtils.isServiceCurrentlyOpen(service.operatingHours);
-    final bg = openNow ? const Color(0xFFE9F7EF) : const Color(0xFF3A3A3A);
-    final fg = openNow ? const Color(0xFF1D7A38) : Colors.white;
-    final secondary = openNow
-        ? ServiceUtils.getClosingTimeText(service.operatingHours)
-        : 'Currently closed';
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(
-          color: openNow ? const Color(0xFFBFE5CB) : const Color(0xFF4A4A4A),
-        ),
-      ),
-      child: Column(
-        children: [
-          Text(
-            openNow ? 'Open Now' : 'Closed',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: fg,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          if (secondary.isNotEmpty)
-            Text(
-              secondary,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: fg.withValues(alpha: 0.92),
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionShell extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  const _SectionShell({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.16),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 17, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
+    return EntityOpenClosedBanner(
+      isOpen: openNow,
+      viewCount: service.viewCount,
     );
   }
 }
 
 class _GalleryTile extends StatelessWidget {
   final ServiceImageDto image;
+  final List<String> allImageUrls;
+  final int index;
 
-  const _GalleryTile({required this.image});
+  const _GalleryTile({
+    required this.image,
+    required this.allImageUrls,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final resolvedUrl = UrlUtils.resolveImageUrl(image.url);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 158,
-        color: colorScheme.surfaceContainerHighest,
-        child: Image.network(
-          resolvedUrl,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              color: colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Loading image...',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
-              ),
-            );
-          },
-          errorBuilder: (context, _, _) {
-            return Container(
-              color: colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.broken_image_outlined,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _ServiceHoursGrid extends StatelessWidget {
-  final List<ServiceOperatingHourDto> operatingHours;
-
-  const _ServiceHoursGrid({required this.operatingHours});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    const orderedDays = <String>[
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    final today = orderedDays[DateTime.now().weekday - 1];
-
-    final byDay = <String, ServiceOperatingHourDto>{
-      for (final hour in operatingHours)
-        ServiceUtils.formatDayOfWeek(hour.dayOfWeek): hour,
-    };
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final tileWidth = (constraints.maxWidth - 8) / 2;
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: orderedDays.map((day) {
-            final match = byDay[day];
-            final isAvailable = match?.isAvailable == true &&
-                match?.startTime != null &&
-                match?.endTime != null;
-            final timeLabel = isAvailable
-                ? '${ServiceUtils.formatTime24(match!.startTime!)} - ${ServiceUtils.formatTime24(match.endTime!)}'
-                : 'Closed';
-            final isToday = day == today;
-
-            return SizedBox(
-              width: tileWidth,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isToday
-                      ? colorScheme.primary.withValues(alpha: 0.10)
-                      : colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isToday
-                        ? colorScheme.primary.withValues(alpha: 0.45)
-                        : colorScheme.outline.withValues(alpha: 0.16),
-                  ),
-                ),
-                child: Row(
+    return TappableImage(
+      imageUrls: allImageUrls,
+      initialIndex: index,
+      heroTag: 'service_gallery_$index',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 158,
+          color: colorScheme.surfaceContainerHighest,
+          child: Image.network(
+            resolvedUrl,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Text(
-                        day.substring(0, 3),
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: isToday ? colorScheme.primary : null,
-                            ),
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
                       ),
                     ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        timeLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading image...',
+                      style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-}
-
-class _QuickActionIconButton extends StatelessWidget {
-  final String tooltip;
-  final IconData icon;
-  final Color color;
-  final Color iconColor;
-  final VoidCallback onPressed;
-
-  const _QuickActionIconButton({
-    required this.tooltip,
-    required this.icon,
-    required this.color,
-    required this.iconColor,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: SizedBox(
-        width: 56,
-        height: 56,
-        child: IconButton(
-          onPressed: onPressed,
-          style: IconButton.styleFrom(
-            backgroundColor: color,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          icon: Icon(icon, size: 24, color: iconColor),
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialIconButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _SocialIconButton({
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 42,
-      height: 42,
-      child: IconButton(
-        onPressed: onPressed,
-        style: IconButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+              );
+            },
+            errorBuilder: (context, _, _) {
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              );
+            },
           ),
         ),
-        icon: FaIcon(icon, size: 18, color: Colors.white),
       ),
     );
   }

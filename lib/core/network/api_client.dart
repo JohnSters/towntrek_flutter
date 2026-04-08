@@ -1,9 +1,47 @@
 import 'dart:io';
 import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+
 import '../config/api_config.dart';
 import '../utils/logger.dart';
+
+/// Max characters for a single HTTP log line (avoids huge allocations / log buffer truncation).
+const int _kMaxHttpLogChars = 12000;
+
+String _formatPayloadForLog(dynamic data) {
+  if (data == null) return 'null';
+  try {
+    if (data is Map || data is List) {
+      final encoded = const JsonEncoder.withIndent('  ').convert(data);
+      if (encoded.length > _kMaxHttpLogChars) {
+        return '${encoded.substring(0, _kMaxHttpLogChars)}… [truncated $_kMaxHttpLogChars chars]';
+      }
+      return encoded;
+    }
+  } catch (_) {
+    // Fall through to toString
+  }
+  final s = data.toString();
+  if (s.length > _kMaxHttpLogChars) {
+    return '${s.substring(0, _kMaxHttpLogChars)}… [truncated]';
+  }
+  return s;
+}
+
+Map<String, dynamic> _redactHeadersForLog(Map<String, dynamic> headers) {
+  final out = <String, dynamic>{};
+  for (final e in headers.entries) {
+    final k = e.key.toString().toLowerCase();
+    if (k == 'authorization' || k == 'cookie' || k == 'set-cookie') {
+      out[e.key] = '***';
+    } else {
+      out[e.key] = e.value;
+    }
+  }
+  return out;
+}
 
 /// Singleton Dio client for API communication
 class ApiClient {
@@ -55,9 +93,11 @@ class ApiClient {
       };
     }
 
-    // Add interceptors
+    // Verbose HTTP logging only outside production (avoids PII/body leaks in release).
+    if (ApiConfig.environment != AppEnvironment.production) {
+      _dio.interceptors.add(_LoggingInterceptor());
+    }
     _dio.interceptors.addAll([
-      _LoggingInterceptor(),
       _ErrorInterceptor(),
       _RetryInterceptor(),
     ]);
@@ -188,19 +228,19 @@ class _LoggingInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     Logger.i('🌐 API Request: ${options.method} ${options.uri}');
     if (options.queryParameters.isNotEmpty) {
-      Logger.d('Query Parameters: ${options.queryParameters}');
+      Logger.d('Query Parameters: ${_formatPayloadForLog(options.queryParameters)}');
     }
     if (options.data != null) {
-      Logger.d('Request Data: ${options.data}');
+      Logger.d('Request Data: ${_formatPayloadForLog(options.data)}');
     }
-    Logger.d('Headers: ${options.headers}');
+    Logger.d('Headers: ${_formatPayloadForLog(_redactHeadersForLog(Map<String, dynamic>.from(options.headers)))}');
     super.onRequest(options, handler);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     Logger.i('✅ API Response: ${response.statusCode} ${response.requestOptions.uri}');
-    Logger.d('Response Data: ${response.data}');
+    Logger.d('Response Data: ${_formatPayloadForLog(response.data)}');
     super.onResponse(response, handler);
   }
 
@@ -210,7 +250,7 @@ class _LoggingInterceptor extends Interceptor {
     Logger.e('Error Message: ${err.message}');
     if (err.response != null) {
       Logger.e('Status Code: ${err.response?.statusCode}');
-      Logger.e('Error Response: ${err.response?.data}');
+      Logger.e('Error Response: ${_formatPayloadForLog(err.response?.data)}');
     }
     super.onError(err, handler);
   }

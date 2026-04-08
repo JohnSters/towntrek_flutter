@@ -47,11 +47,14 @@ class _LandingPageContent extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+              child: RefreshIndicator(
+                onRefresh: () => context.read<LandingViewModel>().loadStats(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
                     const SizedBox(height: 8),
                     const AppLogo(),
                     const SizedBox(height: 16),
@@ -73,6 +76,7 @@ class _LandingPageContent extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    _buildLandingBanners(viewModel.state),
                     const SizedBox(height: 20),
                     ActionButton(
                       onPressed: () async {
@@ -120,6 +124,7 @@ class _LandingPageContent extends StatelessWidget {
                     ),
                   ],
                 ),
+                ),
               ),
             ),
             Padding(
@@ -129,13 +134,7 @@ class _LandingPageContent extends StatelessWidget {
                 LandingPageConstants.horizontalPadding,
                 8,
               ),
-              child: Column(
-                children: [
-                  const _PulsingStatsTitle(),
-                  const SizedBox(height: 8),
-                  _buildFeatureGrid(viewModel.state),
-                ],
-              ),
+              child: _buildPlatformStats(viewModel.state),
             ),
             _LandingFooter(
               onSendFeedback: () => viewModel.launchFeedbackEmail(context),
@@ -146,70 +145,82 @@ class _LandingPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureGrid(LandingPageState state) {
+  Widget _buildPlatformStats(LandingPageState state) {
     return switch (state) {
-      LandingPageLoading() => const FeatureGrid(isLoading: true),
+      LandingPageLoading() => const PlatformStatsCard(isLoading: true),
       LandingPageSuccess(
         businessCount: final businessCount,
         serviceCount: final serviceCount,
         eventCount: final eventCount,
+        creativeSpaceCount: final creativeSpaceCount,
+        propertyListingCount: final propertyListingCount,
+        equipmentRentalBusinessCount: final equipmentRentalBusinessCount,
       ) =>
-        FeatureGrid(
+        PlatformStatsCard(
           businessCount: businessCount,
           serviceCount: serviceCount,
           eventCount: eventCount,
+          creativeSpaceCount: creativeSpaceCount,
+          propertyListingCount: propertyListingCount,
+          equipmentRentalBusinessCount: equipmentRentalBusinessCount,
         ),
-      LandingPageError() =>
-        const FeatureGrid(), // Show with null counts on error
+      LandingPageError() => const PlatformStatsCard(),
+    };
+  }
+
+  Widget _buildLandingBanners(LandingPageState state) {
+    return switch (state) {
+      LandingPageSuccess(
+        infoBannerMessage: final infoBannerMessage,
+        issueBannerMessage: final issueBannerMessage,
+      ) =>
+        _LandingBannerStack(
+          infoBannerMessage: infoBannerMessage,
+          issueBannerMessage: issueBannerMessage,
+        ),
+      _ => const SizedBox.shrink(),
     };
   }
 }
 
-class _PulsingStatsTitle extends StatefulWidget {
-  const _PulsingStatsTitle();
+class _LandingBannerStack extends StatelessWidget {
+  final String? infoBannerMessage;
+  final String? issueBannerMessage;
 
-  @override
-  State<_PulsingStatsTitle> createState() => _PulsingStatsTitleState();
-}
-
-class _PulsingStatsTitleState extends State<_PulsingStatsTitle>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1300),
-    )..repeat(reverse: true);
-    _scaleAnimation = Tween<double>(
-      begin: 0.98,
-      end: 1.02,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _LandingBannerStack({
+    required this.infoBannerMessage,
+    required this.issueBannerMessage,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: Text(
-        'Towntrek Stats',
-        textAlign: TextAlign.center,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: colorScheme.onSurface,
+    final banners = <Widget>[
+      if (infoBannerMessage != null)
+        LandingMessageBanner(
+          message: infoBannerMessage!,
+          tone: LandingMessageBannerTone.info,
         ),
+      if (issueBannerMessage != null)
+        LandingMessageBanner(
+          message: issueBannerMessage!,
+          tone: LandingMessageBannerTone.issue,
+        ),
+    ];
+
+    if (banners.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < banners.length; i++) ...[
+            banners[i],
+            if (i < banners.length - 1) const SizedBox(height: 10),
+          ],
+        ],
       ),
     );
   }

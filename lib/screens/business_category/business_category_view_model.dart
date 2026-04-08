@@ -253,4 +253,9 @@ class BusinessCategoryViewModel extends ChangeNotifier {
     _state = BusinessCategoryTownSelection();
     notifyListeners();
   }
+
+  /// Retry loading the page using the same initialization flow.
+  Future<void> retry() async {
+    await _initializePage();
+  }
 }

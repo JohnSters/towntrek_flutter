@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
-import '../../core/widgets/navigation_footer.dart';
-import '../../core/widgets/page_header.dart';
+import '../../core/core.dart';
 import '../service_list/service_list_page.dart';
-import '../../core/constants/service_sub_category_constants.dart';
 import 'service_sub_category_state.dart';
 import 'service_sub_category_view_model.dart';
 import 'widgets/widgets.dart';
@@ -42,35 +40,70 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              child: _buildContent(),
+              child: _buildContent(context),
             ),
-            const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildHero(BuildContext context, ServiceSubCategoryViewModel viewModel) {
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: viewModel.category.name,
+      categoryName: TownFeatureConstants.servicesTitle,
+      townName: viewModel.town.name,
+    );
+  }
+
+  Widget _buildBand(
+    BuildContext context,
+    ServiceSubCategoryViewModel viewModel,
+    int serviceCount,
+  ) {
+    return ListingResultsBand(
+      count: serviceCount,
+      categoryName: viewModel.category.name,
+      bandColor: context.entityListingTheme.resultsBand,
+    );
+  }
+
+  int _serviceCountForBand(ServiceSubCategoryViewModel viewModel) {
+    final c = viewModel.category;
+    if (c.serviceCount > 0) return c.serviceCount;
+    return c.subCategories.fold<int>(0, (sum, s) => sum + s.serviceCount);
+  }
+
+  Widget _buildContent(BuildContext context) {
     return Consumer<ServiceSubCategoryViewModel>(
       builder: (context, viewModel, child) {
         final state = viewModel.state;
 
         if (state is ServiceSubCategoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Column(
+            children: [
+              _buildHero(context, viewModel),
+              _buildBand(context, viewModel, _serviceCountForBand(viewModel)),
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          );
         }
 
         if (state is ServiceSubCategoryError) {
-          return Center(
-            child: Text(
-              state.message,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+          return _buildErrorState(
+            context,
+            error: state.error,
+            viewModel: viewModel,
           );
         }
 
@@ -80,6 +113,44 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
 
         return const SizedBox();
       },
+    );
+  }
+
+  Widget _buildErrorState(
+    BuildContext context, {
+    required AppError error,
+    required ServiceSubCategoryViewModel viewModel,
+  }) {
+    final count = _serviceCountForBand(viewModel);
+    if (error.actionText != null && error.action != null) {
+      return Column(
+        children: [
+          _buildHero(context, viewModel),
+          _buildBand(context, viewModel, count),
+          Expanded(child: ErrorView(error: error)),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        _buildHero(context, viewModel),
+        _buildBand(context, viewModel, count),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            children: [
+              ErrorView(error: error),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: viewModel.retry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -96,22 +167,21 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
 
     return Column(
       children: [
-        PageHeader(
-          title: state.category.name,
-          subtitle: '${ServiceSubCategoryConstants.subtitlePrefix} ${state.town.name}',
-          height: ServiceSubCategoryConstants.pageHeaderHeight,
-          headerType: HeaderType.service,
+        EntityListingHeroHeader(
+          theme: context.entityListingTheme,
+          categoryIcon: Icons.handyman_rounded,
+          subCategoryName: state.category.name,
+          categoryName: TownFeatureConstants.servicesTitle,
+          townName: state.town.name,
         ),
-        _CategoryInfoBar(
-          icon: Icons.handyman_rounded,
-          text: '$totalServices services \u2022 ${state.category.name}',
-          backgroundColor: const Color(0xFFE3F2FD),
-          textColor: const Color(0xFF0D47A1),
-          borderColor: const Color(0xFFBBDEFB),
+        ListingResultsBand(
+          count: totalServices,
+          categoryName: state.category.name,
+          bandColor: context.entityListingTheme.resultsBand,
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -154,54 +224,6 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
           subCategory: subCategory,
           town: state.town,
         ),
-      ),
-    );
-  }
-}
-
-class _CategoryInfoBar extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color backgroundColor;
-  final Color textColor;
-  final Color borderColor;
-
-  const _CategoryInfoBar({
-    required this.icon,
-    required this.text,
-    required this.backgroundColor,
-    required this.textColor,
-    required this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ),
-        ],
       ),
     );
   }

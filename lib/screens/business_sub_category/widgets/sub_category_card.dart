@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/config/business_category_config.dart';
+import '../../../core/utils/business_category_copy.dart';
 import '../../../models/models.dart';
 import '../../business_card/business_card.dart';
-import '../../../core/constants/business_sub_category_constants.dart';
 
 /// Card widget for displaying a sub-category with navigation functionality
 class SubCategoryCard extends StatelessWidget {
@@ -22,7 +22,11 @@ class SubCategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final bool isDisabled = subCategory.businessCount == 0;
-    final intro = 'Explore ${subCategory.name} businesses in ${town.name}';
+    final intro = BusinessCategoryCopy.exploreIntro(
+      subCategoryName: subCategory.name,
+      townName: town.name,
+      categoryKey: category.key,
+    );
 
     return OutlinedButton(
       onPressed: isDisabled ? null : () => _navigateToBusinessCardPage(context),
@@ -79,9 +83,10 @@ class SubCategoryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subCategory.businessCount == 0
-                      ? BusinessSubCategoryConstants.noBusinessesYet
-                      : '${subCategory.businessCount} ${BusinessSubCategoryConstants.businessesLabel}',
+                  BusinessCategoryCopy.subCategoryCountLine(
+                    subCategory.businessCount,
+                    category.key,
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,

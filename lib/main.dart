@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'core/core.dart';
 import 'core/config/http_overrides.dart';
@@ -34,6 +35,26 @@ class TownTrekApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       home: const LandingPage(),
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final surface = theme.colorScheme.surface;
+        final overlayStyle = isDark
+            ? SystemUiOverlayStyle.light.copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: surface,
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: surface,
+                systemNavigationBarIconBrightness: Brightness.dark,
+              );
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlayStyle,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
-import '../../../core/utils/business_utils.dart';
+import '../../../core/utils/operating_hours_open_calc.dart';
 import '../../../core/widgets/open_closed_status_banner.dart';
 
 class BusinessStatusIndicator extends StatelessWidget {
@@ -13,18 +13,17 @@ class BusinessStatusIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCurrentlyOpen = business.isOpenNow ?? BusinessUtils.isBusinessCurrentlyOpen(business.operatingHours);
-    final openNowText = business.openNowText;
-    final closingText = BusinessUtils.getClosingTime(business.operatingHours);
-    final subtitle = (isCurrentlyOpen && (openNowText?.isNotEmpty ?? false))
-        ? openNowText
-        : (isCurrentlyOpen && closingText.isNotEmpty ? closingText : null);
+    final isCurrentlyOpen = business.isOpenNow ??
+        OperatingHoursOpenCalc.businessIsOpenNow(
+          business.operatingHours,
+          business.specialOperatingHours,
+        );
 
     return OpenClosedStatusBanner(
       isOpen: isCurrentlyOpen,
       openText: 'Open Now',
       closedText: 'Closed',
-      subtitle: subtitle,
+      subtitle: null,
     );
   }
 }

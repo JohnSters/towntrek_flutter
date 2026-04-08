@@ -1,4 +1,5 @@
 import '../../models/models.dart';
+import '../../core/core.dart';
 
 /// Sealed class for Business Sub-Category page states
 sealed class BusinessSubCategoryState {}
@@ -34,7 +35,7 @@ class BusinessSubCategorySuccess extends BusinessSubCategoryState {
 
 /// Error state for Business Sub-Category page
 class BusinessSubCategoryError extends BusinessSubCategoryState {
-  final String message;
+  final AppError error;
 
-  BusinessSubCategoryError(this.message);
+  BusinessSubCategoryError(this.error);
 }

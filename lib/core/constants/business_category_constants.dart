@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Constants for Business Category page layout, spacing, and strings
 class BusinessCategoryConstants {
   // Header heights
@@ -27,7 +29,39 @@ class BusinessCategoryConstants {
   static const double actionButtonHeight = 100.0;
   static const double actionButtonPadding = 12.0;
   static const double actionButtonIconSize = 40.0;
-  static const double connectedButtonHeight = 64.0; // Height for connected buttons that fill width
+  /// Strip under category headers (Wrong Town / Events).
+  static const double connectedButtonHeight = 46.0;
+  static const double connectedButtonHorizontalPadding = 10.0;
+  static const double connectedButtonVerticalPadding = 7.0;
+  static const double connectedButtonIconSize = 19.0;
+
+  /// Shared compact [FilledButton] style for the Wrong Town / Events row.
+  static ButtonStyle connectedHeaderButtonStyle(
+    ThemeData theme, {
+    Color? backgroundColor,
+    Color? foregroundColor,
+    double elevation = 0,
+    Color? shadowColor,
+    OutlinedBorder? shape,
+  }) {
+    return FilledButton.styleFrom(
+      minimumSize: Size(0, connectedButtonHeight),
+      maximumSize: Size(double.infinity, connectedButtonHeight),
+      padding: EdgeInsets.symmetric(
+        horizontal: connectedButtonHorizontalPadding,
+        vertical: connectedButtonVerticalPadding,
+      ),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      iconSize: connectedButtonIconSize,
+      textStyle: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+      backgroundColor: backgroundColor,
+      foregroundColor: foregroundColor,
+      elevation: elevation,
+      shadowColor: shadowColor,
+      shape: shape ?? const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+    );
+  }
 
   // Card styling
   static const double cardElevation = 0.0;
@@ -44,13 +78,8 @@ class BusinessCategoryConstants {
 
   // Animation durations
   static const Duration uiSettleDelay = Duration(milliseconds: 100);
-  static const Duration pulseAnimationDuration = Duration(seconds: 2);
 
   // Animation values
-  static const double pulseScaleBegin = 1.0;
-  static const double pulseScaleEnd = 1.05;
-  static const double pulseFadeBegin = 0.5;
-  static const double pulseFadeEnd = 1.0;
   static const double disabledOpacity = 0.6;
   static const double disabledAlpha = 0.5;
   static const double lowAlpha = 0.3;

@@ -7,11 +7,21 @@ class LandingPageSuccess extends LandingPageState {
   final int businessCount;
   final int serviceCount;
   final int eventCount;
+  final int creativeSpaceCount;
+  final int propertyListingCount;
+  final int equipmentRentalBusinessCount;
+  final String? infoBannerMessage;
+  final String? issueBannerMessage;
 
   LandingPageSuccess({
     required this.businessCount,
     required this.serviceCount,
     required this.eventCount,
+    required this.creativeSpaceCount,
+    required this.propertyListingCount,
+    required this.equipmentRentalBusinessCount,
+    this.infoBannerMessage,
+    this.issueBannerMessage,
   });
 }
 

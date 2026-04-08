@@ -1,16 +1,21 @@
 import 'package:flutter/foundation.dart';
 import '../../models/models.dart';
+import '../../core/core.dart';
 import 'business_sub_category_state.dart';
 
 /// ViewModel for Business Sub-Category page
 /// Handles sorting logic and state management for sub-categories display
 class BusinessSubCategoryViewModel extends ChangeNotifier {
   BusinessSubCategoryState _state;
+  CategoryWithCountDto _category;
+  TownDto _town;
 
   BusinessSubCategoryViewModel({
     required CategoryWithCountDto category,
     required TownDto town,
-  }) : _state = BusinessSubCategorySuccess(
+  })  : _category = category,
+       _town = town,
+       _state = BusinessSubCategorySuccess(
          category: category,
          town: town,
          sortedSubCategories: _sortSubCategories(category.subCategories),
@@ -18,6 +23,10 @@ class BusinessSubCategoryViewModel extends ChangeNotifier {
 
   /// Current state of the page
   BusinessSubCategoryState get state => _state;
+
+  CategoryWithCountDto get category => _category;
+
+  TownDto get town => _town;
 
   /// Sorts sub-categories with active ones (with businesses) first, then alphabetical
   static List<SubCategoryWithCountDto> _sortSubCategories(
@@ -41,11 +50,17 @@ class BusinessSubCategoryViewModel extends ChangeNotifier {
     CategoryWithCountDto? category,
     TownDto? town,
   }) {
-    if (_state is! BusinessSubCategorySuccess) return;
-
-    final currentState = _state as BusinessSubCategorySuccess;
+    final currentState = _state is BusinessSubCategorySuccess
+        ? _state as BusinessSubCategorySuccess
+        : BusinessSubCategorySuccess(
+            category: _category,
+            town: _town,
+            sortedSubCategories: _sortSubCategories(_category.subCategories),
+          );
     final newCategory = category ?? currentState.category;
     final newTown = town ?? currentState.town;
+    _category = newCategory;
+    _town = newTown;
 
     _state = BusinessSubCategorySuccess(
       category: newCategory,
@@ -62,16 +77,23 @@ class BusinessSubCategoryViewModel extends ChangeNotifier {
   }
 
   /// Sets error state with message
-  void setError(String message) {
-    _state = BusinessSubCategoryError(message);
+  void setError(AppError error) {
+    _state = BusinessSubCategoryError(error);
     notifyListeners();
   }
 
   /// Resets to success state (useful for retry operations)
   void resetToSuccess() {
-    if (_state is BusinessSubCategorySuccess) {
-      // If already in success state, just notify listeners to trigger rebuild
-      notifyListeners();
-    }
+    _state = BusinessSubCategorySuccess(
+      category: _category,
+      town: _town,
+      sortedSubCategories: _sortSubCategories(_category.subCategories),
+    );
+    notifyListeners();
+  }
+
+  /// Retry by restoring current category payload.
+  void retry() {
+    resetToSuccess();
   }
 }

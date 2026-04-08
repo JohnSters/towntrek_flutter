@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../core/core.dart';
+import '../../../core/utils/external_link_launcher.dart';
 import '../../../models/models.dart';
 
 class EventContactSection extends StatelessWidget {
@@ -10,71 +11,18 @@ class EventContactSection extends StatelessWidget {
     required this.event,
   });
 
-  Future<void> _launchExternal(BuildContext context, Uri uri) async {
-    try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not launch ${uri.toString()}')),
-        );
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid or unsupported link')),
-        );
-      }
-    }
-  }
-
-  String? _normalizeWebUrl(String? urlString) {
-    if (urlString == null) return null;
-    final trimmed = urlString.trim();
-    if (trimmed.isEmpty) return null;
-
-    // Already has a scheme (http/https)
-    final parsed = Uri.tryParse(trimmed);
-    if (parsed != null && parsed.hasScheme) return trimmed;
-
-    // Common user-entered formats (e.g. www.example.com)
-    return 'https://$trimmed';
-  }
-
   bool _looksLikeUrl(String value) {
     final v = value.trim().toLowerCase();
     if (v.startsWith('http://') || v.startsWith('https://')) return true;
     if (v.startsWith('www.')) return true;
-    // Very small heuristic: "domain.tld/..." or "domain.tld"
     return v.contains('.') && !v.contains(' ');
   }
 
   Future<void> _openWebsite(BuildContext context, String website) async {
-    final normalized = _normalizeWebUrl(website);
-    if (normalized == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Website link not available')),
-        );
-      }
-      return;
-    }
-    await _launchExternal(context, Uri.parse(normalized));
-  }
-
-  Future<void> _makeCall(BuildContext context, String phoneNumber) async {
-    final trimmed = phoneNumber.trim();
-    if (trimmed.isEmpty) return;
-    await _launchExternal(context, Uri.parse('tel:$trimmed'));
-  }
-
-  Future<void> _sendEmail(BuildContext context, String email) async {
-    final trimmed = email.trim();
-    if (trimmed.isEmpty) return;
-    await _launchExternal(context, Uri.parse('mailto:$trimmed'));
+    await ExternalLinkLauncher.openWebsite(context, website);
   }
 
   Future<void> _handleGetTickets(BuildContext context) async {
-    // Prefer ticketInfo if it looks like a URL; else fall back to website; else show ticketInfo text.
     final ticketInfo = event.ticketInfo?.trim();
     final website = event.website?.trim();
 
@@ -113,143 +61,98 @@ class EventContactSection extends StatelessWidget {
     }
   }
 
+  bool _hasValue(String? value) => value != null && value.trim().isNotEmpty;
+
+  bool _hasContactInfo() {
+    return event.organizerContact != null ||
+        _hasValue(event.phoneNumber) ||
+        _hasValue(event.emailAddress) ||
+        _hasValue(event.website) ||
+        event.requiresTickets;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Only show section if there is contact info
     if (!_hasContactInfo()) {
       return const SizedBox.shrink();
     }
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final qa = context.detailQuickActions;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.1),
-          ),
+    final actions = <Widget>[
+      if (_hasValue(event.phoneNumber))
+        DetailQuickActionButton(
+          tooltip: 'Call',
+          icon: Icons.call_rounded,
+          backgroundColor: qa.callBackground,
+          iconColor: qa.callIcon,
+          onPressed: () => ExternalLinkLauncher.callPhone(context, event.phoneNumber!),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Contact & Tickets',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              if (event.organizerContact != null)
-                 Padding(
-                   padding: const EdgeInsets.only(bottom: 12),
-                   child: Row(
-                    children: [
-                      Icon(Icons.person, size: 20, color: colorScheme.primary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          event.organizerContact!,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
-                   ),
-                 ),
+      if (_hasValue(event.emailAddress))
+        DetailQuickActionButton(
+          tooltip: 'Email',
+          icon: Icons.mail_rounded,
+          backgroundColor: qa.emailBackground,
+          iconColor: qa.emailIcon,
+          onPressed: () => ExternalLinkLauncher.sendEmail(context, event.emailAddress!),
+        ),
+      if (_hasValue(event.website))
+        DetailQuickActionButton(
+          tooltip: 'Website',
+          icon: Icons.language_rounded,
+          backgroundColor: qa.websiteBackground,
+          iconColor: qa.websiteIcon,
+          onPressed: () => _openWebsite(context, event.website!),
+        ),
+      if (event.requiresTickets)
+        DetailQuickActionButton(
+          tooltip: 'Get tickets',
+          icon: Icons.confirmation_number_rounded,
+          backgroundColor: qa.ticketsBackground,
+          iconColor: qa.ticketsIcon,
+          onPressed: () => _handleGetTickets(context),
+        ),
+    ];
 
-              if (event.phoneNumber != null)
-                _buildContactRow(
-                  context, 
-                  Icons.phone, 
-                  event.phoneNumber!, 
-                  () => _makeCall(context, event.phoneNumber!),
-                ),
-                
-              if (event.emailAddress != null)
-                _buildContactRow(
-                  context, 
-                  Icons.email, 
-                  event.emailAddress!, 
-                  () => _sendEmail(context, event.emailAddress!),
-                ),
-                
-              if (event.website != null)
-                _buildContactRow(
-                  context, 
-                  Icons.language, 
-                  'Visit Website', 
-                  () => _openWebsite(context, event.website!),
-                ),
-
-              if (event.requiresTickets) ...[
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => _handleGetTickets(context),
-                    icon: const Icon(Icons.confirmation_number),
-                    label: const Text('Get Tickets'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: DetailSectionShell(
+        expandTitle: true,
+        title: 'Contact & tickets',
+        icon: Icons.contact_mail_rounded,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (event.organizerContact != null && event.organizerContact!.trim().isNotEmpty) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.person_outline_rounded, size: 20, color: colorScheme.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      event.organizerContact!.trim(),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        height: 1.35,
+                        color: colorScheme.onSurface.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  bool _hasContactInfo() {
-    return event.organizerContact != null ||
-        event.phoneNumber != null ||
-        event.emailAddress != null ||
-        event.website != null ||
-        (event.ticketInfo?.trim().isNotEmpty ?? false) ||
-        event.requiresTickets;
-  }
-
-  Widget _buildContactRow(BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    final theme = Theme.of(context);
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: theme.colorScheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                    decorationColor: theme.colorScheme.primary.withValues(alpha: 0.5),
-                  ),
-                ),
+                ],
               ),
-              Icon(Icons.arrow_forward_ios, size: 14, color: theme.colorScheme.outlineVariant),
+              if (actions.isNotEmpty) const SizedBox(height: 12),
             ],
-          ),
+            if (actions.isNotEmpty)
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: actions,
+              ),
+          ],
         ),
       ),
     );
   }
 }
-

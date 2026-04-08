@@ -44,7 +44,7 @@ class ApiConfig {
   // iOS Simulator uses localhost
   // static const String _iosSimulatorUrl = 'https://localhost:7125';
   // Physical device needs your LAN IP
-  static const String _localNetworkUrl = 'https://192.168.1.104:7125';
+  static const String _localNetworkUrl = 'https://192.168.1.1:7125';
 
   // Dynamic base URL getter
   static String get baseUrl {
@@ -60,13 +60,9 @@ class ApiConfig {
       case AppEnvironment.production:
         return azureUrl;
       case AppEnvironment.localHost:
-        // NOTE:
-        // - Android Emulator: use 10.0.2.2
-        // - Physical device (USB): prefer adb reverse + localhost (resolved at runtime in initialize())
-        // - iOS Simulator: localhost
-        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-          return _androidEmulatorUrl;
-        }
+        // Default host for dev. `initialize()` sets `_runtimeBaseUrlOverride` when a probe succeeds
+        // (e.g. Android emulator → 10.0.2.2, LAN → 192.168.x.x), which is returned above.
+        // Physical Android: use `adb reverse tcp:7125 tcp:7125` so localhost reaches the PC.
         return _localhostUrl;
       case AppEnvironment.localNetwork:
         return _localNetworkUrl;
@@ -89,16 +85,16 @@ class ApiConfig {
 
     final candidates = <String>[];
 
-    // For Android physical devices, `adb reverse tcp:7125 tcp:7125` allows localhost to work.
-    // For iOS Simulator, localhost works directly.
+    // Physical Android with `adb reverse tcp:7125 tcp:7125` and iOS Simulator can use localhost.
     candidates.add(_localhostUrl);
 
-    // Android emulator host mapping.
+    // Android emulator: 10.0.2.2 forwards to the host loopback. Try before `_localNetworkUrl`
+    // so a stale hardcoded LAN IP does not delay or block picking the emulator host.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       candidates.add(_androidEmulatorUrl);
     }
 
-    // LAN fallback (requires API to bind to LAN interface and firewall to allow 7125).
+    // Physical device on same LAN (update `_localNetworkUrl` or pass `--dart-define=TT_API_BASE_URL=...`).
     candidates.add(_localNetworkUrl);
 
     final resolved = await _pickFirstReachableBaseUrl(candidates);
@@ -165,9 +161,11 @@ class ApiConfig {
   // Endpoints
   static const String businessesEndpoint = 'businesses';
   static const String servicesEndpoint = 'services';
+  static const String creativeSpacesEndpoint = 'creativespaces';
   static const String townsEndpoint = 'towns';
   static const String eventsEndpoint = 'events';
   static const String statsEndpoint = 'stats';
+  static const String propertiesEndpoint = 'properties';
 
   // Timeout configurations - reduced for development
   static const Duration connectTimeout = Duration(seconds: 10);
@@ -257,6 +255,48 @@ class ApiConfig {
     );
   }
 
+  /// Builds creative spaces endpoint URL
+  static String creativeSpacesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(creativeSpacesEndpoint, queryParams);
+  }
+
+  /// Builds creative spaces search endpoint URL
+  static String creativeSpacesSearchUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$creativeSpacesEndpoint/search', queryParams);
+  }
+
+  /// Builds creative space categories endpoint URL
+  static String creativeSpaceCategoriesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl('$creativeSpacesEndpoint/categories', queryParams);
+  }
+
+  /// Builds creative space categories with counts for town endpoint URL
+  static String creativeSpaceCategoriesWithCountsUrl(
+    int townId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$creativeSpacesEndpoint/categories/town/$townId', queryParams);
+  }
+
+  /// Builds specific creative space endpoint URL
+  static String creativeSpaceDetailUrl(
+    int creativeSpaceId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$creativeSpacesEndpoint/$creativeSpaceId', queryParams);
+  }
+
+  /// Builds creative space subcategories endpoint URL
+  static String creativeSpaceSubCategoriesUrl(
+    int categoryId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl(
+      '$creativeSpacesEndpoint/categories/$categoryId/subcategories',
+      queryParams,
+    );
+  }
+
   /// Builds services categories with counts for town endpoint URL
   static String serviceCategoriesWithCountsUrl(
     int townId, [
@@ -327,6 +367,19 @@ class ApiConfig {
   /// Builds stats summary endpoint URL (used by the mobile landing page)
   static String statsSummaryUrl([Map<String, dynamic>? queryParams]) {
     return buildUrl('$statsEndpoint/summary', queryParams);
+  }
+
+  /// Builds public properties list endpoint URL
+  static String propertiesUrl([Map<String, dynamic>? queryParams]) {
+    return buildUrl(propertiesEndpoint, queryParams);
+  }
+
+  /// Builds public property listing detail URL
+  static String propertyDetailUrl(
+    int propertyListingId, [
+    Map<String, dynamic>? queryParams,
+  ]) {
+    return buildUrl('$propertiesEndpoint/$propertyListingId', queryParams);
   }
 
   /// Get the appropriate base URL for the current environment

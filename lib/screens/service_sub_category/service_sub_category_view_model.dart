@@ -1,17 +1,24 @@
 import 'package:flutter/foundation.dart';
 import '../../models/models.dart';
+import '../../core/core.dart';
 import 'service_sub_category_state.dart';
 
 /// ViewModel for Service Sub-Category page
 /// Handles sorting logic and state management for sub-categories display
 class ServiceSubCategoryViewModel extends ChangeNotifier {
   ServiceSubCategoryState _state;
+  ServiceCategoryDto _category;
+  TownDto _town;
+  bool _countsAvailable;
 
   ServiceSubCategoryViewModel({
     required ServiceCategoryDto category,
     required TownDto town,
     required bool countsAvailable,
-  }) : _state = ServiceSubCategorySuccess(
+  })  : _category = category,
+       _town = town,
+       _countsAvailable = countsAvailable,
+       _state = ServiceSubCategorySuccess(
          category: category,
          town: town,
          countsAvailable: countsAvailable,
@@ -20,6 +27,10 @@ class ServiceSubCategoryViewModel extends ChangeNotifier {
 
   /// Current state of the page
   ServiceSubCategoryState get state => _state;
+
+  ServiceCategoryDto get category => _category;
+
+  TownDto get town => _town;
 
   /// Sorts sub-categories with active ones (with services) first, then alphabetical
   static List<ServiceSubCategoryDto> _sortSubCategories(
@@ -56,6 +67,9 @@ class ServiceSubCategoryViewModel extends ChangeNotifier {
     final newCategory = category ?? currentState.category;
     final newTown = town ?? currentState.town;
     final newCountsAvailable = countsAvailable ?? currentState.countsAvailable;
+    _category = newCategory;
+    _town = newTown;
+    _countsAvailable = newCountsAvailable;
 
     _state = ServiceSubCategorySuccess(
       category: newCategory,
@@ -73,16 +87,24 @@ class ServiceSubCategoryViewModel extends ChangeNotifier {
   }
 
   /// Sets error state with message
-  void setError(String message) {
-    _state = ServiceSubCategoryError(message);
+  void setError(AppError error) {
+    _state = ServiceSubCategoryError(error);
     notifyListeners();
   }
 
   /// Resets to success state (useful for retry operations)
   void resetToSuccess() {
-    if (_state is ServiceSubCategorySuccess) {
-      // If already in success state, just notify listeners to trigger rebuild
-      notifyListeners();
-    }
+    _state = ServiceSubCategorySuccess(
+      category: _category,
+      town: _town,
+      countsAvailable: _countsAvailable,
+      sortedSubCategories: _sortSubCategories(_category.subCategories, _countsAvailable),
+    );
+    notifyListeners();
+  }
+
+  /// Retry operation by restoring the current category payload.
+  void retry() {
+    resetToSuccess();
   }
 }

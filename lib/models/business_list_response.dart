@@ -1,5 +1,12 @@
 import 'business_dto.dart';
 
+int? _readInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.round();
+  return null;
+}
+
 /// Response model for paginated business listings
 class BusinessListResponse {
   final List<BusinessDto> businesses;
@@ -22,16 +29,18 @@ class BusinessListResponse {
 
   /// Creates a BusinessListResponse from JSON
   factory BusinessListResponse.fromJson(Map<String, dynamic> json) {
+    final rawList = json['businesses'] ?? json['Businesses'];
+    final list = rawList is List<dynamic> ? rawList : const <dynamic>[];
     return BusinessListResponse(
-      businesses: (json['businesses'] as List<dynamic>)
+      businesses: list
           .map((e) => BusinessDto.fromJson(e as Map<String, dynamic>))
           .toList(),
-      totalCount: json['totalCount'] as int,
-      page: json['page'] as int,
-      pageSize: json['pageSize'] as int,
-      totalPages: json['totalPages'] as int,
-      hasNextPage: json['hasNextPage'] as bool? ?? false,
-      hasPreviousPage: json['hasPreviousPage'] as bool? ?? false,
+      totalCount: _readInt(json['totalCount'] ?? json['TotalCount']) ?? 0,
+      page: _readInt(json['page'] ?? json['Page']) ?? 1,
+      pageSize: _readInt(json['pageSize'] ?? json['PageSize']) ?? 0,
+      totalPages: _readInt(json['totalPages'] ?? json['TotalPages']) ?? 0,
+      hasNextPage: (json['hasNextPage'] ?? json['HasNextPage']) as bool? ?? false,
+      hasPreviousPage: (json['hasPreviousPage'] ?? json['HasPreviousPage']) as bool? ?? false,
     );
   }
 

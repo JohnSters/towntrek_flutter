@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/widgets/page_header.dart';
+import '../../../core/core.dart';
 import '../../../models/models.dart';
-import '../../../core/constants/service_list_constants.dart';
 
-/// Loading view for service list page
+/// Loading layout with listing hero + results band (for reuse if needed).
 class ServiceListLoadingView extends StatelessWidget {
   final ServiceCategoryDto category;
   final ServiceSubCategoryDto subCategory;
@@ -18,13 +17,20 @@ class ServiceListLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final listingTheme = context.entityListingTheme;
     return Column(
       children: [
-        PageHeader(
-          title: subCategory.name,
-          subtitle: '${category.name} in ${town.name}',
-          height: ServiceListConstants.pageHeaderHeight,
-          headerType: HeaderType.service,
+        EntityListingHeroHeader(
+          theme: listingTheme,
+          categoryIcon: Icons.handyman_rounded,
+          subCategoryName: subCategory.name,
+          categoryName: category.name,
+          townName: town.name,
+        ),
+        ListingResultsBand(
+          count: subCategory.serviceCount,
+          categoryName: subCategory.name,
+          bandColor: listingTheme.resultsBand,
         ),
         const Expanded(
           child: Center(

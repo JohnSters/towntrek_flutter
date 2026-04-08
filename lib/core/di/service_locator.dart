@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+
 import '../../repositories/repositories.dart';
 import '../../services/services.dart';
 import '../network/api_client.dart';
@@ -17,8 +21,12 @@ class ServiceLocator {
   late final BusinessApiService _businessApiService;
   late final TownApiService _townApiService;
   late final EventApiService _eventApiService;
+  late final CreativeSpaceApiService _creativeSpaceApiService;
   late final ServiceApiService _serviceApiService;
   late final StatsApiService _statsApiService;
+  late final PropertyApiService _propertyApiService;
+  late final ConfigService _configService;
+  late final DiscoveryApiService _discoveryApiService;
   late final GeolocationService _geolocationService;
   late final NavigationService _navigationService;
   late final ErrorHandler _errorHandler;
@@ -27,8 +35,10 @@ class ServiceLocator {
   late final BusinessRepository _businessRepository;
   late final TownRepository _townRepository;
   late final EventRepository _eventRepository;
+  late final CreativeSpaceRepository _creativeSpaceRepository;
   late final ServiceRepository _serviceRepository;
   late final StatsRepository _statsRepository;
+  late final PropertyRepository _propertyRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -42,8 +52,12 @@ class ServiceLocator {
     _businessApiService = BusinessApiService(_apiClient);
     _townApiService = TownApiService(_apiClient);
     _eventApiService = EventApiService(_apiClient);
+    _creativeSpaceApiService = CreativeSpaceApiService(_apiClient);
     _serviceApiService = ServiceApiService(_apiClient);
     _statsApiService = StatsApiService(_apiClient);
+    _propertyApiService = PropertyApiService(_apiClient);
+    _configService = ConfigService(_apiClient);
+    _discoveryApiService = DiscoveryApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _navigationService = NavigationServiceImpl();
 
@@ -51,10 +65,23 @@ class ServiceLocator {
     _businessRepository = BusinessRepositoryImpl(_businessApiService);
     _townRepository = TownRepositoryImpl(_townApiService);
     _eventRepository = EventRepositoryImpl(_eventApiService);
+    _creativeSpaceRepository = CreativeSpaceRepositoryImpl(_creativeSpaceApiService);
     _serviceRepository = ServiceRepositoryImpl(_serviceApiService);
     _statsRepository = StatsRepositoryImpl(_statsApiService);
+    _propertyRepository = PropertyRepositoryImpl(_propertyApiService);
 
     _isInitialized = true;
+
+    unawaited(_primeMapboxToken());
+  }
+
+  Future<void> _primeMapboxToken() async {
+    try {
+      final token = await _configService.getMapboxAccessToken();
+      if (token != null && token.isNotEmpty) {
+        MapboxOptions.setAccessToken(token);
+      }
+    } catch (_) {}
   }
 
   bool get isInitialized => _isInitialized;
@@ -78,6 +105,12 @@ class ServiceLocator {
   TownApiService get townApiService {
     _ensureInitialized();
     return _townApiService;
+  }
+
+  /// Get the creative space API service
+  CreativeSpaceApiService get creativeSpaceApiService {
+    _ensureInitialized();
+    return _creativeSpaceApiService;
   }
 
   /// Get the service API service
@@ -104,6 +137,12 @@ class ServiceLocator {
     return _eventRepository;
   }
 
+  /// Get the creative space repository
+  CreativeSpaceRepository get creativeSpaceRepository {
+    _ensureInitialized();
+    return _creativeSpaceRepository;
+  }
+
   /// Get the service repository
   ServiceRepository get serviceRepository {
     _ensureInitialized();
@@ -114,6 +153,22 @@ class ServiceLocator {
   StatsRepository get statsRepository {
     _ensureInitialized();
     return _statsRepository;
+  }
+
+  /// Get the property repository
+  PropertyRepository get propertyRepository {
+    _ensureInitialized();
+    return _propertyRepository;
+  }
+
+  ConfigService get configService {
+    _ensureInitialized();
+    return _configService;
+  }
+
+  DiscoveryApiService get discoveryApiService {
+    _ensureInitialized();
+    return _discoveryApiService;
   }
 
   /// Get the geolocation service

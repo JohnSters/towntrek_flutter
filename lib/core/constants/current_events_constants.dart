@@ -91,6 +91,7 @@ class CurrentEventsConstants {
   static const String tryAgainButtonText = 'Try Again';
   static const String refreshErrorTitle = 'Connection Error';
   static const String refreshErrorMessage = 'Failed to load events. Please check your connection and try again.';
+  static const String emptySearchTitle = 'No matching events';
   static const String emptyStateTitle = 'No events happening right now';
   static const String emptyStateMessage = 'Check back later for upcoming events in';
   static const String featuredBadgeText = 'Featured';

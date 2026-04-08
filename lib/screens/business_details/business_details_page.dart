@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
-import '../../core/utils/business_utils.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import 'business_details_state.dart';
 import 'business_details_view_model.dart';
+import 'widgets/equipment_hire_rates_section.dart';
 
 class BusinessDetailsPage extends StatelessWidget {
   final int businessId;
@@ -37,30 +37,44 @@ class BusinessDetailsPage extends StatelessWidget {
 class _BusinessDetailsPageContent extends StatelessWidget {
   const _BusinessDetailsPageContent();
 
+  Widget _detailHero(
+    BuildContext context,
+    BusinessDetailsState state,
+    BusinessDetailsViewModel viewModel,
+  ) {
+    final title = state is BusinessDetailsSuccess
+        ? state.business.name
+        : viewModel.businessName;
+    final categoryLine =
+        state is BusinessDetailsSuccess ? state.business.category : 'Business';
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.storefront_outlined,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: 'Details',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessDetailsViewModel>();
     final state = viewModel.state;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: context.entityListing.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(
-              title: state is BusinessDetailsSuccess
-                  ? state.business.name
-                  : viewModel.businessName,
-              subtitle: 'Business Details',
-              height: 112.0,
-              headerType: HeaderType.business,
-            ),
-            if (state is BusinessDetailsSuccess)
-              _TopStatusBar(business: state.business),
+            _detailHero(context, state, viewModel),
+            if (state is BusinessDetailsSuccess) ...[
+              _BusinessOpenClosedBanner(business: state.business),
+              _BusinessSpecialClosedHint(business: state.business),
+            ],
             Expanded(
               child: _buildContent(context, state, viewModel),
             ),
-            if (state is BusinessDetailsSuccess) const BackNavigationFooter(),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
@@ -130,6 +144,7 @@ class _BusinessDetailsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final qa = context.detailQuickActions;
 
     final availableServices = business.services
         .where((service) => service.isAvailable)
@@ -175,7 +190,7 @@ class _BusinessDetailsBody extends StatelessWidget {
         ),
         if (business.images.isNotEmpty) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Gallery',
             icon: Icons.photo_library_outlined,
             child: SizedBox(
@@ -185,63 +200,89 @@ class _BusinessDetailsBody extends StatelessWidget {
                 itemCount: business.images.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
-                  return _GalleryTile(image: business.images[index]);
+                  final allUrls = business.images
+                      .map((img) => UrlUtils.resolveImageUrl(img.url))
+                      .toList();
+                  return _GalleryTile(
+                    image: business.images[index],
+                    allImageUrls: allUrls,
+                    index: index,
+                  );
                 },
               ),
             ),
           ),
         ],
         const SizedBox(height: 12),
-        _SectionShell(
+        DetailSectionShell(
           title: 'Operating Hours',
           icon: Icons.schedule,
-          child: _HoursGrid(operatingHours: business.operatingHours),
+          child: DetailHoursGrid(
+            rows: detailHoursFromBusiness(business.operatingHours),
+          ),
         ),
+        if (business.category.toLowerCase() ==
+            TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase()) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Hire rates',
+            icon: Icons.construction_rounded,
+            child: EquipmentHireRatesSection(business: business),
+          ),
+        ],
         const SizedBox(height: 12),
-        _SectionShell(
+        DetailSectionShell(
           title: 'Quick Actions',
           icon: Icons.bolt_rounded,
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
+              DetailQuickActionButton(
+                tooltip: DetailTownTrekWebAction.tooltip,
+                assetImagePath: DetailTownTrekWebAction.assetPath,
+                backgroundColor: qa.towntrekWebBackground,
+                iconColor: qa.websiteIcon,
+                onPressed: () =>
+                    viewModel.openFullBusinessDetails(context, business),
+              ),
               if (business.latitude != null && business.longitude != null)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Take Me There',
                   icon: Icons.directions_rounded,
-                  color: const Color(0xFFE0F2F1),
-                  iconColor: const Color(0xFF00695C),
+                  backgroundColor: qa.directionsBackground,
+                  iconColor: qa.directionsIcon,
                   onPressed: () => viewModel.navigateToBusiness(context, business),
                 ),
               if (business.phoneNumber != null)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Call',
                   icon: Icons.call_rounded,
-                  color: const Color(0xFFE8F5E9),
-                  iconColor: const Color(0xFF2E7D32),
+                  backgroundColor: qa.callBackground,
+                  iconColor: qa.callIcon,
                   onPressed: () => ExternalLinkLauncher.callPhone(context, business.phoneNumber!),
                 ),
               if (business.emailAddress != null)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Email',
                   icon: Icons.mail_rounded,
-                  color: const Color(0xFFE3F2FD),
-                  iconColor: const Color(0xFF1565C0),
+                  backgroundColor: qa.emailBackground,
+                  iconColor: qa.emailIcon,
                   onPressed: () => ExternalLinkLauncher.sendEmail(context, business.emailAddress!),
                 ),
               if (business.website != null)
-                _QuickActionIconButton(
+                DetailQuickActionButton(
                   tooltip: 'Website',
                   icon: Icons.language_rounded,
-                  color: const Color(0xFFF3E5F5),
-                  iconColor: const Color(0xFF6A1B9A),
+                  backgroundColor: qa.websiteBackground,
+                  iconColor: qa.websiteIcon,
                   onPressed: () => ExternalLinkLauncher.openWebsite(context, business.website!),
                 ),
-              _QuickActionIconButton(
+              DetailQuickActionButton(
                 tooltip: 'Rate Business',
                 icon: Icons.star_rounded,
-                color: const Color(0xFFFFF3E0),
-                iconColor: const Color(0xFFEF6C00),
+                backgroundColor: qa.rateBackground,
+                iconColor: qa.rateIcon,
                 onPressed: () => viewModel.rateBusiness(context, business),
               ),
             ],
@@ -249,7 +290,7 @@ class _BusinessDetailsBody extends StatelessWidget {
         ),
         if (business.facebook != null || business.instagram != null || business.whatsApp != null) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Social',
             icon: Icons.share_outlined,
             child: Wrap(
@@ -257,21 +298,27 @@ class _BusinessDetailsBody extends StatelessWidget {
               runSpacing: 10,
               children: [
                 if (business.facebook != null)
-                  _SocialIconButton(
+                  DetailSocialIconButton(
+                    tooltip: 'Facebook',
                     icon: FontAwesomeIcons.facebookF,
-                    color: const Color(0xFF1877F2),
+                    backgroundColor: qa.facebookBackground,
+                    iconColor: qa.facebookIcon,
                     onPressed: () => ExternalLinkLauncher.openRaw(context, business.facebook!),
                   ),
                 if (business.instagram != null)
-                  _SocialIconButton(
+                  DetailSocialIconButton(
+                    tooltip: 'Instagram',
                     icon: FontAwesomeIcons.instagram,
-                    color: const Color(0xFFC13584),
+                    backgroundColor: qa.instagramBackground,
+                    iconColor: qa.instagramIcon,
                     onPressed: () => ExternalLinkLauncher.openRaw(context, business.instagram!),
                   ),
                 if (business.whatsApp != null)
-                  _SocialIconButton(
+                  DetailSocialIconButton(
+                    tooltip: 'WhatsApp',
                     icon: FontAwesomeIcons.whatsapp,
-                    color: const Color(0xFF25D366),
+                    backgroundColor: qa.whatsappBackground,
+                    iconColor: qa.whatsappIcon,
                     onPressed: () => ExternalLinkLauncher.openRaw(context, business.whatsApp!),
                   ),
               ],
@@ -280,7 +327,7 @@ class _BusinessDetailsBody extends StatelessWidget {
         ],
         if (availableServices.isNotEmpty) ...[
           const SizedBox(height: 12),
-          _SectionShell(
+          DetailSectionShell(
             title: 'Services & Features',
             icon: Icons.grid_view_rounded,
             child: Wrap(
@@ -310,116 +357,78 @@ class _BusinessDetailsBody extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () => viewModel.openFullBusinessDetails(context, business),
-            icon: const Icon(Icons.open_in_new_rounded, size: 18),
-            label: const Text('View full details and reviews on web'),
-          ),
-        ),
       ],
     );
   }
 }
 
-class _SectionShell extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
+class _BusinessOpenClosedBanner extends StatelessWidget {
+  final BusinessDetailDto business;
 
-  const _SectionShell({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
+  const _BusinessOpenClosedBanner({required this.business});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.16),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 17, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
+    final openNow = business.isOpenNow ??
+        OperatingHoursOpenCalc.businessIsOpenNow(
+          business.operatingHours,
+          business.specialOperatingHours,
+        );
+
+    return EntityOpenClosedBanner(
+      isOpen: openNow,
+      viewCount: business.viewCount,
     );
   }
 }
 
-class _TopStatusBar extends StatelessWidget {
+/// Explains “Closed” when [specialOperatingHours] has a **closed** entry for today (SAST).
+class _BusinessSpecialClosedHint extends StatelessWidget {
   final BusinessDetailDto business;
 
-  const _TopStatusBar({required this.business});
+  const _BusinessSpecialClosedHint({required this.business});
+
+  static String _messageFor(SpecialOperatingHourDto s) {
+    final reason = s.reason?.trim();
+    if (reason != null && reason.isNotEmpty) {
+      return 'Closed today — special hours: $reason';
+    }
+    final notes = s.notes?.trim();
+    if (notes != null && notes.isNotEmpty) {
+      return 'Closed today — special hours: $notes';
+    }
+    return 'Closed today — special hours are in effect.';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final openNow =
-        business.isOpenNow ?? BusinessUtils.isBusinessCurrentlyOpen(business.operatingHours);
-    final bg = openNow ? const Color(0xFFE9F7EF) : const Color(0xFF3A3A3A);
-    final fg = openNow ? const Color(0xFF1D7A38) : Colors.white;
-    final secondary = business.openNowText?.trim().isNotEmpty == true
-        ? business.openNowText!
-        : (openNow ? BusinessUtils.getClosingTime(business.operatingHours) : 'Currently closed');
+    final special =
+        OperatingHoursOpenCalc.todaysClosedSpecialEntry(business.specialOperatingHours);
+    if (special == null) return const SizedBox.shrink();
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(
-          color: openNow ? const Color(0xFFBFE5CB) : const Color(0xFF4A4A4A),
-        ),
-      ),
-      child: Column(
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            openNow ? 'Open Now' : 'Closed',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: fg,
-                  fontWeight: FontWeight.w700,
-                ),
+          Icon(
+            Icons.event_busy_outlined,
+            size: 18,
+            color: colorScheme.tertiary,
           ),
-          if (secondary.isNotEmpty)
-            Text(
-              secondary,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: fg.withValues(alpha: 0.92),
-                    fontWeight: FontWeight.w600,
-                  ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _messageFor(special),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.86),
+                height: 1.35,
+              ),
             ),
+          ),
         ],
       ),
     );
@@ -428,227 +437,72 @@ class _TopStatusBar extends StatelessWidget {
 
 class _GalleryTile extends StatelessWidget {
   final BusinessImageDto image;
+  final List<String> allImageUrls;
+  final int index;
 
-  const _GalleryTile({required this.image});
+  const _GalleryTile({
+    required this.image,
+    required this.allImageUrls,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final resolvedUrl = UrlUtils.resolveImageUrl(image.url);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 158,
-        color: colorScheme.surfaceContainerHighest,
-        child: Image.network(
-          resolvedUrl,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              color: colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Loading image...',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
-              ),
-            );
-          },
-          errorBuilder: (context, _, _) {
-            return Container(
-              color: colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.broken_image_outlined,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _HoursGrid extends StatelessWidget {
-  final List<OperatingHourDto> operatingHours;
-
-  const _HoursGrid({required this.operatingHours});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    const orderedDays = <String>[
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    final today = orderedDays[DateTime.now().weekday - 1];
-
-    final normalized = operatingHours
-        .where((hour) => !hour.isSpecialHours)
-        .map(
-          (hour) => MapEntry(
-            BusinessUtils.formatDayOfWeek(hour.dayOfWeek),
-            hour,
-          ),
-        )
-        .toList();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final tileWidth = (constraints.maxWidth - 8) / 2;
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: orderedDays.map((day) {
-            final match = normalized
-                .where((entry) => entry.key == day)
-                .map((entry) => entry.value)
-                .cast<OperatingHourDto?>()
-                .firstWhere((_) => true, orElse: () => null);
-
-            final isOpen = match?.isOpen == true &&
-                match?.openTime != null &&
-                match?.closeTime != null;
-            final timeLabel = isOpen
-                ? '${BusinessUtils.formatTime(match!.openTime!)} - ${BusinessUtils.formatTime(match.closeTime!)}'
-                : 'Closed';
-
-            final isToday = day == today;
-
-            return SizedBox(
-              width: tileWidth,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isToday
-                      ? colorScheme.primary.withValues(alpha: 0.10)
-                      : colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isToday
-                        ? colorScheme.primary.withValues(alpha: 0.45)
-                        : colorScheme.outline.withValues(alpha: 0.16),
-                  ),
-                ),
-                child: Row(
+    return TappableImage(
+      imageUrls: allImageUrls,
+      initialIndex: index,
+      heroTag: 'business_gallery_$index',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 158,
+          color: colorScheme.surfaceContainerHighest,
+          child: Image.network(
+            resolvedUrl,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Text(
-                        day.substring(0, 3),
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: isToday ? colorScheme.primary : null,
-                            ),
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
                       ),
                     ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        timeLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading image...',
+                      style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-}
-
-class _QuickActionIconButton extends StatelessWidget {
-  final String tooltip;
-  final IconData icon;
-  final Color color;
-  final Color iconColor;
-  final VoidCallback onPressed;
-
-  const _QuickActionIconButton({
-    required this.tooltip,
-    required this.icon,
-    required this.color,
-    required this.iconColor,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: SizedBox(
-        width: 56,
-        height: 56,
-        child: IconButton(
-          onPressed: onPressed,
-          style: IconButton.styleFrom(
-            backgroundColor: color,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          icon: Icon(icon, size: 24, color: iconColor),
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialIconButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _SocialIconButton({
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 42,
-      height: 42,
-      child: IconButton(
-        onPressed: onPressed,
-        style: IconButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+              );
+            },
+            errorBuilder: (context, _, _) {
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              );
+            },
           ),
         ),
-        icon: FaIcon(icon, size: 18, color: Colors.white),
       ),
     );
   }
