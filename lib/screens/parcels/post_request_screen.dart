@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
@@ -35,6 +36,9 @@ class PostRequestViewModel extends ChangeNotifier {
 
   void setRequestType(ParcelRequestType value) {
     requestType = value;
+    if (value == ParcelRequestType.standardParcel) {
+      requiresPassengerSeat = false;
+    }
     notifyListeners();
   }
 
@@ -50,6 +54,11 @@ class PostRequestViewModel extends ChangeNotifier {
 
   void setRequiresPassengerSeat(bool value) {
     requiresPassengerSeat = value;
+    notifyListeners();
+  }
+
+  void setRouteTravelDate(DateTime? value) {
+    routeTravelDate = value;
     notifyListeners();
   }
 
@@ -131,141 +140,316 @@ class _PostRequestBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<PostRequestViewModel>();
+    final listing = context.entityListing;
+    final isRoute = viewModel.requestType == ParcelRequestType.routeRequest;
+
     return Scaffold(
+      backgroundColor: listing.pageBg,
       appBar: AppBar(title: Text('Post in ${town.name}')),
       body: Form(
         key: viewModel.formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 28),
           children: [
-            DropdownButtonFormField<ParcelRequestType>(
-              initialValue: viewModel.requestType,
-              items: const [
-                DropdownMenuItem(
-                  value: ParcelRequestType.standardParcel,
-                  child: Text('Parcel request'),
-                ),
-                DropdownMenuItem(
-                  value: ParcelRequestType.routeRequest,
-                  child: Text('Route request'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  viewModel.setRequestType(value);
-                }
-              },
-              decoration: const InputDecoration(labelText: 'Card type'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: viewModel.pickupController,
-              decoration: InputDecoration(
-                labelText: viewModel.requestType == ParcelRequestType.routeRequest
-                    ? 'From'
-                    : 'Pickup neighbourhood',
-              ),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Please fill this in' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: viewModel.dropoffController,
-              decoration: InputDecoration(
-                labelText: viewModel.requestType == ParcelRequestType.routeRequest
-                    ? 'To'
-                    : 'Drop-off neighbourhood',
-              ),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Please fill this in' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: viewModel.fullPickupController,
-              decoration: const InputDecoration(labelText: 'Full pickup address'),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Please fill this in' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: viewModel.fullDropoffController,
-              decoration: const InputDecoration(labelText: 'Full drop-off address'),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Please fill this in' : null,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<ParcelSize>(
-              initialValue: viewModel.parcelSize,
-              items: const [
-                DropdownMenuItem(value: ParcelSize.small, child: Text('Small')),
-                DropdownMenuItem(value: ParcelSize.medium, child: Text('Medium')),
-                DropdownMenuItem(value: ParcelSize.large, child: Text('Large')),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  viewModel.setParcelSize(value);
-                }
-              },
-              decoration: const InputDecoration(labelText: 'Size'),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<UrgencyLevel>(
-              initialValue: viewModel.urgencyLevel,
-              items: const [
-                DropdownMenuItem(value: UrgencyLevel.flexible, child: Text('Flexible')),
-                DropdownMenuItem(value: UrgencyLevel.today, child: Text('Today')),
-                DropdownMenuItem(value: UrgencyLevel.urgent, child: Text('Urgent')),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  viewModel.setUrgency(value);
-                }
-              },
-              decoration: const InputDecoration(labelText: 'Urgency'),
-            ),
-            const SizedBox(height: 12),
-            if (viewModel.requestType == ParcelRequestType.routeRequest) ...[
-              TextFormField(
-                controller: viewModel.routeSummaryController,
-                decoration: const InputDecoration(
-                  labelText: 'Route summary',
-                  hintText: 'Swellendam to Cape Town, space for one',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: viewModel.routeTravelNoteController,
-                decoration: const InputDecoration(
-                  labelText: 'Travel note',
-                  hintText: 'Leaving early next week',
-                ),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: viewModel.requiresPassengerSeat,
+            DetailSectionShell(
+              title: 'Request type',
+              icon: Icons.category_outlined,
+              child: DropdownButtonFormField<ParcelRequestType>(
+                initialValue: viewModel.requestType,
+                items: const [
+                  DropdownMenuItem(
+                    value: ParcelRequestType.standardParcel,
+                    child: Text('Parcel request'),
+                  ),
+                  DropdownMenuItem(
+                    value: ParcelRequestType.routeRequest,
+                    child: Text('Route request'),
+                  ),
+                ],
                 onChanged: (value) {
-                  viewModel.setRequiresPassengerSeat(value);
+                  if (value != null) {
+                    viewModel.setRequestType(value);
+                  }
                 },
-                title: const Text('Needs passenger seat'),
+                decoration: const InputDecoration(
+                  labelText: 'What are you posting?',
+                ),
+              ),
+            ),
+            if (isRoute) ...[
+              const SizedBox(height: 12),
+              DetailSectionShell(
+                title: 'Route & ride',
+                icon: Icons.alt_route_rounded,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Describe the lift you need so drivers can see it on the board. '
+                      'Pickup and exact addresses come in the next section.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: listing.bodyText,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: viewModel.routeSummaryController,
+                      decoration: const InputDecoration(
+                        labelText: 'Route summary',
+                        hintText: 'e.g. Swellendam to Barrydale, one seat',
+                      ),
+                      maxLength: 200,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please add a short route summary';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _RouteTravelDateRow(viewModel: viewModel),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: viewModel.routeTravelNoteController,
+                      decoration: const InputDecoration(
+                        labelText: 'Travel / timing note',
+                        hintText: 'e.g. Leaving Tuesday morning',
+                      ),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: viewModel.requiresPassengerSeat,
+                      onChanged: viewModel.setRequiresPassengerSeat,
+                      title: const Text('Needs a passenger seat'),
+                    ),
+                  ],
+                ),
               ),
             ],
-            TextFormField(
-              controller: viewModel.noteController,
-              decoration: const InputDecoration(labelText: 'Note'),
-              maxLines: 3,
+            const SizedBox(height: 12),
+            DetailSectionShell(
+              title: isRoute ? 'Pickup & drop-off' : 'Places',
+              icon: Icons.place_outlined,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (isRoute)
+                    Text(
+                      'Public labels appear on the board; full addresses are shared only '
+                      'with the member who takes your request.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: listing.bodyText,
+                        height: 1.4,
+                      ),
+                    ),
+                  if (isRoute) const SizedBox(height: 12),
+                  TextFormField(
+                    controller: viewModel.pickupController,
+                    decoration: InputDecoration(
+                      labelText: isRoute
+                          ? 'From (area or landmark)'
+                          : 'Pickup neighbourhood',
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Please fill this in'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: viewModel.dropoffController,
+                    decoration: InputDecoration(
+                      labelText: isRoute
+                          ? 'To (area or landmark)'
+                          : 'Drop-off neighbourhood',
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Please fill this in'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: viewModel.fullPickupController,
+                    decoration: InputDecoration(
+                      labelText: isRoute
+                          ? 'Full address at pickup / start'
+                          : 'Full pickup address',
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Please fill this in'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: viewModel.fullDropoffController,
+                    decoration: InputDecoration(
+                      labelText: isRoute
+                          ? 'Full address at drop-off / end'
+                          : 'Full drop-off address',
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Please fill this in'
+                        : null,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: viewModel.thankYouController,
-              decoration: const InputDecoration(labelText: 'Thank-you offer'),
-            ),
+            if (!isRoute)
+              DetailSectionShell(
+                title: 'Parcel details',
+                icon: Icons.inventory_2_outlined,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    DropdownButtonFormField<ParcelSize>(
+                      initialValue: viewModel.parcelSize,
+                      items: const [
+                        DropdownMenuItem(
+                          value: ParcelSize.small,
+                          child: Text('Small'),
+                        ),
+                        DropdownMenuItem(
+                          value: ParcelSize.medium,
+                          child: Text('Medium'),
+                        ),
+                        DropdownMenuItem(
+                          value: ParcelSize.large,
+                          child: Text('Large'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          viewModel.setParcelSize(value);
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Parcel size',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<UrgencyLevel>(
+                      initialValue: viewModel.urgencyLevel,
+                      items: const [
+                        DropdownMenuItem(
+                          value: UrgencyLevel.flexible,
+                          child: Text('Flexible'),
+                        ),
+                        DropdownMenuItem(
+                          value: UrgencyLevel.today,
+                          child: Text('Today'),
+                        ),
+                        DropdownMenuItem(
+                          value: UrgencyLevel.urgent,
+                          child: Text('Urgent'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          viewModel.setUrgency(value);
+                        }
+                      },
+                      decoration: const InputDecoration(labelText: 'Urgency'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: viewModel.noteController,
+                      decoration: const InputDecoration(labelText: 'Note'),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: viewModel.thankYouController,
+                      decoration: const InputDecoration(
+                        labelText: 'Thank-you offer',
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              DetailSectionShell(
+                title: 'Trip logistics',
+                icon: Icons.tune_rounded,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    DropdownButtonFormField<ParcelSize>(
+                      initialValue: viewModel.parcelSize,
+                      items: const [
+                        DropdownMenuItem(
+                          value: ParcelSize.small,
+                          child: Text('Small'),
+                        ),
+                        DropdownMenuItem(
+                          value: ParcelSize.medium,
+                          child: Text('Medium'),
+                        ),
+                        DropdownMenuItem(
+                          value: ParcelSize.large,
+                          child: Text('Large'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          viewModel.setParcelSize(value);
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Space / load size',
+                        helperText: 'Approximate luggage or cargo volume',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<UrgencyLevel>(
+                      initialValue: viewModel.urgencyLevel,
+                      items: const [
+                        DropdownMenuItem(
+                          value: UrgencyLevel.flexible,
+                          child: Text('Flexible'),
+                        ),
+                        DropdownMenuItem(
+                          value: UrgencyLevel.today,
+                          child: Text('Today'),
+                        ),
+                        DropdownMenuItem(
+                          value: UrgencyLevel.urgent,
+                          child: Text('Urgent'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          viewModel.setUrgency(value);
+                        }
+                      },
+                      decoration: const InputDecoration(labelText: 'Urgency'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: viewModel.thankYouController,
+                      decoration: const InputDecoration(
+                        labelText: 'Thank-you offer',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: viewModel.noteController,
+                      decoration: const InputDecoration(
+                        labelText: 'Other notes (optional)',
+                        hintText: 'Anything else helpers should know',
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 20),
             FilledButton(
               onPressed: viewModel.submitting
                   ? null
                   : () async {
-                      final ok =
-                          await serviceLocator.mobileSessionManager.ensureAuthenticated();
+                      final ok = await serviceLocator.mobileSessionManager
+                          .ensureAuthenticated();
                       if (!ok) {
                         if (context.mounted) {
                           await Navigator.of(context).push(
@@ -292,6 +476,57 @@ class _PostRequestBody extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RouteTravelDateRow extends StatelessWidget {
+  const _RouteTravelDateRow({required this.viewModel});
+
+  final PostRequestViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final summary = viewModel.routeTravelDate == null
+        ? 'No date selected'
+        : DateFormat.yMMMd().format(viewModel.routeTravelDate!.toLocal());
+
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Travel date (optional)',
+        border: OutlineInputBorder(),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(summary, style: theme.textTheme.bodyLarge)),
+          IconButton(
+            tooltip: 'Choose date',
+            icon: const Icon(Icons.calendar_today_outlined),
+            onPressed: () async {
+              final now = DateTime.now();
+              final today = DateTime(now.year, now.month, now.day);
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: viewModel.routeTravelDate ?? today,
+                firstDate: today,
+                lastDate: today.add(const Duration(days: 365 * 2)),
+              );
+              if (picked != null) {
+                viewModel.setRouteTravelDate(
+                  DateTime(picked.year, picked.month, picked.day),
+                );
+              }
+            },
+          ),
+          if (viewModel.routeTravelDate != null)
+            IconButton(
+              tooltip: 'Clear date',
+              icon: const Icon(Icons.clear),
+              onPressed: () => viewModel.setRouteTravelDate(null),
+            ),
+        ],
       ),
     );
   }

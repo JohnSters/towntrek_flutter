@@ -71,19 +71,13 @@ class ParcelBoardScaffold extends StatelessWidget {
         town: town,
         repository: serviceLocator.parcelRepository,
       ),
-      child: _ParcelBoardBody(
-        town: town,
-        authenticatedMode: authenticatedMode,
-      ),
+      child: _ParcelBoardBody(town: town, authenticatedMode: authenticatedMode),
     );
   }
 }
 
 class _ParcelBoardBody extends StatelessWidget {
-  const _ParcelBoardBody({
-    required this.town,
-    required this.authenticatedMode,
-  });
+  const _ParcelBoardBody({required this.town, required this.authenticatedMode});
 
   final TownDto town;
   final bool authenticatedMode;
@@ -91,7 +85,9 @@ class _ParcelBoardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ParcelBoardViewModel>();
+    final listing = context.entityListing;
     return Scaffold(
+      backgroundColor: listing.pageBg,
       appBar: AppBar(
         title: Text('${town.name} Parcels'),
         actions: authenticatedMode
@@ -130,37 +126,43 @@ class _ParcelBoardBody extends StatelessWidget {
             }
             if (viewModel.error != null) {
               return ListView(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(viewModel.error!),
+                  _ParcelBoardMessageCard(
+                    icon: Icons.error_outline_rounded,
+                    title: 'Couldn\'t load the board',
+                    body: viewModel.error!,
                   ),
                 ],
               );
             }
             if (viewModel.items.isEmpty) {
               return ListView(
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      'Nothing is open right now. Check back soon or post the first request.',
-                    ),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+                children: [
+                  _ParcelBoardMessageCard(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'No open requests',
+                    body:
+                        'Nothing is open right now. Check back soon or post the first request.',
                   ),
                 ],
               );
             }
 
             return ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 88),
               itemCount: viewModel.items.length,
               itemBuilder: (context, index) {
                 final parcel = viewModel.items[index];
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: ParcelCard(
                     parcel: parcel,
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                    ),
                     onTap: () async {
                       final changed = await Navigator.of(context).push<bool>(
                         MaterialPageRoute(
@@ -196,7 +198,9 @@ class _ParcelBoardBody extends StatelessWidget {
             await context.read<ParcelBoardViewModel>().load();
           }
         },
-        icon: Icon(authenticatedMode ? Icons.add_rounded : Icons.favorite_border),
+        icon: Icon(
+          authenticatedMode ? Icons.add_rounded : Icons.favorite_border,
+        ),
         label: Text(authenticatedMode ? 'Post request' : 'Join to post'),
       ),
     );
@@ -216,11 +220,73 @@ class _ParcelBoardBody extends StatelessWidget {
   }
 }
 
+class _ParcelBoardMessageCard extends StatelessWidget {
+  const _ParcelBoardMessageCard({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final listing = context.entityListing;
+    final theme = Theme.of(context);
+    final outline = theme.colorScheme.outline.withValues(alpha: 0.18);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+      decoration: BoxDecoration(
+        color: listing.cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: outline),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 44, color: listing.accent),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: listing.textTitle,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: listing.bodyText,
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 Future<void> showGuestParcelPrompt(BuildContext context) async {
+  final listing = context.entityListing;
   await showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
+    backgroundColor: listing.cardBg,
     builder: (sheetContext) {
+      final theme = Theme.of(sheetContext);
       return Padding(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
         child: Column(
@@ -229,13 +295,18 @@ Future<void> showGuestParcelPrompt(BuildContext context) async {
           children: [
             Text(
               'TownTrek members keep this community running.',
-              style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
+                color: listing.textTitle,
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'It\'s free, always will be, and takes about 2 minutes to join. If you already have an account, use your mobile access code.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: listing.bodyText,
+                height: 1.45,
+              ),
             ),
             const SizedBox(height: 20),
             FilledButton(

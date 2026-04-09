@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
@@ -167,6 +168,11 @@ class RequestDetailScreen extends StatelessWidget {
   }
 }
 
+String _formatParcelWhen(DateTime utc) {
+  final local = utc.toLocal();
+  return DateFormat('EEE, d MMM yyyy • HH:mm').format(local);
+}
+
 class _RequestDetailBody extends StatelessWidget {
   const _RequestDetailBody({required this.guestMode});
 
@@ -176,99 +182,148 @@ class _RequestDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.watch<RequestDetailViewModel>();
     final detail = viewModel.detail;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Parcel request')),
-      body: Builder(
-        builder: (context) {
-          if (viewModel.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (viewModel.error != null || detail == null) {
-            return Center(child: Text(viewModel.error ?? 'Unable to load request'));
-          }
+    final pageBg = context.entityListing.pageBg;
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              ParcelCard(parcel: detail),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    final d = detail;
+    final headerCategory = viewModel.loading
+        ? 'Loading'
+        : (viewModel.error != null || d == null
+              ? 'Unavailable'
+              : parcelStatusLabel(d.status));
+    final headerTown = d == null ? 'Request' : requestTypeLabel(d.requestType);
+
+    return Scaffold(
+      backgroundColor: pageBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            EntityListingHeroHeader(
+              theme: context.entityListingTheme,
+              categoryIcon: Icons.inventory_2_outlined,
+              subCategoryName: 'Parcel request',
+              categoryName: headerCategory,
+              townName: headerTown,
+            ),
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  if (viewModel.loading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (viewModel.error != null || detail == null) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                      child: Center(
+                        child: Text(
+                          viewModel.error ?? 'Unable to load request',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
+                    );
+                  }
+
+                  final timelineEntries = <({String title, String subtitle})>[
+                    (
+                      title: 'Posted',
+                      subtitle: _formatParcelWhen(detail.createdAt),
+                    ),
+                  ];
+                  final claim = detail.activeClaim;
+                  if (claim != null) {
+                    timelineEntries.add((
+                      title: 'Claimed',
+                      subtitle:
+                          '${claim.claimedByDisplayName} • ${_formatParcelWhen(claim.claimedAt)}',
+                    ));
+                    if (claim.pickedUpAt != null) {
+                      timelineEntries.add((
+                        title: 'Picked up',
+                        subtitle: _formatParcelWhen(claim.pickedUpAt!),
+                      ));
+                    }
+                    if (claim.deliveredAt != null) {
+                      timelineEntries.add((
+                        title: 'Delivered',
+                        subtitle: _formatParcelWhen(claim.deliveredAt!),
+                      ));
+                    }
+                    if (claim.confirmedAt != null) {
+                      timelineEntries.add((
+                        title: 'Confirmed',
+                        subtitle: _formatParcelWhen(claim.confirmedAt!),
+                      ));
+                    }
+                  }
+
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                     children: [
-                      Text(
-                        'Status timeline',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      ParcelCard(parcel: detail, dense: true),
+                      const SizedBox(height: 12),
+                      DetailSectionShell(
+                        title: 'Status timeline',
+                        icon: Icons.timeline_rounded,
+                        child: _ParcelTimeline(entries: timelineEntries),
+                      ),
+                      const SizedBox(height: 12),
+                      DetailSectionShell(
+                        title: 'Addresses',
+                        icon: Icons.place_outlined,
+                        child: Column(
+                          children: [
+                            _AddressBlock(
+                              icon: Icons.north_east_rounded,
+                              label: 'Pickup',
+                              value:
+                                  detail.fullPickupAddress ??
+                                  detail.pickupLocation,
+                              padBottom: true,
+                            ),
+                            _AddressBlock(
+                              icon: Icons.south_west_rounded,
+                              label: 'Drop-off',
+                              value:
+                                  detail.fullDropoffAddress ??
+                                  detail.dropoffLocation,
+                              padBottom: false,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (detail.cancelReason?.isNotEmpty == true) ...[
+                        const SizedBox(height: 12),
+                        DetailSectionShell(
+                          title: 'Cancellation',
+                          icon: Icons.info_outline_rounded,
+                          child: Text(
+                            detail.cancelReason!,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(height: 1.45),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      DetailSectionShell(
+                        title: 'Actions',
+                        icon: Icons.touch_app_outlined,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ..._buildActions(context, viewModel, detail),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _TimelineRow(
-                        label: 'Posted',
-                        value: detail.createdAt.toLocal().toString(),
-                      ),
-                      if (detail.activeClaim != null)
-                        _TimelineRow(
-                          label: 'Claimed',
-                          value:
-                              '${detail.activeClaim!.claimedByDisplayName} • ${detail.activeClaim!.claimedAt.toLocal()}',
-                        ),
-                      if (detail.activeClaim?.pickedUpAt != null)
-                        _TimelineRow(
-                          label: 'Picked up',
-                          value: detail.activeClaim!.pickedUpAt!.toLocal().toString(),
-                        ),
-                      if (detail.activeClaim?.deliveredAt != null)
-                        _TimelineRow(
-                          label: 'Delivered',
-                          value: detail.activeClaim!.deliveredAt!.toLocal().toString(),
-                        ),
-                      if (detail.activeClaim?.confirmedAt != null)
-                        _TimelineRow(
-                          label: 'Confirmed',
-                          value: detail.activeClaim!.confirmedAt!.toLocal().toString(),
-                        ),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Addresses',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text('Pickup: ${detail.fullPickupAddress ?? detail.pickupLocation}'),
-                      const SizedBox(height: 8),
-                      Text('Drop-off: ${detail.fullDropoffAddress ?? detail.dropoffLocation}'),
-                    ],
-                  ),
-                ),
-              ),
-              if (detail.cancelReason?.isNotEmpty == true) ...[
-                const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text('Cancel reason: ${detail.cancelReason}'),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              ..._buildActions(context, viewModel, detail),
-            ],
-          );
-        },
+            ),
+            const ListingBackFooter(label: 'Back'),
+          ],
+        ),
       ),
     );
   }
@@ -293,7 +348,8 @@ class _RequestDetailBody extends StatelessWidget {
     }
 
     Future<void> guardedAction(Future<bool> Function() action) async {
-      final ok = await serviceLocator.mobileSessionManager.ensureAuthenticated();
+      final ok = await serviceLocator.mobileSessionManager
+          .ensureAuthenticated();
       if (!ok) {
         if (context.mounted) {
           await Navigator.of(context).push(
@@ -310,9 +366,9 @@ class _RequestDetailBody extends StatelessWidget {
         }
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error.toString())),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(error.toString())));
         }
       }
     }
@@ -320,7 +376,9 @@ class _RequestDetailBody extends StatelessWidget {
     if (detail.canClaim) {
       actions.add(
         FilledButton(
-          onPressed: viewModel.actionLoading ? null : () => guardedAction(viewModel.claim),
+          onPressed: viewModel.actionLoading
+              ? null
+              : () => guardedAction(viewModel.claim),
           child: const Text("I'll do this"),
         ),
       );
@@ -389,14 +447,16 @@ class _RequestDetailBody extends StatelessWidget {
                   await viewModel.report(reason);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Thanks. We\'ll review it.')),
+                      const SnackBar(
+                        content: Text('Thanks. We\'ll review it.'),
+                      ),
                     );
                   }
                 } catch (error) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(error.toString())),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(error.toString())));
                   }
                 }
               },
@@ -424,9 +484,9 @@ class _RequestDetailBody extends StatelessWidget {
                     }
                   } catch (error) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error.toString())),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error.toString())));
                     }
                   }
                 },
@@ -436,29 +496,172 @@ class _RequestDetailBody extends StatelessWidget {
     }
 
     return [
-      for (final action in actions) ...[
-        action,
-        const SizedBox(height: 10),
+      for (var i = 0; i < actions.length; i++) ...[
+        if (i > 0) const SizedBox(height: 10),
+        actions[i],
       ],
     ];
   }
 }
 
-class _TimelineRow extends StatelessWidget {
-  const _TimelineRow({required this.label, required this.value});
+class _ParcelTimeline extends StatelessWidget {
+  const _ParcelTimeline({required this.entries});
 
-  final String label;
-  final String value;
+  final List<({String title, String subtitle})> entries;
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < entries.length; i++)
+          _TimelineStep(
+            isLast: i == entries.length - 1,
+            title: entries[i].title,
+            subtitle: entries[i].subtitle,
+          ),
+      ],
+    );
+  }
+}
+
+class _TimelineStep extends StatelessWidget {
+  const _TimelineStep({
+    required this.isLast,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final bool isLast;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final lineColor = colorScheme.outlineVariant.withValues(alpha: 0.55);
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 26,
+            child: Column(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  margin: const EdgeInsets.only(top: 3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.primary,
+                    border: Border.all(color: colorScheme.surface, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withValues(alpha: 0.35),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      decoration: BoxDecoration(
+                        color: lineColor,
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(left: 6, bottom: isLast ? 0 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddressBlock extends StatelessWidget {
+  const _AddressBlock({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.padBottom = true,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool padBottom;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: padBottom ? 14 : 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 92, child: Text(label)),
-          Expanded(child: Text(value)),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 22, color: colorScheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label.toUpperCase(),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: theme.textTheme.bodyLarge?.copyWith(height: 1.35),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -506,10 +709,8 @@ Future<int?> _askForRating(BuildContext context) async {
           isExpanded: true,
           items: List.generate(
             5,
-            (index) => DropdownMenuItem(
-              value: index + 1,
-              child: Text('${index + 1}'),
-            ),
+            (index) =>
+                DropdownMenuItem(value: index + 1, child: Text('${index + 1}')),
           ),
           onChanged: (value) {
             if (value != null) setState(() => selected = value);

@@ -50,41 +50,61 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final listing = context.entityListing;
     return Scaffold(
+      backgroundColor: listing.pageBg,
       appBar: AppBar(title: const Text('Enter Access Code')),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Use the mobile access code from your TownTrek profile.',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _codeController,
-                textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(
-                  labelText: 'Access code',
-                  hintText: 'TREK-7284-KXMP',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: listing.bodyText,
+                  height: 1.45,
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _deviceController,
-                decoration: const InputDecoration(labelText: 'Device name'),
+              const SizedBox(height: 16),
+              DetailSectionShell(
+                title: 'Sign in',
+                icon: Icons.key_rounded,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _codeController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'Access code',
+                        hintText: 'TREK-7284-KXMP',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _deviceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Device name',
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: _submitting ? null : _submit,
                 child: Text(_submitting ? 'Checking...' : 'Use this code'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Text(
                 'Need a code? Generate one in TownTrek on the web under My Devices.',
-                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: listing.footerHint,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
