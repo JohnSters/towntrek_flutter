@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/core.dart';
 import '../../core/progression/xp_level_math.dart';
 import '../../models/models.dart';
+import '../../theme/member_level_tier_style.dart';
+import 'level_badge.dart';
+
 /// Three tabs: tier ladder, achievement sets, paginated XP history.
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -117,102 +120,77 @@ class _ProgressScreenState extends State<ProgressScreen>
                     builder: (context, _) {
                       final sets =
                           session.memberProgression?.achievementSets ??
-                              const [];
+                          const [];
+                      final listing = context.entityListing;
                       if (sets.isEmpty) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(
-                              'Achievement progress will appear after your first XP awards.',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyLarge,
+                        return ListView(
+                          padding: const EdgeInsets.fromLTRB(14, 24, 14, 24),
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                28,
+                                20,
+                                28,
+                              ),
+                              decoration: BoxDecoration(
+                                color: listing.cardBg,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outline.withValues(alpha: 0.18),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.emoji_events_outlined,
+                                    size: 52,
+                                    color: listing.accent.withValues(
+                                      alpha: 0.9,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Achievement sets unlock as you earn XP.',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: listing.textTitle,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Complete deliveries, post requests, and '
+                                    'stay active — your first awards will '
+                                    'appear here.',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: listing.bodyText,
+                                          height: 1.45,
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
                         );
                       }
                       return ListView.builder(
                         padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
                         itemCount: sets.length,
                         itemBuilder: (context, i) {
-                          final s = sets[i];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          s.setName,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                              ),
-                                        ),
-                                      ),
-                                      if (s.isComplete)
-                                        Icon(
-                                          Icons.verified_rounded,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    '${s.unlockedCount} / ${s.totalCount} unlocked',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  ...s.achievements.map(
-                                    (a) => Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 6,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            a.unlocked
-                                                ? Icons.check_circle_outline
-                                                : Icons.radio_button_unchecked,
-                                            size: 18,
-                                            color: a.unlocked
-                                                ? Theme.of(
-                                                    context,
-                                                  ).colorScheme.primary
-                                                : Theme.of(
-                                                    context,
-                                                  ).colorScheme.outline,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              a.displayName,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium,
-                                            ),
-                                          ),
-                                          if (a.xpValue > 0)
-                                            Text(
-                                              '+${a.xpValue}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .labelMedium,
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          return _AchievementSetCard(
+                            set: sets[i],
+                            paletteIndex: i,
                           );
                         },
                       );
@@ -261,9 +239,9 @@ class _ProgressScreenState extends State<ProgressScreen>
                 ),
                 trailing: Text(
                   '+${item.amount}',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
               );
             },
@@ -298,6 +276,29 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 }
 
+String _tierXpRangeLabel(int level) {
+  final min = XpLevelMath.minXpForLevel(level);
+  if (level >= 12) {
+    return '$min+ XP total';
+  }
+  final nextMin = XpLevelMath.minXpForLevel(level + 1);
+  return '$min – ${nextMin - 1} XP';
+}
+
+double _tierLadderFill({
+  required int level,
+  required int currentLevel,
+  required int xpIntoLevel,
+  required int xpForNext,
+}) {
+  if (level < currentLevel) return 1;
+  if (level > currentLevel) return 0;
+  if (xpForNext <= 0) return 1;
+  final denom = xpIntoLevel + xpForNext;
+  if (denom <= 0) return 0;
+  return (xpIntoLevel / denom).clamp(0.0, 1.0);
+}
+
 class _TiersTab extends StatelessWidget {
   const _TiersTab({required this.progression});
 
@@ -307,41 +308,113 @@ class _TiersTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final listing = context.entityListing;
     final theme = Theme.of(context);
-    final current = progression?.currentLevel ?? 1;
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final currentLevel = progression?.currentLevel ?? 1;
     final totalXp = progression?.totalXp ?? 0;
+    final xpInto =
+        progression?.xpIntoLevel ??
+        XpLevelMath.xpIntoCurrentLevel(totalXp, currentLevel);
+    final xpForNext =
+        progression?.xpForNext ??
+        XpLevelMath.xpToNextLevel(totalXp, currentLevel);
+    final currentStyle = tierStyleForLevel(currentLevel);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
       children: [
         if (progression != null) ...[
-          Text(
-            '${progression!.currentLevelTitle} • $totalXp XP',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: listing.textTitle,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: currentStyle.ringColor.withValues(alpha: 0.5),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  currentStyle.accentColor.withValues(
+                    alpha: isDark ? 0.26 : 0.14,
+                  ),
+                  isDark
+                      ? colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.95,
+                        )
+                      : Colors.white.withValues(alpha: 0.55),
+                  listing.cardBg,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: currentStyle.accentColor.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LevelBadge(
+                  level: progression!.currentLevel,
+                  title: progression!.currentLevelTitle,
+                  full: true,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '$totalXp total XP',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: listing.textTitle,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                if (progression!.xpForNext > 0) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value:
+                          progression!.xpIntoLevel /
+                          (progression!.xpIntoLevel + progression!.xpForNext),
+                      minHeight: 8,
+                      color: currentStyle.accentColor,
+                      backgroundColor: currentStyle.accentColor.withValues(
+                        alpha: 0.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${progression!.xpIntoLevel} XP this tier · '
+                    '${progression!.xpForNext} XP to ${tierStyleForLevel(currentLevel + 1).title}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: listing.bodyText,
+                      height: 1.35,
+                    ),
+                  ),
+                ] else
+                  Text(
+                    'Max tier (${tierStyleForLevel(12).title}) — XP still counts '
+                    'toward seasonal standings.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: listing.bodyText,
+                      height: 1.35,
+                    ),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          if (progression!.xpForNext > 0)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: progression!.xpIntoLevel /
-                    (progression!.xpIntoLevel + progression!.xpForNext),
-                minHeight: 8,
-              ),
-            )
-          else
-            Text(
-              'Max tier reached — XP still counts toward seasonal standings.',
-              style: theme.textTheme.bodySmall?.copyWith(height: 1.35),
-            ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 22),
+        ] else ...[
           Text(
-            progression!.xpForNext > 0
-                ? '${progression!.xpIntoLevel} XP into this level • ${progression!.xpForNext} to next'
-                : 'Level 12',
-            style: theme.textTheme.bodySmall,
+            'Sign in with your access code to see your level, XP, and tier ladder.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: listing.bodyText,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 20),
         ],
@@ -349,47 +422,410 @@ class _TiersTab extends StatelessWidget {
           'All tiers',
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w800,
+            color: listing.textTitle,
           ),
         ),
         const SizedBox(height: 8),
+        const SizedBox(height: 12),
         for (var lv = 1; lv <= 12; lv++)
-          Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: lv == current
-                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.35)
-                  : listing.cardBg,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.12),
+          _TierLadderRow(
+            level: lv,
+            currentLevel: currentLevel,
+            xpIntoLevel: xpInto,
+            xpForNext: xpForNext,
+            listing: listing,
+            theme: theme,
+            colorScheme: colorScheme,
+          ),
+      ],
+    );
+  }
+}
+
+class _TierLevelCircle extends StatelessWidget {
+  const _TierLevelCircle({
+    required this.level,
+    required this.style,
+    required this.theme,
+    required this.dimmed,
+  });
+
+  final int level;
+  final TierStyle style;
+  final ThemeData theme;
+  final bool dimmed;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = theme.brightness == Brightness.dark;
+    final label = isDark ? style.labelColorDark : style.labelColorLight;
+    return Container(
+      width: 44,
+      height: 44,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: style.ringColor.withValues(alpha: dimmed ? 0.35 : 1),
+          width: 2,
+        ),
+        color: style.accentColor.withValues(alpha: dimmed ? 0.06 : 0.16),
+      ),
+      child: Text(
+        '$level',
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w900,
+          color: dimmed ? theme.colorScheme.onSurfaceVariant : label,
+        ),
+      ),
+    );
+  }
+}
+
+class _TierLadderRow extends StatelessWidget {
+  const _TierLadderRow({
+    required this.level,
+    required this.currentLevel,
+    required this.xpIntoLevel,
+    required this.xpForNext,
+    required this.listing,
+    required this.theme,
+    required this.colorScheme,
+  });
+
+  final int level;
+  final int currentLevel;
+  final int xpIntoLevel;
+  final int xpForNext;
+  final EntityListingThemeExtension listing;
+  final ThemeData theme;
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final rowStyle = tierStyleForLevel(level);
+    final isCurrent = level == currentLevel;
+    final isPast = level < currentLevel;
+    final isFuture = level > currentLevel;
+    final fill = _tierLadderFill(
+      level: level,
+      currentLevel: currentLevel,
+      xpIntoLevel: xpIntoLevel,
+      xpForNext: xpForNext,
+    );
+    final trackColor = isFuture
+        ? colorScheme.outlineVariant.withValues(alpha: 0.35)
+        : rowStyle.accentColor.withValues(alpha: 0.14);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: listing.cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isCurrent
+              ? rowStyle.ringColor.withValues(alpha: 0.65)
+              : colorScheme.outline.withValues(alpha: 0.14),
+          width: isCurrent ? 2 : 1,
+        ),
+        boxShadow: isCurrent
+            ? [
+                BoxShadow(
+                  color: rowStyle.accentColor.withValues(alpha: 0.18),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isCurrent) Container(width: 5, color: rowStyle.accentColor),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _TierLevelCircle(
+                            level: level,
+                            style: rowStyle,
+                            theme: theme,
+                            dimmed: isFuture,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        rowStyle.title,
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              color: listing.textTitle,
+                                            ),
+                                      ),
+                                    ),
+                                    if (isPast)
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        size: 22,
+                                        color: const Color(0xFF059669),
+                                      )
+                                    else if (isCurrent)
+                                      Icon(
+                                        Icons.place_rounded,
+                                        size: 22,
+                                        color: rowStyle.accentColor,
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _tierXpRangeLabel(level),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: rowStyle.accentColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  rowStyle.perkTagline,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: listing.bodyText,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: fill,
+                          minHeight: 7,
+                          color: isFuture
+                              ? colorScheme.outline.withValues(alpha: 0.25)
+                              : rowStyle.accentColor,
+                          backgroundColor: trackColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            child: Row(
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AchievementSetCard extends StatelessWidget {
+  const _AchievementSetCard({required this.set, required this.paletteIndex});
+
+  final AchievementSetProgressDto set;
+  final int paletteIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final listing = context.entityListing;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final accent =
+        achievementSetCardAccents[paletteIndex %
+            achievementSetCardAccents.length];
+    final ratio = set.totalCount > 0 ? set.unlockedCount / set.totalCount : 0.0;
+    const unlockGreen = Color(0xFF059669);
+
+    // Blend accent into card base only slightly — avoids a harsh white diagonal
+    // when [listing.cardBg] is near-white between two tinted stops.
+    final base = listing.cardBg;
+    final cornerTint = isDark ? 0.11 : 0.07;
+    final midTint = isDark ? 0.035 : 0.022;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: set.isComplete
+              ? unlockGreen.withValues(alpha: 0.45)
+              : colorScheme.outline.withValues(alpha: 0.14),
+          width: set.isComplete ? 1.5 : 1,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          stops: const [0.0, 0.42, 0.58, 1.0],
+          colors: [
+            Color.lerp(base, accent, cornerTint)!,
+            Color.lerp(base, accent, midTint)!,
+            Color.lerp(base, accent, midTint)!,
+            Color.lerp(base, accent, cornerTint * 0.85)!,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '$lv',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accent.withValues(alpha: isDark ? 0.35 : 0.22),
+                    border: Border.all(color: accent.withValues(alpha: 0.55)),
+                  ),
+                  child: Icon(
+                    Icons.workspace_premium_outlined,
+                    color: isDark ? Colors.white : accent,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'From ${XpLevelMath.minXpForLevel(lv)} XP',
-                    style: theme.textTheme.bodyMedium,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        set.setName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: listing.textTitle,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: ratio.clamp(0.0, 1.0),
+                                minHeight: 6,
+                                color: set.isComplete ? unlockGreen : accent,
+                                backgroundColor: colorScheme.outlineVariant
+                                    .withValues(alpha: 0.35),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            '${set.unlockedCount}/${set.totalCount}',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: listing.textTitle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                if (lv == current)
-                  Icon(
-                    Icons.flag_rounded,
-                    size: 18,
-                    color: theme.colorScheme.primary,
+                if (set.isComplete)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Icon(
+                      Icons.verified_rounded,
+                      color: unlockGreen,
+                      size: 28,
+                    ),
                   ),
               ],
             ),
-          ),
-      ],
+            const SizedBox(height: 12),
+            ...set.achievements.map(
+              (a) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      a.unlocked
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked,
+                      size: 20,
+                      color: a.unlocked ? unlockGreen : colorScheme.outline,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        a.displayName,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: a.unlocked
+                              ? listing.textTitle
+                              : colorScheme.onSurfaceVariant,
+                          fontWeight: a.unlocked
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    if (a.xpValue > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: a.unlocked
+                              ? accent.withValues(alpha: isDark ? 0.35 : 0.2)
+                              : colorScheme.surfaceContainerHighest.withValues(
+                                  alpha: 0.6,
+                                ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '+${a.xpValue}',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: a.unlocked ? accent : colorScheme.outline,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

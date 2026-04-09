@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import '../../theme/member_level_tier_style.dart';
 
 /// Compact ring + level for board cards; [full] adds title line for profile / progress.
+/// [prominent] uses a larger ring and type for profile-style plaques.
 class LevelBadge extends StatelessWidget {
   const LevelBadge({
     super.key,
     required this.level,
     this.title,
     this.full = false,
+    this.prominent = false,
   });
 
   final int? level;
   final String? title;
   final bool full;
+  final bool prominent;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +46,11 @@ class LevelBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.military_tech_outlined, size: 14, color: style.accentColor),
+            Icon(
+              Icons.military_tech_outlined,
+              size: 14,
+              color: style.accentColor,
+            ),
             const SizedBox(width: 4),
             Text(
               '$lv',
@@ -58,6 +65,26 @@ class LevelBadge extends StatelessWidget {
     }
 
     final displayTitle = title ?? style.title;
+    final ring = prominent ? 44.0 : 36.0;
+    final borderW = prominent ? 2.5 : 2.0;
+    final titleStyle = prominent
+        ? theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: labelColor,
+          )
+        : theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: labelColor,
+          );
+    final digitStyle = prominent
+        ? theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: labelColor,
+          )
+        : theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: labelColor,
+          );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -66,32 +93,20 @@ class LevelBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: ring,
+              height: ring,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: style.ringColor, width: 2),
-                color: style.accentColor.withValues(alpha: 0.15),
-              ),
-              child: Text(
-                '$lv',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: labelColor,
+                border: Border.all(color: style.ringColor, width: borderW),
+                color: style.accentColor.withValues(
+                  alpha: prominent ? 0.18 : 0.15,
                 ),
               ),
+              child: Text('$lv', style: digitStyle),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                displayTitle,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: labelColor,
-                ),
-              ),
-            ),
+            SizedBox(width: prominent ? 12 : 10),
+            Expanded(child: Text(displayTitle, style: titleStyle)),
           ],
         ),
       ],
