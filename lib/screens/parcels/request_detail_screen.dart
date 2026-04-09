@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
-import 'access_code_entry_screen.dart';
-import 'parcel_ui.dart';
 import 'board_screen.dart';
+import 'connect_device_sheet.dart';
+import 'parcel_ui.dart';
 import 'parcel_xp_feedback.dart';
 
 class RequestDetailViewModel extends ChangeNotifier {
@@ -176,6 +176,30 @@ String _formatParcelWhen(DateTime utc) {
   return DateFormat('EEE, d MMM yyyy • HH:mm').format(local);
 }
 
+Future<void> _tryParcelActionAfterConnect(
+  BuildContext context,
+  RequestDetailViewModel viewModel,
+  Future<bool> Function() action,
+) async {
+  try {
+    final changed = await action();
+    if (changed && context.mounted) {
+      final d = viewModel.detail;
+      if (d != null) {
+        serviceLocator.mobileSessionManager.mergeFromParcelDetail(d);
+        ParcelXpFeedback.showForDetail(d);
+      }
+      Navigator.of(context).pop(true);
+    }
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+}
+
 class _RequestDetailBody extends StatelessWidget {
   const _RequestDetailBody({required this.guestMode});
 
@@ -210,118 +234,133 @@ class _RequestDetailBody extends StatelessWidget {
               townName: headerTownLine,
             ),
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  if (viewModel.loading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (viewModel.error != null || detail == null) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                      child: Center(
-                        child: Text(
-                          viewModel.error ?? 'Unable to load request',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ),
-                    );
-                  }
-
-                  final timelineEntries = <({String title, String subtitle})>[
-                    (
-                      title: 'Posted',
-                      subtitle: _formatParcelWhen(detail.createdAt),
-                    ),
-                  ];
-                  final claim = detail.activeClaim;
-                  if (claim != null) {
-                    timelineEntries.add((
-                      title: 'Claimed',
-                      subtitle:
-                          '${claim.claimedByDisplayName} • ${_formatParcelWhen(claim.claimedAt)}',
-                    ));
-                    if (claim.pickedUpAt != null) {
-                      timelineEntries.add((
-                        title: 'Picked up',
-                        subtitle: _formatParcelWhen(claim.pickedUpAt!),
-                      ));
-                    }
-                    if (claim.deliveredAt != null) {
-                      timelineEntries.add((
-                        title: 'Delivered',
-                        subtitle: _formatParcelWhen(claim.deliveredAt!),
-                      ));
-                    }
-                    if (claim.confirmedAt != null) {
-                      timelineEntries.add((
-                        title: 'Confirmed',
-                        subtitle: _formatParcelWhen(claim.confirmedAt!),
-                      ));
-                    }
-                  }
-
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                    children: [
-                      ParcelCard(parcel: detail, dense: true),
-                      const SizedBox(height: 12),
-                      DetailSectionShell(
-                        title: 'Status timeline',
-                        icon: Icons.timeline_rounded,
-                        child: _ParcelTimeline(entries: timelineEntries),
-                      ),
-                      const SizedBox(height: 12),
-                      DetailSectionShell(
-                        title: 'Addresses',
-                        icon: Icons.place_outlined,
-                        child: Column(
-                          children: [
-                            _AddressBlock(
-                              icon: Icons.north_east_rounded,
-                              label: 'Pickup',
-                              value:
-                                  detail.fullPickupAddress ??
-                                  detail.pickupLocation,
-                              padBottom: true,
+              child: ListenableBuilder(
+                listenable: serviceLocator.mobileSessionManager,
+                builder: (context, _) {
+                  return Builder(
+                    builder: (context) {
+                      if (viewModel.loading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (viewModel.error != null || detail == null) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                          child: Center(
+                            child: Text(
+                              viewModel.error ?? 'Unable to load request',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyLarge,
                             ),
-                            _AddressBlock(
-                              icon: Icons.south_west_rounded,
-                              label: 'Drop-off',
-                              value:
-                                  detail.fullDropoffAddress ??
-                                  detail.dropoffLocation,
-                              padBottom: false,
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (detail.cancelReason?.isNotEmpty == true) ...[
-                        const SizedBox(height: 12),
-                        DetailSectionShell(
-                          title: 'Cancellation',
-                          icon: Icons.info_outline_rounded,
-                          child: Text(
-                            detail.cancelReason!,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(height: 1.45),
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      DetailSectionShell(
-                        title: 'Actions',
-                        icon: Icons.touch_app_outlined,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            ..._buildActions(context, viewModel, detail),
+                        );
+                      }
+
+                      final effectiveGuest =
+                          guestMode &&
+                          !serviceLocator.mobileSessionManager.isAuthenticated;
+
+                      final timelineEntries =
+                          <({String title, String subtitle})>[
+                            (
+                              title: 'Posted',
+                              subtitle: _formatParcelWhen(detail.createdAt),
+                            ),
+                          ];
+                      final claim = detail.activeClaim;
+                      if (claim != null) {
+                        timelineEntries.add((
+                          title: 'Claimed',
+                          subtitle:
+                              '${claim.claimedByDisplayName} • ${_formatParcelWhen(claim.claimedAt)}',
+                        ));
+                        if (claim.pickedUpAt != null) {
+                          timelineEntries.add((
+                            title: 'Picked up',
+                            subtitle: _formatParcelWhen(claim.pickedUpAt!),
+                          ));
+                        }
+                        if (claim.deliveredAt != null) {
+                          timelineEntries.add((
+                            title: 'Delivered',
+                            subtitle: _formatParcelWhen(claim.deliveredAt!),
+                          ));
+                        }
+                        if (claim.confirmedAt != null) {
+                          timelineEntries.add((
+                            title: 'Confirmed',
+                            subtitle: _formatParcelWhen(claim.confirmedAt!),
+                          ));
+                        }
+                      }
+
+                      return ListView(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                        children: [
+                          ParcelCard(parcel: detail, dense: true),
+                          const SizedBox(height: 12),
+                          DetailSectionShell(
+                            title: 'Status timeline',
+                            icon: Icons.timeline_rounded,
+                            child: _ParcelTimeline(entries: timelineEntries),
+                          ),
+                          const SizedBox(height: 12),
+                          DetailSectionShell(
+                            title: 'Addresses',
+                            icon: Icons.place_outlined,
+                            child: Column(
+                              children: [
+                                _AddressBlock(
+                                  icon: Icons.north_east_rounded,
+                                  label: 'Pickup',
+                                  value:
+                                      detail.fullPickupAddress ??
+                                      detail.pickupLocation,
+                                  padBottom: true,
+                                ),
+                                _AddressBlock(
+                                  icon: Icons.south_west_rounded,
+                                  label: 'Drop-off',
+                                  value:
+                                      detail.fullDropoffAddress ??
+                                      detail.dropoffLocation,
+                                  padBottom: false,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (detail.cancelReason?.isNotEmpty == true) ...[
+                            const SizedBox(height: 12),
+                            DetailSectionShell(
+                              title: 'Cancellation',
+                              icon: Icons.info_outline_rounded,
+                              child: Text(
+                                detail.cancelReason!,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(height: 1.45),
+                              ),
+                            ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
+                          const SizedBox(height: 16),
+                          DetailSectionShell(
+                            title: 'Actions',
+                            icon: Icons.touch_app_outlined,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ..._buildActions(
+                                  context,
+                                  viewModel,
+                                  detail,
+                                  effectiveGuest,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -337,50 +376,51 @@ class _RequestDetailBody extends StatelessWidget {
     BuildContext context,
     RequestDetailViewModel viewModel,
     ParcelDetailDto detail,
+    bool effectiveGuest,
   ) {
     final actions = <Widget>[];
 
-    if (guestMode) {
+    if (effectiveGuest) {
       actions.add(
         FilledButton(
           onPressed: viewModel.actionLoading
               ? null
-              : () => showGuestParcelPrompt(context),
-          child: const Text('Join to help with this'),
+              : () async {
+                  await showGuestParcelPrompt(
+                    context,
+                    onDeviceConnected: () => _tryParcelActionAfterConnect(
+                      context,
+                      viewModel,
+                      viewModel.claim,
+                    ),
+                  );
+                },
+          child: const Text('Connect your device to continue'),
         ),
       );
       return actions;
     }
 
     Future<void> guardedAction(Future<bool> Function() action) async {
-      final ok = await serviceLocator.mobileSessionManager
-          .ensureAuthenticated();
-      if (!ok) {
-        if (context.mounted) {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AccessCodeEntryScreen()),
-          );
-        }
-        return;
-      }
-
-      try {
-        final changed = await action();
-        if (changed && context.mounted) {
-          final d = viewModel.detail;
-          if (d != null) {
-            serviceLocator.mobileSessionManager.mergeFromParcelDetail(d);
-            ParcelXpFeedback.showForDetail(d);
+      await runWithParcelSession(context, () async {
+        try {
+          final changed = await action();
+          if (changed && context.mounted) {
+            final d = viewModel.detail;
+            if (d != null) {
+              serviceLocator.mobileSessionManager.mergeFromParcelDetail(d);
+              ParcelXpFeedback.showForDetail(d);
+            }
+            Navigator.of(context).pop(true);
           }
-          Navigator.of(context).pop(true);
+        } catch (error) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(error.toString())));
+          }
         }
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(error.toString())));
-        }
-      }
+      });
     }
 
     if (detail.canClaim) {

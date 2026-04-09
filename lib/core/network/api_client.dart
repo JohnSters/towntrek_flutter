@@ -347,7 +347,8 @@ class _ErrorInterceptor extends Interceptor {
               );
 
             case 401:
-              message = 'Unauthorized access. Please log in again.';
+              message =
+                  'Unauthorized access. Connect your device to continue.';
               return ApiException(
                 type: ApiExceptionType.unauthorized,
                 message: message,

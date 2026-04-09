@@ -410,7 +410,7 @@ class _TiersTab extends StatelessWidget {
           const SizedBox(height: 22),
         ] else ...[
           Text(
-            'Sign in with your access code to see your level, XP, and tier ladder.',
+            'Connect your device to see your level, XP, and tier ladder.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: listing.bodyText,
               height: 1.45,

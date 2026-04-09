@@ -60,9 +60,9 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
             EntityListingHeroHeader(
               theme: context.entityListingTheme,
               categoryIcon: Icons.key_rounded,
-              subCategoryName: 'Enter access code',
+              subCategoryName: 'Connect device',
               categoryName: TownFeatureConstants.parcelsTitle,
-              townName: 'Member sign-in',
+              townName: 'TownTrek code',
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -71,7 +71,7 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Use the mobile access code from your TownTrek profile.',
+                      'Link this phone with a short code from your TownTrek profile.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: listing.bodyText,
                         height: 1.45,
@@ -79,7 +79,7 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                     ),
                     const SizedBox(height: 16),
                     DetailSectionShell(
-                      title: 'Sign in',
+                      title: 'Connect device',
                       icon: Icons.key_rounded,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,8 +88,8 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                             controller: _codeController,
                             textCapitalization: TextCapitalization.characters,
                             decoration: const InputDecoration(
-                              labelText: 'Access code',
-                              hintText: 'TREK-7284-KXMP',
+                              labelText: 'Enter your TownTrek code',
+                              hintText: 'TREK-0000-XXXX',
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -104,7 +104,7 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      'Need a code? Generate one in TownTrek on the web under My Devices.',
+                      'Get your code from My Devices at towntrek.co.za',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: listing.footerHint,
@@ -121,7 +121,7 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _submitting ? null : _submit,
-                  child: Text(_submitting ? 'Checking...' : 'Use this code'),
+                  child: Text(_submitting ? 'Connecting…' : 'Connect this device'),
                 ),
               ),
             ),

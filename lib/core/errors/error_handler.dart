@@ -94,8 +94,8 @@ class ErrorHandler {
       case 401:
         return ValidationError(
           title: 'Authentication Required',
-          message: 'Please log in to continue.',
-          actionText: 'Login',
+          message: 'Connect your device to continue.',
+          actionText: 'Connect device',
           action: retryAction,
         );
 

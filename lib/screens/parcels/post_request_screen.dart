@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
-import 'access_code_entry_screen.dart';
+import 'connect_device_sheet.dart';
 import 'parcel_xp_feedback.dart';
 
 class PostRequestViewModel extends ChangeNotifier {
@@ -467,34 +467,23 @@ class _PostRequestBody extends StatelessWidget {
                   onPressed: viewModel.submitting
                       ? null
                       : () async {
-                          final ok = await serviceLocator.mobileSessionManager
-                              .ensureAuthenticated();
-                          if (!ok) {
-                            if (context.mounted) {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const AccessCodeEntryScreen(),
-                                ),
+                          await runWithParcelSession(context, () async {
+                            try {
+                              final detail = await viewModel.submit();
+                              if (!context.mounted) return;
+                              if (detail != null) {
+                                serviceLocator.mobileSessionManager
+                                    .mergeFromParcelDetail(detail);
+                                ParcelXpFeedback.showForDetail(detail);
+                                Navigator.of(context).pop(true);
+                              }
+                            } catch (error) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(error.toString())),
                               );
                             }
-                            return;
-                          }
-
-                          try {
-                            final detail = await viewModel.submit();
-                            if (!context.mounted) return;
-                            if (detail != null) {
-                              serviceLocator.mobileSessionManager
-                                  .mergeFromParcelDetail(detail);
-                              ParcelXpFeedback.showForDetail(detail);
-                              Navigator.of(context).pop(true);
-                            }
-                          } catch (error) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(error.toString())),
-                            );
-                          }
+                          });
                         },
                   child: Text(
                     viewModel.submitting ? 'Posting...' : 'Post request',

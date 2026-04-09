@@ -57,7 +57,7 @@ class TownFeatureConstants {
   static const String equipmentRentalsTitle = 'Equipment Rentals';
   static const String equipmentRentalsDescription =
       'Tools, machinery & gear for hire';
-  static const String parcelsTitle = 'Parcels';
+  static const String parcelsTitle = 'Parcels & Routes';
   static const String parcelsDescription =
       'Ask for help with collections, drop-offs, and local routes';
   static const String changeTownTooltip = 'Wrong Town?';

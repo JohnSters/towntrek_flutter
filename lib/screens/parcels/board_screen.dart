@@ -5,13 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
-import 'access_code_entry_screen.dart';
-import 'my_activity_screen.dart';
+import 'connect_device_sheet.dart';
+import 'parcel_member_hub_navigation.dart';
 import 'parcel_ui.dart';
 import 'post_request_screen.dart';
-import 'profile_screen.dart';
-import 'leaderboard_screen.dart';
-import 'progress_screen.dart';
 import 'request_detail_screen.dart';
 
 enum BoardListFilter { all, parcels, routes }
@@ -147,8 +144,8 @@ class _ParcelBoardBody extends StatelessWidget {
                 onSelectionChanged: (selection) {
                   if (selection.isEmpty) return;
                   context.read<ParcelBoardViewModel>().setListFilter(
-                        selection.first,
-                      );
+                    selection.first,
+                  );
                 },
               ),
             ),
@@ -211,15 +208,15 @@ class _ParcelBoardBody extends StatelessWidget {
                               size: 16,
                             ),
                             onTap: () async {
-                              final changed =
-                                  await Navigator.of(context).push<bool>(
-                                MaterialPageRoute(
-                                  builder: (_) => RequestDetailScreen(
-                                    requestId: parcel.id,
-                                    guestMode: !authenticatedMode,
-                                  ),
-                                ),
-                              );
+                              final changed = await Navigator.of(context)
+                                  .push<bool>(
+                                    MaterialPageRoute(
+                                      builder: (_) => RequestDetailScreen(
+                                        requestId: parcel.id,
+                                        guestMode: !authenticatedMode,
+                                      ),
+                                    ),
+                                  );
                               if (changed == true && context.mounted) {
                                 await context
                                     .read<ParcelBoardViewModel>()
@@ -241,7 +238,17 @@ class _ParcelBoardBody extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () async {
                     if (!authenticatedMode) {
-                      await showGuestParcelPrompt(context);
+                      await showGuestParcelPrompt(
+                        context,
+                        onDeviceConnected: () async {
+                          if (!context.mounted) return;
+                          await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(
+                              builder: (_) => PostRequestScreen(town: town),
+                            ),
+                          );
+                        },
+                      );
                       return;
                     }
                     if (!await _parcelBoardEnsureSignedIn(context)) return;
@@ -256,10 +263,14 @@ class _ParcelBoardBody extends StatelessWidget {
                     }
                   },
                   icon: Icon(
-                    authenticatedMode ? Icons.add_rounded : Icons.favorite_border,
+                    authenticatedMode
+                        ? Icons.add_rounded
+                        : Icons.favorite_border,
                   ),
                   label: Text(
-                    authenticatedMode ? 'Post request' : 'Join to post',
+                    authenticatedMode
+                        ? 'Post request'
+                        : 'Connect your device to post or claim',
                   ),
                 ),
               ),
@@ -315,42 +326,28 @@ class _ParcelBoardShortcutsRow extends StatelessWidget {
             icon: Icons.leaderboard_outlined,
             tooltip: 'Leaderboard',
             color: const Color(0xFF5E35B1),
-            onOpen: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => LeaderboardScreen(town: town),
-              ),
-            ),
+            action: ParcelMemberHubAction.leaderboard,
           ),
           _shortcutTile(
             context,
             icon: Icons.trending_up_rounded,
             tooltip: 'Progress',
             color: const Color(0xFF00897B),
-            onOpen: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ProgressScreen(),
-              ),
-            ),
+            action: ParcelMemberHubAction.progress,
           ),
           _shortcutTile(
             context,
             icon: Icons.history_rounded,
             tooltip: 'Activity',
             color: const Color(0xFFE65100),
-            onOpen: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const MyActivityScreen(),
-              ),
-            ),
+            action: ParcelMemberHubAction.activity,
           ),
           _shortcutTile(
             context,
             icon: Icons.person_outline_rounded,
             tooltip: 'Profile',
             color: const Color(0xFF1565C0),
-            onOpen: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            ),
+            action: ParcelMemberHubAction.profile,
           ),
         ],
       ),
@@ -362,7 +359,7 @@ class _ParcelBoardShortcutsRow extends StatelessWidget {
     required IconData icon,
     required String tooltip,
     required Color color,
-    required Future<void> Function() onOpen,
+    required ParcelMemberHubAction action,
   }) {
     return Expanded(
       child: Padding(
@@ -373,20 +370,17 @@ class _ParcelBoardShortcutsRow extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () async {
-              if (!await _parcelBoardEnsureSignedIn(context)) return;
-              if (!context.mounted) return;
-              await onOpen();
+              await runWithParcelSession(context, () async {
+                if (!context.mounted) return;
+                openParcelMemberHubAction(context, town: town, action: action);
+              });
             },
             child: Semantics(
               button: true,
               label: tooltip,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 26,
-                ),
+                child: Icon(icon, color: Colors.white, size: 26),
               ),
             ),
           ),
@@ -401,12 +395,8 @@ Future<bool> _parcelBoardEnsureSignedIn(BuildContext context) async {
   if (await sessionManager.ensureAuthenticated()) {
     return true;
   }
-
   if (!context.mounted) return false;
-  final result = await Navigator.of(context).push<bool>(
-    MaterialPageRoute(builder: (_) => const AccessCodeEntryScreen()),
-  );
-  return result == true;
+  return showConnectDeviceSheet(context);
 }
 
 class _ParcelBoardMessageCard extends StatelessWidget {
@@ -468,7 +458,10 @@ class _ParcelBoardMessageCard extends StatelessWidget {
   }
 }
 
-Future<void> showGuestParcelPrompt(BuildContext context) async {
+Future<void> showGuestParcelPrompt(
+  BuildContext context, {
+  Future<void> Function()? onDeviceConnected,
+}) async {
   final listing = context.entityListing;
   await showModalBottomSheet<void>(
     context: context,
@@ -483,15 +476,16 @@ Future<void> showGuestParcelPrompt(BuildContext context) async {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'TownTrek members keep this community running.',
+              'Connect your device to post or claim',
               style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 color: listing.textTitle,
               ),
             ),
             const SizedBox(height: 10),
             Text(
-              'It\'s free, always will be, and takes about 2 minutes to join. If you already have an account, use your mobile access code.',
+              'Enter the short TREK code from your TownTrek profile. '
+              'It only links this phone — no separate app password.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: listing.bodyText,
                 height: 1.45,
@@ -501,13 +495,13 @@ Future<void> showGuestParcelPrompt(BuildContext context) async {
             FilledButton(
               onPressed: () async {
                 Navigator.of(sheetContext).pop();
-                await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => const AccessCodeEntryScreen(),
-                  ),
+                if (!context.mounted) return;
+                await showConnectDeviceSheet(
+                  context,
+                  onConnected: onDeviceConnected,
                 );
               },
-              child: const Text('Enter access code'),
+              child: const Text('Connect device'),
             ),
             const SizedBox(height: 10),
             OutlinedButton(
@@ -517,7 +511,7 @@ Future<void> showGuestParcelPrompt(BuildContext context) async {
                 );
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               },
-              child: const Text('Register free on the web'),
+              child: const Text('Register free at towntrek.co.za'),
             ),
           ],
         ),
