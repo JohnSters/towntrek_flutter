@@ -32,6 +32,7 @@ export 'creative_space_image_dto.dart';
 export 'creative_space_operating_hour_dto.dart';
 export 'creative_space_list_response.dart';
 export 'landing_stats_dto.dart';
+export 'member_progression_dto.dart';
 export 'member_dto.dart';
 export 'mobile_auth_dto.dart';
 export 'parcel_dto.dart';

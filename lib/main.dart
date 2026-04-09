@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'core/core.dart';
+import 'core/widgets/app_scaffold_messenger.dart';
 import 'core/config/http_overrides.dart';
 import 'screens/landing_page.dart';
 import 'theme/app_theme.dart';
@@ -30,6 +31,7 @@ class TownTrekApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: AppScaffoldMessenger.key,
       title: 'TownTrek',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

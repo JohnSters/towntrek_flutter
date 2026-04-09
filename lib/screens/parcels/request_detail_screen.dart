@@ -8,6 +8,7 @@ import '../../repositories/repositories.dart';
 import 'access_code_entry_screen.dart';
 import 'parcel_ui.dart';
 import 'board_screen.dart';
+import 'parcel_xp_feedback.dart';
 
 class RequestDetailViewModel extends ChangeNotifier {
   RequestDetailViewModel({
@@ -111,12 +112,14 @@ class RequestDetailViewModel extends ChangeNotifier {
     actionLoading = true;
     notifyListeners();
     try {
-      await repository.rate(
+      final updated = await repository.rate(
         id: requestId,
         score: score,
         rateClaimer: rateClaimer,
         note: note,
       );
+      detail = updated;
+      sessionManager.mergeFromParcelDetail(updated);
     } finally {
       actionLoading = false;
       notifyListeners();
@@ -185,12 +188,14 @@ class _RequestDetailBody extends StatelessWidget {
     final pageBg = context.entityListing.pageBg;
 
     final d = detail;
-    final headerCategory = viewModel.loading
-        ? 'Loading'
+    final headerSub = viewModel.loading
+        ? 'Loading…'
         : (viewModel.error != null || d == null
               ? 'Unavailable'
               : parcelStatusLabel(d.status));
-    final headerTown = d == null ? 'Request' : requestTypeLabel(d.requestType);
+    final headerTownLine = d == null
+        ? 'Request'
+        : '${d.pickupLocation} → ${d.dropoffLocation}';
 
     return Scaffold(
       backgroundColor: pageBg,
@@ -200,9 +205,9 @@ class _RequestDetailBody extends StatelessWidget {
             EntityListingHeroHeader(
               theme: context.entityListingTheme,
               categoryIcon: Icons.inventory_2_outlined,
-              subCategoryName: 'Parcel request',
-              categoryName: headerCategory,
-              townName: headerTown,
+              subCategoryName: headerSub,
+              categoryName: TownFeatureConstants.parcelsTitle,
+              townName: headerTownLine,
             ),
             Expanded(
               child: Builder(
@@ -362,6 +367,11 @@ class _RequestDetailBody extends StatelessWidget {
       try {
         final changed = await action();
         if (changed && context.mounted) {
+          final d = viewModel.detail;
+          if (d != null) {
+            serviceLocator.mobileSessionManager.mergeFromParcelDetail(d);
+            ParcelXpFeedback.showForDetail(d);
+          }
           Navigator.of(context).pop(true);
         }
       } catch (error) {
@@ -478,6 +488,10 @@ class _RequestDetailBody extends StatelessWidget {
                       rateClaimer: detail.isRequester,
                     );
                     if (context.mounted) {
+                      final d = viewModel.detail;
+                      if (d != null) {
+                        ParcelXpFeedback.showForDetail(d);
+                      }
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Rating sent.')),
                       );

@@ -1,3 +1,4 @@
+import 'member_progression_dto.dart';
 import 'town_dto.dart';
 
 int _enumInt(dynamic value, int fallback) {
@@ -148,6 +149,8 @@ class ParcelSummaryDto {
   final DateTime? routeTravelDate;
   final String? routeTravelNote;
   final bool requiresPassengerSeat;
+  final int? claimerLevel;
+  final String? claimerLevelTitle;
 
   const ParcelSummaryDto({
     required this.id,
@@ -167,6 +170,8 @@ class ParcelSummaryDto {
     required this.routeTravelDate,
     required this.routeTravelNote,
     required this.requiresPassengerSeat,
+    this.claimerLevel,
+    this.claimerLevelTitle,
   });
 
   factory ParcelSummaryDto.fromJson(Map<String, dynamic> json) {
@@ -189,6 +194,8 @@ class ParcelSummaryDto {
       routeTravelDate: _parcelDate(json['routeTravelDate']),
       routeTravelNote: json['routeTravelNote'] as String?,
       requiresPassengerSeat: (json['requiresPassengerSeat'] as bool?) ?? false,
+      claimerLevel: (json['claimerLevel'] as num?)?.toInt(),
+      claimerLevelTitle: json['claimerLevelTitle'] as String?,
     );
   }
 
@@ -210,6 +217,8 @@ class ParcelSummaryDto {
     DateTime? routeTravelDate,
     String? routeTravelNote,
     bool? requiresPassengerSeat,
+    int? claimerLevel,
+    String? claimerLevelTitle,
   }) {
     return ParcelSummaryDto(
       id: id ?? this.id,
@@ -231,6 +240,8 @@ class ParcelSummaryDto {
       routeTravelNote: routeTravelNote ?? this.routeTravelNote,
       requiresPassengerSeat:
           requiresPassengerSeat ?? this.requiresPassengerSeat,
+      claimerLevel: claimerLevel ?? this.claimerLevel,
+      claimerLevelTitle: claimerLevelTitle ?? this.claimerLevelTitle,
     );
   }
 }
@@ -249,6 +260,7 @@ class ParcelDetailDto extends ParcelSummaryDto {
   final bool canConfirm;
   final bool canCancel;
   final bool canRate;
+  final XpDeltaDto? xpDelta;
 
   const ParcelDetailDto({
     required super.id,
@@ -268,6 +280,8 @@ class ParcelDetailDto extends ParcelSummaryDto {
     required super.routeTravelDate,
     required super.routeTravelNote,
     required super.requiresPassengerSeat,
+    super.claimerLevel,
+    super.claimerLevelTitle,
     required this.fullPickupAddress,
     required this.fullDropoffAddress,
     required this.cancelReason,
@@ -281,9 +295,15 @@ class ParcelDetailDto extends ParcelSummaryDto {
     required this.canConfirm,
     required this.canCancel,
     required this.canRate,
+    this.xpDelta,
   });
 
   factory ParcelDetailDto.fromJson(Map<String, dynamic> json) {
+    XpDeltaDto? xpDelta;
+    final rawXp = json['xpDelta'];
+    if (rawXp is Map<String, dynamic>) {
+      xpDelta = XpDeltaDto.fromJson(rawXp);
+    }
     return ParcelDetailDto(
       id: (json['id'] as num).toInt(),
       townId: (json['townId'] as num).toInt(),
@@ -303,6 +323,8 @@ class ParcelDetailDto extends ParcelSummaryDto {
       routeTravelDate: _parcelDate(json['routeTravelDate']),
       routeTravelNote: json['routeTravelNote'] as String?,
       requiresPassengerSeat: (json['requiresPassengerSeat'] as bool?) ?? false,
+      claimerLevel: (json['claimerLevel'] as num?)?.toInt(),
+      claimerLevelTitle: json['claimerLevelTitle'] as String?,
       fullPickupAddress: json['fullPickupAddress'] as String?,
       fullDropoffAddress: json['fullDropoffAddress'] as String?,
       cancelReason: json['cancelReason'] as String?,
@@ -320,6 +342,7 @@ class ParcelDetailDto extends ParcelSummaryDto {
       canConfirm: (json['canConfirm'] as bool?) ?? false,
       canCancel: (json['canCancel'] as bool?) ?? false,
       canRate: (json['canRate'] as bool?) ?? false,
+      xpDelta: xpDelta,
     );
   }
 
@@ -342,6 +365,8 @@ class ParcelDetailDto extends ParcelSummaryDto {
     DateTime? routeTravelDate,
     String? routeTravelNote,
     bool? requiresPassengerSeat,
+    int? claimerLevel,
+    String? claimerLevelTitle,
     String? fullPickupAddress,
     String? fullDropoffAddress,
     String? cancelReason,
@@ -355,6 +380,7 @@ class ParcelDetailDto extends ParcelSummaryDto {
     bool? canConfirm,
     bool? canCancel,
     bool? canRate,
+    XpDeltaDto? xpDelta,
   }) {
     return ParcelDetailDto(
       id: id ?? this.id,
@@ -376,6 +402,8 @@ class ParcelDetailDto extends ParcelSummaryDto {
       routeTravelNote: routeTravelNote ?? this.routeTravelNote,
       requiresPassengerSeat:
           requiresPassengerSeat ?? this.requiresPassengerSeat,
+      claimerLevel: claimerLevel ?? this.claimerLevel,
+      claimerLevelTitle: claimerLevelTitle ?? this.claimerLevelTitle,
       fullPickupAddress: fullPickupAddress ?? this.fullPickupAddress,
       fullDropoffAddress: fullDropoffAddress ?? this.fullDropoffAddress,
       cancelReason: cancelReason ?? this.cancelReason,
@@ -389,6 +417,7 @@ class ParcelDetailDto extends ParcelSummaryDto {
       canConfirm: canConfirm ?? this.canConfirm,
       canCancel: canCancel ?? this.canCancel,
       canRate: canRate ?? this.canRate,
+      xpDelta: xpDelta ?? this.xpDelta,
     );
   }
 }

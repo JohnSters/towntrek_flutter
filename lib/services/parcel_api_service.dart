@@ -70,15 +70,16 @@ class ParcelApiService {
     );
   }
 
-  Future<void> rate({
+  Future<ParcelDetailDto> rate({
     required int id,
     required int score,
     required bool rateClaimer,
     String? note,
   }) async {
-    await _apiClient.post<Map<String, dynamic>>(
+    final response = await _apiClient.post<Map<String, dynamic>>(
       '/api/parcels/$id/rate',
       data: {'score': score, 'rateClaimer': rateClaimer, 'note': note},
     );
+    return ParcelDetailDto.fromJson(response.data!);
   }
 }

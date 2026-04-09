@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
+import 'level_badge.dart';
 
 Color parcelStatusColor(BuildContext context, ParcelStatus status) {
   final scheme = Theme.of(context).colorScheme;
@@ -261,6 +262,39 @@ class ParcelCard extends StatelessWidget {
                 maxLines: dense ? 2 : 3,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (parcel.claimerLevel != null &&
+                  parcel.claimerLevel! > 0 &&
+                  (parcel.status == ParcelStatus.claimed ||
+                      parcel.status == ParcelStatus.pickedUp ||
+                      parcel.status == ParcelStatus.delivered)) ...[
+                SizedBox(height: dense ? 8 : 10),
+                Row(
+                  children: [
+                    Text(
+                      'Claimer ',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: listing.bodyText,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    LevelBadge(level: parcel.claimerLevel),
+                    if (parcel.claimerLevelTitle?.isNotEmpty == true) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          parcel.claimerLevelTitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: listing.bodyText,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
               SizedBox(height: dense ? 10 : 12),
               Wrap(
                 spacing: 8,

@@ -53,36 +53,67 @@ class _MyActivityBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<MyActivityViewModel>();
+    final listing = context.entityListing;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: context.entityListing.pageBg,
-        appBar: AppBar(
-          title: const Text('My Activity'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'My Requests'),
-              Tab(text: 'My Deliveries'),
+        backgroundColor: listing.pageBg,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              EntityListingHeroHeader(
+                theme: context.entityListingTheme,
+                categoryIcon: Icons.history_rounded,
+                subCategoryName: 'My activity',
+                categoryName: TownFeatureConstants.parcelsTitle,
+                townName: 'Your account',
+              ),
+              TabBar(
+                labelColor: colorScheme.primary,
+                unselectedLabelColor: colorScheme.onSurfaceVariant,
+                indicatorColor: colorScheme.primary,
+                dividerColor: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                tabs: const [
+                  Tab(text: 'My Requests'),
+                  Tab(text: 'My Deliveries'),
+                ],
+              ),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (viewModel.loading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (viewModel.error != null || viewModel.activity == null) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            viewModel.error ?? 'Unable to load activity',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    }
+                    return TabBarView(
+                      children: [
+                        _ParcelListView(
+                          items: viewModel.activity!.myRequests,
+                        ),
+                        _ParcelListView(
+                          items: viewModel.activity!.myDeliveries,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const ListingBackFooter(label: 'Back'),
             ],
           ),
-        ),
-        body: Builder(
-          builder: (context) {
-            if (viewModel.loading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (viewModel.error != null || viewModel.activity == null) {
-              return Center(
-                child: Text(viewModel.error ?? 'Unable to load activity'),
-              );
-            }
-            return TabBarView(
-              children: [
-                _ParcelListView(items: viewModel.activity!.myRequests),
-                _ParcelListView(items: viewModel.activity!.myDeliveries),
-              ],
-            );
-          },
         ),
       ),
     );

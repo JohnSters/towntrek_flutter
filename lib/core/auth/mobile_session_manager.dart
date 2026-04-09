@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../network/api_client.dart';
+import '../progression/xp_level_math.dart';
 import '../utils/mobile_session_storage.dart';
 import '../../models/models.dart';
 import '../../repositories/member_repository.dart';
@@ -21,12 +24,14 @@ class MobileSessionManager extends ChangeNotifier {
 
   MobileAuthResponseDto? _session;
   MemberProfileDto? _profile;
+  MemberProgressionDto? _memberProgression;
   bool _initializing = false;
   bool _busy = false;
   String? _errorMessage;
 
   MobileAuthResponseDto? get session => _session;
   MemberProfileDto? get profile => _profile;
+  MemberProgressionDto? get memberProgression => _memberProgression;
   bool get isInitializing => _initializing;
   bool get isBusy => _busy;
   String? get errorMessage => _errorMessage;
@@ -46,6 +51,7 @@ class MobileSessionManager extends ChangeNotifier {
           await refreshSession();
         } else {
           await loadProfile();
+          await loadProgression();
         }
       }
     } catch (error) {
@@ -73,6 +79,7 @@ class MobileSessionManager extends ChangeNotifier {
       _applyAccessToken(session.accessToken);
       await MobileSessionStorage.save(session);
       await loadProfile();
+      await loadProgression();
     } catch (error) {
       _errorMessage = error.toString();
       rethrow;
@@ -110,6 +117,7 @@ class MobileSessionManager extends ChangeNotifier {
       _applyAccessToken(refreshed.accessToken);
       await MobileSessionStorage.save(refreshed);
       await loadProfile();
+      await loadProgression();
       notifyListeners();
       return true;
     } catch (error) {
@@ -133,9 +141,65 @@ class MobileSessionManager extends ChangeNotifier {
     }
   }
 
+  Future<void> loadProgression() async {
+    if (_session == null) {
+      _memberProgression = null;
+      return;
+    }
+
+    try {
+      _memberProgression = await _memberRepository.getMyProgression();
+      notifyListeners();
+    } catch (error) {
+      debugPrint('Failed to load member progression: $error');
+    }
+  }
+
+  /// Merges server [XpDeltaDto] into cached progression and refreshes from API in the background.
+  void mergeFromParcelDetail(ParcelDetailDto? detail) {
+    final delta = detail?.xpDelta;
+    if (delta == null || !delta.hasAward) {
+      return;
+    }
+    applyXpDelta(delta);
+  }
+
+  void applyXpDelta(XpDeltaDto delta) {
+    if (!delta.hasAward) {
+      return;
+    }
+    final p = _memberProgression;
+    if (p == null) {
+      unawaited(loadProgression());
+      return;
+    }
+    final level = delta.currentLevel;
+    final into = XpLevelMath.xpIntoCurrentLevel(delta.newTotal, level);
+    final toNext = XpLevelMath.xpToNextLevel(delta.newTotal, level);
+    _memberProgression = p.copyWith(
+      totalXp: delta.newTotal,
+      currentLevel: level,
+      currentLevelTitle: delta.newLevelTitle ?? p.currentLevelTitle,
+      xpIntoLevel: into,
+      xpForNext: toNext,
+    );
+    notifyListeners();
+    unawaited(loadProgression());
+  }
+
+  void setLeaderboardDisclosureSeenLocal() {
+    final p = _memberProgression;
+    if (p == null) {
+      return;
+    }
+    _memberProgression = p.copyWith(leaderboardDisclosureSeen: true);
+    notifyListeners();
+  }
+
   Future<void> signOut({bool notify = true}) async {
     _session = null;
     _profile = null;
+    _memberProgression = null;
     _apiClient.clearHeader('Authorization');
     await MobileSessionStorage.clear();
     if (notify) {

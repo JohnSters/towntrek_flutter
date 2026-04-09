@@ -20,7 +20,7 @@ abstract class ParcelRepository {
 
   Future<void> report(int id, String reason);
 
-  Future<void> rate({
+  Future<ParcelDetailDto> rate({
     required int id,
     required int score,
     required bool rateClaimer,
@@ -74,13 +74,13 @@ class ParcelRepositoryImpl implements ParcelRepository {
   }
 
   @override
-  Future<void> rate({
+  Future<ParcelDetailDto> rate({
     required int id,
     required int score,
     required bool rateClaimer,
     String? note,
-  }) async {
-    await _apiService.rate(
+  }) {
+    return _apiService.rate(
       id: id,
       score: score,
       rateClaimer: rateClaimer,

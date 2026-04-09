@@ -6,6 +6,7 @@ import '../../core/core.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import 'access_code_entry_screen.dart';
+import 'parcel_xp_feedback.dart';
 
 class PostRequestViewModel extends ChangeNotifier {
   PostRequestViewModel({
@@ -62,12 +63,12 @@ class PostRequestViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> submit() async {
-    if (!formKey.currentState!.validate()) return false;
+  Future<ParcelDetailDto?> submit() async {
+    if (!formKey.currentState!.validate()) return null;
     submitting = true;
     notifyListeners();
     try {
-      await _repository.create(
+      final detail = await _repository.create(
         CreateParcelRequestDto(
           townId: town.id,
           requestType: requestType,
@@ -94,7 +95,7 @@ class PostRequestViewModel extends ChangeNotifier {
           requiresPassengerSeat: requiresPassengerSeat,
         ),
       );
-      return true;
+      return detail;
     } finally {
       submitting = false;
       notifyListeners();
@@ -145,12 +146,23 @@ class _PostRequestBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: listing.pageBg,
-      appBar: AppBar(title: Text('Post in ${town.name}')),
-      body: Form(
-        key: viewModel.formKey,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 28),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            EntityListingHeroHeader(
+              theme: context.entityListingTheme,
+              categoryIcon: Icons.add_box_outlined,
+              subCategoryName: 'Post a request',
+              categoryName: TownFeatureConstants.parcelsTitle,
+              townName: town.name,
+            ),
+            Expanded(
+              child: Form(
+                key: viewModel.formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                  children: [
             DetailSectionShell(
               title: 'Request type',
               icon: Icons.category_outlined,
@@ -443,37 +455,54 @@ class _PostRequestBody extends StatelessWidget {
                   ],
                 ),
               ),
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: viewModel.submitting
-                  ? null
-                  : () async {
-                      final ok = await serviceLocator.mobileSessionManager
-                          .ensureAuthenticated();
-                      if (!ok) {
-                        if (context.mounted) {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const AccessCodeEntryScreen(),
-                            ),
-                          );
-                        }
-                        return;
-                      }
-
-                      try {
-                        final created = await viewModel.submit();
-                        if (!context.mounted) return;
-                        if (created) Navigator.of(context).pop(true);
-                      } catch (error) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error.toString())),
-                        );
-                      }
-                    },
-              child: Text(viewModel.submitting ? 'Posting...' : 'Post request'),
+          ],
+                ),
+              ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: viewModel.submitting
+                      ? null
+                      : () async {
+                          final ok = await serviceLocator.mobileSessionManager
+                              .ensureAuthenticated();
+                          if (!ok) {
+                            if (context.mounted) {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const AccessCodeEntryScreen(),
+                                ),
+                              );
+                            }
+                            return;
+                          }
+
+                          try {
+                            final detail = await viewModel.submit();
+                            if (!context.mounted) return;
+                            if (detail != null) {
+                              serviceLocator.mobileSessionManager
+                                  .mergeFromParcelDetail(detail);
+                              ParcelXpFeedback.showForDetail(detail);
+                              Navigator.of(context).pop(true);
+                            }
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(error.toString())),
+                            );
+                          }
+                        },
+                  child: Text(
+                    viewModel.submitting ? 'Posting...' : 'Post request',
+                  ),
+                ),
+              ),
+            ),
+            const ListingBackFooter(label: 'Back'),
           ],
         ),
       ),
