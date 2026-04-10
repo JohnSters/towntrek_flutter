@@ -148,7 +148,7 @@ class _TownHubMemberPanelBody extends StatelessWidget {
                     onLetterColor: onAvatar,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,39 +160,87 @@ class _TownHubMemberPanelBody extends StatelessWidget {
                           color: listing.textTitle,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        tierTitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: tierStyle.accentColor,
-                          fontWeight: FontWeight.w700,
+                      const SizedBox(height: 8),
+                      Semantics(
+                        label: rating > 0
+                            ? 'Average community rating '
+                                '${rating.toStringAsFixed(1)} out of five'
+                            : 'No average community rating yet',
+                        child: MergeSemantics(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                size: 22,
+                                color: Colors.amber.shade700,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                rating > 0 ? rating.toStringAsFixed(1) : '—',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: listing.textTitle,
+                                ),
+                              ),
+                              Text(
+                                ' avg',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: listing.bodyText,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tierStyle.accentColor.withValues(
+                        alpha: isDark ? 0.22 : 0.14,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: tierStyle.ringColor.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Semantics(
+                      label: 'Level $currentLevel, $tierTitle',
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.star_rounded,
-                            size: 22,
-                            color: Colors.amber.shade700,
-                          ),
-                          const SizedBox(width: 4),
                           Text(
-                            rating > 0 ? rating.toStringAsFixed(1) : '—',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: listing.textTitle,
+                            '$currentLevel',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: tierStyle.accentColor,
+                              height: 1,
                             ),
                           ),
+                          const SizedBox(height: 4),
                           Text(
-                            ' avg',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: listing.bodyText,
+                            tierTitle,
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: tierStyle.accentColor,
+                              fontWeight: FontWeight.w800,
+                              height: 1.2,
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -404,7 +452,7 @@ class _HubAvatar extends StatelessWidget {
   }
 }
 
-/// Circular level ring FAB for the town hub (authenticated).
+/// Tier-styled profile FAB for the town hub (opens member quick panel).
 class TownHubLevelFab extends StatelessWidget {
   const TownHubLevelFab({
     super.key,
@@ -413,6 +461,7 @@ class TownHubLevelFab extends StatelessWidget {
     required this.onPressed,
   });
 
+  /// Used for tier ring colors (same visual language as before the icon swap).
   final int level;
   final bool showVerified;
   final VoidCallback onPressed;
@@ -442,13 +491,10 @@ class TownHubLevelFab extends StatelessWidget {
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
-              Text(
-                '$level',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: style.accentColor,
-                  height: 1,
-                ),
+              Icon(
+                Icons.person_rounded,
+                size: 30,
+                color: style.accentColor,
               ),
               if (showVerified)
                 Positioned(
