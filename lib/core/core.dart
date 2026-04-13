@@ -1,7 +1,9 @@
 // Export all core functionality for easy importing
 export 'config/api_config.dart';
+export 'auth/mobile_session_manager.dart';
 export 'constants/landing_page_constants.dart';
 export 'constants/town_feature_constants.dart';
+export 'constants/parcel_feature_flags.dart';
 export 'constants/creative_spaces_constants.dart';
 export 'constants/town_loader_constants.dart';
 export 'constants/town_selection_constants.dart';
@@ -29,6 +31,7 @@ export 'errors/error_handler.dart';
 export 'utils/logger.dart';
 export 'utils/operating_hours_open_calc.dart';
 export 'utils/favourite_town_storage.dart';
+export 'utils/mobile_session_storage.dart';
 export 'utils/discovery_install_id_storage.dart';
 export 'utils/result.dart';
 export 'widgets/error_view.dart';

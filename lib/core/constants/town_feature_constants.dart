@@ -26,6 +26,7 @@ class TownFeatureConstants {
   static const int creativeSpacesColor = 0xFFD81B60; // Rose 700
   static const int propertiesColor = 0xFF2E7D32; // Green 800
   static const int equipmentRentalsColor = 0xFFFF9800; // Amber / equipment pillar
+  static const int parcelsColor = 0xFF6D4C41; // Brown 600
 
   /// Business category key from server seed (matches web `?category=equipment-rentals`).
   static const String equipmentRentalsCategoryKey = 'equipment-rentals';
@@ -56,5 +57,8 @@ class TownFeatureConstants {
   static const String equipmentRentalsTitle = 'Equipment Rentals';
   static const String equipmentRentalsDescription =
       'Tools, machinery & gear for hire';
+  static const String parcelsTitle = 'Parcels & Routes';
+  static const String parcelsDescription =
+      'Ask for help with collections, drop-offs, and local routes';
   static const String changeTownTooltip = 'Wrong Town?';
 }

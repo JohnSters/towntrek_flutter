@@ -17,6 +17,7 @@ class TownDto {
   final int? population;
   final double? latitude;
   final double? longitude;
+  final bool isParcelBoardEnabled;
   final int businessCount;
   final int servicesCount;
   final int eventsCount;
@@ -33,6 +34,7 @@ class TownDto {
     this.population,
     this.latitude,
     this.longitude,
+    this.isParcelBoardEnabled = false,
     required this.businessCount,
     this.servicesCount = 0,
     this.eventsCount = 0,
@@ -52,6 +54,7 @@ class TownDto {
       population: json['population'] as int?,
       latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
       longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
+      isParcelBoardEnabled: (json['isParcelBoardEnabled'] as bool?) ?? false,
       businessCount: json['businessCount'] as int,
       servicesCount: (json['serviceCount'] as int?) ?? 0,
       eventsCount: (json['eventCount'] as int?) ?? 0,
@@ -84,6 +87,7 @@ class TownDto {
       'population': population,
       'latitude': latitude,
       'longitude': longitude,
+      'isParcelBoardEnabled': isParcelBoardEnabled,
       'businessCount': businessCount,
       'serviceCount': servicesCount,
       'eventCount': eventsCount,
@@ -103,6 +107,7 @@ class TownDto {
     int? population,
     double? latitude,
     double? longitude,
+    bool? isParcelBoardEnabled,
     int? businessCount,
     int? servicesCount,
     int? eventsCount,
@@ -119,6 +124,7 @@ class TownDto {
       population: population ?? this.population,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      isParcelBoardEnabled: isParcelBoardEnabled ?? this.isParcelBoardEnabled,
       businessCount: businessCount ?? this.businessCount,
       servicesCount: servicesCount ?? this.servicesCount,
       eventsCount: eventsCount ?? this.eventsCount,

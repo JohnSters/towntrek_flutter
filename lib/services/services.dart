@@ -1,5 +1,8 @@
 // Export all service classes for easy importing
 export 'config_service.dart';
+export 'member_api_service.dart';
+export 'mobile_auth_api_service.dart';
+export 'parcel_api_service.dart';
 export 'discovery_api_service.dart';
 export 'business_api_service.dart';
 export 'town_api_service.dart';
