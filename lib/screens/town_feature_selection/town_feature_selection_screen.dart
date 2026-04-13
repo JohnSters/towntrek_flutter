@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
+import '../parcels/connect_device_sheet.dart';
 import 'town_feature_selection_state.dart';
 import 'town_feature_selection_view_model.dart';
+import 'town_hub_member_sheet.dart';
 import 'widgets/widgets.dart';
 
 class TownFeatureSelectionScreen extends StatelessWidget {
@@ -81,77 +83,109 @@ class _TownFeatureSelectionScreenContentState
       TownFeatureLoaded(town: final town) => town,
     };
 
-    return Scaffold(
-      backgroundColor: context.entityListing.pageBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            EntityListingHeroHeader(
-              theme: context.entityListingTheme,
-              categoryIcon: Icons.explore_rounded,
-              // Town hub: main prompt + PROVINCE • TOWN in uppercase line
-              subCategoryName: TownFeatureConstants.pageTitle,
-              categoryName: town.province,
-              townName: town.name,
-              trailing: ValueListenableBuilder<TownDto?>(
-                valueListenable: FavouriteTownStorage.favouriteTownNotifier,
-                builder: (context, favouriteTown, _) {
-                  final isFavourite = favouriteTown?.id == town.id;
-                  return IconButton(
-                    onPressed: _isFavouriteActionRunning
-                        ? null
-                        : () => _toggleFavourite(town, isFavourite),
-                    tooltip: isFavourite
-                        ? 'Remove favourite town'
-                        : 'Set as favourite town',
-                    style: IconButton.styleFrom(
-                      backgroundColor:
-                          Theme.of(context).colorScheme.onPrimary.withValues(
-                                alpha: 0.2,
-                              ),
-                    ),
-                    icon: Icon(
-                      isFavourite
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  );
-                },
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(TownFeatureConstants.pagePadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TownPulseCard(
-                      town: town,
-                      isLoading: viewModel.pulseLoading,
-                      weather: viewModel.pulseWeather,
-                      activeEventsCount: viewModel.pulseActiveEventsCount,
-                      creativeTotal: viewModel.pulseCreativeTotal,
-                      propertiesTotal: viewModel.pulsePropertiesTotal,
-                      equipmentTotal: viewModel.pulseEquipmentTotal,
-                      discoveriesTotal: viewModel.pulseDiscoveriesCount,
-                      onNavigate: (destination) => _onPulseNavigate(
-                        context,
-                        viewModel,
-                        town,
-                        destination,
-                      ),
-                    ),
-                    const SizedBox(height: TownFeatureConstants.sectionGap),
-                    _buildFeatureGrid(context, viewModel, town),
-                  ],
+    final listing = context.entityListing;
+    final sessionManager = serviceLocator.mobileSessionManager;
+    final bottomFabInset = 56.0 + MediaQuery.paddingOf(context).bottom;
+
+    return ListenableBuilder(
+      listenable: sessionManager,
+      builder: (context, _) {
+        final authed = sessionManager.isAuthenticated;
+        return Scaffold(
+          backgroundColor: listing.pageBg,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: Padding(
+            padding: EdgeInsets.only(bottom: bottomFabInset),
+            child: authed
+                ? TownHubLevelFab(
+                    level: sessionManager.memberProgression?.currentLevel ?? 1,
+                    showVerified:
+                        sessionManager.profile?.trustLevel ==
+                        MemberTrustLevel.trusted,
+                    onPressed: () =>
+                        showTownHubMemberQuickPanel(context, town: town),
+                  )
+                : FloatingActionButton.extended(
+                    onPressed: () => showConnectDeviceSheet(context),
+                    icon: const Icon(Icons.phonelink_rounded),
+                    label: const Text('Connect device'),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    elevation: 4,
+                  ),
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                EntityListingHeroHeader(
+                  theme: context.entityListingTheme,
+                  categoryIcon: Icons.explore_rounded,
+                  // Town hub: main prompt + PROVINCE • TOWN in uppercase line
+                  subCategoryName: TownFeatureConstants.pageTitle,
+                  categoryName: town.province,
+                  townName: town.name,
+                  trailing: ValueListenableBuilder<TownDto?>(
+                    valueListenable: FavouriteTownStorage.favouriteTownNotifier,
+                    builder: (context, favouriteTown, _) {
+                      final isFavourite = favouriteTown?.id == town.id;
+                      return IconButton(
+                        onPressed: _isFavouriteActionRunning
+                            ? null
+                            : () => _toggleFavourite(town, isFavourite),
+                        tooltip: isFavourite
+                            ? 'Remove favourite town'
+                            : 'Set as favourite town',
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary.withValues(alpha: 0.2),
+                        ),
+                        icon: Icon(
+                          isFavourite
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(
+                      TownFeatureConstants.pagePadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TownPulseCard(
+                          town: town,
+                          isLoading: viewModel.pulseLoading,
+                          weather: viewModel.pulseWeather,
+                          activeEventsCount: viewModel.pulseActiveEventsCount,
+                          creativeTotal: viewModel.pulseCreativeTotal,
+                          propertiesTotal: viewModel.pulsePropertiesTotal,
+                          equipmentTotal: viewModel.pulseEquipmentTotal,
+                          discoveriesTotal: viewModel.pulseDiscoveriesCount,
+                          onNavigate: (destination) => _onPulseNavigate(
+                            context,
+                            viewModel,
+                            town,
+                            destination,
+                          ),
+                        ),
+                        const SizedBox(height: TownFeatureConstants.sectionGap),
+                        _buildFeatureGrid(context, viewModel, town),
+                      ],
+                    ),
+                  ),
+                ),
+                const ListingBackFooter(label: 'Back'),
+              ],
             ),
-            const ListingBackFooter(label: 'Back'),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -217,6 +251,14 @@ class _TownFeatureSelectionScreenContentState
       onTap: () => viewModel.navigateToEquipmentRentals(context, town),
     );
 
+    final parcels = FeatureData(
+      title: TownFeatureConstants.parcelsTitle,
+      description: TownFeatureConstants.parcelsDescription,
+      icon: Icons.local_shipping_outlined,
+      color: const Color(TownFeatureConstants.parcelsColor),
+      onTap: () => viewModel.navigateToParcels(context, town),
+    );
+
     const gap = SizedBox(height: TownFeatureConstants.gridGap);
     const hGap = SizedBox(width: TownFeatureConstants.gridGap);
 
@@ -256,6 +298,10 @@ class _TownFeatureSelectionScreenContentState
             ],
           ),
         ),
+        if (town.isParcelBoardEnabled) ...[
+          gap,
+          FeatureHeroCard(feature: parcels),
+        ],
       ],
     );
   }

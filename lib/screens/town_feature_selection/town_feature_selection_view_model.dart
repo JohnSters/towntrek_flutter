@@ -10,6 +10,7 @@ import '../service_category/service_category_page.dart';
 import '../town_selection/town_selection_screen.dart';
 import '../what_to_do/what_to_do_screen.dart';
 import '../property_list/property_list_screen.dart';
+import '../parcels.dart';
 import 'town_feature_selection_screen.dart';
 import 'town_feature_selection_state.dart';
 
@@ -203,6 +204,17 @@ class TownFeatureViewModel extends ChangeNotifier {
     CreativeSpacesNavigation.pushCategoryPage(
       context,
       pageBuilder: (_) => CreativeSpacesCategoryPage(town: town),
+    );
+  }
+
+  void navigateToParcels(BuildContext context, TownDto town) {
+    final isAuthenticated = serviceLocator.mobileSessionManager.isAuthenticated;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => isAuthenticated
+            ? BoardScreen(town: town)
+            : GuestBoardScreen(town: town),
+      ),
     );
   }
 }
