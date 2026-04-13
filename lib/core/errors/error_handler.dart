@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'app_error.dart';
+import '../network/api_client.dart';
 
 /// Centralized error handling service
 class ErrorHandler {
@@ -84,9 +85,10 @@ class ErrorHandler {
 
     switch (statusCode) {
       case 400:
+        final detail = extractApiErrorMessageFromResponseData(error.response?.data);
         return ValidationError(
           title: 'Invalid Request',
-          message: 'Please check your input and try again.',
+          message: detail ?? 'Please check your input and try again.',
           actionText: retryAction != null ? 'Retry' : null,
           action: retryAction,
         );

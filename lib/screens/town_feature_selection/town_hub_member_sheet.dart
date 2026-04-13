@@ -452,6 +452,36 @@ class _HubAvatar extends StatelessWidget {
   }
 }
 
+/// Compact “Connect device” FAB for the town hub and parcel board (bottom-right).
+class TownHubConnectDeviceFab extends StatelessWidget {
+  const TownHubConnectDeviceFab({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    return FloatingActionButton.extended(
+      onPressed: onPressed,
+      icon: const Icon(Icons.phonelink_rounded, size: 20),
+      label: Text(
+        'Connect device',
+        style: theme.textTheme.labelLarge?.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.15,
+        ),
+      ),
+      backgroundColor: scheme.primary.withValues(alpha: 0.76),
+      foregroundColor: scheme.onPrimary,
+      elevation: 3,
+      extendedPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      extendedIconLabelSpacing: 8,
+    );
+  }
+}
+
 /// Tier-styled profile FAB for the town hub (opens member quick panel).
 class TownHubLevelFab extends StatelessWidget {
   const TownHubLevelFab({
@@ -460,6 +490,10 @@ class TownHubLevelFab extends StatelessWidget {
     required this.showVerified,
     required this.onPressed,
   });
+
+  static const double _fabSize = 50;
+  static const double _iconSize = 25;
+  static const double _ringWidth = 2.5;
 
   /// Used for tier ring colors (same visual language as before the icon swap).
   final int level;
@@ -471,8 +505,8 @@ class TownHubLevelFab extends StatelessWidget {
     final theme = Theme.of(context);
     final style = tierStyleForLevel(level);
     return Material(
-      elevation: 5,
-      shadowColor: style.accentColor.withValues(alpha: 0.35),
+      elevation: 3,
+      shadowColor: style.accentColor.withValues(alpha: 0.3),
       shape: const CircleBorder(),
       clipBehavior: Clip.antiAlias,
       color: Colors.transparent,
@@ -480,11 +514,11 @@ class TownHubLevelFab extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onPressed,
         child: Ink(
-          width: 60,
-          height: 60,
+          width: _fabSize,
+          height: _fabSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: style.ringColor, width: 3),
+            border: Border.all(color: style.ringColor, width: _ringWidth),
             color: style.accentColor.withValues(alpha: 0.18),
           ),
           child: Stack(
@@ -493,13 +527,13 @@ class TownHubLevelFab extends StatelessWidget {
             children: [
               Icon(
                 Icons.person_rounded,
-                size: 30,
+                size: _iconSize,
                 color: style.accentColor,
               ),
               if (showVerified)
                 Positioned(
-                  top: -2,
-                  right: -2,
+                  top: -1,
+                  right: -1,
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
@@ -508,7 +542,7 @@ class TownHubLevelFab extends StatelessWidget {
                     ),
                     child: Icon(
                       Icons.verified_rounded,
-                      size: 18,
+                      size: 16,
                       color: Colors.teal.shade600,
                     ),
                   ),

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
+import '../../core/utils/url_utils.dart';
+import '../../core/widgets/app_scaffold_messenger.dart';
 
 enum _ConnectedAccountDecision { continueCurrent, useDifferentCode }
 
@@ -27,7 +29,6 @@ Future<bool> showConnectDeviceSheet(
       return true;
     }
 
-    await sessionManager.signOut();
   }
 
   if (!context.mounted) return false;
@@ -186,6 +187,9 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
   late final TextEditingController _deviceNameController;
   bool _submitting = false;
   bool _helpExpanded = false;
+  /// Shown in-sheet: parent [ListenableBuilder]s on [MobileSessionManager] rebuild
+  /// during redeem and can prevent post-frame snackbars from ever displaying.
+  String? _submitError;
 
   String get _defaultDeviceName => 'TownTrek ${Platform.operatingSystem}';
 
@@ -207,23 +211,38 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
     final deviceName = _deviceNameController.text.trim();
     if (code.isEmpty) return;
 
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _submitError = null;
+    });
+    Object? err;
     try {
       await serviceLocator.mobileSessionManager.signInWithCode(
         code: code,
         deviceName: deviceName.isEmpty ? _defaultDeviceName : deviceName,
       );
-      if (!mounted) return;
-      widget.onSuccess();
-    } catch (error) {
-      if (!mounted) return;
-      if (!widget.parentContext.mounted) return;
-      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-        SnackBar(content: Text('Could not use that code: $error')),
-      );
-    } finally {
-      if (mounted) setState(() => _submitting = false);
+    } catch (e) {
+      err = e;
     }
+    if (!mounted) {
+      if (err != null) {
+        final msg = resolveUserFacingApiError(err);
+        AppScaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _submitting = false;
+      _submitError = err == null ? null : resolveUserFacingApiError(err);
+    });
+    if (err != null) return;
+    widget.onSuccess();
   }
 
   @override
@@ -290,13 +309,37 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            'Get your code from My Devices at towntrek.co.za. You can also rename this device so it is easier to manage later.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: listing.bodyText,
-              height: 1.4,
+          _myDevicesHintRichText(theme, listing),
+          if (_submitError != null) ...[
+            const SizedBox(height: 14),
+            Material(
+              color: colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: colorScheme.onErrorContainer,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _submitError!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onErrorContainer,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 22),
           FilledButton(
             onPressed: _submitting ? null : _submit,
@@ -364,21 +407,33 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
                           theme,
                           listing,
                           '1',
-                          'Register free at towntrek.co.za — it takes 2 minutes',
+                          _registerHelpStepRichText(theme, listing),
                         ),
                         const SizedBox(height: 12),
                         _helpStep(
                           theme,
                           listing,
                           '2',
-                          'Go to your profile and tap My Devices',
+                          Text(
+                            'Go to your profile and tap My Devices',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: listing.bodyText,
+                              height: 1.45,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 12),
                         _helpStep(
                           theme,
                           listing,
                           '3',
-                          'Generate your TREK code and enter it here',
+                          Text(
+                            'Generate your TREK code and enter it here',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: listing.bodyText,
+                              height: 1.45,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -394,7 +449,7 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
     ThemeData theme,
     EntityListingThemeExtension listing,
     String number,
-    String text,
+    Widget detail,
   ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,16 +471,85 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: listing.bodyText,
-              height: 1.45,
+        Expanded(child: detail),
+      ],
+    );
+  }
+
+  TextStyle? _bodyLinkStyle(
+    ThemeData theme,
+    EntityListingThemeExtension listing,
+    TextStyle? base,
+  ) {
+    return base?.copyWith(
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.w600,
+      decoration: TextDecoration.underline,
+      decorationColor: theme.colorScheme.primary,
+    );
+  }
+
+  Widget _myDevicesHintRichText(
+    ThemeData theme,
+    EntityListingThemeExtension listing,
+  ) {
+    final baseStyle = theme.textTheme.bodySmall?.copyWith(
+      color: listing.bodyText,
+      height: 1.4,
+    );
+    final linkStyle = _bodyLinkStyle(theme, listing, baseStyle);
+    return Text.rich(
+      TextSpan(
+        style: baseStyle,
+        children: [
+          const TextSpan(
+            text:
+                'Get your code from My Devices at ',
+          ),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: GestureDetector(
+              onTap: () => UrlUtils.launchTowntrekRegister(),
+              child: Text('towntrek.co.za', style: linkStyle),
             ),
           ),
-        ),
-      ],
+          const TextSpan(
+            text:
+                '. You can also rename this device so it is easier to manage later.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _registerHelpStepRichText(
+    ThemeData theme,
+    EntityListingThemeExtension listing,
+  ) {
+    final baseStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: listing.bodyText,
+      height: 1.45,
+    );
+    final linkStyle = _bodyLinkStyle(theme, listing, baseStyle);
+    return Text.rich(
+      TextSpan(
+        style: baseStyle,
+        children: [
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: GestureDetector(
+              onTap: () => UrlUtils.launchTowntrekRegister(),
+              child: Text(
+                'Register free at towntrek.co.za',
+                style: linkStyle,
+              ),
+            ),
+          ),
+          const TextSpan(text: ' — it takes 2 minutes'),
+        ],
+      ),
     );
   }
 }

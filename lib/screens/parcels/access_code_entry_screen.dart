@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
+import '../../core/utils/url_utils.dart';
+import '../../core/widgets/app_scaffold_messenger.dart';
 
 class AccessCodeEntryScreen extends StatefulWidget {
   const AccessCodeEntryScreen({super.key});
@@ -17,6 +19,7 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
     text: 'TownTrek ${Platform.operatingSystem}',
   );
   bool _submitting = false;
+  String? _submitError;
 
   @override
   void dispose() {
@@ -30,27 +33,55 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
     final deviceName = _deviceController.text.trim();
     if (code.isEmpty || deviceName.isEmpty) return;
 
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _submitError = null;
+    });
+    Object? err;
     try {
       await serviceLocator.mobileSessionManager.signInWithCode(
         code: code,
         deviceName: deviceName,
       );
-      if (!mounted) return;
+    } catch (e) {
+      err = e;
+    }
+    if (!mounted) {
+      if (err != null) {
+        final msg = resolveUserFacingApiError(err);
+        AppScaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _submitting = false;
+      _submitError = err == null ? null : resolveUserFacingApiError(err);
+    });
+    if (err == null) {
       Navigator.of(context).pop(true);
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not use that code: $error')),
-      );
-    } finally {
-      if (mounted) setState(() => _submitting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final listing = context.entityListing;
+    final theme = Theme.of(context);
+    final baseHint = theme.textTheme.bodySmall?.copyWith(
+      color: listing.footerHint,
+      height: 1.4,
+    );
+    final linkHint = baseHint?.copyWith(
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.w600,
+      decoration: TextDecoration.underline,
+      decorationColor: theme.colorScheme.primary,
+    );
     return Scaffold(
       backgroundColor: listing.pageBg,
       body: SafeArea(
@@ -103,18 +134,60 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    Text(
-                      'Get your code from My Devices at towntrek.co.za',
+                    Text.rich(
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: listing.footerHint,
-                        height: 1.4,
+                      TextSpan(
+                        style: baseHint,
+                        children: [
+                          const TextSpan(
+                            text: 'Get your code from My Devices at ',
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: GestureDetector(
+                              onTap: () => UrlUtils.launchTowntrekRegister(),
+                              child: Text('towntrek.co.za', style: linkHint),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+            if (_submitError != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Material(
+                  color: theme.colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.error_outline_rounded,
+                          color: theme.colorScheme.onErrorContainer,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _submitError!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: SizedBox(

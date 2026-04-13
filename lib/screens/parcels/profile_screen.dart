@@ -194,9 +194,9 @@ class _ProfileBody extends StatelessWidget {
                       const SizedBox(height: _sectionGap),
                       FilledButton(
                         onPressed: () async {
-                          await sessionManager.signOut();
-                          if (!context.mounted) return;
-                          await Navigator.of(context).push(
+                          // Do not sign out here: redeeming a new code replaces the
+                          // session; backing out must keep the existing token.
+                          await Navigator.of(context).push<bool>(
                             MaterialPageRoute(
                               builder: (_) => const AccessCodeEntryScreen(),
                             ),

@@ -7,6 +7,9 @@ class TownFeatureConstants {
   static const double gridGap = 12.0;
   static const double sectionGap = 16.0;
 
+  /// Bottom inset for town hub / parcel board FABs above the safe area (lower = closer to the bottom edge).
+  static const double floatingHubActionBottomInset = 40.0;
+
   // Sizes
   static const double pageHeaderHeight = 100.0;
   static const double heroIconSize = 48.0;

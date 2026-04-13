@@ -83,7 +83,7 @@ class MobileSessionManager extends ChangeNotifier {
       await loadProfile();
       await loadProgression();
     } catch (error) {
-      _errorMessage = error.toString();
+      _errorMessage = resolveUserFacingApiError(error);
       rethrow;
     } finally {
       _busy = false;

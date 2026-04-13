@@ -256,6 +256,45 @@ class _LoggingInterceptor extends Interceptor {
   }
 }
 
+/// Parses JSON body `error` / `message` fields (shared by interceptors and UI).
+String? extractApiErrorMessageFromResponseData(dynamic responseData) {
+  if (responseData == null) return null;
+
+  // Most common case: JSON object
+  if (responseData is Map) {
+    final dynamic direct =
+        responseData['error'] ?? responseData['message'] ?? responseData['Error'] ?? responseData['Message'];
+
+    if (direct != null) return direct.toString();
+
+    // Handle GlobalExceptionMiddleware shape: { "Error": { "Message": "..." } }
+    final dynamic nestedError = responseData['Error'] ?? responseData['error'];
+    if (nestedError is Map) {
+      final dynamic nestedMessage = nestedError['Message'] ?? nestedError['message'];
+      if (nestedMessage != null) return nestedMessage.toString();
+    }
+
+    return null;
+  }
+
+  // Sometimes Dio gives us a JSON string (or an HTML error page string)
+  if (responseData is String) {
+    final trimmed = responseData.trim();
+    if (trimmed.isEmpty) return null;
+
+    // Try decode JSON string
+    try {
+      final decoded = jsonDecode(trimmed);
+      return extractApiErrorMessageFromResponseData(decoded);
+    } catch (_) {
+      // Not JSON. Avoid surfacing raw HTML to users.
+      return null;
+    }
+  }
+
+  return null;
+}
+
 /// Error interceptor for standardized error handling
 class _ErrorInterceptor extends Interceptor {
   @override
@@ -270,44 +309,6 @@ class _ErrorInterceptor extends Interceptor {
       error: apiException,
     );
     handler.reject(dioException);
-  }
-
-  String? _tryExtractErrorMessage(dynamic responseData) {
-    if (responseData == null) return null;
-
-    // Most common case: JSON object
-    if (responseData is Map) {
-      final dynamic direct =
-          responseData['error'] ?? responseData['message'] ?? responseData['Error'] ?? responseData['Message'];
-
-      if (direct != null) return direct.toString();
-
-      // Handle GlobalExceptionMiddleware shape: { "Error": { "Message": "..." } }
-      final dynamic nestedError = responseData['Error'] ?? responseData['error'];
-      if (nestedError is Map) {
-        final dynamic nestedMessage = nestedError['Message'] ?? nestedError['message'];
-        if (nestedMessage != null) return nestedMessage.toString();
-      }
-
-      return null;
-    }
-
-    // Sometimes Dio gives us a JSON string (or an HTML error page string)
-    if (responseData is String) {
-      final trimmed = responseData.trim();
-      if (trimmed.isEmpty) return null;
-
-      // Try decode JSON string
-      try {
-        final decoded = jsonDecode(trimmed);
-        return _tryExtractErrorMessage(decoded);
-      } catch (_) {
-        // Not JSON. Avoid surfacing raw HTML to users.
-        return null;
-      }
-    }
-
-    return null;
   }
 
   ApiException _mapDioExceptionToApiException(DioException dioException) {
@@ -333,7 +334,7 @@ class _ErrorInterceptor extends Interceptor {
         final responseData = dioException.response?.data;
 
         String message = 'An error occurred while processing your request.';
-        final extracted = _tryExtractErrorMessage(responseData);
+        final extracted = extractApiErrorMessageFromResponseData(responseData);
 
         if (statusCode != null) {
           switch (statusCode) {
@@ -510,6 +511,20 @@ class ApiException implements Exception {
   String toString() {
     return 'ApiException(type: $type, message: $message, statusCode: $statusCode)';
   }
+}
+
+/// User-visible text for failures from [ApiClient] / Dio (e.g. redeem-code errors).
+String resolveUserFacingApiError(Object error) {
+  if (error is DioException) {
+    final inner = error.error;
+    if (inner is ApiException) return inner.message;
+    final fromBody = extractApiErrorMessageFromResponseData(error.response?.data);
+    if (fromBody != null && fromBody.isNotEmpty) return fromBody;
+    final msg = error.message;
+    if (msg != null && msg.isNotEmpty) return msg;
+  }
+  if (error is ApiException) return error.message;
+  return error.toString();
 }
 
 /// Types of API exceptions

@@ -8,4 +8,10 @@ class AppScaffoldMessenger {
       GlobalKey<ScaffoldMessengerState>();
 
   static ScaffoldMessengerState? get state => key.currentState;
+
+  /// Prefer this over [ScaffoldMessenger.maybeOf] under modals: the sheet subtree
+  /// may not resolve the same messenger as [MaterialApp.scaffoldMessengerKey].
+  static void showSnackBar(SnackBar snackBar) {
+    state?.showSnackBar(snackBar);
+  }
 }

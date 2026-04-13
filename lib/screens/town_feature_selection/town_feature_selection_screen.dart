@@ -85,7 +85,9 @@ class _TownFeatureSelectionScreenContentState
 
     final listing = context.entityListing;
     final sessionManager = serviceLocator.mobileSessionManager;
-    final bottomFabInset = 56.0 + MediaQuery.paddingOf(context).bottom;
+    final bottomFabInset =
+        TownFeatureConstants.floatingHubActionBottomInset +
+        MediaQuery.paddingOf(context).bottom;
 
     return ListenableBuilder(
       listenable: sessionManager,
@@ -105,13 +107,8 @@ class _TownFeatureSelectionScreenContentState
                     onPressed: () =>
                         showTownHubMemberQuickPanel(context, town: town),
                   )
-                : FloatingActionButton.extended(
+                : TownHubConnectDeviceFab(
                     onPressed: () => showConnectDeviceSheet(context),
-                    icon: const Icon(Icons.phonelink_rounded),
-                    label: const Text('Connect device'),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    elevation: 4,
                   ),
           ),
           body: SafeArea(

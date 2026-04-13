@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../core/core.dart';
+import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import 'connect_device_sheet.dart';
@@ -136,7 +135,9 @@ class _ParcelBoardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.watch<ParcelBoardViewModel>();
     final listing = context.entityListing;
-    final bottomFabInset = 56.0 + MediaQuery.paddingOf(context).bottom;
+    final bottomFabInset =
+        TownFeatureConstants.floatingHubActionBottomInset +
+        MediaQuery.paddingOf(context).bottom;
 
     return ListenableBuilder(
       listenable: serviceLocator.mobileSessionManager,
@@ -163,15 +164,9 @@ class _ParcelBoardBody extends StatelessWidget {
                                 town: town,
                               ),
                         )
-                      : FloatingActionButton.extended(
-                          onPressed: () => showConnectDeviceSheet(context),
-                          icon: const Icon(Icons.phonelink_rounded),
-                          label: const Text('Connect device'),
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onPrimary,
-                          elevation: 4,
+                      : TownHubConnectDeviceFab(
+                          onPressed: () =>
+                              showConnectDeviceSheet(context),
                         ),
                 )
               : null,
@@ -534,12 +529,7 @@ Future<void> showGuestParcelPrompt(
             ),
             const SizedBox(height: 10),
             OutlinedButton(
-              onPressed: () async {
-                final uri = Uri.parse(
-                  '${LandingPageConstants.ownerWebsiteUrl}/Auth/Register',
-                );
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              },
+              onPressed: () => UrlUtils.launchTowntrekRegister(),
               child: const Text('Register free at towntrek.co.za'),
             ),
           ],

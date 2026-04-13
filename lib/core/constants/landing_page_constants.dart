@@ -33,6 +33,8 @@ class LandingPageConstants {
 
   // URLs
   static const String ownerWebsiteUrl = 'https://towntrek.co.za';
+  /// Web sign-up used from mobile “connect device” help and guest prompts.
+  static const String registerAccountUrl = 'https://towntrek.co.za/Auth/Register';
   static const String feedbackEmail = 'admin@bytecraftdigital.com';
 
   // Strings
