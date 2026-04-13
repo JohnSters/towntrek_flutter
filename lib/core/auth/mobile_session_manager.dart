@@ -32,6 +32,8 @@ class MobileSessionManager extends ChangeNotifier {
   MobileAuthResponseDto? get session => _session;
   MemberProfileDto? get profile => _profile;
   MemberProgressionDto? get memberProgression => _memberProgression;
+  String? get currentUserId => _profile?.userId;
+  String? get currentDisplayName => _profile?.displayName;
   bool get isInitializing => _initializing;
   bool get isBusy => _busy;
   String? get errorMessage => _errorMessage;

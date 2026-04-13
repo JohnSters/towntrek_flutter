@@ -28,10 +28,13 @@ class PostRequestViewModel extends ChangeNotifier {
   final routeTravelNoteController = TextEditingController();
 
   ParcelRequestType requestType = ParcelRequestType.standardParcel;
+  RouteListingPerspective routeListingPerspective =
+      RouteListingPerspective.needLift;
   ParcelSize parcelSize = ParcelSize.small;
   UrgencyLevel urgencyLevel = UrgencyLevel.flexible;
   DateTime expiresAt = DateTime.now().toUtc().add(const Duration(days: 2));
   DateTime? routeTravelDate;
+  /// For NeedLift: true = traveller needs a seat; false = sending goods only with someone's trip.
   bool requiresPassengerSeat = false;
   bool submitting = false;
 
@@ -39,7 +42,22 @@ class PostRequestViewModel extends ChangeNotifier {
     requestType = value;
     if (value == ParcelRequestType.standardParcel) {
       requiresPassengerSeat = false;
+      routeListingPerspective = RouteListingPerspective.needLift;
+    } else {
+      if (!kEnableOfferingLiftRoutePost) {
+        routeListingPerspective = RouteListingPerspective.needLift;
+      }
+      requiresPassengerSeat = true;
     }
+    notifyListeners();
+  }
+
+  void setRouteListingPerspective(RouteListingPerspective value) {
+    if (!kEnableOfferingLiftRoutePost &&
+        value == RouteListingPerspective.offeringLift) {
+      return;
+    }
+    routeListingPerspective = value;
     notifyListeners();
   }
 
@@ -68,6 +86,16 @@ class PostRequestViewModel extends ChangeNotifier {
     submitting = true;
     notifyListeners();
     try {
+      final isRoute = requestType == ParcelRequestType.routeRequest;
+      final perspective = isRoute
+          ? (kEnableOfferingLiftRoutePost
+                ? routeListingPerspective
+                : RouteListingPerspective.needLift)
+          : null;
+      final effectiveUrgency =
+          isRoute && routeTravelDate != null
+              ? UrgencyLevel.flexible
+              : urgencyLevel;
       final detail = await _repository.create(
         CreateParcelRequestDto(
           townId: town.id,
@@ -77,7 +105,7 @@ class PostRequestViewModel extends ChangeNotifier {
           fullPickupAddress: fullPickupController.text.trim(),
           fullDropoffAddress: fullDropoffController.text.trim(),
           parcelSize: parcelSize,
-          urgencyLevel: urgencyLevel,
+          urgencyLevel: effectiveUrgency,
           note: noteController.text.trim().isEmpty
               ? null
               : noteController.text.trim(),
@@ -93,6 +121,7 @@ class PostRequestViewModel extends ChangeNotifier {
               ? null
               : routeTravelNoteController.text.trim(),
           requiresPassengerSeat: requiresPassengerSeat,
+          routeListingPerspective: perspective,
         ),
       );
       return detail;
@@ -175,7 +204,7 @@ class _PostRequestBody extends StatelessWidget {
                   ),
                   DropdownMenuItem(
                     value: ParcelRequestType.routeRequest,
-                    child: Text('Route request'),
+                    child: Text('Route listing'),
                   ),
                 ],
                 onChanged: (value) {
@@ -197,19 +226,60 @@ class _PostRequestBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Describe the lift you need so drivers can see it on the board. '
-                      'Pickup and exact addresses come in the next section.',
+                      kEnableOfferingLiftRoutePost &&
+                              viewModel.routeListingPerspective ==
+                                  RouteListingPerspective.offeringLift
+                          ? 'Describe your offered trip so it appears clearly on the board.'
+                          : 'Describe your route so it appears clearly on the board.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: listing.bodyText,
                         height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 12),
+                    Text(
+                      'Listing type',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: listing.textTitle,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('I need a lift'),
+                          selected: viewModel.routeListingPerspective ==
+                              RouteListingPerspective.needLift,
+                          onSelected: (_) => viewModel.setRouteListingPerspective(
+                            RouteListingPerspective.needLift,
+                          ),
+                        ),
+                        ChoiceChip(
+                          label: const Text('I\'m offering a lift'),
+                          selected: viewModel.routeListingPerspective ==
+                              RouteListingPerspective.offeringLift,
+                          onSelected: kEnableOfferingLiftRoutePost
+                              ? (_) => viewModel.setRouteListingPerspective(
+                                    RouteListingPerspective.offeringLift,
+                                  )
+                              : null,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: viewModel.routeSummaryController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Route summary',
-                        hintText: 'e.g. Swellendam to Barrydale, one seat',
+                        hintText:
+                            kEnableOfferingLiftRoutePost &&
+                                viewModel.routeListingPerspective ==
+                                    RouteListingPerspective.offeringLift
+                            ? 'e.g. Barrydale to Swellendam Wed morning, 2 seats'
+                            : 'e.g. Swellendam to Barrydale — need one seat',
                       ),
                       maxLength: 200,
                       validator: (value) {
@@ -224,16 +294,37 @@ class _PostRequestBody extends StatelessWidget {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: viewModel.routeTravelNoteController,
-                      decoration: const InputDecoration(
-                        labelText: 'Travel / timing note',
-                        hintText: 'e.g. Leaving Tuesday morning',
+                      decoration: InputDecoration(
+                        labelText: 'Timing note',
+                        hintText:
+                            kEnableOfferingLiftRoutePost &&
+                                viewModel.routeListingPerspective ==
+                                    RouteListingPerspective.offeringLift
+                            ? 'e.g. Leaving Wednesday around 8am'
+                            : 'e.g. Flexible this week / must arrive before Friday 5pm',
                       ),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: viewModel.requiresPassengerSeat,
                       onChanged: viewModel.setRequiresPassengerSeat,
-                      title: const Text('Needs a passenger seat'),
+                      title: Text(
+                        kEnableOfferingLiftRoutePost &&
+                                viewModel.routeListingPerspective ==
+                                    RouteListingPerspective.offeringLift
+                            ? 'Passenger seat available'
+                            : 'I will be travelling (need a passenger seat)',
+                      ),
+                      subtitle: Text(
+                        kEnableOfferingLiftRoutePost &&
+                                viewModel.routeListingPerspective ==
+                                    RouteListingPerspective.offeringLift
+                            ? 'Turn off if you only have boot or cargo space.'
+                            : 'Turn off if you are only sending goods with someone\'s trip (no seat for you).',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: listing.bodyText,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -248,8 +339,13 @@ class _PostRequestBody extends StatelessWidget {
                 children: [
                   if (isRoute)
                     Text(
-                      'Public labels appear on the board; full addresses are shared only '
-                      'with the member who takes your request.',
+                      kEnableOfferingLiftRoutePost &&
+                              viewModel.routeListingPerspective ==
+                                  RouteListingPerspective.offeringLift
+                          ? 'Short place names appear on the board. Full addresses are shared only '
+                                'with the member you arrange the trip with.'
+                          : 'Short place names appear on the board. Full addresses are shared only '
+                                'with the member who helps with your trip.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: listing.bodyText,
                         height: 1.4,
@@ -408,34 +504,51 @@ class _PostRequestBody extends StatelessWidget {
                         }
                       },
                       decoration: const InputDecoration(
-                        labelText: 'Space / load size',
-                        helperText: 'Approximate luggage or cargo volume',
+                        labelText: 'Luggage or gear size',
+                        helperText:
+                            'Roughly how much space you need for bags or items',
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<UrgencyLevel>(
-                      initialValue: viewModel.urgencyLevel,
-                      items: const [
-                        DropdownMenuItem(
-                          value: UrgencyLevel.flexible,
-                          child: Text('Flexible'),
+                    if (!(isRoute && viewModel.routeTravelDate != null)) ...[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<UrgencyLevel>(
+                        initialValue: viewModel.urgencyLevel,
+                        items: const [
+                          DropdownMenuItem(
+                            value: UrgencyLevel.flexible,
+                            child: Text('Flexible'),
+                          ),
+                          DropdownMenuItem(
+                            value: UrgencyLevel.today,
+                            child: Text('Today'),
+                          ),
+                          DropdownMenuItem(
+                            value: UrgencyLevel.urgent,
+                            child: Text('Urgent'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            viewModel.setUrgency(value);
+                          }
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'How soon do you need a match?',
+                          helperText:
+                              'How quickly you need someone to take the request',
                         ),
-                        DropdownMenuItem(
-                          value: UrgencyLevel.today,
-                          child: Text('Today'),
+                      ),
+                    ] else ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        'You picked a travel date, so timing follows that date. '
+                        'Urgency is set to Flexible for this post.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: listing.bodyText,
+                          height: 1.4,
                         ),
-                        DropdownMenuItem(
-                          value: UrgencyLevel.urgent,
-                          child: Text('Urgent'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          viewModel.setUrgency(value);
-                        }
-                      },
-                      decoration: const InputDecoration(labelText: 'Urgency'),
-                    ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: viewModel.thankYouController,
@@ -448,7 +561,8 @@ class _PostRequestBody extends StatelessWidget {
                       controller: viewModel.noteController,
                       decoration: const InputDecoration(
                         labelText: 'Other notes (optional)',
-                        hintText: 'Anything else helpers should know',
+                        hintText:
+                            'Accessibility, child seat, contact preferences, etc.',
                       ),
                       maxLines: 3,
                     ),
@@ -510,11 +624,16 @@ class _RouteTravelDateRow extends StatelessWidget {
     final summary = viewModel.routeTravelDate == null
         ? 'No date selected'
         : DateFormat.yMMMd().format(viewModel.routeTravelDate!.toLocal());
+    final offering = kEnableOfferingLiftRoutePost &&
+        viewModel.routeListingPerspective ==
+            RouteListingPerspective.offeringLift;
 
     return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Travel date (optional)',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: offering
+            ? 'Departure date (optional)'
+            : 'Preferred travel date (optional)',
+        border: const OutlineInputBorder(),
       ),
       child: Row(
         children: [

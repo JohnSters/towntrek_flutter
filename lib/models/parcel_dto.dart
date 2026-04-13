@@ -29,6 +29,26 @@ enum ParcelStatus {
   expired,
 }
 
+/// Server: 1 = need a lift, 2 = offering a ride. Null/omitted = legacy or unknown (see migration runbook).
+enum RouteListingPerspective { needLift, offeringLift }
+
+RouteListingPerspective? _routeListingPerspectiveFromJson(dynamic value) {
+  if (value == null) return null;
+  switch (_enumInt(value, -1)) {
+    case 1:
+      return RouteListingPerspective.needLift;
+    case 2:
+      return RouteListingPerspective.offeringLift;
+    default:
+      return null;
+  }
+}
+
+int _routeListingPerspectiveToJson(RouteListingPerspective value) => switch (value) {
+  RouteListingPerspective.needLift => 1,
+  RouteListingPerspective.offeringLift => 2,
+};
+
 ParcelRequestType _requestTypeFromJson(dynamic value) {
   switch (_enumInt(value, 1)) {
     case 2:
@@ -149,6 +169,7 @@ class ParcelSummaryDto {
   final DateTime? routeTravelDate;
   final String? routeTravelNote;
   final bool requiresPassengerSeat;
+  final RouteListingPerspective? routeListingPerspective;
   final int? claimerLevel;
   final String? claimerLevelTitle;
 
@@ -170,6 +191,7 @@ class ParcelSummaryDto {
     required this.routeTravelDate,
     required this.routeTravelNote,
     required this.requiresPassengerSeat,
+    this.routeListingPerspective,
     this.claimerLevel,
     this.claimerLevelTitle,
   });
@@ -194,6 +216,8 @@ class ParcelSummaryDto {
       routeTravelDate: _parcelDate(json['routeTravelDate']),
       routeTravelNote: json['routeTravelNote'] as String?,
       requiresPassengerSeat: (json['requiresPassengerSeat'] as bool?) ?? false,
+      routeListingPerspective:
+          _routeListingPerspectiveFromJson(json['routeListingPerspective']),
       claimerLevel: (json['claimerLevel'] as num?)?.toInt(),
       claimerLevelTitle: json['claimerLevelTitle'] as String?,
     );
@@ -217,6 +241,7 @@ class ParcelSummaryDto {
     DateTime? routeTravelDate,
     String? routeTravelNote,
     bool? requiresPassengerSeat,
+    RouteListingPerspective? routeListingPerspective,
     int? claimerLevel,
     String? claimerLevelTitle,
   }) {
@@ -240,6 +265,8 @@ class ParcelSummaryDto {
       routeTravelNote: routeTravelNote ?? this.routeTravelNote,
       requiresPassengerSeat:
           requiresPassengerSeat ?? this.requiresPassengerSeat,
+      routeListingPerspective:
+          routeListingPerspective ?? this.routeListingPerspective,
       claimerLevel: claimerLevel ?? this.claimerLevel,
       claimerLevelTitle: claimerLevelTitle ?? this.claimerLevelTitle,
     );
@@ -280,6 +307,7 @@ class ParcelDetailDto extends ParcelSummaryDto {
     required super.routeTravelDate,
     required super.routeTravelNote,
     required super.requiresPassengerSeat,
+    super.routeListingPerspective,
     super.claimerLevel,
     super.claimerLevelTitle,
     required this.fullPickupAddress,
@@ -323,6 +351,8 @@ class ParcelDetailDto extends ParcelSummaryDto {
       routeTravelDate: _parcelDate(json['routeTravelDate']),
       routeTravelNote: json['routeTravelNote'] as String?,
       requiresPassengerSeat: (json['requiresPassengerSeat'] as bool?) ?? false,
+      routeListingPerspective:
+          _routeListingPerspectiveFromJson(json['routeListingPerspective']),
       claimerLevel: (json['claimerLevel'] as num?)?.toInt(),
       claimerLevelTitle: json['claimerLevelTitle'] as String?,
       fullPickupAddress: json['fullPickupAddress'] as String?,
@@ -365,6 +395,7 @@ class ParcelDetailDto extends ParcelSummaryDto {
     DateTime? routeTravelDate,
     String? routeTravelNote,
     bool? requiresPassengerSeat,
+    RouteListingPerspective? routeListingPerspective,
     int? claimerLevel,
     String? claimerLevelTitle,
     String? fullPickupAddress,
@@ -402,6 +433,8 @@ class ParcelDetailDto extends ParcelSummaryDto {
       routeTravelNote: routeTravelNote ?? this.routeTravelNote,
       requiresPassengerSeat:
           requiresPassengerSeat ?? this.requiresPassengerSeat,
+      routeListingPerspective:
+          routeListingPerspective ?? this.routeListingPerspective,
       claimerLevel: claimerLevel ?? this.claimerLevel,
       claimerLevelTitle: claimerLevelTitle ?? this.claimerLevelTitle,
       fullPickupAddress: fullPickupAddress ?? this.fullPickupAddress,
@@ -453,6 +486,7 @@ class CreateParcelRequestDto {
   final DateTime? routeTravelDate;
   final String? routeTravelNote;
   final bool requiresPassengerSeat;
+  final RouteListingPerspective? routeListingPerspective;
 
   const CreateParcelRequestDto({
     required this.townId,
@@ -470,6 +504,7 @@ class CreateParcelRequestDto {
     required this.routeTravelDate,
     required this.routeTravelNote,
     required this.requiresPassengerSeat,
+    this.routeListingPerspective,
   });
 
   Map<String, dynamic> toJson() => {
@@ -488,6 +523,9 @@ class CreateParcelRequestDto {
     'routeTravelDate': routeTravelDate?.toUtc().toIso8601String(),
     'routeTravelNote': routeTravelNote,
     'requiresPassengerSeat': requiresPassengerSeat,
+    if (routeListingPerspective != null)
+      'routeListingPerspective':
+          _routeListingPerspectiveToJson(routeListingPerspective!),
   };
 }
 

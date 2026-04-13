@@ -176,6 +176,55 @@ String _formatParcelWhen(DateTime utc) {
   return DateFormat('EEE, d MMM yyyy • HH:mm').format(local);
 }
 
+bool _isRouteOfferingLift(ParcelDetailDto d) =>
+    d.requestType == ParcelRequestType.routeRequest &&
+    d.routeListingPerspective == RouteListingPerspective.offeringLift;
+
+/// Hero subtitle: branches on route offer + requester vs claimer.
+String _detailStatusSubtitle(ParcelDetailDto d) {
+  if (!_isRouteOfferingLift(d)) {
+    return parcelStatusLabel(d.status);
+  }
+  if (d.isRequester) {
+    return switch (d.status) {
+      ParcelStatus.open => 'Open',
+      ParcelStatus.claimed => 'Someone requested your seat',
+      ParcelStatus.pickedUp => 'Trip underway',
+      ParcelStatus.delivered => 'Awaiting your confirmation',
+      ParcelStatus.confirmed => 'Trip complete',
+      ParcelStatus.cancelled => parcelStatusLabel(d.status),
+      ParcelStatus.expired => parcelStatusLabel(d.status),
+    };
+  }
+  if (d.isClaimer) {
+    return switch (d.status) {
+      ParcelStatus.claimed => 'Seat requested',
+      ParcelStatus.pickedUp => 'Trip underway',
+      ParcelStatus.delivered => 'Awaiting poster confirmation',
+      ParcelStatus.confirmed => 'Trip complete',
+      ParcelStatus.open => parcelStatusLabel(d.status),
+      ParcelStatus.cancelled => parcelStatusLabel(d.status),
+      ParcelStatus.expired => parcelStatusLabel(d.status),
+    };
+  }
+  return parcelStatusLabel(d.status);
+}
+
+String _claimTimelineTitle(ParcelDetailDto d) {
+  if (!_isRouteOfferingLift(d)) return 'Claimed';
+  if (d.isRequester) return 'Seat requested';
+  if (d.isClaimer) return 'Matched';
+  return 'Claimed';
+}
+
+String _claimPrimaryButtonLabel(ParcelDetailDto d) {
+  if (d.requestType == ParcelRequestType.routeRequest &&
+      d.routeListingPerspective == RouteListingPerspective.offeringLift) {
+    return 'Request this seat';
+  }
+  return "I'll do this";
+}
+
 Future<void> _tryParcelActionAfterConnect(
   BuildContext context,
   RequestDetailViewModel viewModel,
@@ -216,7 +265,7 @@ class _RequestDetailBody extends StatelessWidget {
         ? 'Loading…'
         : (viewModel.error != null || d == null
               ? 'Unavailable'
-              : parcelStatusLabel(d.status));
+              : _detailStatusSubtitle(d));
     final headerTownLine = d == null
         ? 'Request'
         : '${d.pickupLocation} → ${d.dropoffLocation}';
@@ -269,7 +318,7 @@ class _RequestDetailBody extends StatelessWidget {
                       final claim = detail.activeClaim;
                       if (claim != null) {
                         timelineEntries.add((
-                          title: 'Claimed',
+                          title: _claimTimelineTitle(detail),
                           subtitle:
                               '${claim.claimedByDisplayName} • ${_formatParcelWhen(claim.claimedAt)}',
                         ));
@@ -301,7 +350,26 @@ class _RequestDetailBody extends StatelessWidget {
                           DetailSectionShell(
                             title: 'Status timeline',
                             icon: Icons.timeline_rounded,
-                            child: _ParcelTimeline(entries: timelineEntries),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _ParcelTimeline(entries: timelineEntries),
+                                if (_isRouteOfferingLift(detail) &&
+                                    detail.isRequester &&
+                                    detail.status == ParcelStatus.claimed &&
+                                    claim != null) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '${claim.claimedByDisplayName} requested a seat on your offer. '
+                                    'The steps below are the same—use them when you are ready.',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(height: 1.45),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 12),
                           DetailSectionShell(
@@ -379,6 +447,13 @@ class _RequestDetailBody extends StatelessWidget {
     bool effectiveGuest,
   ) {
     final actions = <Widget>[];
+    final profile = serviceLocator.mobileSessionManager.profile;
+    final showLockedClaimAction =
+        detail.status == ParcelStatus.open &&
+        !detail.isRequester &&
+        !detail.isClaimer &&
+        !detail.canClaim &&
+        profile?.trustLevel == MemberTrustLevel.newMember;
 
     if (effectiveGuest) {
       actions.add(
@@ -429,7 +504,23 @@ class _RequestDetailBody extends StatelessWidget {
           onPressed: viewModel.actionLoading
               ? null
               : () => guardedAction(viewModel.claim),
-          child: const Text("I'll do this"),
+          child: Text(_claimPrimaryButtonLabel(detail)),
+        ),
+      );
+    } else if (showLockedClaimAction && profile != null) {
+      actions.add(
+        FilledButton(
+          onPressed: null,
+          child: Text(_claimPrimaryButtonLabel(detail)),
+        ),
+      );
+      actions.add(
+        TextButton.icon(
+          onPressed: viewModel.actionLoading
+              ? null
+              : () => _showClaimEligibilitySheet(context),
+          icon: const Icon(Icons.info_outline_rounded),
+          label: const Text("Why can't I respond yet?"),
         ),
       );
     }
@@ -555,6 +646,89 @@ class _RequestDetailBody extends StatelessWidget {
         actions[i],
       ],
     ];
+  }
+}
+
+Future<void> _showClaimEligibilitySheet(BuildContext context) {
+  final listing = context.entityListing;
+
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    backgroundColor: listing.cardBg,
+    builder: (sheetContext) {
+      final sheetTheme = Theme.of(sheetContext);
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Responding is locked for now',
+              style: sheetTheme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: listing.textTitle,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'You can respond to a parcel or join a route listing only after all of these are true:',
+              style: sheetTheme.textTheme.bodyMedium?.copyWith(
+                color: listing.bodyText,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const _EligibilityRuleLine(
+              text: 'Your account is at least 7 days old.',
+            ),
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: () => Navigator.of(sheetContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _EligibilityRuleLine extends StatelessWidget {
+  const _EligibilityRuleLine({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final listing = context.entityListing;
+    final colorScheme = theme.colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(
+            Icons.check_circle_outline_rounded,
+            size: 18,
+            color: colorScheme.primary,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: listing.bodyText,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

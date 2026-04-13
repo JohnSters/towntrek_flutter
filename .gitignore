@@ -1,3 +1,6 @@
+# Local debug / capture artifacts (never commit; logcat may contain tokens)
+.tmp_*
+
 # Miscellaneous
 *.class
 *.log

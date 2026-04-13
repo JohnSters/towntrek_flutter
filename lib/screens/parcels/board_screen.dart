@@ -13,6 +13,9 @@ import 'request_detail_screen.dart';
 
 enum BoardListFilter { all, parcels, routes }
 
+/// Sub-filter for route rows when primary filter is All or Routes.
+enum BoardRoutePerspectiveFilter { any, needLift, offeringLift }
+
 class ParcelBoardViewModel extends ChangeNotifier {
   ParcelBoardViewModel({
     required this.town,
@@ -28,25 +31,49 @@ class ParcelBoardViewModel extends ChangeNotifier {
   String? error;
   List<ParcelSummaryDto> items = [];
   BoardListFilter listFilter = BoardListFilter.all;
+  BoardRoutePerspectiveFilter routePerspectiveFilter =
+      BoardRoutePerspectiveFilter.any;
 
   List<ParcelSummaryDto> get visibleItems {
-    switch (listFilter) {
-      case BoardListFilter.all:
-        return items;
-      case BoardListFilter.parcels:
-        return items
-            .where((p) => p.requestType == ParcelRequestType.standardParcel)
-            .toList();
-      case BoardListFilter.routes:
-        return items
-            .where((p) => p.requestType == ParcelRequestType.routeRequest)
-            .toList();
+    Iterable<ParcelSummaryDto> row = switch (listFilter) {
+      BoardListFilter.all => items,
+      BoardListFilter.parcels => items.where(
+        (p) => p.requestType == ParcelRequestType.standardParcel,
+      ),
+      BoardListFilter.routes => items.where(
+        (p) => p.requestType == ParcelRequestType.routeRequest,
+      ),
+    };
+    if (listFilter == BoardListFilter.all ||
+        listFilter == BoardListFilter.routes) {
+      if (routePerspectiveFilter == BoardRoutePerspectiveFilter.needLift) {
+        row = row.where(
+          (p) =>
+              p.requestType != ParcelRequestType.routeRequest ||
+              p.routeListingPerspective == RouteListingPerspective.needLift,
+        );
+      } else if (routePerspectiveFilter ==
+          BoardRoutePerspectiveFilter.offeringLift) {
+        row = row.where(
+          (p) =>
+              p.requestType != ParcelRequestType.routeRequest ||
+              p.routeListingPerspective ==
+                  RouteListingPerspective.offeringLift,
+        );
+      }
     }
+    return row.toList();
   }
 
   void setListFilter(BoardListFilter value) {
     if (listFilter == value) return;
     listFilter = value;
+    notifyListeners();
+  }
+
+  void setRoutePerspectiveFilter(BoardRoutePerspectiveFilter value) {
+    if (routePerspectiveFilter == value) return;
+    routePerspectiveFilter = value;
     notifyListeners();
   }
 
@@ -201,7 +228,7 @@ class _ParcelBoardBody extends StatelessWidget {
                       label: Text(
                         authenticatedMode
                             ? 'Post request'
-                            : 'Connect your device to post or claim',
+                            : 'Connect your device to post or respond to listings',
                       ),
                     ),
                   ),
@@ -232,6 +259,48 @@ class _ParcelBoardBody extends StatelessWidget {
                     },
                   ),
                 ),
+                if (viewModel.listFilter == BoardListFilter.all ||
+                    viewModel.listFilter == BoardListFilter.routes)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Route listings',
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: listing.bodyText,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        SegmentedButton<BoardRoutePerspectiveFilter>(
+                          showSelectedIcon: false,
+                          segments: const [
+                            ButtonSegment<BoardRoutePerspectiveFilter>(
+                              value: BoardRoutePerspectiveFilter.any,
+                              label: Text('Any'),
+                            ),
+                            ButtonSegment<BoardRoutePerspectiveFilter>(
+                              value: BoardRoutePerspectiveFilter.needLift,
+                              label: Text('Need lift'),
+                            ),
+                            ButtonSegment<BoardRoutePerspectiveFilter>(
+                              value: BoardRoutePerspectiveFilter.offeringLift,
+                              label: Text('Offering'),
+                            ),
+                          ],
+                          selected: {viewModel.routePerspectiveFilter},
+                          onSelectionChanged: (selection) {
+                            if (selection.isEmpty) return;
+                            context.read<ParcelBoardViewModel>().setRoutePerspectiveFilter(
+                              selection.first,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: viewModel.load,
@@ -339,8 +408,8 @@ class _ParcelBoardBody extends StatelessWidget {
       );
     case BoardListFilter.routes:
       return (
-        'No route requests',
-        'There are no route requests right now. Try All or Parcels, or post one.',
+        'No route listings',
+        'There are no route listings right now. Try All or Parcels, or post one.',
       );
     case BoardListFilter.all:
       return (
@@ -436,7 +505,7 @@ Future<void> showGuestParcelPrompt(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Connect your device to post or claim',
+              'Connect your device to post or respond to listings',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: listing.textTitle,

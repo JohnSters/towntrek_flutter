@@ -3,6 +3,7 @@ export 'config/api_config.dart';
 export 'auth/mobile_session_manager.dart';
 export 'constants/landing_page_constants.dart';
 export 'constants/town_feature_constants.dart';
+export 'constants/parcel_feature_flags.dart';
 export 'constants/creative_spaces_constants.dart';
 export 'constants/town_loader_constants.dart';
 export 'constants/town_selection_constants.dart';

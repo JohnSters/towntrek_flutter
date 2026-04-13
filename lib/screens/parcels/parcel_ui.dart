@@ -72,6 +72,33 @@ String requestTypeLabel(ParcelRequestType type) => switch (type) {
   ParcelRequestType.routeRequest => 'Route',
 };
 
+String? _routePerspectivePillLabel(ParcelSummaryDto parcel) {
+  if (parcel.requestType != ParcelRequestType.routeRequest) return null;
+  return switch (parcel.routeListingPerspective) {
+    RouteListingPerspective.needLift => 'Need a lift',
+    RouteListingPerspective.offeringLift => 'Offering a ride',
+    _ => null,
+  };
+}
+
+String _routeCardNoteFallback(ParcelSummaryDto parcel) {
+  if (parcel.requestType != ParcelRequestType.routeRequest) {
+    return 'A neighbour needs help with a local parcel run.';
+  }
+  if (parcel.routeListingPerspective == null) {
+    return 'Route listing — details may be from before listing types were added.';
+  }
+  if (parcel.routeListingPerspective == RouteListingPerspective.offeringLift) {
+    if (!kEnableOfferingLiftRoutePost) {
+      return parcel.routeTravelNote ??
+          'Someone may be offering space on this route — read the summary carefully.';
+    }
+    return parcel.routeTravelNote ??
+        'A driver posted spare capacity on this route.';
+  }
+  return parcel.routeTravelNote ?? 'Looking for help on this route.';
+}
+
 String trustLevelLabel(MemberTrustLevel level) => switch (level) {
   MemberTrustLevel.newMember => 'New',
   MemberTrustLevel.community => 'Community',
@@ -166,7 +193,7 @@ class ParcelCard extends StatelessWidget {
     final noteText = parcel.note?.isNotEmpty == true
         ? parcel.note!
         : parcel.requestType == ParcelRequestType.routeRequest
-        ? (parcel.routeTravelNote ?? 'Looking for help on this route.')
+        ? (parcel.routeTravelNote ?? _routeCardNoteFallback(parcel))
         : 'A neighbour needs help with a local parcel run.';
 
     final inner = Column(
@@ -218,6 +245,17 @@ class ParcelCard extends StatelessWidget {
                           ? Icons.alt_route_rounded
                           : Icons.local_shipping_outlined,
                     ),
+                    if (_routePerspectivePillLabel(parcel) != null)
+                      ParcelPill(
+                        label: _routePerspectivePillLabel(parcel)!,
+                        backgroundColor: colorScheme.secondaryContainer
+                            .withValues(alpha: 0.95),
+                        foregroundColor: colorScheme.onSecondaryContainer,
+                        icon: parcel.routeListingPerspective ==
+                                RouteListingPerspective.offeringLift
+                            ? Icons.directions_car_filled_outlined
+                            : Icons.hail_outlined,
+                      ),
                   ],
                 ),
               ),
@@ -271,7 +309,11 @@ class ParcelCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Claimer ',
+                      parcel.requestType == ParcelRequestType.routeRequest &&
+                              parcel.routeListingPerspective ==
+                                  RouteListingPerspective.offeringLift
+                          ? 'Responder '
+                          : 'Claimer ',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: listing.bodyText,
                         fontWeight: FontWeight.w600,

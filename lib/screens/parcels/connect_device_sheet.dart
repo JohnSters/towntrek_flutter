@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 
+enum _ConnectedAccountDecision { continueCurrent, useDifferentCode }
+
 /// Shows the connect-device bottom sheet. Returns `true` if the user ends with a
 /// valid session (including when already authenticated before the sheet opens).
 ///
@@ -15,10 +17,17 @@ Future<bool> showConnectDeviceSheet(
 }) async {
   final sessionManager = serviceLocator.mobileSessionManager;
   if (await sessionManager.ensureAuthenticated()) {
-    if (onConnected != null && context.mounted) {
-      await onConnected();
+    if (!context.mounted) return true;
+    final decision = await _askHowToUseExistingSession(context, sessionManager);
+    if (decision == null) return false;
+    if (decision == _ConnectedAccountDecision.continueCurrent) {
+      if (onConnected != null && context.mounted) {
+        await onConnected();
+      }
+      return true;
     }
-    return true;
+
+    await sessionManager.signOut();
   }
 
   if (!context.mounted) return false;
@@ -64,6 +73,100 @@ Future<void> runWithParcelSession(
   await showConnectDeviceSheet(context, onConnected: action);
 }
 
+Future<_ConnectedAccountDecision?> _askHowToUseExistingSession(
+  BuildContext context,
+  MobileSessionManager sessionManager,
+) {
+  final displayName = sessionManager.currentDisplayName?.trim();
+  final accountLabel = displayName?.isNotEmpty == true
+      ? displayName!
+      : 'your current account';
+
+  return showModalBottomSheet<_ConnectedAccountDecision>(
+    context: context,
+    showDragHandle: true,
+    backgroundColor: context.entityListing.cardBg,
+    builder: (sheetContext) {
+      final theme = Theme.of(sheetContext);
+      final listing = sheetContext.entityListing;
+      final colorScheme = theme.colorScheme;
+
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'This device is already connected',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: listing.textTitle,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'You are currently signed in as $accountLabel. Continue with this account or switch to a different TREK code on this emulator.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: listing.bodyText,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 18),
+            if (displayName?.isNotEmpty == true)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.person_outline_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        displayName!,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: listing.textTitle,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (displayName?.isNotEmpty == true) const SizedBox(height: 18),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(
+                  sheetContext,
+                ).pop(_ConnectedAccountDecision.continueCurrent);
+              },
+              child: Text('Continue as $accountLabel'),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.of(
+                  sheetContext,
+                ).pop(_ConnectedAccountDecision.useDifferentCode);
+              },
+              child: const Text('Use a different access code'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class _ConnectDeviceSheetBody extends StatefulWidget {
   const _ConnectDeviceSheetBody({
     required this.parentContext,
@@ -80,25 +183,35 @@ class _ConnectDeviceSheetBody extends StatefulWidget {
 
 class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
   final _codeController = TextEditingController();
-  final _deviceName = 'TownTrek ${Platform.operatingSystem}';
+  late final TextEditingController _deviceNameController;
   bool _submitting = false;
   bool _helpExpanded = false;
+
+  String get _defaultDeviceName => 'TownTrek ${Platform.operatingSystem}';
+
+  @override
+  void initState() {
+    super.initState();
+    _deviceNameController = TextEditingController(text: _defaultDeviceName);
+  }
 
   @override
   void dispose() {
     _codeController.dispose();
+    _deviceNameController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final code = _codeController.text.trim();
+    final deviceName = _deviceNameController.text.trim();
     if (code.isEmpty) return;
 
     setState(() => _submitting = true);
     try {
       await serviceLocator.mobileSessionManager.signInWithCode(
         code: code,
-        deviceName: _deviceName,
+        deviceName: deviceName.isEmpty ? _defaultDeviceName : deviceName,
       );
       if (!mounted) return;
       widget.onSuccess();
@@ -156,9 +269,29 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
               ),
             ),
           ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _deviceNameController,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: 'Device name',
+              hintText: 'e.g. My phone or Work tablet',
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.35,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 18,
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
           Text(
-            'Get your code from My Devices at towntrek.co.za',
+            'Get your code from My Devices at towntrek.co.za. You can also rename this device so it is easier to manage later.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: listing.bodyText,
               height: 1.4,
