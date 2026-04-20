@@ -24,8 +24,17 @@ class BusinessCategoryCopy {
   ) =>
       context.entityListingTheme;
 
-  static String listingBackFooterLabel(String? categoryKey) =>
-      isEquipmentRentals(categoryKey) ? 'Back to rentals' : 'Back to properties';
+  /// Footer for [BusinessCardPage]: pops to subcategories for this category ([categoryName]).
+  static String businessCardBackFooterLabel({
+    required String categoryName,
+    String? categoryKey,
+  }) {
+    final name = categoryName.trim();
+    if (name.isEmpty) {
+      return isEquipmentRentals(categoryKey) ? 'Back to rentals' : 'Back';
+    }
+    return 'Back to $name';
+  }
 
   static String entityPlural(String? categoryKey) =>
       isEquipmentRentals(categoryKey) ? 'listings' : 'businesses';

@@ -86,7 +86,10 @@ class _BusinessCardPageContentState extends State<_BusinessCardPageContent> {
     final viewModel = context.watch<BusinessCardViewModel>();
     final listingTheme =
         BusinessCategoryCopy.listingThemeOf(context, viewModel.category.key);
-    final backLabel = BusinessCategoryCopy.listingBackFooterLabel(viewModel.category.key);
+    final backLabel = BusinessCategoryCopy.businessCardBackFooterLabel(
+      categoryName: viewModel.category.name,
+      categoryKey: viewModel.category.key,
+    );
 
     return Scaffold(
       backgroundColor: context.entityListing.pageBg,
