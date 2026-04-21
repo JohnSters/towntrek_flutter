@@ -49,11 +49,10 @@ class EventInfoCard extends StatelessWidget {
               if (event.shortDescription != null &&
                   event.shortDescription!.trim().isNotEmpty) ...[
                 const SizedBox(height: 8),
-                Text(
-                  event.shortDescription!.trim(),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                CollapsibleDetailTextBlock(
+                  text: event.shortDescription!.trim(),
+                  headerLabel: 'Summary',
+                  textStyle: theme.textTheme.bodyMedium?.copyWith(
                     height: 1.4,
                     color: colorScheme.onSurface.withValues(alpha: 0.88),
                   ),
@@ -124,9 +123,10 @@ class EventInfoCard extends StatelessWidget {
             expandTitle: true,
             title: 'About',
             icon: Icons.notes_rounded,
-            child: Text(
-              event.description!.trim(),
-              style: theme.textTheme.bodyLarge?.copyWith(
+            child: CollapsibleDetailTextBlock(
+              text: event.description!.trim(),
+              headerLabel: 'Full description',
+              textStyle: theme.textTheme.bodyLarge?.copyWith(
                 color: colorScheme.onSurfaceVariant,
                 height: 1.6,
               ),

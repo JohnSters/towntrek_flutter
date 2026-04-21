@@ -224,9 +224,7 @@ class _InfoSection extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final location = _buildLocationText();
     final rating = space.rating;
-    final description = space.description.trim().isEmpty
-        ? CreativeSpacesConstants.noDescriptionText
-        : space.description.trim();
+    final rawDescription = space.description.trim();
 
     return Container(
       width: double.infinity,
@@ -295,15 +293,23 @@ class _InfoSection extends StatelessWidget {
             ),
             const SizedBox(height: 8),
           ],
-          Text(
-            description,
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              height: 1.45,
-              color: colorScheme.onSurface.withValues(alpha: 0.88),
+          if (rawDescription.isEmpty)
+            Text(
+              CreativeSpacesConstants.noDescriptionText,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                height: 1.45,
+                color: colorScheme.onSurface.withValues(alpha: 0.72),
+              ),
+            )
+          else
+            CollapsibleDetailTextBlock(
+              text: rawDescription,
+              headerLabel: 'About',
+              textStyle: theme.textTheme.bodyMedium?.copyWith(
+                height: 1.45,
+                color: colorScheme.onSurface.withValues(alpha: 0.88),
+              ),
             ),
-          ),
           if (space.contactMessage != null &&
               space.contactMessage!.trim().isNotEmpty) ...[
             const SizedBox(height: 10),

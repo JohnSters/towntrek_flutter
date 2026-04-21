@@ -178,12 +178,23 @@ class _PropertyDetailsBody extends StatelessWidget {
     required this.viewModel,
   });
 
-  String get _blurb {
+  String _combinedDescriptionText() {
     final short = listing.shortDescription?.trim();
-    if (short != null && short.isNotEmpty) return short;
     final long = listing.description?.trim();
+    if ((short == null || short.isEmpty) &&
+        (long == null || long.isEmpty)) {
+      return '';
+    }
+    if (short != null &&
+        short.isNotEmpty &&
+        long != null &&
+        long.isNotEmpty &&
+        short != long) {
+      return '$short\n\n$long';
+    }
     if (long != null && long.isNotEmpty) return long;
-    return 'No description available yet.';
+    if (short != null && short.isNotEmpty) return short;
+    return '';
   }
 
   @override
@@ -257,11 +268,10 @@ class _PropertyDetailsBody extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(
-                _blurb,
-                maxLines: 6,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              CollapsibleDetailTextBlock(
+                text: _combinedDescriptionText(),
+                headerLabel: 'Description',
+                textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       height: 1.4,
                       color: colorScheme.onSurface.withValues(alpha: 0.88),
                     ),

@@ -9,6 +9,20 @@ import '../../models/models.dart';
 import 'service_detail_state.dart';
 import 'service_detail_view_model.dart';
 
+/// Short summary plus full description when both exist and differ.
+String _combinedServiceDescription(ServiceDetailDto service) {
+  final short = service.shortDescription?.trim();
+  final long = service.description.trim();
+  if (long.isNotEmpty) {
+    if (short != null && short.isNotEmpty && short != long) {
+      return '$short\n\n$long';
+    }
+    return long;
+  }
+  if (short != null && short.isNotEmpty) return short;
+  return '';
+}
+
 class ServiceDetailPage extends StatelessWidget {
   final int serviceId;
   final String serviceName;
@@ -190,9 +204,7 @@ class _ServiceDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final qa = context.detailQuickActions;
-    final description = (service.shortDescription?.trim().isNotEmpty == true)
-        ? service.shortDescription!.trim()
-        : service.description.trim();
+    final description = _combinedServiceDescription(service);
 
     final serviceTags = <String>[
       if (service.serviceArea?.trim().isNotEmpty == true) service.serviceArea!.trim(),
@@ -209,32 +221,13 @@ class _ServiceDetailBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.primaryContainer.withValues(alpha: 0.72),
-                colorScheme.tertiaryContainer.withValues(alpha: 0.45),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.18),
-            ),
-          ),
-          child: Text(
-            description.isEmpty ? 'No description available yet.' : description,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.4,
-                  color: colorScheme.onSurface.withValues(alpha: 0.88),
-                ),
-          ),
+        CollapsibleGradientDescriptionCard(
+          bodyText: description,
+          headerLabel: 'About',
+          gradientColors: [
+            colorScheme.primaryContainer.withValues(alpha: 0.72),
+            colorScheme.tertiaryContainer.withValues(alpha: 0.45),
+          ],
         ),
         if (service.images.isNotEmpty) ...[
           const SizedBox(height: 12),

@@ -154,39 +154,13 @@ class _BusinessDetailsBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.primaryContainer.withValues(alpha: 0.72),
-                colorScheme.secondaryContainer.withValues(alpha: 0.50),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.18),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                business.description.trim().isEmpty
-                    ? 'No description available yet.'
-                    : business.description.trim(),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.4,
-                      color: colorScheme.onSurface.withValues(alpha: 0.88),
-                    ),
-              ),
-            ],
-          ),
+        CollapsibleGradientDescriptionCard(
+          bodyText: business.description.trim(),
+          headerLabel: 'About',
+          gradientColors: [
+            colorScheme.primaryContainer.withValues(alpha: 0.72),
+            colorScheme.secondaryContainer.withValues(alpha: 0.50),
+          ],
         ),
         if (business.images.isNotEmpty) ...[
           const SizedBox(height: 12),
