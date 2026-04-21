@@ -69,6 +69,9 @@ class MobileSessionManager extends ChangeNotifier {
     required String code,
     required String deviceName,
   }) async {
+    if (_session != null) {
+      await signOut(notify: false);
+    }
     _busy = true;
     _errorMessage = null;
     notifyListeners();
@@ -199,6 +202,13 @@ class MobileSessionManager extends ChangeNotifier {
   }
 
   Future<void> signOut({bool notify = true}) async {
+    if (_session != null) {
+      try {
+        await _mobileAuthRepository.disconnect();
+      } catch (_) {
+        // Best-effort: still clear local session if the token is expired or offline.
+      }
+    }
     _session = null;
     _profile = null;
     _memberProgression = null;

@@ -10,6 +10,8 @@ abstract class MobileAuthRepository {
   Future<MobileAuthResponseDto> refresh({
     required String refreshToken,
   });
+
+  Future<void> disconnect();
 }
 
 class MobileAuthRepositoryImpl implements MobileAuthRepository {
@@ -30,5 +32,10 @@ class MobileAuthRepositoryImpl implements MobileAuthRepository {
     required String refreshToken,
   }) async {
     return _apiService.refresh(refreshToken: refreshToken);
+  }
+
+  @override
+  Future<void> disconnect() async {
+    await _apiService.disconnect();
   }
 }

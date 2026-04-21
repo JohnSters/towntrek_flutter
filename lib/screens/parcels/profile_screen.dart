@@ -194,8 +194,8 @@ class _ProfileBody extends StatelessWidget {
                       const SizedBox(height: _sectionGap),
                       FilledButton(
                         onPressed: () async {
-                          // Do not sign out here: redeeming a new code replaces the
-                          // session; backing out must keep the existing token.
+                          // [signInWithCode] disconnects the current device on the server
+                          // before redeeming, so the previous session is revoked.
                           await Navigator.of(context).push<bool>(
                             MaterialPageRoute(
                               builder: (_) => const AccessCodeEntryScreen(),
@@ -206,6 +206,57 @@ class _ProfileBody extends StatelessWidget {
                           }
                         },
                         child: const Text('Use a different access code'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: colorScheme.error,
+                          side: BorderSide(
+                            color: colorScheme.error.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (dialogContext) {
+                              return AlertDialog(
+                                title: const Text('Disconnect this device?'),
+                                content: Text(
+                                  'You will need a new TownTrek code from My Devices on '
+                                  'towntrek.co.za to use Parcel features on this device. '
+                                  'Any unused codes on your account will be cancelled.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    height: 1.4,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: colorScheme.error,
+                                      foregroundColor: colorScheme.onError,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(true),
+                                    child: const Text('Disconnect'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (confirmed != true || !context.mounted) {
+                            return;
+                          }
+                          await serviceLocator.mobileSessionManager.signOut();
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: const Text('Disconnect this device'),
                       ),
                     ],
                   );

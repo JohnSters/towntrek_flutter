@@ -26,4 +26,12 @@ class MobileAuthApiService {
     );
     return MobileAuthResponseDto.fromJson(response.data!);
   }
+
+  /// Revokes this device session on the server and invalidates unused mobile access codes.
+  Future<void> disconnect() async {
+    await _apiClient.post<Map<String, dynamic>>(
+      '/api/mobile/disconnect',
+      data: <String, dynamic>{},
+    );
+  }
 }
