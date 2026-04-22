@@ -80,9 +80,7 @@ class _PropertyDetailsPageContent extends StatelessWidget {
             if (state is PropertyDetailsSuccess)
               EntityOpenClosedBanner(
                 isOpen: null,
-                viewCount: state.listing.viewCount > 0
-                    ? state.listing.viewCount
-                    : null,
+                viewCount: state.listing.viewCount,
               ),
             Expanded(
               child: _buildContent(context, state, viewModel),
