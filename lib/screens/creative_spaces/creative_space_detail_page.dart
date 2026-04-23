@@ -78,6 +78,163 @@ const _kGallerySurfaceTones = <({Gradient header, Color title, Color body})>[
   ),
 ];
 
+/// Narrow screens: single-column accordions instead of the 2-column card grid.
+const double _kGalleryMultiselectAccordionMaxWidth = 600;
+
+bool _useGalleryMultiselectAccordionLayout(BuildContext context) {
+  return MediaQuery.sizeOf(context).width < _kGalleryMultiselectAccordionMaxWidth;
+}
+
+/// Expandable row + chips; reuses [ _kGallerySurfaceTones ] (mobile layout only).
+class _GalleryMultiselectAccordionTile extends StatefulWidget {
+  final ThemeData theme;
+  final String headerLabel;
+  final List<String> items;
+  final int toneIndex;
+  final bool uppercaseHeader;
+
+  const _GalleryMultiselectAccordionTile({
+    required this.theme,
+    required this.headerLabel,
+    required this.items,
+    required this.toneIndex,
+    this.uppercaseHeader = true,
+  });
+
+  @override
+  State<_GalleryMultiselectAccordionTile> createState() =>
+      _GalleryMultiselectAccordionTileState();
+}
+
+class _GalleryMultiselectAccordionTileState
+    extends State<_GalleryMultiselectAccordionTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone =
+        _kGallerySurfaceTones[widget.toneIndex % _kGallerySurfaceTones.length];
+    final title = widget.uppercaseHeader
+        ? widget.headerLabel.toUpperCase()
+        : widget.headerLabel;
+    final chipLabelStyle = const TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.07)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() => _expanded = !_expanded),
+                child: Ink(
+                  decoration: BoxDecoration(gradient: tone.header),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: tone.title,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: widget.theme.textTheme.titleSmall?.copyWith(
+                              color: tone.title,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.35,
+                              fontSize: 12,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${widget.items.length}',
+                          style: widget.theme.textTheme.labelLarge?.copyWith(
+                            color: tone.title.withValues(alpha: 0.88),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          _expanded ? Icons.expand_less : Icons.expand_more,
+                          color: tone.title,
+                          size: 22,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: _expanded
+                  ? ColoredBox(
+                      color: tone.body,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: widget.items
+                              .map(
+                                (s) => Chip(
+                                  label: Text(s, style: chipLabelStyle),
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  padding: EdgeInsets.zero,
+                                  labelPadding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Single multiselect “card” ( art forms, styles, … digital ) with shared tone strip + centered chips.
 Widget _gallerySurfaceCard(
   ThemeData theme, {
@@ -85,16 +242,37 @@ Widget _gallerySurfaceCard(
   required List<String> items,
   required int toneIndex,
   bool uppercaseHeader = true,
+  bool compact = false,
 }) {
   if (items.isEmpty) return const SizedBox.shrink();
   final tone = _kGallerySurfaceTones[toneIndex % _kGallerySurfaceTones.length];
   final h = uppercaseHeader ? headerLabel.toUpperCase() : headerLabel;
+  final radius = compact ? 10.0 : 14.0;
+  final headerPad = compact
+      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 6)
+      : const EdgeInsets.symmetric(horizontal: 12, vertical: 9);
+  final headerStyle = theme.textTheme.labelLarge?.copyWith(
+    color: tone.title,
+    fontWeight: FontWeight.w800,
+    letterSpacing: compact ? 0.35 : 0.4,
+    fontSize: compact ? 10.5 : 12,
+    height: compact ? 1.2 : null,
+  );
+  final bodyPad = compact
+      ? const EdgeInsets.fromLTRB(6, 6, 6, 7)
+      : const EdgeInsets.fromLTRB(8, 10, 8, 12);
+  final chipSpacing = compact ? 4.0 : 6.0;
+  final chipLabelStyle = TextStyle(
+    fontSize: compact ? 11 : 12,
+    fontWeight: FontWeight.w600,
+    height: compact ? 1.2 : null,
+  );
   return Padding(
-    padding: const EdgeInsets.only(bottom: 10),
+    padding: EdgeInsets.only(bottom: compact ? 0 : 10),
     child: Material(
       color: Colors.transparent,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(radius),
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: tone.body,
@@ -102,7 +280,7 @@ Widget _gallerySurfaceCard(
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 3,
+                blurRadius: compact ? 2 : 3,
                 offset: const Offset(0, 1),
               ),
             ],
@@ -112,32 +290,35 @@ Widget _gallerySurfaceCard(
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                padding: headerPad,
                 decoration: BoxDecoration(gradient: tone.header),
                 child: Text(
                   h,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: tone.title,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.4,
-                    fontSize: 12,
-                  ),
+                  maxLines: compact ? 2 : null,
+                  overflow: compact ? TextOverflow.ellipsis : null,
+                  style: headerStyle,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 12),
+                padding: bodyPad,
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  runSpacing: 6,
+                  spacing: chipSpacing,
+                  runSpacing: chipSpacing,
                   children: items
                       .map(
                         (s) => Chip(
-                          label: Text(s),
+                          label: Text(s, style: chipLabelStyle),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: compact
+                              ? EdgeInsets.zero
+                              : const EdgeInsets.symmetric(horizontal: 4),
+                          labelPadding: compact
+                              ? const EdgeInsets.symmetric(horizontal: 6)
+                              : null,
                         ),
                       )
                       .toList(),
@@ -784,7 +965,53 @@ class _GalleryStudioSection extends StatelessWidget {
     final cs = theme.colorScheme;
     final artGroups = _groupArtFormTokensForDisplay(detail.artFormsOffered);
     final artFormEntries = artGroups.entries.toList();
-    final afterArtTone = artFormEntries.length;
+    var toneCursor = 0;
+
+    final multiselectTiles =
+        <({String header, List<String> items, int tone, bool uppercaseHeader})>[];
+    var hasArtFormTiles = false;
+    for (var i = 0; i < artFormEntries.length; i++) {
+      final e = artFormEntries[i];
+      if (e.value.isEmpty) continue;
+      hasArtFormTiles = true;
+      multiselectTiles.add((
+        header: e.key,
+        items: e.value,
+        tone: toneCursor++,
+        uppercaseHeader: true,
+      ));
+    }
+    void addSurfaceCard(String header, List<String> items) {
+      if (items.isEmpty) return;
+      multiselectTiles.add((
+        header: header,
+        items: items,
+        tone: toneCursor++,
+        uppercaseHeader: false,
+      ));
+    }
+
+    addSurfaceCard('Styles & genres', detail.stylesAndGenres);
+    addSurfaceCard('Artist representation', detail.artistRepresentation);
+    addSurfaceCard('Price ranges', detail.priceRanges);
+    addSurfaceCard('Services', detail.servicesOffered);
+    addSurfaceCard('Visitor experience', detail.visitorExperience);
+    addSurfaceCard('Exhibition types', detail.exhibitionTypes);
+    addSurfaceCard('Digital presence', detail.digitalPresence);
+
+    final hasFeaturedArtists = detail.featuredArtists != null &&
+        detail.featuredArtists!.trim().isNotEmpty;
+    final hasExhibitionFormat = detail.exhibitionFormat != null &&
+        detail.exhibitionFormat!.trim().isNotEmpty;
+    final hasStudioVisitsChip = detail.offersStudioVisits;
+    final hasGalleryNarrativeFooter =
+        hasFeaturedArtists || hasExhibitionFormat || hasStudioVisitsChip;
+    final hasGalleryIntroText = (detail.galleryType != null &&
+            detail.galleryType!.trim().isNotEmpty) ||
+        (detail.curatorialTheme != null &&
+            detail.curatorialTheme!.trim().isNotEmpty);
+    final showTopNarrativeDivider = hasGalleryNarrativeFooter &&
+        (multiselectTiles.isNotEmpty || hasGalleryIntroText);
 
     return DetailSectionShell(
       title: CreativeSpacesConstants.galleryStudioSectionTitle,
@@ -811,7 +1038,7 @@ class _GalleryStudioSection extends StatelessWidget {
           if (detail.curatorialTheme != null &&
               detail.curatorialTheme!.trim().isNotEmpty)
             const SizedBox(height: 10),
-          if (artFormEntries.isNotEmpty) ...[
+          if (hasArtFormTiles) ...[
             Text(
               'Art forms',
               style: theme.textTheme.titleSmall?.copyWith(
@@ -819,88 +1046,104 @@ class _GalleryStudioSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            for (var i = 0; i < artFormEntries.length; i++) ...[
-              _gallerySurfaceCard(
-                theme,
-                headerLabel: artFormEntries[i].key,
-                items: artFormEntries[i].value,
-                toneIndex: i,
-              ),
-            ],
           ],
-          _gallerySurfaceCard(
-            theme,
-            headerLabel: 'Styles & genres',
-            items: detail.stylesAndGenres,
-            toneIndex: afterArtTone,
-          ),
-          _gallerySurfaceCard(
-            theme,
-            headerLabel: 'Artist representation',
-            items: detail.artistRepresentation,
-            toneIndex: afterArtTone + 1,
-          ),
-          _gallerySurfaceCard(
-            theme,
-            headerLabel: 'Price ranges',
-            items: detail.priceRanges,
-            toneIndex: afterArtTone + 2,
-          ),
-          _gallerySurfaceCard(
-            theme,
-            headerLabel: 'Services',
-            items: detail.servicesOffered,
-            toneIndex: afterArtTone + 3,
-          ),
-          _gallerySurfaceCard(
-            theme,
-            headerLabel: 'Visitor experience',
-            items: detail.visitorExperience,
-            toneIndex: afterArtTone + 4,
-          ),
-          _gallerySurfaceCard(
-            theme,
-            headerLabel: 'Exhibition types',
-            items: detail.exhibitionTypes,
-            toneIndex: afterArtTone + 5,
-          ),
-          _gallerySurfaceCard(
-            theme,
-            headerLabel: 'Digital presence',
-            items: detail.digitalPresence,
-            toneIndex: afterArtTone + 6,
-          ),
-          if (detail.featuredArtists != null &&
-              detail.featuredArtists!.trim().isNotEmpty) ...[
+          if (multiselectTiles.isNotEmpty)
+            _useGalleryMultiselectAccordionLayout(context)
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var i = 0; i < multiselectTiles.length; i++) ...[
+                        _GalleryMultiselectAccordionTile(
+                          theme: theme,
+                          headerLabel: multiselectTiles[i].header,
+                          items: multiselectTiles[i].items,
+                          toneIndex: multiselectTiles[i].tone,
+                          uppercaseHeader: multiselectTiles[i].uppercaseHeader,
+                        ),
+                        if (i < multiselectTiles.length - 1)
+                          const SizedBox(height: 8),
+                      ],
+                    ],
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      const gap = 6.0;
+                      final colW = (constraints.maxWidth - gap) / 2;
+                      return Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        children: [
+                          for (final tile in multiselectTiles)
+                            SizedBox(
+                              width: colW,
+                              child: _gallerySurfaceCard(
+                                theme,
+                                headerLabel: tile.header,
+                                items: tile.items,
+                                toneIndex: tile.tone,
+                                compact: true,
+                                uppercaseHeader: tile.uppercaseHeader,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+          if (showTopNarrativeDivider) ...[
+            const SizedBox(height: 20),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (hasFeaturedArtists) ...[
             Text(
               'Featured artists',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               detail.featuredArtists!.trim(),
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
             ),
-            const SizedBox(height: 10),
           ],
-          if (detail.exhibitionFormat != null &&
-              detail.exhibitionFormat!.trim().isNotEmpty) ...[
+          if (hasFeaturedArtists && hasExhibitionFormat) ...[
+            const SizedBox(height: 18),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.38),
+            ),
+            const SizedBox(height: 18),
+          ],
+          if (hasExhibitionFormat) ...[
             Text(
               'Exhibition format',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               detail.exhibitionFormat!.trim(),
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
             ),
-            const SizedBox(height: 10),
           ],
-          if (detail.offersStudioVisits)
+          if ((hasFeaturedArtists || hasExhibitionFormat) &&
+              hasStudioVisitsChip) ...[
+            const SizedBox(height: 18),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.38),
+            ),
+            const SizedBox(height: 14),
+          ],
+          if (hasStudioVisitsChip)
             Chip(
               label: const Text('Studio visits available'),
               avatar: Icon(Icons.meeting_room_rounded, size: 18, color: cs.primary),
@@ -1233,26 +1476,42 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+    final primary = Theme.of(context).colorScheme.primary;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: primary.withValues(alpha: 0.2),
+            ),
           ),
-        ],
-      ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(icon, size: 13, color: primary),
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                fit: FlexFit.loose,
+                child: Text(
+                  text,
+                  softWrap: true,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -1265,23 +1524,38 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(14),
           ),
-        ],
-      ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Icon(icon, size: 12),
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                fit: FlexFit.loose,
+                child: Text(
+                  text,
+                  softWrap: true,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
