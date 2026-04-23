@@ -68,6 +68,9 @@ class CreativeSpacesConstants {
   static const String operatingHoursTitle = 'Operating Hours';
   static const String specialHoursTitle = 'Special hours';
   static const String detailsTitle = 'Details';
+  /// Server creative category key for Art Galleries & Studios.
+  static const String categoryKeyArtGalleriesStudios = 'art-galleries-studios';
+  static const String galleryStudioSectionTitle = 'Gallery & studio';
   static const String galleryTitle = 'Gallery';
   static const String reviewsTitle = 'Reviews';
   static const String documentsTitle = 'Documents';

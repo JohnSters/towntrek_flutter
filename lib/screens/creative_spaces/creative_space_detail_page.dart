@@ -18,6 +18,31 @@ bool _creativeSpaceHasSocial(CreativeSpaceDetailDto space) {
       nonEmpty(space.twitterUrl);
 }
 
+bool _shouldShowGalleryStudio(CreativeSpaceDetailDto space) {
+  final g = space.galleryStudio;
+  if (g == null || !g.hasAnyVisible) return false;
+  return space.categoryKey == CreativeSpacesConstants.categoryKeyArtGalleriesStudios;
+}
+
+/// Group composite art-form tokens (`Medium|Option`) for display (mirrors server grouping).
+Map<String, List<String>> _groupArtFormTokensForDisplay(List<String> tokens) {
+  final map = <String, List<String>>{};
+  for (final raw in tokens) {
+    final t = raw.trim();
+    if (t.isEmpty) continue;
+    final i = t.indexOf('|');
+    final medium = i < 0 ? '' : t.substring(0, i).trim();
+    final opt = (i < 0 ? t : t.substring(i + 1)).trim();
+    if (medium.isEmpty) continue;
+    map.putIfAbsent(medium, () => []).add(opt);
+  }
+  for (final list in map.values) {
+    list.sort();
+  }
+  final keys = map.keys.toList()..sort();
+  return {for (final k in keys) k: map[k]!};
+}
+
 class CreativeSpaceDetailPage extends StatelessWidget {
   final int creativeSpaceId;
   final String creativeSpaceName;
@@ -175,6 +200,10 @@ class _CreativeSpaceDetailBody extends StatelessWidget {
         _InfoSection(space: space),
         const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
         _QuickActionsSection(space: space),
+        if (_shouldShowGalleryStudio(space)) ...[
+          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
+          _GalleryStudioSection(detail: space.galleryStudio!),
+        ],
         if (_creativeSpaceHasSocial(space)) ...[
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
           _CreativeSocialSection(space: space),
@@ -597,6 +626,162 @@ class _CreativeSocialSection extends StatelessWidget {
                 context,
                 space.twitterUrl!.trim(),
               ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GalleryStudioSection extends StatelessWidget {
+  final CreativeSpaceGalleryStudioDetailDto detail;
+
+  const _GalleryStudioSection({required this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final artGroups = _groupArtFormTokensForDisplay(detail.artFormsOffered);
+
+    Widget chipRow(String label, List<String> items) {
+      if (items.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: items
+                .map(
+                  (s) => Chip(
+                    label: Text(s),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 12),
+        ],
+      );
+    }
+
+    return DetailSectionShell(
+      title: CreativeSpacesConstants.galleryStudioSectionTitle,
+      icon: Icons.museum_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (detail.galleryType != null &&
+              detail.galleryType!.trim().isNotEmpty) ...[
+            Text(
+              detail.galleryType!.trim(),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (detail.curatorialTheme != null &&
+              detail.curatorialTheme!.trim().isNotEmpty)
+            Text(
+              detail.curatorialTheme!.trim(),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
+          if (detail.curatorialTheme != null &&
+              detail.curatorialTheme!.trim().isNotEmpty)
+            const SizedBox(height: 10),
+          if (artGroups.isNotEmpty) ...[
+            Text(
+              'Art forms',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...artGroups.entries.map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      e.key,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: e.value
+                          .map(
+                            (s) => Chip(
+                              label: Text(s),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          chipRow('Styles & genres', detail.stylesAndGenres),
+          chipRow('Artist representation', detail.artistRepresentation),
+          chipRow('Price ranges', detail.priceRanges),
+          chipRow('Services', detail.servicesOffered),
+          chipRow('Visitor experience', detail.visitorExperience),
+          chipRow('Exhibition types', detail.exhibitionTypes),
+          chipRow('Digital presence', detail.digitalPresence),
+          if (detail.featuredArtists != null &&
+              detail.featuredArtists!.trim().isNotEmpty) ...[
+            Text(
+              'Featured artists',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              detail.featuredArtists!.trim(),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (detail.exhibitionFormat != null &&
+              detail.exhibitionFormat!.trim().isNotEmpty) ...[
+            Text(
+              'Exhibition format',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              detail.exhibitionFormat!.trim(),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (detail.offersStudioVisits)
+            Chip(
+              label: const Text('Studio visits available'),
+              avatar: Icon(Icons.meeting_room_rounded, size: 18, color: cs.primary),
             ),
         ],
       ),

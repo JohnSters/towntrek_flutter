@@ -28,6 +28,7 @@ export 'creative_category_dto.dart';
 export 'creative_sub_category_dto.dart';
 export 'creative_space_dto.dart';
 export 'creative_space_detail_dto.dart';
+export 'creative_space_gallery_studio_detail_dto.dart';
 export 'creative_space_image_dto.dart';
 export 'creative_space_operating_hour_dto.dart';
 export 'creative_space_list_response.dart';

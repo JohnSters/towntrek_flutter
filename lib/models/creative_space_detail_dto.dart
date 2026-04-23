@@ -1,4 +1,5 @@
 import 'creative_space_dto.dart';
+import 'creative_space_gallery_studio_detail_dto.dart';
 import 'creative_space_image_dto.dart';
 import 'creative_space_operating_hour_dto.dart';
 import 'document_dto.dart';
@@ -58,6 +59,7 @@ class CreativeSpaceDetailDto {
   final List<ReviewDto> reviews;
   final List<DocumentDto> documents;
   final CreativeSpaceDto summary;
+  final CreativeSpaceGalleryStudioDetailDto? galleryStudio;
 
   const CreativeSpaceDetailDto({
     required this.id,
@@ -112,6 +114,7 @@ class CreativeSpaceDetailDto {
     this.reviews = const [],
     this.documents = const [],
     required this.summary,
+    this.galleryStudio,
   });
 
   /// Creates a [CreativeSpaceDetailDto] from JSON
@@ -124,6 +127,21 @@ class CreativeSpaceDetailDto {
     summaryJson.remove('specialOperatingHours');
     summaryJson.remove('reviews');
     summaryJson.remove('documents');
+    summaryJson.remove('galleryStudio');
+    summaryJson.remove('craftMarketsMakers');
+    summaryJson.remove('heritageCultural');
+    summaryJson.remove('textileFashion');
+    summaryJson.remove('performingArts');
+    summaryJson.remove('foodArtisans');
+    summaryJson.remove('jewelleryAdornment');
+
+    final rawGallery = json['galleryStudio'];
+    CreativeSpaceGalleryStudioDetailDto? gallery;
+    if (rawGallery is Map<String, dynamic>) {
+      gallery = CreativeSpaceGalleryStudioDetailDto.fromJson(rawGallery);
+    } else {
+      gallery = null;
+    }
 
     return CreativeSpaceDetailDto(
       id: json['id'] as int,
@@ -193,6 +211,7 @@ class CreativeSpaceDetailDto {
               .toList() ??
           const [],
       summary: CreativeSpaceDto.fromJson(summaryJson),
+      galleryStudio: gallery,
     );
   }
 
@@ -251,6 +270,7 @@ class CreativeSpaceDetailDto {
       'reviews': reviews.map((e) => e.toJson()).toList(),
       'documents': documents.map((e) => e.toJson()).toList(),
       'summary': summary.toJson(),
+      if (galleryStudio != null) 'galleryStudio': galleryStudio!.toJson(),
     };
   }
 }
