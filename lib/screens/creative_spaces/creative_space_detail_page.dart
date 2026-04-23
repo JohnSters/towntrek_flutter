@@ -11,6 +11,146 @@ import '../business_details/widgets/business_documents_section.dart';
 import 'creative_space_detail_state.dart';
 import 'creative_space_detail_view_model.dart';
 
+/// Header + body surface (soft material) for gallery multiselect blocks — order matches web `tone-0…6`.
+const _kGallerySurfaceTones = <({Gradient header, Color title, Color body})>[
+  (
+    header: LinearGradient(
+      colors: [Color(0x8FC4B5FD), Color(0x73A5B4FC)],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    ),
+    title: Color(0xFF312E81),
+    body: Color(0xE6EEF2FF),
+  ),
+  (
+    header: LinearGradient(
+      colors: [Color(0x8FA7F3D0), Color(0x736EE7B7)],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    ),
+    title: Color(0xFF064E3B),
+    body: Color(0xE6ECFDF5),
+  ),
+  (
+    header: LinearGradient(
+      colors: [Color(0x8FBFD7FE), Color(0x7393C5FD)],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    ),
+    title: Color(0xFF1E3A5F),
+    body: Color(0xE6EFF6FF),
+  ),
+  (
+    header: LinearGradient(
+      colors: [Color(0x8FFED7AA), Color(0x73FDBA74)],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    ),
+    title: Color(0xFF7C2D12),
+    body: Color(0xF2FFF7ED),
+  ),
+  (
+    header: LinearGradient(
+      colors: [Color(0x8FE9D5FF), Color(0x73D8B4FE)],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    ),
+    title: Color(0xFF581C87),
+    body: Color(0xE6FAF5FF),
+  ),
+  (
+    header: LinearGradient(
+      colors: [Color(0x8F99F6E4), Color(0x735EEAD4)],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    ),
+    title: Color(0xFF115E59),
+    body: Color(0xF2F0FDFA),
+  ),
+  (
+    header: LinearGradient(
+      colors: [Color(0x8FFECACA), Color(0x73FCA5A5)],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    ),
+    title: Color(0xFF7F1D1D),
+    body: Color(0xE6FFF1F2),
+  ),
+];
+
+/// Single multiselect “card” ( art forms, styles, … digital ) with shared tone strip + centered chips.
+Widget _gallerySurfaceCard(
+  ThemeData theme, {
+  required String headerLabel,
+  required List<String> items,
+  required int toneIndex,
+  bool uppercaseHeader = true,
+}) {
+  if (items.isEmpty) return const SizedBox.shrink();
+  final tone = _kGallerySurfaceTones[toneIndex % _kGallerySurfaceTones.length];
+  final h = uppercaseHeader ? headerLabel.toUpperCase() : headerLabel;
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Material(
+      color: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: tone.body,
+            border: Border.all(color: Colors.black.withValues(alpha: 0.07)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                decoration: BoxDecoration(gradient: tone.header),
+                child: Text(
+                  h,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: tone.title,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 10, 8, 12),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: items
+                      .map(
+                        (s) => Chip(
+                          label: Text(s),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 bool _creativeSpaceHasSocial(CreativeSpaceDetailDto space) {
   bool nonEmpty(String? s) => s != null && s.trim().isNotEmpty;
   return nonEmpty(space.facebookUrl) ||
@@ -643,37 +783,8 @@ class _GalleryStudioSection extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final artGroups = _groupArtFormTokensForDisplay(detail.artFormsOffered);
-
-    Widget chipRow(String label, List<String> items) {
-      if (items.isEmpty) return const SizedBox.shrink();
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: cs.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: items
-                .map(
-                  (s) => Chip(
-                    label: Text(s),
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: 12),
-        ],
-      );
-    }
+    final artFormEntries = artGroups.entries.toList();
+    final afterArtTone = artFormEntries.length;
 
     return DetailSectionShell(
       title: CreativeSpacesConstants.galleryStudioSectionTitle,
@@ -700,7 +811,7 @@ class _GalleryStudioSection extends StatelessWidget {
           if (detail.curatorialTheme != null &&
               detail.curatorialTheme!.trim().isNotEmpty)
             const SizedBox(height: 10),
-          if (artGroups.isNotEmpty) ...[
+          if (artFormEntries.isNotEmpty) ...[
             Text(
               'Art forms',
               style: theme.textTheme.titleSmall?.copyWith(
@@ -708,46 +819,57 @@ class _GalleryStudioSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            ...artGroups.entries.map(
-              (e) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      e.key,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: e.value
-                          .map(
-                            (s) => Chip(
-                              label: Text(s),
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
+            for (var i = 0; i < artFormEntries.length; i++) ...[
+              _gallerySurfaceCard(
+                theme,
+                headerLabel: artFormEntries[i].key,
+                items: artFormEntries[i].value,
+                toneIndex: i,
               ),
-            ),
+            ],
           ],
-          chipRow('Styles & genres', detail.stylesAndGenres),
-          chipRow('Artist representation', detail.artistRepresentation),
-          chipRow('Price ranges', detail.priceRanges),
-          chipRow('Services', detail.servicesOffered),
-          chipRow('Visitor experience', detail.visitorExperience),
-          chipRow('Exhibition types', detail.exhibitionTypes),
-          chipRow('Digital presence', detail.digitalPresence),
+          _gallerySurfaceCard(
+            theme,
+            headerLabel: 'Styles & genres',
+            items: detail.stylesAndGenres,
+            toneIndex: afterArtTone,
+          ),
+          _gallerySurfaceCard(
+            theme,
+            headerLabel: 'Artist representation',
+            items: detail.artistRepresentation,
+            toneIndex: afterArtTone + 1,
+          ),
+          _gallerySurfaceCard(
+            theme,
+            headerLabel: 'Price ranges',
+            items: detail.priceRanges,
+            toneIndex: afterArtTone + 2,
+          ),
+          _gallerySurfaceCard(
+            theme,
+            headerLabel: 'Services',
+            items: detail.servicesOffered,
+            toneIndex: afterArtTone + 3,
+          ),
+          _gallerySurfaceCard(
+            theme,
+            headerLabel: 'Visitor experience',
+            items: detail.visitorExperience,
+            toneIndex: afterArtTone + 4,
+          ),
+          _gallerySurfaceCard(
+            theme,
+            headerLabel: 'Exhibition types',
+            items: detail.exhibitionTypes,
+            toneIndex: afterArtTone + 5,
+          ),
+          _gallerySurfaceCard(
+            theme,
+            headerLabel: 'Digital presence',
+            items: detail.digitalPresence,
+            toneIndex: afterArtTone + 6,
+          ),
           if (detail.featuredArtists != null &&
               detail.featuredArtists!.trim().isNotEmpty) ...[
             Text(
