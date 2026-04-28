@@ -141,17 +141,23 @@ class EventLocationSection extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            for (var i = 0; i < addressLines.length; i++) ...[
-              if (i > 0 || (event.venue != null && event.venue!.trim().isNotEmpty))
-                const SizedBox(height: 6),
-              Text(
-                addressLines[i],
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.35,
-                  color: colorScheme.onSurface.withValues(alpha: 0.88),
-                ),
-              ),
-            ],
+            ...List.generate(
+              addressLines.length,
+              (i) {
+                final beforeGap = i > 0 ||
+                    (event.venue != null && event.venue!.trim().isNotEmpty);
+                return [
+                  if (beforeGap) const SizedBox(height: 6),
+                  Text(
+                    addressLines[i],
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.35,
+                      color: colorScheme.onSurface.withValues(alpha: 0.88),
+                    ),
+                  ),
+                ];
+              },
+            ).expand((w) => w),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,

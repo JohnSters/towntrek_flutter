@@ -241,7 +241,7 @@ class ContactActionsSection extends StatelessWidget {
   }
 
   Widget _buildSocialButton({
-    required IconData icon,
+    required FaIconData icon,
     required Color backgroundColor,
     required VoidCallback onPressed,
   }) {

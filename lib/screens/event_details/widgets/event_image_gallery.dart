@@ -3,6 +3,16 @@ import '../../../core/core.dart';
 import '../../../models/models.dart';
 import '../../../core/utils/url_utils.dart';
 
+List<EventImageDto> _sortedEventImagesForGallery(List<EventImageDto> images) {
+  final sorted = List<EventImageDto>.of(images)
+    ..sort((a, b) {
+      if (a.isPrimary && !b.isPrimary) return -1;
+      if (!a.isPrimary && b.isPrimary) return 1;
+      return a.sortOrder.compareTo(b.sortOrder);
+    });
+  return sorted;
+}
+
 /// Horizontal gallery matching [business_details_page] gallery (TappableImage, 158×104, radius 10).
 class EventImageGallery extends StatelessWidget {
   final List<EventImageDto> images;
@@ -16,11 +26,7 @@ class EventImageGallery extends StatelessWidget {
   Widget build(BuildContext context) {
     if (images.isEmpty) return const SizedBox.shrink();
 
-    final sortedImages = [...images]..sort((a, b) {
-          if (a.isPrimary && !b.isPrimary) return -1;
-          if (!a.isPrimary && b.isPrimary) return 1;
-          return a.sortOrder.compareTo(b.sortOrder);
-        });
+    final sortedImages = _sortedEventImagesForGallery(images);
 
     final allUrls = sortedImages
         .map((img) => UrlUtils.resolveImageUrl(img.url))

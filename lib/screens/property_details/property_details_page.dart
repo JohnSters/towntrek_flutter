@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../shared/detail_widgets/detail_widgets.dart';
 import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/property_listing_format.dart';
@@ -8,6 +9,37 @@ import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import 'property_details_state.dart';
 import 'property_details_view_model.dart';
+
+String _propertyListingTitle(
+  PropertyDetailsState state,
+  PropertyDetailsViewModel viewModel,
+) {
+  if (state is PropertyDetailsSuccess) {
+    final a = state.listing.address.trim();
+    return a.isNotEmpty ? a : state.listing.ownerName;
+  }
+  return viewModel.titleFallback;
+}
+
+List<({PropertyListingImageDto img, String url})> _propertyGalleryPairs(
+  PropertyListingDetailDto listing,
+) {
+  final sorted = [...listing.images]
+    ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+  final out = <({PropertyListingImageDto img, String url})>[];
+  for (final img in sorted) {
+    final primary = img.imageUrl.trim();
+    if (primary.isNotEmpty) {
+      out.add((img: img, url: UrlUtils.resolveImageUrl(primary)));
+      continue;
+    }
+    final thumb = img.thumbnailUrl?.trim();
+    if (thumb != null && thumb.isNotEmpty) {
+      out.add((img: img, url: UrlUtils.resolveImageUrl(thumb)));
+    }
+  }
+  return out;
+}
 
 class PropertyDetailsPage extends StatelessWidget {
   final int listingId;
@@ -37,33 +69,6 @@ class PropertyDetailsPage extends StatelessWidget {
 class _PropertyDetailsPageContent extends StatelessWidget {
   const _PropertyDetailsPageContent();
 
-  String _listingTitle(PropertyDetailsState state, PropertyDetailsViewModel viewModel) {
-    if (state is PropertyDetailsSuccess) {
-      final a = state.listing.address.trim();
-      return a.isNotEmpty ? a : state.listing.ownerName;
-    }
-    return viewModel.titleFallback;
-  }
-
-  Widget _detailHero(
-    BuildContext context,
-    PropertyDetailsState state,
-    PropertyDetailsViewModel viewModel,
-  ) {
-    final typeLabel = state is PropertyDetailsSuccess
-        ? (state.listing.listingType == 0 ? 'For rent' : 'For sale')
-        : 'Property';
-    final townLine =
-        state is PropertyDetailsSuccess ? state.listing.townName : 'Details';
-    return EntityListingHeroHeader(
-      theme: context.entityListingTheme,
-      categoryIcon: Icons.home_work_rounded,
-      subCategoryName: _listingTitle(state, viewModel),
-      categoryName: typeLabel,
-      townName: townLine,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<PropertyDetailsViewModel>();
@@ -74,7 +79,7 @@ class _PropertyDetailsPageContent extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(context, state, viewModel),
+            _PropertyDetailHero(state: state, viewModel: viewModel),
             if (state is PropertyDetailsSuccess && state.listing.isFeatured)
               const _FeaturedBar(),
             if (state is PropertyDetailsSuccess)
@@ -83,7 +88,7 @@ class _PropertyDetailsPageContent extends StatelessWidget {
                 viewCount: state.listing.viewCount,
               ),
             Expanded(
-              child: _buildContent(context, state, viewModel),
+              child: _PropertyDetailStateBody(state: state, viewModel: viewModel),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -91,12 +96,49 @@ class _PropertyDetailsPageContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildContent(
-    BuildContext context,
-    PropertyDetailsState state,
-    PropertyDetailsViewModel viewModel,
-  ) {
+class _PropertyDetailHero extends StatelessWidget {
+  const _PropertyDetailHero({
+    required this.state,
+    required this.viewModel,
+  });
+
+  final PropertyDetailsState state;
+  final PropertyDetailsViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final typeLabel = switch (state) {
+      PropertyDetailsSuccess(:final listing) =>
+        listing.listingType == 0 ? 'For rent' : 'For sale',
+      _ => 'Property',
+    };
+    final townLine = switch (state) {
+      PropertyDetailsSuccess(:final listing) => listing.townName,
+      _ => 'Details',
+    };
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.home_work_rounded,
+      subCategoryName: _propertyListingTitle(state, viewModel),
+      categoryName: typeLabel,
+      townName: townLine,
+    );
+  }
+}
+
+class _PropertyDetailStateBody extends StatelessWidget {
+  const _PropertyDetailStateBody({
+    required this.state,
+    required this.viewModel,
+  });
+
+  final PropertyDetailsState state;
+  final PropertyDetailsViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
     return switch (state) {
       PropertyDetailsLoading() => const _PropertyDetailsLoadingView(),
       PropertyDetailsError(error: final error) => ErrorView(error: error),
@@ -113,20 +155,21 @@ class _FeaturedBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
+        color: cs.tertiaryContainer,
         borderRadius: BorderRadius.zero,
-        border: Border.all(color: const Color(0xFFFFE082)),
+        border: Border.all(color: cs.tertiary),
       ),
       child: Text(
         'Featured listing',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: const Color(0xFFF57F17),
+              color: cs.onTertiaryContainer,
               fontWeight: FontWeight.w700,
             ),
       ),
@@ -143,9 +186,9 @@ class _PropertyDetailsLoadingView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        _LoadingBlock(height: 112, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(height: 112, color: colorScheme.surfaceContainerHigh),
         const SizedBox(height: 12),
-        _LoadingBlock(height: 84, color: colorScheme.surfaceContainerLow),
+        DetailLoadingBlock(height: 84, color: colorScheme.surfaceContainerLow),
         const SizedBox(height: 12),
         SizedBox(
           height: 96,
@@ -155,7 +198,7 @@ class _PropertyDetailsLoadingView extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (_, _) => SizedBox(
               width: 142,
-              child: _LoadingBlock(
+              child: DetailLoadingBlock(
                 height: 96,
                 color: colorScheme.surfaceContainerHighest,
               ),
@@ -199,19 +242,7 @@ class _PropertyDetailsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final qa = context.detailQuickActions;
-    final sortedImages = [...listing.images]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-    final galleryPairs = <({PropertyListingImageDto img, String url})>[];
-    for (final img in sortedImages) {
-      final primary = img.imageUrl.trim();
-      if (primary.isNotEmpty) {
-        galleryPairs.add((img: img, url: UrlUtils.resolveImageUrl(primary)));
-        continue;
-      }
-      final thumb = img.thumbnailUrl?.trim();
-      if (thumb != null && thumb.isNotEmpty) {
-        galleryPairs.add((img: img, url: UrlUtils.resolveImageUrl(thumb)));
-      }
-    }
+    final galleryPairs = _propertyGalleryPairs(listing);
     final galleryUrls = galleryPairs.map((p) => p.url).toList();
 
     return ListView(
@@ -277,67 +308,6 @@ class _PropertyDetailsBody extends StatelessWidget {
             ],
           ),
         ),
-        if (listing.ownerName.trim().isNotEmpty) ...[
-          const SizedBox(height: 12),
-          DetailSectionShell(
-            title: 'Listed by',
-            icon: Icons.person_outline_rounded,
-            child: Text(
-              listing.ownerName.trim(),
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ),
-        ],
-        if (galleryPairs.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          DetailSectionShell(
-            title: 'Gallery',
-            icon: Icons.photo_library_outlined,
-            child: SizedBox(
-              height: 104,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: galleryPairs.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 10),
-                itemBuilder: (context, index) {
-                  return _GalleryTile(
-                    imageUrl: galleryPairs[index].url,
-                    allImageUrls: galleryUrls,
-                    index: index,
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 12),
-        DetailSectionShell(
-          title: 'Location',
-          icon: Icons.place_outlined,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (listing.townName.trim().isNotEmpty)
-                Text(
-                  listing.townName.trim(),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              if (listing.address.trim().isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  listing.address.trim(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.35,
-                      ),
-                ),
-              ],
-            ],
-          ),
-        ),
         const SizedBox(height: 12),
         DetailSectionShell(
           title: 'Quick Actions',
@@ -375,6 +345,67 @@ class _PropertyDetailsBody extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        DetailSectionShell(
+          title: 'Location',
+          icon: Icons.place_outlined,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (listing.townName.trim().isNotEmpty)
+                Text(
+                  listing.townName.trim(),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              if (listing.address.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  listing.address.trim(),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        height: 1.35,
+                      ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (listing.ownerName.trim().isNotEmpty) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Listed by',
+            icon: Icons.person_outline_rounded,
+            child: Text(
+              listing.ownerName.trim(),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+        ],
+        if (galleryPairs.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Gallery',
+            icon: Icons.photo_library_outlined,
+            child: SizedBox(
+              height: 104,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: galleryPairs.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  return _GalleryTile(
+                    imageUrl: galleryPairs[index].url,
+                    allImageUrls: galleryUrls,
+                    index: index,
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -451,23 +482,3 @@ class _GalleryTile extends StatelessWidget {
   }
 }
 
-class _LoadingBlock extends StatelessWidget {
-  final double height;
-  final Color color;
-
-  const _LoadingBlock({
-    required this.height,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
-  }
-}

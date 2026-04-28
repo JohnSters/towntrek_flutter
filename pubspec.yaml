@@ -37,10 +37,11 @@ dependencies:
 
   # Avoid `any` to prevent accidental major upgrades that can break builds at random.
   http: ^1.6.0
-  font_awesome_flutter: ^10.12.0
+  font_awesome_flutter: ^11.0.0
   image_picker: ^1.2.1
   cached_network_image: ^3.4.1
-  mapbox_maps_flutter: ^2.20.1
+  # Pinned: 2.22.0 fails Android compile (AnnotationController / native SDK mismatch).
+  mapbox_maps_flutter: 2.20.1
   flutter_secure_storage: ^10.0.0
 dev_dependencies:
   flutter_test:

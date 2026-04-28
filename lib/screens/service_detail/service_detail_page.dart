@@ -6,6 +6,7 @@ import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/service_utils.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
+import '../shared/detail_widgets/detail_widgets.dart';
 import 'service_detail_state.dart';
 import 'service_detail_view_model.dart';
 
@@ -21,6 +22,20 @@ String _combinedServiceDescription(ServiceDetailDto service) {
   }
   if (short != null && short.isNotEmpty) return short;
   return '';
+}
+
+List<String> _serviceFeatureTagList(ServiceDetailDto service) {
+  return [
+    if (service.serviceArea?.trim().isNotEmpty == true) service.serviceArea!.trim(),
+    if (service.priceRange?.trim().isNotEmpty == true) service.priceRange!.trim(),
+    if (service.hourlyRate != null) 'R${service.hourlyRate!.toStringAsFixed(0)}/hr',
+    if (service.offersQuotes) 'Quotes',
+    if (service.mobileService) 'Mobile',
+    if (service.onSiteService) 'On-site',
+    if (service.availableWeekends) 'Weekends',
+    if (service.availableAfterHours) 'After Hours',
+    if (service.emergencyService) 'Emergency',
+  ];
 }
 
 class ServiceDetailPage extends StatelessWidget {
@@ -50,29 +65,6 @@ class ServiceDetailPage extends StatelessWidget {
 class _ServiceDetailPageContent extends StatelessWidget {
   const _ServiceDetailPageContent();
 
-  Widget _detailHero(
-    BuildContext context,
-    ServiceDetailState state,
-    ServiceDetailViewModel viewModel,
-  ) {
-    final title = state is ServiceDetailSuccess
-        ? state.serviceDetails.name
-        : viewModel.serviceName;
-    final categoryLine = state is ServiceDetailSuccess
-        ? (state.serviceDetails.categoryName ?? 'Service')
-        : 'Service';
-    final townLine = state is ServiceDetailSuccess
-        ? state.serviceDetails.townName
-        : 'Details';
-    return EntityListingHeroHeader(
-      theme: context.entityListingTheme,
-      categoryIcon: Icons.handyman_rounded,
-      subCategoryName: title,
-      categoryName: categoryLine,
-      townName: townLine,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ServiceDetailViewModel>();
@@ -83,11 +75,11 @@ class _ServiceDetailPageContent extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(context, state, viewModel),
+            _ServiceDetailHero(state: state, viewModel: viewModel),
             if (state is ServiceDetailSuccess)
               _ServiceOpenClosedBanner(service: state.serviceDetails),
             Expanded(
-              child: _buildContent(context, state, viewModel),
+              child: _ServiceDetailStateBody(state: state, viewModel: viewModel),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -95,12 +87,53 @@ class _ServiceDetailPageContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildContent(
-    BuildContext context,
-    ServiceDetailState state,
-    ServiceDetailViewModel viewModel,
-  ) {
+class _ServiceDetailHero extends StatelessWidget {
+  const _ServiceDetailHero({
+    required this.state,
+    required this.viewModel,
+  });
+
+  final ServiceDetailState state;
+  final ServiceDetailViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = switch (state) {
+      ServiceDetailSuccess(:final serviceDetails) => serviceDetails.name,
+      _ => viewModel.serviceName,
+    };
+    final categoryLine = switch (state) {
+      ServiceDetailSuccess(:final serviceDetails) =>
+        serviceDetails.categoryName ?? 'Service',
+      _ => 'Service',
+    };
+    final townLine = switch (state) {
+      ServiceDetailSuccess(:final serviceDetails) => serviceDetails.townName,
+      _ => 'Details',
+    };
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.handyman_rounded,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: townLine,
+    );
+  }
+}
+
+class _ServiceDetailStateBody extends StatelessWidget {
+  const _ServiceDetailStateBody({
+    required this.state,
+    required this.viewModel,
+  });
+
+  final ServiceDetailState state;
+  final ServiceDetailViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
     return switch (state) {
       ServiceDetailLoading() => const _ServiceDetailsLoadingView(),
       ServiceDetailSuccess(serviceDetails: final serviceDetails) => _ServiceDetailBody(
@@ -132,10 +165,10 @@ class _ErrorStateView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.red,
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 16),
             Text(
@@ -167,7 +200,7 @@ class _ServiceDetailsLoadingView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        _LoadingBlock(height: 106, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(height: 106, color: colorScheme.surfaceContainerHigh),
         const SizedBox(height: 12),
         SizedBox(
           height: 96,
@@ -177,7 +210,7 @@ class _ServiceDetailsLoadingView extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (_, _) => SizedBox(
               width: 142,
-              child: _LoadingBlock(
+              child: DetailLoadingBlock(
                 height: 96,
                 color: colorScheme.surfaceContainerHighest,
               ),
@@ -185,7 +218,7 @@ class _ServiceDetailsLoadingView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _LoadingBlock(height: 160, color: colorScheme.surfaceContainerLow),
+        DetailLoadingBlock(height: 160, color: colorScheme.surfaceContainerLow),
       ],
     );
   }
@@ -203,20 +236,11 @@ class _ServiceDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final qa = context.detailQuickActions;
     final description = _combinedServiceDescription(service);
-
-    final serviceTags = <String>[
-      if (service.serviceArea?.trim().isNotEmpty == true) service.serviceArea!.trim(),
-      if (service.priceRange?.trim().isNotEmpty == true) service.priceRange!.trim(),
-      if (service.hourlyRate != null) 'R${service.hourlyRate!.toStringAsFixed(0)}/hr',
-      if (service.offersQuotes) 'Quotes',
-      if (service.mobileService) 'Mobile',
-      if (service.onSiteService) 'On-site',
-      if (service.availableWeekends) 'Weekends',
-      if (service.availableAfterHours) 'After Hours',
-      if (service.emergencyService) 'Emergency',
-    ];
+    final serviceTags = _serviceFeatureTagList(service);
+    final hasSocial = service.facebook?.trim().isNotEmpty == true ||
+        service.instagram?.trim().isNotEmpty == true ||
+        service.whatsApp?.trim().isNotEmpty == true;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
@@ -229,6 +253,26 @@ class _ServiceDetailBody extends StatelessWidget {
             colorScheme.tertiaryContainer.withValues(alpha: 0.45),
           ],
         ),
+        const SizedBox(height: 12),
+        _ServiceDetailQuickActionsSection(
+          service: service,
+          viewModel: viewModel,
+        ),
+        if (serviceTags.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Services & Features',
+            icon: Icons.grid_view_rounded,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: serviceTags
+                  .take(9)
+                  .map((tag) => DetailMetadataTag(label: tag))
+                  .toList(),
+            ),
+          ),
+        ],
         if (service.images.isNotEmpty) ...[
           const SizedBox(height: 12),
           DetailSectionShell(
@@ -254,6 +298,10 @@ class _ServiceDetailBody extends StatelessWidget {
             ),
           ),
         ],
+        if (hasSocial) ...[
+          const SizedBox(height: 12),
+          _ServiceDetailSocialSection(service: service),
+        ],
         const SizedBox(height: 12),
         DetailSectionShell(
           title: 'Operating Hours',
@@ -262,155 +310,19 @@ class _ServiceDetailBody extends StatelessWidget {
             rows: detailHoursFromService(service.operatingHours),
           ),
         ),
-        const SizedBox(height: 12),
-        DetailSectionShell(
-          title: 'Quick Actions',
-          icon: Icons.bolt_rounded,
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              DetailQuickActionButton(
-                tooltip: DetailTownTrekWebAction.tooltip,
-                assetImagePath: DetailTownTrekWebAction.assetPath,
-                backgroundColor: qa.towntrekWebBackground,
-                iconColor: qa.websiteIcon,
-                onPressed: () =>
-                    viewModel.openFullServiceDetails(context, service),
-              ),
-              if (service.latitude != null && service.longitude != null)
-                DetailQuickActionButton(
-                  tooltip: 'Take Me There',
-                  icon: Icons.directions_rounded,
-                  backgroundColor: qa.directionsBackground,
-                  iconColor: qa.directionsIcon,
-                  onPressed: () => _openMaps(context),
-                ),
-              if (service.phoneNumber.trim().isNotEmpty)
-                DetailQuickActionButton(
-                  tooltip: 'Call',
-                  icon: Icons.call_rounded,
-                  backgroundColor: qa.callBackground,
-                  iconColor: qa.callIcon,
-                  onPressed: () =>
-                      ExternalLinkLauncher.callPhone(context, service.phoneNumber),
-                ),
-              if (service.phoneNumber2?.trim().isNotEmpty == true)
-                DetailQuickActionButton(
-                  tooltip: 'Call Alternative',
-                  icon: Icons.call_split_rounded,
-                  backgroundColor: qa.callAltBackground,
-                  iconColor: qa.callAltIcon,
-                  onPressed: () => ExternalLinkLauncher.callPhone(
-                    context,
-                    service.phoneNumber2!,
-                  ),
-                ),
-              if (service.emailAddress?.trim().isNotEmpty == true)
-                DetailQuickActionButton(
-                  tooltip: 'Email',
-                  icon: Icons.mail_rounded,
-                  backgroundColor: qa.emailBackground,
-                  iconColor: qa.emailIcon,
-                  onPressed: () =>
-                      ExternalLinkLauncher.sendEmail(context, service.emailAddress!),
-                ),
-              if (service.website?.trim().isNotEmpty == true)
-                DetailQuickActionButton(
-                  tooltip: 'Website',
-                  icon: Icons.language_rounded,
-                  backgroundColor: qa.websiteBackground,
-                  iconColor: qa.websiteIcon,
-                  onPressed: () =>
-                      ExternalLinkLauncher.openWebsite(context, service.website!),
-                ),
-              DetailQuickActionButton(
-                tooltip: 'Rate Service',
-                icon: Icons.star_rounded,
-                backgroundColor: qa.rateBackground,
-                iconColor: qa.rateIcon,
-                onPressed: () => viewModel.rateService(context, service),
-              ),
-            ],
-          ),
-        ),
-        if (service.facebook?.trim().isNotEmpty == true ||
-            service.instagram?.trim().isNotEmpty == true ||
-            service.whatsApp?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 12),
-          DetailSectionShell(
-            title: 'Social',
-            icon: Icons.share_outlined,
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                if (service.facebook?.trim().isNotEmpty == true)
-                  DetailSocialIconButton(
-                    tooltip: 'Facebook',
-                    icon: FontAwesomeIcons.facebookF,
-                    backgroundColor: qa.facebookBackground,
-                    iconColor: qa.facebookIcon,
-                    onPressed: () =>
-                        ExternalLinkLauncher.openRaw(context, service.facebook!),
-                  ),
-                if (service.instagram?.trim().isNotEmpty == true)
-                  DetailSocialIconButton(
-                    tooltip: 'Instagram',
-                    icon: FontAwesomeIcons.instagram,
-                    backgroundColor: qa.instagramBackground,
-                    iconColor: qa.instagramIcon,
-                    onPressed: () =>
-                        ExternalLinkLauncher.openRaw(context, service.instagram!),
-                  ),
-                if (service.whatsApp?.trim().isNotEmpty == true)
-                  DetailSocialIconButton(
-                    tooltip: 'WhatsApp',
-                    icon: FontAwesomeIcons.whatsapp,
-                    backgroundColor: qa.whatsappBackground,
-                    iconColor: qa.whatsappIcon,
-                    onPressed: () =>
-                        ExternalLinkLauncher.openRaw(context, service.whatsApp!),
-                  ),
-              ],
-            ),
-          ),
-        ],
-        if (serviceTags.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          DetailSectionShell(
-            title: 'Services & Features',
-            icon: Icons.grid_view_rounded,
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: serviceTags
-                  .take(9)
-                  .map(
-                    (tag) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: colorScheme.outline.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: Text(
-                        tag,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-        ],
       ],
     );
   }
+}
+
+class _ServiceDetailQuickActionsSection extends StatelessWidget {
+  const _ServiceDetailQuickActionsSection({
+    required this.service,
+    required this.viewModel,
+  });
+
+  final ServiceDetailDto service;
+  final ServiceDetailViewModel viewModel;
 
   Future<void> _openMaps(BuildContext context) async {
     if (service.latitude == null || service.longitude == null) return;
@@ -421,6 +333,129 @@ class _ServiceDetailBody extends StatelessWidget {
       context,
       uri,
       failureMessage: 'Unable to open maps',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final qa = context.detailQuickActions;
+    return DetailSectionShell(
+      title: 'Quick Actions',
+      icon: Icons.bolt_rounded,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          DetailQuickActionButton(
+            tooltip: DetailTownTrekWebAction.tooltip,
+            assetImagePath: DetailTownTrekWebAction.assetPath,
+            backgroundColor: qa.towntrekWebBackground,
+            iconColor: qa.websiteIcon,
+            onPressed: () => viewModel.openFullServiceDetails(context, service),
+          ),
+          if (service.latitude != null && service.longitude != null)
+            DetailQuickActionButton(
+              tooltip: 'Take Me There',
+              icon: Icons.directions_rounded,
+              backgroundColor: qa.directionsBackground,
+              iconColor: qa.directionsIcon,
+              onPressed: () => _openMaps(context),
+            ),
+          if (service.phoneNumber.trim().isNotEmpty)
+            DetailQuickActionButton(
+              tooltip: 'Call',
+              icon: Icons.call_rounded,
+              backgroundColor: qa.callBackground,
+              iconColor: qa.callIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.callPhone(context, service.phoneNumber),
+            ),
+          if (service.phoneNumber2?.trim().isNotEmpty == true)
+            DetailQuickActionButton(
+              tooltip: 'Call Alternative',
+              icon: Icons.call_split_rounded,
+              backgroundColor: qa.callAltBackground,
+              iconColor: qa.callAltIcon,
+              onPressed: () => ExternalLinkLauncher.callPhone(
+                context,
+                service.phoneNumber2!,
+              ),
+            ),
+          if (service.emailAddress?.trim().isNotEmpty == true)
+            DetailQuickActionButton(
+              tooltip: 'Email',
+              icon: Icons.mail_rounded,
+              backgroundColor: qa.emailBackground,
+              iconColor: qa.emailIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.sendEmail(context, service.emailAddress!),
+            ),
+          if (service.website?.trim().isNotEmpty == true)
+            DetailQuickActionButton(
+              tooltip: 'Website',
+              icon: Icons.language_rounded,
+              backgroundColor: qa.websiteBackground,
+              iconColor: qa.websiteIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.openWebsite(context, service.website!),
+            ),
+          DetailQuickActionButton(
+            tooltip: 'Rate Service',
+            icon: Icons.star_rounded,
+            backgroundColor: qa.rateBackground,
+            iconColor: qa.rateIcon,
+            onPressed: () => viewModel.rateService(context, service),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceDetailSocialSection extends StatelessWidget {
+  const _ServiceDetailSocialSection({required this.service});
+
+  final ServiceDetailDto service;
+
+  @override
+  Widget build(BuildContext context) {
+    final qa = context.detailQuickActions;
+    return DetailSectionShell(
+      title: 'Social',
+      icon: Icons.share_outlined,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          if (service.facebook?.trim().isNotEmpty == true)
+            DetailSocialIconButton(
+              tooltip: 'Facebook',
+              icon: FontAwesomeIcons.facebookF,
+              backgroundColor: qa.facebookBackground,
+              iconColor: qa.facebookIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.openRaw(context, service.facebook!),
+            ),
+          if (service.instagram?.trim().isNotEmpty == true)
+            DetailSocialIconButton(
+              tooltip: 'Instagram',
+              icon: FontAwesomeIcons.instagram,
+              backgroundColor: qa.instagramBackground,
+              iconColor: qa.instagramIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.openRaw(context, service.instagram!),
+            ),
+          if (service.whatsApp?.trim().isNotEmpty == true)
+            DetailSocialIconButton(
+              tooltip: 'WhatsApp',
+              icon: FontAwesomeIcons.whatsapp,
+              backgroundColor: qa.whatsappBackground,
+              iconColor: qa.whatsappIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.openRaw(context, service.whatsApp!),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -509,27 +544,6 @@ class _GalleryTile extends StatelessWidget {
             },
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _LoadingBlock extends StatelessWidget {
-  final double height;
-  final Color color;
-
-  const _LoadingBlock({
-    required this.height,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
       ),
     );
   }

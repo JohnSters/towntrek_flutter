@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/core.dart';
 import '../../../models/models.dart';
+import '../../shared/detail_widgets/detail_widgets.dart';
 
 class EventInfoCard extends StatelessWidget {
   final EventDetailDto event;
@@ -70,27 +71,24 @@ class EventInfoCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildDetailTag(
-                context,
-                Icons.calendar_today_rounded,
-                event.displayDate,
+              DetailMetadataTag(
+                label: event.displayDate,
+                icon: Icons.calendar_today_rounded,
               ),
               if (event.startTime != null)
-                _buildDetailTag(
-                  context,
-                  Icons.schedule_rounded,
-                  '${event.startTime} ${event.endTime != null ? '- ${event.endTime}' : ''}',
+                DetailMetadataTag(
+                  label:
+                      '${event.startTime} ${event.endTime != null ? '- ${event.endTime}' : ''}',
+                  icon: Icons.schedule_rounded,
                 ),
-              _buildDetailTag(
-                context,
-                Icons.payments_outlined,
-                event.displayPrice,
+              DetailMetadataTag(
+                label: event.displayPrice,
+                icon: Icons.payments_outlined,
               ),
               if (event.ageRestrictions != null && event.ageRestrictions!.isNotEmpty)
-                _buildDetailTag(
-                  context,
-                  Icons.warning_amber_rounded,
-                  event.ageRestrictions!,
+                DetailMetadataTag(
+                  label: event.ageRestrictions!,
+                  icon: Icons.warning_amber_rounded,
                 ),
             ],
           ),
@@ -106,13 +104,25 @@ class EventInfoCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 if (event.isOutdoorEvent)
-                  _buildDetailTag(context, Icons.landscape_rounded, 'Outdoor'),
+                  const DetailMetadataTag(
+                    label: 'Outdoor',
+                    icon: Icons.landscape_rounded,
+                  ),
                 if (event.hasParking)
-                  _buildDetailTag(context, Icons.local_parking_rounded, 'Parking'),
+                  const DetailMetadataTag(
+                    label: 'Parking',
+                    icon: Icons.local_parking_rounded,
+                  ),
                 if (event.hasRefreshments)
-                  _buildDetailTag(context, Icons.restaurant_rounded, 'Refreshments'),
+                  const DetailMetadataTag(
+                    label: 'Refreshments',
+                    icon: Icons.restaurant_rounded,
+                  ),
                 if (event.hasWeatherBackup)
-                  _buildDetailTag(context, Icons.umbrella_rounded, 'Weather backup'),
+                  const DetailMetadataTag(
+                    label: 'Weather backup',
+                    icon: Icons.umbrella_rounded,
+                  ),
               ],
             ),
           ),
@@ -166,36 +176,5 @@ class EventInfoCard extends StatelessWidget {
         event.hasParking ||
         event.hasRefreshments ||
         event.hasWeatherBackup;
-  }
-
-  /// Matches Business/Services & Features pill styling.
-  Widget _buildDetailTag(BuildContext context, IconData icon, String label) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.18),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: colorScheme.primary),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

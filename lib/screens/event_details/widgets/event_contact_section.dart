@@ -55,8 +55,12 @@ class EventContactSection extends StatelessWidget {
     }
 
     if (context.mounted) {
+      final cs = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ticket link not available')),
+        SnackBar(
+          content: const Text('Ticket link not available'),
+          backgroundColor: cs.error,
+        ),
       );
     }
   }

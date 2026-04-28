@@ -5,6 +5,7 @@ import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
+import '../shared/detail_widgets/detail_widgets.dart';
 import 'business_details_state.dart';
 import 'business_details_view_model.dart';
 import 'widgets/equipment_hire_rates_section.dart';
@@ -37,25 +38,6 @@ class BusinessDetailsPage extends StatelessWidget {
 class _BusinessDetailsPageContent extends StatelessWidget {
   const _BusinessDetailsPageContent();
 
-  Widget _detailHero(
-    BuildContext context,
-    BusinessDetailsState state,
-    BusinessDetailsViewModel viewModel,
-  ) {
-    final title = state is BusinessDetailsSuccess
-        ? state.business.name
-        : viewModel.businessName;
-    final categoryLine =
-        state is BusinessDetailsSuccess ? state.business.category : 'Business';
-    return EntityListingHeroHeader(
-      theme: context.entityListingTheme,
-      categoryIcon: Icons.storefront_outlined,
-      subCategoryName: title,
-      categoryName: categoryLine,
-      townName: 'Details',
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessDetailsViewModel>();
@@ -66,13 +48,13 @@ class _BusinessDetailsPageContent extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(context, state, viewModel),
+            _BusinessDetailHero(state: state, viewModel: viewModel),
             if (state is BusinessDetailsSuccess) ...[
               _BusinessOpenClosedBanner(business: state.business),
               _BusinessSpecialClosedHint(business: state.business),
             ],
             Expanded(
-              child: _buildContent(context, state, viewModel),
+              child: _BusinessDetailStateBody(state: state, viewModel: viewModel),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -80,12 +62,48 @@ class _BusinessDetailsPageContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildContent(
-    BuildContext context,
-    BusinessDetailsState state,
-    BusinessDetailsViewModel viewModel,
-  ) {
+class _BusinessDetailHero extends StatelessWidget {
+  const _BusinessDetailHero({
+    required this.state,
+    required this.viewModel,
+  });
+
+  final BusinessDetailsState state;
+  final BusinessDetailsViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = switch (state) {
+      BusinessDetailsSuccess(:final business) => business.name,
+      _ => viewModel.businessName,
+    };
+    final categoryLine = switch (state) {
+      BusinessDetailsSuccess(:final business) => business.category,
+      _ => 'Business',
+    };
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.storefront_outlined,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: 'Details',
+    );
+  }
+}
+
+class _BusinessDetailStateBody extends StatelessWidget {
+  const _BusinessDetailStateBody({
+    required this.state,
+    required this.viewModel,
+  });
+
+  final BusinessDetailsState state;
+  final BusinessDetailsViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
     return switch (state) {
       BusinessDetailsLoading() => const _BusinessDetailsLoadingView(),
       BusinessDetailsError(error: final error) => ErrorView(error: error),
@@ -106,9 +124,9 @@ class _BusinessDetailsLoadingView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        _LoadingBlock(height: 112, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(height: 112, color: colorScheme.surfaceContainerHigh),
         const SizedBox(height: 12),
-        _LoadingBlock(height: 84, color: colorScheme.surfaceContainerLow),
+        DetailLoadingBlock(height: 84, color: colorScheme.surfaceContainerLow),
         const SizedBox(height: 12),
         SizedBox(
           height: 96,
@@ -118,7 +136,7 @@ class _BusinessDetailsLoadingView extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (_, _) => SizedBox(
               width: 142,
-              child: _LoadingBlock(
+              child: DetailLoadingBlock(
                 height: 96,
                 color: colorScheme.surfaceContainerHighest,
               ),
@@ -126,7 +144,7 @@ class _BusinessDetailsLoadingView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _LoadingBlock(height: 160, color: colorScheme.surfaceContainerLow),
+        DetailLoadingBlock(height: 160, color: colorScheme.surfaceContainerLow),
       ],
     );
   }
@@ -144,12 +162,17 @@ class _BusinessDetailsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final qa = context.detailQuickActions;
 
     final availableServices = business.services
         .where((service) => service.isAvailable)
         .map((service) => service.serviceType)
         .toList();
+
+    final isEquipmentRental = business.category.toLowerCase() ==
+        TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase();
+    final hasSocial = business.facebook != null ||
+        business.instagram != null ||
+        business.whatsApp != null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
@@ -162,6 +185,19 @@ class _BusinessDetailsBody extends StatelessWidget {
             colorScheme.secondaryContainer.withValues(alpha: 0.50),
           ],
         ),
+        const SizedBox(height: 12),
+        _BusinessDetailQuickActionsSection(
+          business: business,
+          viewModel: viewModel,
+        ),
+        if (isEquipmentRental) ...[
+          const SizedBox(height: 12),
+          DetailSectionShell(
+            title: 'Hire rates',
+            icon: Icons.construction_rounded,
+            child: EquipmentHireRatesSection(business: business),
+          ),
+        ],
         if (business.images.isNotEmpty) ...[
           const SizedBox(height: 12),
           DetailSectionShell(
@@ -187,117 +223,9 @@ class _BusinessDetailsBody extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 12),
-        DetailSectionShell(
-          title: 'Operating Hours',
-          icon: Icons.schedule,
-          child: DetailHoursGrid(
-            rows: detailHoursFromBusiness(business.operatingHours),
-          ),
-        ),
-        if (business.category.toLowerCase() ==
-            TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase()) ...[
+        if (hasSocial) ...[
           const SizedBox(height: 12),
-          DetailSectionShell(
-            title: 'Hire rates',
-            icon: Icons.construction_rounded,
-            child: EquipmentHireRatesSection(business: business),
-          ),
-        ],
-        const SizedBox(height: 12),
-        DetailSectionShell(
-          title: 'Quick Actions',
-          icon: Icons.bolt_rounded,
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              DetailQuickActionButton(
-                tooltip: DetailTownTrekWebAction.tooltip,
-                assetImagePath: DetailTownTrekWebAction.assetPath,
-                backgroundColor: qa.towntrekWebBackground,
-                iconColor: qa.websiteIcon,
-                onPressed: () =>
-                    viewModel.openFullBusinessDetails(context, business),
-              ),
-              if (business.latitude != null && business.longitude != null)
-                DetailQuickActionButton(
-                  tooltip: 'Take Me There',
-                  icon: Icons.directions_rounded,
-                  backgroundColor: qa.directionsBackground,
-                  iconColor: qa.directionsIcon,
-                  onPressed: () => viewModel.navigateToBusiness(context, business),
-                ),
-              if (business.phoneNumber != null)
-                DetailQuickActionButton(
-                  tooltip: 'Call',
-                  icon: Icons.call_rounded,
-                  backgroundColor: qa.callBackground,
-                  iconColor: qa.callIcon,
-                  onPressed: () => ExternalLinkLauncher.callPhone(context, business.phoneNumber!),
-                ),
-              if (business.emailAddress != null)
-                DetailQuickActionButton(
-                  tooltip: 'Email',
-                  icon: Icons.mail_rounded,
-                  backgroundColor: qa.emailBackground,
-                  iconColor: qa.emailIcon,
-                  onPressed: () => ExternalLinkLauncher.sendEmail(context, business.emailAddress!),
-                ),
-              if (business.website != null)
-                DetailQuickActionButton(
-                  tooltip: 'Website',
-                  icon: Icons.language_rounded,
-                  backgroundColor: qa.websiteBackground,
-                  iconColor: qa.websiteIcon,
-                  onPressed: () => ExternalLinkLauncher.openWebsite(context, business.website!),
-                ),
-              DetailQuickActionButton(
-                tooltip: 'Rate Business',
-                icon: Icons.star_rounded,
-                backgroundColor: qa.rateBackground,
-                iconColor: qa.rateIcon,
-                onPressed: () => viewModel.rateBusiness(context, business),
-              ),
-            ],
-          ),
-        ),
-        if (business.facebook != null || business.instagram != null || business.whatsApp != null) ...[
-          const SizedBox(height: 12),
-          DetailSectionShell(
-            title: 'Social',
-            icon: Icons.share_outlined,
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                if (business.facebook != null)
-                  DetailSocialIconButton(
-                    tooltip: 'Facebook',
-                    icon: FontAwesomeIcons.facebookF,
-                    backgroundColor: qa.facebookBackground,
-                    iconColor: qa.facebookIcon,
-                    onPressed: () => ExternalLinkLauncher.openRaw(context, business.facebook!),
-                  ),
-                if (business.instagram != null)
-                  DetailSocialIconButton(
-                    tooltip: 'Instagram',
-                    icon: FontAwesomeIcons.instagram,
-                    backgroundColor: qa.instagramBackground,
-                    iconColor: qa.instagramIcon,
-                    onPressed: () => ExternalLinkLauncher.openRaw(context, business.instagram!),
-                  ),
-                if (business.whatsApp != null)
-                  DetailSocialIconButton(
-                    tooltip: 'WhatsApp',
-                    icon: FontAwesomeIcons.whatsapp,
-                    backgroundColor: qa.whatsappBackground,
-                    iconColor: qa.whatsappIcon,
-                    onPressed: () => ExternalLinkLauncher.openRaw(context, business.whatsApp!),
-                  ),
-              ],
-            ),
-          ),
+          _BusinessDetailSocialSection(business: business),
         ],
         if (availableServices.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -309,29 +237,149 @@ class _BusinessDetailsBody extends StatelessWidget {
               runSpacing: 8,
               children: availableServices
                   .take(8)
-                  .map(
-                    (serviceType) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: colorScheme.outline.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: Text(
-                        serviceType,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ),
-                  )
+                  .map((serviceType) => DetailMetadataTag(label: serviceType))
                   .toList(),
             ),
           ),
         ],
+        const SizedBox(height: 12),
+        DetailSectionShell(
+          title: 'Operating Hours',
+          icon: Icons.schedule,
+          child: DetailHoursGrid(
+            rows: detailHoursFromBusiness(business.operatingHours),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _BusinessDetailQuickActionsSection extends StatelessWidget {
+  const _BusinessDetailQuickActionsSection({
+    required this.business,
+    required this.viewModel,
+  });
+
+  final BusinessDetailDto business;
+  final BusinessDetailsViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final qa = context.detailQuickActions;
+    return DetailSectionShell(
+      title: 'Quick Actions',
+      icon: Icons.bolt_rounded,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          DetailQuickActionButton(
+            tooltip: DetailTownTrekWebAction.tooltip,
+            assetImagePath: DetailTownTrekWebAction.assetPath,
+            backgroundColor: qa.towntrekWebBackground,
+            iconColor: qa.websiteIcon,
+            onPressed: () =>
+                viewModel.openFullBusinessDetails(context, business),
+          ),
+          if (business.latitude != null && business.longitude != null)
+            DetailQuickActionButton(
+              tooltip: 'Take Me There',
+              icon: Icons.directions_rounded,
+              backgroundColor: qa.directionsBackground,
+              iconColor: qa.directionsIcon,
+              onPressed: () => viewModel.navigateToBusiness(context, business),
+            ),
+          if (business.phoneNumber != null)
+            DetailQuickActionButton(
+              tooltip: 'Call',
+              icon: Icons.call_rounded,
+              backgroundColor: qa.callBackground,
+              iconColor: qa.callIcon,
+              onPressed: () => ExternalLinkLauncher.callPhone(
+                context,
+                business.phoneNumber!,
+              ),
+            ),
+          if (business.emailAddress != null)
+            DetailQuickActionButton(
+              tooltip: 'Email',
+              icon: Icons.mail_rounded,
+              backgroundColor: qa.emailBackground,
+              iconColor: qa.emailIcon,
+              onPressed: () => ExternalLinkLauncher.sendEmail(
+                context,
+                business.emailAddress!,
+              ),
+            ),
+          if (business.website != null)
+            DetailQuickActionButton(
+              tooltip: 'Website',
+              icon: Icons.language_rounded,
+              backgroundColor: qa.websiteBackground,
+              iconColor: qa.websiteIcon,
+              onPressed: () => ExternalLinkLauncher.openWebsite(
+                context,
+                business.website!,
+              ),
+            ),
+          DetailQuickActionButton(
+            tooltip: 'Rate Business',
+            icon: Icons.star_rounded,
+            backgroundColor: qa.rateBackground,
+            iconColor: qa.rateIcon,
+            onPressed: () => viewModel.rateBusiness(context, business),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BusinessDetailSocialSection extends StatelessWidget {
+  const _BusinessDetailSocialSection({required this.business});
+
+  final BusinessDetailDto business;
+
+  @override
+  Widget build(BuildContext context) {
+    final qa = context.detailQuickActions;
+    return DetailSectionShell(
+      title: 'Social',
+      icon: Icons.share_outlined,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          if (business.facebook != null)
+            DetailSocialIconButton(
+              tooltip: 'Facebook',
+              icon: FontAwesomeIcons.facebookF,
+              backgroundColor: qa.facebookBackground,
+              iconColor: qa.facebookIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.openRaw(context, business.facebook!),
+            ),
+          if (business.instagram != null)
+            DetailSocialIconButton(
+              tooltip: 'Instagram',
+              icon: FontAwesomeIcons.instagram,
+              backgroundColor: qa.instagramBackground,
+              iconColor: qa.instagramIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.openRaw(context, business.instagram!),
+            ),
+          if (business.whatsApp != null)
+            DetailSocialIconButton(
+              tooltip: 'WhatsApp',
+              icon: FontAwesomeIcons.whatsapp,
+              backgroundColor: qa.whatsappBackground,
+              iconColor: qa.whatsappIcon,
+              onPressed: () =>
+                  ExternalLinkLauncher.openRaw(context, business.whatsApp!),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -482,24 +530,4 @@ class _GalleryTile extends StatelessWidget {
   }
 }
 
-class _LoadingBlock extends StatelessWidget {
-  final double height;
-  final Color color;
-
-  const _LoadingBlock({
-    required this.height,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
-  }
-}
 

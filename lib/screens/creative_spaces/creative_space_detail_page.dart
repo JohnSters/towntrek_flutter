@@ -4,14 +4,15 @@ import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/listing_aggregate_rating.dart';
-import '../../core/utils/operating_hours_display_format.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import '../business_details/widgets/business_documents_section.dart';
+import '../shared/detail_widgets/detail_widgets.dart';
 import 'creative_space_detail_state.dart';
 import 'creative_space_detail_view_model.dart';
 
 /// Header + body surface (soft material) for gallery multiselect blocks — order matches web `tone-0…6`.
+// Intentional fixed palette — not theme-dependent.
 const _kGallerySurfaceTones = <({Gradient header, Color title, Color body})>[
   (
     header: LinearGradient(
@@ -236,100 +237,112 @@ class _GalleryMultiselectAccordionTileState
 }
 
 /// Single multiselect “card” ( art forms, styles, … digital ) with shared tone strip + centered chips.
-Widget _gallerySurfaceCard(
-  ThemeData theme, {
-  required String headerLabel,
-  required List<String> items,
-  required int toneIndex,
-  bool uppercaseHeader = true,
-  bool compact = false,
-}) {
-  if (items.isEmpty) return const SizedBox.shrink();
-  final tone = _kGallerySurfaceTones[toneIndex % _kGallerySurfaceTones.length];
-  final h = uppercaseHeader ? headerLabel.toUpperCase() : headerLabel;
-  final radius = compact ? 10.0 : 14.0;
-  final headerPad = compact
-      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 6)
-      : const EdgeInsets.symmetric(horizontal: 12, vertical: 9);
-  final headerStyle = theme.textTheme.labelLarge?.copyWith(
-    color: tone.title,
-    fontWeight: FontWeight.w800,
-    letterSpacing: compact ? 0.35 : 0.4,
-    fontSize: compact ? 10.5 : 12,
-    height: compact ? 1.2 : null,
-  );
-  final bodyPad = compact
-      ? const EdgeInsets.fromLTRB(6, 6, 6, 7)
-      : const EdgeInsets.fromLTRB(8, 10, 8, 12);
-  final chipSpacing = compact ? 4.0 : 6.0;
-  final chipLabelStyle = TextStyle(
-    fontSize: compact ? 11 : 12,
-    fontWeight: FontWeight.w600,
-    height: compact ? 1.2 : null,
-  );
-  return Padding(
-    padding: EdgeInsets.only(bottom: compact ? 0 : 10),
-    child: Material(
-      color: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tone.body,
-            border: Border.all(color: Colors.black.withValues(alpha: 0.07)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: compact ? 2 : 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: headerPad,
-                decoration: BoxDecoration(gradient: tone.header),
-                child: Text(
-                  h,
-                  textAlign: TextAlign.center,
-                  maxLines: compact ? 2 : null,
-                  overflow: compact ? TextOverflow.ellipsis : null,
-                  style: headerStyle,
+class _GallerySurfaceCard extends StatelessWidget {
+  const _GallerySurfaceCard({
+    required this.theme,
+    required this.headerLabel,
+    required this.items,
+    required this.toneIndex,
+    this.uppercaseHeader = true,
+    this.compact = false,
+  });
+
+  final ThemeData theme;
+  final String headerLabel;
+  final List<String> items;
+  final int toneIndex;
+  final bool uppercaseHeader;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) return const SizedBox.shrink();
+    final tone = _kGallerySurfaceTones[toneIndex % _kGallerySurfaceTones.length];
+    final h = uppercaseHeader ? headerLabel.toUpperCase() : headerLabel;
+    final radius = compact ? 10.0 : 14.0;
+    final headerPad = compact
+        ? const EdgeInsets.symmetric(horizontal: 8, vertical: 6)
+        : const EdgeInsets.symmetric(horizontal: 12, vertical: 9);
+    final headerStyle = theme.textTheme.labelLarge?.copyWith(
+      color: tone.title,
+      fontWeight: FontWeight.w800,
+      letterSpacing: compact ? 0.35 : 0.4,
+      fontSize: compact ? 10.5 : 12,
+      height: compact ? 1.2 : null,
+    );
+    final bodyPad = compact
+        ? const EdgeInsets.fromLTRB(6, 6, 6, 7)
+        : const EdgeInsets.fromLTRB(8, 10, 8, 12);
+    final chipSpacing = compact ? 4.0 : 6.0;
+    final chipLabelStyle = TextStyle(
+      fontSize: compact ? 11 : 12,
+      fontWeight: FontWeight.w600,
+      height: compact ? 1.2 : null,
+    );
+    return Padding(
+      padding: EdgeInsets.only(bottom: compact ? 0 : 10),
+      child: Material(
+        color: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: tone.body,
+              border: Border.all(color: Colors.black.withValues(alpha: 0.07)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: compact ? 2 : 3,
+                  offset: const Offset(0, 1),
                 ),
-              ),
-              Padding(
-                padding: bodyPad,
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: chipSpacing,
-                  runSpacing: chipSpacing,
-                  children: items
-                      .map(
-                        (s) => Chip(
-                          label: Text(s, style: chipLabelStyle),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          padding: compact
-                              ? EdgeInsets.zero
-                              : const EdgeInsets.symmetric(horizontal: 4),
-                          labelPadding: compact
-                              ? const EdgeInsets.symmetric(horizontal: 6)
-                              : null,
-                        ),
-                      )
-                      .toList(),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: headerPad,
+                  decoration: BoxDecoration(gradient: tone.header),
+                  child: Text(
+                    h,
+                    textAlign: TextAlign.center,
+                    maxLines: compact ? 2 : null,
+                    overflow: compact ? TextOverflow.ellipsis : null,
+                    style: headerStyle,
+                  ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: bodyPad,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: chipSpacing,
+                    runSpacing: chipSpacing,
+                    children: items
+                        .map(
+                          (s) => Chip(
+                            label: Text(s, style: chipLabelStyle),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            padding: compact
+                                ? EdgeInsets.zero
+                                : const EdgeInsets.symmetric(horizontal: 4),
+                            labelPadding: compact
+                                ? const EdgeInsets.symmetric(horizontal: 6)
+                                : null,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 bool _creativeSpaceHasSocial(CreativeSpaceDetailDto space) {
@@ -364,6 +377,53 @@ Map<String, List<String>> _groupArtFormTokensForDisplay(List<String> tokens) {
   return {for (final k in keys) k: map[k]!};
 }
 
+typedef _GalleryMultiselectTileRec = ({
+  String header,
+  List<String> items,
+  int tone,
+  bool uppercaseHeader,
+});
+
+({List<_GalleryMultiselectTileRec> tiles, bool hasArtFormTiles})
+    _buildGalleryMultiselectTileData(
+  CreativeSpaceGalleryStudioDetailDto detail,
+) {
+  final artGroups = _groupArtFormTokensForDisplay(detail.artFormsOffered);
+  final artFormEntries = artGroups.entries.toList();
+  var toneCursor = 0;
+  final multiselectTiles = <_GalleryMultiselectTileRec>[];
+  var hasArtFormTiles = false;
+  for (var i = 0; i < artFormEntries.length; i++) {
+    final e = artFormEntries[i];
+    if (e.value.isEmpty) continue;
+    hasArtFormTiles = true;
+    multiselectTiles.add((
+      header: e.key,
+      items: e.value,
+      tone: toneCursor++,
+      uppercaseHeader: true,
+    ));
+  }
+  void addSurfaceCard(String header, List<String> items) {
+    if (items.isEmpty) return;
+    multiselectTiles.add((
+      header: header,
+      items: items,
+      tone: toneCursor++,
+      uppercaseHeader: false,
+    ));
+  }
+
+  addSurfaceCard('Styles & genres', detail.stylesAndGenres);
+  addSurfaceCard('Artist representation', detail.artistRepresentation);
+  addSurfaceCard('Price ranges', detail.priceRanges);
+  addSurfaceCard('Services', detail.servicesOffered);
+  addSurfaceCard('Visitor experience', detail.visitorExperience);
+  addSurfaceCard('Exhibition types', detail.exhibitionTypes);
+  addSurfaceCard('Digital presence', detail.digitalPresence);
+  return (tiles: multiselectTiles, hasArtFormTiles: hasArtFormTiles);
+}
+
 class CreativeSpaceDetailPage extends StatelessWidget {
   final int creativeSpaceId;
   final String creativeSpaceName;
@@ -391,31 +451,6 @@ class CreativeSpaceDetailPage extends StatelessWidget {
 class _CreativeSpaceDetailPageContent extends StatelessWidget {
   const _CreativeSpaceDetailPageContent();
 
-  Widget _detailHero(
-    BuildContext context,
-    CreativeSpaceDetailState state,
-    CreativeSpaceDetailViewModel viewModel,
-  ) {
-    final title = state is CreativeSpaceDetailSuccess
-        ? state.creativeSpace.name
-        : viewModel.creativeSpaceName;
-    final categoryLine = state is CreativeSpaceDetailSuccess
-        ? (state.creativeSpace.categoryName ?? 'Creative space')
-        : 'Creative space';
-    final townLine = state is CreativeSpaceDetailSuccess
-        ? (state.creativeSpace.townName ??
-            state.creativeSpace.city ??
-            'Details')
-        : 'Details';
-    return EntityListingHeroHeader(
-      theme: context.entityListingTheme,
-      categoryIcon: Icons.palette_rounded,
-      subCategoryName: title,
-      categoryName: categoryLine,
-      townName: townLine,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<CreativeSpaceDetailViewModel>();
@@ -426,7 +461,7 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _detailHero(context, state, viewModel),
+            _CreativeDetailHero(state: state, viewModel: viewModel),
             if (state is CreativeSpaceDetailSuccess)
               _CreativeOpenClosedBanner(space: state.creativeSpace),
             Expanded(
@@ -434,7 +469,10 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
                 CreativeSpaceDetailLoading() =>
                   const _CreativeSpaceLoadingView(),
                 CreativeSpaceDetailError(error: final error) =>
-                  _buildErrorState(context, error: error, viewModel: viewModel),
+                  _CreativeSpaceErrorState(
+                    error: error,
+                    viewModel: viewModel,
+                  ),
                 CreativeSpaceDetailSuccess(creativeSpace: final space) =>
                   _CreativeSpaceDetailBody(space: space),
               },
@@ -443,6 +481,41 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CreativeDetailHero extends StatelessWidget {
+  const _CreativeDetailHero({
+    required this.state,
+    required this.viewModel,
+  });
+
+  final CreativeSpaceDetailState state;
+  final CreativeSpaceDetailViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = switch (state) {
+      CreativeSpaceDetailSuccess(:final creativeSpace) => creativeSpace.name,
+      _ => viewModel.creativeSpaceName,
+    };
+    final categoryLine = switch (state) {
+      CreativeSpaceDetailSuccess(:final creativeSpace) =>
+        creativeSpace.categoryName ?? 'Creative space',
+      _ => 'Creative space',
+    };
+    final townLine = switch (state) {
+      CreativeSpaceDetailSuccess(:final creativeSpace) =>
+        creativeSpace.townName ?? creativeSpace.city ?? 'Details',
+      _ => 'Details',
+    };
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.palette_rounded,
+      subCategoryName: title,
+      categoryName: categoryLine,
+      townName: townLine,
     );
   }
 }
@@ -456,39 +529,62 @@ class _CreativeSpaceLoadingView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        _LoadingBlock(height: 104, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(
+          height: 104,
+          color: colorScheme.surfaceContainerHigh,
+          borderRadius: CreativeSpacesConstants.sectionRadius,
+        ),
         const SizedBox(height: 12),
-        _LoadingBlock(height: 140, color: colorScheme.surfaceContainerLow),
+        DetailLoadingBlock(
+          height: 140,
+          color: colorScheme.surfaceContainerLow,
+          borderRadius: CreativeSpacesConstants.sectionRadius,
+        ),
         const SizedBox(height: 12),
-        _LoadingBlock(height: 120, color: colorScheme.surfaceContainerHighest),
+        DetailLoadingBlock(
+          height: 120,
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: CreativeSpacesConstants.sectionRadius,
+        ),
         const SizedBox(height: 12),
-        _LoadingBlock(height: 84, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(
+          height: 84,
+          color: colorScheme.surfaceContainerHigh,
+          borderRadius: CreativeSpacesConstants.sectionRadius,
+        ),
       ],
     );
   }
 }
 
-Widget _buildErrorState(
-  BuildContext context, {
-  required AppError error,
-  required CreativeSpaceDetailViewModel viewModel,
-}) {
-  if (error.actionText != null && error.action != null) {
-    return ErrorView(error: error);
-  }
+class _CreativeSpaceErrorState extends StatelessWidget {
+  const _CreativeSpaceErrorState({
+    required this.error,
+    required this.viewModel,
+  });
 
-  return ListView(
-    padding: const EdgeInsets.all(18),
-    children: [
-      ErrorView(error: error),
-      const SizedBox(height: 16),
-      FilledButton.icon(
-        onPressed: viewModel.retry,
-        icon: const Icon(Icons.refresh_rounded),
-        label: const Text(CreativeSpacesConstants.retryLabel),
-      ),
-    ],
-  );
+  final AppError error;
+  final CreativeSpaceDetailViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    if (error.actionText != null && error.action != null) {
+      return ErrorView(error: error);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        ErrorView(error: error),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: viewModel.retry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text(CreativeSpacesConstants.retryLabel),
+        ),
+      ],
+    );
+  }
 }
 
 class _CreativeOpenClosedBanner extends StatelessWidget {
@@ -525,18 +621,18 @@ class _CreativeSpaceDetailBody extends StatelessWidget {
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
           _GalleryStudioSection(detail: space.galleryStudio!),
         ],
-        if (_creativeSpaceHasSocial(space)) ...[
-          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-          _CreativeSocialSection(space: space),
-        ],
         if (space.images.isNotEmpty) ...[
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
           _GallerySection(images: space.images),
         ],
+        if (_creativeSpaceHasSocial(space)) ...[
+          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
+          _CreativeSocialSection(space: space),
+        ],
         if (space.operatingHours.isNotEmpty ||
             space.bestVisitWindow != null) ...[
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-          _HoursSection(
+          _RegularCreativeHoursSection(
             title: CreativeSpacesConstants.operatingHoursTitle,
             hours: space.operatingHours,
             summary: space.bestVisitWindow,
@@ -544,10 +640,9 @@ class _CreativeSpaceDetailBody extends StatelessWidget {
         ],
         if (space.specialOperatingHours.isNotEmpty) ...[
           const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-          _HoursSection(
+          _SpecialCreativeHoursSection(
             title: CreativeSpacesConstants.specialHoursTitle,
             hours: space.specialOperatingHours,
-            isSpecial: true,
           ),
         ],
         if (space.reviews.isNotEmpty) ...[
@@ -605,19 +700,19 @@ class _InfoSection extends StatelessWidget {
               children: [
                 if (space.categoryName != null &&
                     space.categoryName!.trim().isNotEmpty)
-                  _Pill(
+                  DetailInfoPill(
                     icon: Icons.category_rounded,
                     text: space.categoryName!.trim(),
                   ),
                 if (space.subCategoryName != null &&
                     space.subCategoryName!.trim().isNotEmpty)
-                  _Pill(
+                  DetailInfoPill(
                     icon: Icons.layers_rounded,
                     text: space.subCategoryName!.trim(),
                   ),
                 if (space.visitType != null &&
                     space.visitType!.trim().isNotEmpty)
-                  _Pill(
+                  DetailInfoPill(
                     icon: Icons.schedule_rounded,
                     text: space.visitType!.trim(),
                   ),
@@ -689,7 +784,7 @@ class _InfoSection extends StatelessWidget {
                         : Icons.star_border_rounded,
                     size: 14,
                     color: isFilled || isHalf
-                        ? Colors.amber.shade700
+                        ? colorScheme.tertiary
                         : colorScheme.onSurfaceVariant,
                   );
                 }),
@@ -723,19 +818,19 @@ class _InfoSection extends StatelessWidget {
               children: [
                 if (space.craftType != null &&
                     space.craftType!.trim().isNotEmpty)
-                  _InfoChip(
+                  DetailInfoChip(
                     text: space.craftType!.trim(),
                     icon: Icons.brush_rounded,
                   ),
                 if (space.materials != null &&
                     space.materials!.trim().isNotEmpty)
-                  _InfoChip(
+                  DetailInfoChip(
                     text: space.materials!.trim(),
                     icon: Icons.foundation_rounded,
                   ),
                 if (space.languages != null &&
                     space.languages!.trim().isNotEmpty)
-                  _InfoChip(
+                  DetailInfoChip(
                     text: space.languages!.trim(),
                     icon: Icons.translate_rounded,
                   ),
@@ -963,41 +1058,9 @@ class _GalleryStudioSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final artGroups = _groupArtFormTokensForDisplay(detail.artFormsOffered);
-    final artFormEntries = artGroups.entries.toList();
-    var toneCursor = 0;
-
-    final multiselectTiles =
-        <({String header, List<String> items, int tone, bool uppercaseHeader})>[];
-    var hasArtFormTiles = false;
-    for (var i = 0; i < artFormEntries.length; i++) {
-      final e = artFormEntries[i];
-      if (e.value.isEmpty) continue;
-      hasArtFormTiles = true;
-      multiselectTiles.add((
-        header: e.key,
-        items: e.value,
-        tone: toneCursor++,
-        uppercaseHeader: true,
-      ));
-    }
-    void addSurfaceCard(String header, List<String> items) {
-      if (items.isEmpty) return;
-      multiselectTiles.add((
-        header: header,
-        items: items,
-        tone: toneCursor++,
-        uppercaseHeader: false,
-      ));
-    }
-
-    addSurfaceCard('Styles & genres', detail.stylesAndGenres);
-    addSurfaceCard('Artist representation', detail.artistRepresentation);
-    addSurfaceCard('Price ranges', detail.priceRanges);
-    addSurfaceCard('Services', detail.servicesOffered);
-    addSurfaceCard('Visitor experience', detail.visitorExperience);
-    addSurfaceCard('Exhibition types', detail.exhibitionTypes);
-    addSurfaceCard('Digital presence', detail.digitalPresence);
+    final tileData = _buildGalleryMultiselectTileData(detail);
+    final multiselectTiles = tileData.tiles;
+    final hasArtFormTiles = tileData.hasArtFormTiles;
 
     final hasFeaturedArtists = detail.featuredArtists != null &&
         detail.featuredArtists!.trim().isNotEmpty;
@@ -1076,8 +1139,8 @@ class _GalleryStudioSection extends StatelessWidget {
                           for (final tile in multiselectTiles)
                             SizedBox(
                               width: colW,
-                              child: _gallerySurfaceCard(
-                                theme,
+                              child: _GallerySurfaceCard(
+                                theme: theme,
                                 headerLabel: tile.header,
                                 items: tile.items,
                                 toneIndex: tile.tone,
@@ -1228,42 +1291,19 @@ class _GallerySection extends StatelessWidget {
   }
 }
 
-class _HoursSection extends StatelessWidget {
-  final String title;
-  final List<CreativeSpaceOperatingHourDto> hours;
-  final bool isSpecial;
-  final String? summary;
-
-  const _HoursSection({
+class _RegularCreativeHoursSection extends StatelessWidget {
+  const _RegularCreativeHoursSection({
     required this.title,
     required this.hours,
-    this.isSpecial = false,
     this.summary,
   });
 
+  final String title;
+  final List<CreativeSpaceOperatingHourDto> hours;
+  final String? summary;
+
   @override
   Widget build(BuildContext context) {
-    if (isSpecial) {
-      return DetailSectionShell(
-        title: title,
-        icon: Icons.event_note_rounded,
-        child: Column(
-          children: hours
-              .map(
-                (hour) => _HourRow(
-                  dayOfWeek: hour.dayOfWeek,
-                  openTime: hour.openTime,
-                  closeTime: hour.closeTime,
-                  isOpen: hour.isOpen,
-                  note: hour.specialHoursNote,
-                  isSpecial: true,
-                ),
-              )
-              .toList(),
-        ),
-      );
-    }
-
     return DetailSectionShell(
       title: title,
       icon: Icons.schedule,
@@ -1287,6 +1327,38 @@ class _HoursSection extends StatelessWidget {
   }
 }
 
+class _SpecialCreativeHoursSection extends StatelessWidget {
+  const _SpecialCreativeHoursSection({
+    required this.title,
+    required this.hours,
+  });
+
+  final String title;
+  final List<CreativeSpaceOperatingHourDto> hours;
+
+  @override
+  Widget build(BuildContext context) {
+    return DetailSectionShell(
+      title: title,
+      icon: Icons.event_note_rounded,
+      child: Column(
+        children: hours
+            .map(
+              (hour) => DetailHourRow(
+                dayOfWeek: hour.dayOfWeek,
+                openTime: hour.openTime,
+                closeTime: hour.closeTime,
+                isOpen: hour.isOpen,
+                note: hour.specialHoursNote,
+                isSpecial: true,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
 class _ReviewsSection extends StatelessWidget {
   final List<ReviewDto> reviews;
 
@@ -1300,279 +1372,9 @@ class _ReviewsSection extends StatelessWidget {
       icon: Icons.rate_review_rounded,
       child: Column(
         children: shownReviews
-            .map((review) => _ReviewTile(review: review))
+            .map((review) => DetailReviewTile(review: review))
             .toList(),
       ),
-    );
-  }
-}
-
-class _ReviewTile extends StatelessWidget {
-  final ReviewDto review;
-
-  const _ReviewTile({required this.review});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                review.userName,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (review.isVerified) ...[
-                const SizedBox(width: 6),
-                const Icon(Icons.verified_rounded, size: 14),
-              ],
-              const Spacer(),
-              Text(
-                CreativeSpacesConstants.reviewRatingTemplate.replaceAll(
-                  '{rating}',
-                  review.rating.toStringAsFixed(1),
-                ),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          if (review.comment != null && review.comment!.trim().isNotEmpty)
-            Text(review.comment!.trim(), style: theme.textTheme.bodySmall),
-          const SizedBox(height: 8),
-          Text(
-            CreativeSpacesConstants.dateIsoTemplate
-                .replaceAll('{year}', review.createdAt.year.toString())
-                .replaceAll(
-                  '{month}',
-                  review.createdAt.month.toString().padLeft(2, '0'),
-                )
-                .replaceAll(
-                  '{day}',
-                  review.createdAt.day.toString().padLeft(2, '0'),
-                ),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HourRow extends StatelessWidget {
-  final String dayOfWeek;
-  final String? openTime;
-  final String? closeTime;
-  final bool isOpen;
-  final bool isSpecial;
-  final String? note;
-
-  const _HourRow({
-    required this.dayOfWeek,
-    this.openTime,
-    this.closeTime,
-    required this.isOpen,
-    this.note,
-    this.isSpecial = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final timeText =
-        openTime == null ||
-            closeTime == null ||
-            openTime!.trim().isEmpty ||
-            closeTime!.trim().isEmpty
-        ? (isOpen
-              ? CreativeSpacesConstants.openLabel
-              : CreativeSpacesConstants.closedBadge)
-        : CreativeSpacesConstants.timeRangeTemplate
-              .replaceAll('{start}', formatOperatingHoursTimeForDisplay(openTime!))
-              .replaceAll('{end}', formatOperatingHoursTimeForDisplay(closeTime!));
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              dayOfWeek,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          if (isSpecial && isOpen == false)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                CreativeSpacesConstants.specialLabel,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          Text(
-            timeText,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: isOpen
-                  ? Colors.green.shade700
-                  : theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (note != null && note!.trim().isNotEmpty) ...[
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                note!.trim(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _Pill({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: primary.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Icon(icon, size: 13, color: primary),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                fit: FlexFit.loose,
-                child: Text(
-                  text,
-                  softWrap: true,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    height: 1.35,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final String text;
-  final IconData icon;
-
-  const _InfoChip({required this.text, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Icon(icon, size: 12),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                fit: FlexFit.loose,
-                child: Text(
-                  text,
-                  softWrap: true,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _LoadingBlock extends StatelessWidget {
-  final double height;
-  final Color color;
-
-  const _LoadingBlock({required this.height, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(
-        CreativeSpacesConstants.sectionRadius,
-      ),
-      child: Container(height: height, color: color),
     );
   }
 }

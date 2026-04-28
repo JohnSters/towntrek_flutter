@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 /// 56×56 social network action (Font Awesome icon).
 class DetailSocialIconButton extends StatelessWidget {
   final String tooltip;
-  final IconData icon;
+  final FaIconData icon;
   final Color backgroundColor;
   final Color iconColor;
   final VoidCallback onPressed;

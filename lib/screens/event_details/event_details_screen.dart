@@ -11,6 +11,16 @@ import 'event_details_state.dart';
 import 'event_details_view_model.dart';
 import '../event_all_reviews/event_all_reviews_screen.dart';
 
+String _eventPlaceLine(EventDetailDto event) {
+  if (event.venue != null && event.venue!.trim().isNotEmpty) {
+    return event.venue!.trim();
+  }
+  if (event.physicalAddress.trim().isNotEmpty) {
+    return event.physicalAddress.trim();
+  }
+  return 'Details';
+}
+
 /// Screen displaying detailed information for a specific event
 /// Uses Provider pattern with EventDetailsViewModel for state management
 class EventDetailsScreen extends StatelessWidget {
@@ -45,42 +55,6 @@ class EventDetailsScreen extends StatelessWidget {
 class _EventDetailsScreenContent extends StatelessWidget {
   const _EventDetailsScreenContent();
 
-  Widget _eventHero(
-    BuildContext context,
-    EventDetailsState state,
-    EventDetailsViewModel viewModel,
-  ) {
-    final title = switch (state) {
-      EventDetailsSuccess(:final eventDetails) => eventDetails.name,
-      _ => viewModel.eventName,
-    };
-    final typeLine = switch (state) {
-      EventDetailsSuccess(:final eventDetails) => eventDetails.eventType,
-      _ => viewModel.eventType ?? 'Event',
-    };
-    final placeLine = switch (state) {
-      EventDetailsSuccess(:final eventDetails) => _placeLine(eventDetails),
-      _ => 'Details',
-    };
-    return EntityListingHeroHeader(
-      theme: context.entityListingTheme,
-      categoryIcon: Icons.event_rounded,
-      subCategoryName: title,
-      categoryName: typeLine,
-      townName: placeLine,
-    );
-  }
-
-  String _placeLine(EventDetailDto event) {
-    if (event.venue != null && event.venue!.trim().isNotEmpty) {
-      return event.venue!.trim();
-    }
-    if (event.physicalAddress.trim().isNotEmpty) {
-      return event.physicalAddress.trim();
-    }
-    return 'Details';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<EventDetailsViewModel>(
@@ -91,14 +65,14 @@ class _EventDetailsScreenContent extends StatelessWidget {
           body: SafeArea(
             child: Column(
               children: [
-                _eventHero(context, state, viewModel),
+                _EventDetailHero(state: state, viewModel: viewModel),
                 if (state is EventDetailsSuccess)
                   EntityOpenClosedBanner(
                     isOpen: null,
                     viewCount: state.eventDetails.viewCount,
                   ),
                 Expanded(
-                  child: _buildBody(context, state, viewModel),
+                  child: _EventDetailStateBody(state: state),
                 ),
                 const ListingBackFooter(label: 'Back'),
               ],
@@ -108,28 +82,57 @@ class _EventDetailsScreenContent extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildBody(
-    BuildContext context,
-    EventDetailsState state,
-    EventDetailsViewModel viewModel,
-  ) {
-    if (state is EventDetailsLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+class _EventDetailHero extends StatelessWidget {
+  const _EventDetailHero({
+    required this.state,
+    required this.viewModel,
+  });
 
-    if (state is EventDetailsError) {
-      return _ErrorBody(
-        title: state.title,
-        message: state.message,
-      );
-    }
+  final EventDetailsState state;
+  final EventDetailsViewModel viewModel;
 
-    if (state is EventDetailsSuccess) {
-      return _EventDetailsScrollContent(eventDetails: state.eventDetails);
-    }
+  @override
+  Widget build(BuildContext context) {
+    final title = switch (state) {
+      EventDetailsSuccess(:final eventDetails) => eventDetails.name,
+      _ => viewModel.eventName,
+    };
+    final typeLine = switch (state) {
+      EventDetailsSuccess(:final eventDetails) => eventDetails.eventType,
+      _ => viewModel.eventType ?? 'Event',
+    };
+    final placeLine = switch (state) {
+      EventDetailsSuccess(:final eventDetails) => _eventPlaceLine(eventDetails),
+      _ => 'Details',
+    };
+    return EntityListingHeroHeader(
+      theme: context.entityListingTheme,
+      categoryIcon: Icons.event_rounded,
+      subCategoryName: title,
+      categoryName: typeLine,
+      townName: placeLine,
+    );
+  }
+}
 
-    return const SizedBox.shrink();
+class _EventDetailStateBody extends StatelessWidget {
+  const _EventDetailStateBody({required this.state});
+
+  final EventDetailsState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (state) {
+      EventDetailsLoading() => const Center(child: CircularProgressIndicator()),
+      EventDetailsError(:final title, :final message) => _ErrorBody(
+        title: title,
+        message: message,
+      ),
+      EventDetailsSuccess(:final eventDetails) =>
+        _EventDetailsScrollContent(eventDetails: eventDetails),
+    };
   }
 }
 
