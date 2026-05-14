@@ -8,6 +8,7 @@ import '../../models/models.dart';
 import '../shared/detail_widgets/detail_widgets.dart';
 import 'business_details_state.dart';
 import 'business_details_view_model.dart';
+import 'widgets/business_documents_section.dart';
 import 'widgets/equipment_hire_rates_section.dart';
 
 class BusinessDetailsPage extends StatelessWidget {
@@ -193,7 +194,7 @@ class _BusinessDetailsBody extends StatelessWidget {
         if (isEquipmentRental) ...[
           const SizedBox(height: 12),
           DetailSectionShell(
-            title: 'Hire rates',
+            title: 'Hire rates (from)',
             icon: Icons.construction_rounded,
             child: EquipmentHireRatesSection(business: business),
           ),
@@ -222,6 +223,10 @@ class _BusinessDetailsBody extends StatelessWidget {
               ),
             ),
           ),
+        ],
+        if (business.documents.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          BusinessDocumentsSection(documents: business.documents),
         ],
         if (hasSocial) ...[
           const SizedBox(height: 12),

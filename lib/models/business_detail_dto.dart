@@ -41,7 +41,7 @@ class BusinessDetailDto {
   final bool? isOpenNow;
   final String? openNowText;
 
-  /// Equipment rentals category: advertised rates (ZAR), when returned by the API.
+  /// Equipment rentals: advertised “starts from” amounts (ZAR), when returned by the API.
   final double? hourlyRate;
   final double? dailyRate;
 

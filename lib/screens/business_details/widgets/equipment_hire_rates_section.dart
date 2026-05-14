@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/town_feature_constants.dart';
 import '../../../models/models.dart';
 
-/// Hire rates + deposit for equipment-rentals business detail (matches public web logic).
+/// Starting hire amounts + deposit for equipment rentals (matches public web “starts from” copy).
 class EquipmentHireRatesSection extends StatelessWidget {
   final BusinessDetailDto business;
 
@@ -23,7 +23,12 @@ class EquipmentHireRatesSection extends StatelessWidget {
     final showDeposit =
         business.isDepositRequired && business.depositAmount != null;
 
+    final hasDocuments = business.documents.isNotEmpty;
+
     if (!hasHourly && !hasDaily && !showDeposit) {
+      final emptyMessage = hasDocuments
+          ? 'Starting hire amounts are not shown here—scroll to Documents to open price lists or brochures, or contact the business.'
+          : 'No starting rates on the listing yet—contact the business for current hire amounts.';
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -45,7 +50,7 @@ class EquipmentHireRatesSection extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Ask the business for current hire rates.',
+                emptyMessage,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   height: 1.35,
                   color: colorScheme.onSurface.withValues(alpha: 0.82),
@@ -62,8 +67,8 @@ class EquipmentHireRatesSection extends StatelessWidget {
       children: [
         if (hasHourly)
           _HireRateTile(
-            label: 'Hourly rate',
-            value: 'R${h.toStringAsFixed(2)} / hour',
+            label: 'Hourly hire (starts from)',
+            value: 'From R${h.toStringAsFixed(2)} / hour',
             icon: Icons.hourglass_top_rounded,
             tileBackground: colorScheme.primaryContainer.withValues(alpha: 0.42),
             iconBackground: colorScheme.primary.withValues(alpha: 0.16),
@@ -73,8 +78,8 @@ class EquipmentHireRatesSection extends StatelessWidget {
         if (hasHourly && (hasDaily || showDeposit)) const SizedBox(height: 10),
         if (hasDaily)
           _HireRateTile(
-            label: 'Daily rate',
-            value: 'R${d.toStringAsFixed(2)} / day',
+            label: 'Full day (starts from)',
+            value: 'From R${d.toStringAsFixed(2)} / day',
             icon: Icons.calendar_today_rounded,
             tileBackground: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
             iconBackground: colorScheme.tertiary.withValues(alpha: 0.18),
@@ -92,6 +97,16 @@ class EquipmentHireRatesSection extends StatelessWidget {
             iconColor: _equipmentAccent.withValues(alpha: 0.95),
             borderColor: _equipmentAccent.withValues(alpha: 0.35),
           ),
+        if (hasDocuments) ...[
+          const SizedBox(height: 12),
+          Text(
+            'Itemised tariffs or full rate sheets may be in Documents below—tap Download to view.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              height: 1.35,
+              color: colorScheme.onSurface.withValues(alpha: 0.72),
+            ),
+          ),
+        ],
       ],
     );
   }
