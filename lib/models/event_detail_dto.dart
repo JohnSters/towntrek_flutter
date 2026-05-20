@@ -92,51 +92,76 @@ class EventDetailDto {
 
   /// Creates an EventDetailDto from JSON
   factory EventDetailDto.fromJson(Map<String, dynamic> json) {
+    T? pick<T>(String camel, String pascal) {
+      final v = json[camel] ?? json[pascal];
+      return v as T?;
+    }
+
+    String reqStr(String camel, String pascal) =>
+        pick<String>(camel, pascal) ?? '';
+
+    int reqInt(String camel, String pascal) =>
+        pick<int>(camel, pascal) ?? (pick<num>(camel, pascal)?.toInt() ?? 0);
+
+    bool pickBool(String camel, String pascal, {bool d = false}) =>
+        pick<bool>(camel, pascal) ?? d;
+
+    final startRaw = json['startDate'] ?? json['StartDate'];
+    final endRaw = json['endDate'] ?? json['EndDate'];
+
+    double? coord(String camel, String pascal) {
+      final v = json[camel] ?? json[pascal];
+      if (v == null) return null;
+      return (v as num).toDouble();
+    }
+
+    final imgs = json['images'] as List<dynamic>? ?? json['Images'] as List<dynamic>? ?? [];
+    final revs = json['reviews'] as List<dynamic>? ?? json['Reviews'] as List<dynamic>? ?? [];
+
     return EventDetailDto(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      shortDescription: json['shortDescription'] as String? ?? json['ShortDescription'] as String?,
-      eventType: json['eventType'] as String,
-      startDate: DateTime.parse(json['startDate'] as String),
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate'] as String) : null,
-      startTime: json['startTime'] as String?,
-      endTime: json['endTime'] as String?,
-      venue: json['venue'] as String?,
-      physicalAddress: json['physicalAddress'] as String,
-      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
-      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
-      isFreeEvent: json['isFreeEvent'] as bool? ?? true,
-      entryFeeAmount: json['entryFeeAmount'] != null ? (json['entryFeeAmount'] as num).toDouble() : null,
-      entryFeeCurrency: json['entryFeeCurrency'] as String?,
-      logoUrl: json['logoUrl'] as String?,
-      rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
-      totalReviews: json['totalReviews'] as int,
-      viewCount: json['viewCount'] as int,
-      isPriorityListing: json['isPriorityListing'] as bool? ?? false,
-      venueAddress: json['venueAddress'] as String?,
-      phoneNumber: json['phoneNumber'] as String?,
-      emailAddress: json['emailAddress'] as String?,
-      website: json['website'] as String?,
-      ticketInfo: json['ticketInfo'] as String?,
-      requiresTickets: json['requiresTickets'] as bool? ?? false,
-      eventProgram: json['eventProgram'] as String?,
-      ageRestrictions: json['ageRestrictions'] as String?,
-      hasParking: json['hasParking'] as bool? ?? false,
-      hasRefreshments: json['hasRefreshments'] as bool? ?? false,
-      isOutdoorEvent: json['isOutdoorEvent'] as bool? ?? false,
-      hasWeatherBackup: json['hasWeatherBackup'] as bool? ?? false,
-      maxAttendees: json['maxAttendees'] as int?,
-      expectedAttendance: json['expectedAttendance'] as int?,
-      organizerContact: json['organizerContact'] as String?,
-      status: json['status'] as String? ?? 'Draft',
-      coverImageUrl: json['coverImageUrl'] as String?,
-      images: (json['images'] as List<dynamic>?)
-          ?.map((e) => EventImageDto.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
-      reviews: (json['reviews'] as List<dynamic>?)
-          ?.map((e) => EventReviewDto.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+      id: reqInt('id', 'Id'),
+      name: reqStr('name', 'Name'),
+      description: pick<String>('description', 'Description'),
+      shortDescription: pick<String>('shortDescription', 'ShortDescription'),
+      eventType: reqStr('eventType', 'EventType'),
+      startDate: DateTime.parse(startRaw as String),
+      endDate: endRaw != null ? DateTime.parse(endRaw as String) : null,
+      startTime: pick<String>('startTime', 'StartTime'),
+      endTime: pick<String>('endTime', 'EndTime'),
+      venue: pick<String>('venue', 'Venue'),
+      physicalAddress: reqStr('physicalAddress', 'PhysicalAddress'),
+      latitude: coord('latitude', 'Latitude'),
+      longitude: coord('longitude', 'Longitude'),
+      isFreeEvent: pickBool('isFreeEvent', 'IsFreeEvent', d: true),
+      entryFeeAmount: pick<num>('entryFeeAmount', 'EntryFeeAmount')?.toDouble(),
+      entryFeeCurrency: pick<String>('entryFeeCurrency', 'EntryFeeCurrency'),
+      logoUrl: pick<String>('logoUrl', 'LogoUrl'),
+      rating: coord('rating', 'Rating'),
+      totalReviews: reqInt('totalReviews', 'TotalReviews'),
+      viewCount: reqInt('viewCount', 'ViewCount'),
+      isPriorityListing: pickBool('isPriorityListing', 'IsPriorityListing') ||
+          pickBool('isFeatured', 'IsFeatured'),
+      venueAddress: pick<String>('venueAddress', 'VenueAddress'),
+      phoneNumber: pick<String>('phoneNumber', 'PhoneNumber'),
+      emailAddress: pick<String>('emailAddress', 'EmailAddress'),
+      website: pick<String>('website', 'Website'),
+      ticketInfo: pick<String>('ticketInfo', 'TicketInfo'),
+      requiresTickets: pickBool('requiresTickets', 'RequiresTickets'),
+      eventProgram: pick<String>('eventProgram', 'EventProgram'),
+      ageRestrictions: pick<String>('ageRestrictions', 'AgeRestrictions'),
+      hasParking: pickBool('hasParking', 'HasParking'),
+      hasRefreshments: pickBool('hasRefreshments', 'HasRefreshments'),
+      isOutdoorEvent: pickBool('isOutdoorEvent', 'IsOutdoorEvent'),
+      hasWeatherBackup: pickBool('hasWeatherBackup', 'HasWeatherBackup'),
+      maxAttendees: pick<int>('maxAttendees', 'MaxAttendees'),
+      expectedAttendance: pick<int>('expectedAttendance', 'ExpectedAttendance'),
+      organizerContact: pick<String>('organizerContact', 'OrganizerContact'),
+      status: pick<String>('status', 'Status') ?? 'Draft',
+      coverImageUrl: pick<String>('coverImageUrl', 'CoverImageUrl'),
+      images:
+          imgs.map((e) => EventImageDto.fromJson(e as Map<String, dynamic>)).toList(),
+      reviews:
+          revs.map((e) => EventReviewDto.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 

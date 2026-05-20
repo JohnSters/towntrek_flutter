@@ -62,7 +62,8 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
           (e.shortDescription?.toLowerCase().contains(t) ?? false) ||
           (e.description?.toLowerCase().contains(t) ?? false) ||
           (e.venue?.toLowerCase().contains(t) ?? false) ||
-          e.physicalAddress.toLowerCase().contains(t);
+          e.physicalAddress.toLowerCase().contains(t) ||
+          (e.townName?.toLowerCase().contains(t) ?? false);
     }).toList();
   }
 

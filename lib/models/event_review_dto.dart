@@ -19,12 +19,12 @@ class EventReviewDto {
   /// Creates an EventReviewDto from JSON
   factory EventReviewDto.fromJson(Map<String, dynamic> json) {
     return EventReviewDto(
-      id: json['id'] as int,
-      rating: (json['rating'] as num).toDouble(),
-      comment: json['comment'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      userName: json['userName'] as String?,
-      isApproved: json['isApproved'] as bool? ?? false,
+      id: json['id'] as int? ?? json['Id'] as int,
+      rating: ((json['rating'] ?? json['Rating']) as num).toDouble(),
+      comment: json['comment'] as String? ?? json['Comment'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String? ?? json['CreatedAt'] as String),
+      userName: json['userName'] as String? ?? json['UserName'] as String?,
+      isApproved: json['isApproved'] as bool? ?? json['IsApproved'] as bool? ?? false,
     );
   }
 

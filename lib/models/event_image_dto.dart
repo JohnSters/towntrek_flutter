@@ -17,11 +17,11 @@ class EventImageDto {
   /// Creates an EventImageDto from JSON
   factory EventImageDto.fromJson(Map<String, dynamic> json) {
     return EventImageDto(
-      id: json['id'] as int,
-      url: json['url'] as String,
-      altText: json['altText'] as String?,
-      sortOrder: json['sortOrder'] as int,
-      imageType: json['imageType'] as String,
+      id: json['id'] as int? ?? json['Id'] as int,
+      url: json['url'] as String? ?? json['Url'] as String,
+      altText: json['altText'] as String? ?? json['AltText'] as String?,
+      sortOrder: json['sortOrder'] as int? ?? json['SortOrder'] as int,
+      imageType: json['imageType'] as String? ?? json['ImageType'] as String? ?? 'Gallery',
     );
   }
 

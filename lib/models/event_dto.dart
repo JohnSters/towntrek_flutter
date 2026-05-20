@@ -12,6 +12,8 @@ class EventDto {
   final String? endTime;
   final String? venue;
   final String physicalAddress;
+  /// Town label from API listing cards (`townName`).
+  final String? townName;
   final double? latitude;
   final double? longitude;
   final bool isFreeEvent;
@@ -36,6 +38,7 @@ class EventDto {
     this.endTime,
     this.venue,
     required this.physicalAddress,
+    this.townName,
     this.latitude,
     this.longitude,
     required this.isFreeEvent,
@@ -50,13 +53,30 @@ class EventDto {
 
   /// Creates an EventDto from JSON
   factory EventDto.fromJson(Map<String, dynamic> json) {
-    // Handle both PascalCase (backend) and camelCase (our DTO) field names
+    final townNm = json['TownName'] as String? ?? json['townName'] as String?;
+    final street = (json['PhysicalAddress'] as String? ?? json['physicalAddress'] as String?)?.trim();
+    final townTrim = townNm?.trim();
+    final resolvedAddress = (street != null && street.isNotEmpty)
+        ? street
+        : (townTrim != null && townTrim.isNotEmpty ? townTrim : 'Location TBA');
+
+    double? coord(String pascal, String camel) {
+      final v = json[pascal] ?? json[camel];
+      if (v == null) return null;
+      return (v as num).toDouble();
+    }
+
+    final featured =
+        json['IsFeatured'] as bool? ??
+        json['isFeatured'] as bool? ??
+        json['IsPriorityListing'] as bool? ??
+        json['isPriorityListing'] as bool? ??
+        false;
+
     return EventDto(
       id: json['Id'] as int? ?? json['id'] as int,
       name: json['Name'] as String? ?? json['name'] as String,
-      // Map Description if available (from detail view)
       description: json['Description'] as String? ?? json['description'] as String?,
-      // Map ShortDescription explicitly
       shortDescription: json['ShortDescription'] as String? ?? json['shortDescription'] as String?,
       eventType: json['EventType'] as String? ?? json['eventType'] as String,
       status: json['Status'] as String? ?? json['status'] as String?,
@@ -66,9 +86,10 @@ class EventDto {
       startTime: json['StartTime']?.toString() ?? json['startTime'] as String?,
       endTime: json['EndTime']?.toString() ?? json['endTime'] as String?,
       venue: json['Venue'] as String? ?? json['venue'] as String?,
-      physicalAddress: json['TownName'] as String? ?? json['townName'] as String? ?? 'Location TBA',
-      latitude: null, // Not provided by EventCardViewModel
-      longitude: null, // Not provided by EventCardViewModel
+      physicalAddress: resolvedAddress,
+      townName: (townTrim != null && townTrim.isNotEmpty) ? townTrim : null,
+      latitude: coord('Latitude', 'latitude'),
+      longitude: coord('Longitude', 'longitude'),
       isFreeEvent: json['IsFreeEvent'] as bool? ?? json['isFreeEvent'] as bool? ?? true,
       entryFeeAmount: json['EntryFeeAmount'] != null ? (json['EntryFeeAmount'] as num).toDouble() :
                       json['entryFeeAmount'] != null ? (json['entryFeeAmount'] as num).toDouble() : null,
@@ -78,7 +99,7 @@ class EventDto {
                json['rating'] != null ? (json['rating'] as num).toDouble() : null,
       totalReviews: json['TotalReviews'] as int? ?? json['totalReviews'] as int? ?? 0,
       viewCount: json['ViewCount'] as int? ?? json['viewCount'] as int? ?? 0,
-      isPriorityListing: false, // Not provided by EventCardViewModel, default to false
+      isPriorityListing: featured,
     );
   }
 
@@ -97,6 +118,7 @@ class EventDto {
       'endTime': endTime,
       'venue': venue,
       'physicalAddress': physicalAddress,
+      'townName': townName,
       'latitude': latitude,
       'longitude': longitude,
       'isFreeEvent': isFreeEvent,
@@ -124,6 +146,7 @@ class EventDto {
     String? endTime,
     String? venue,
     String? physicalAddress,
+    String? townName,
     double? latitude,
     double? longitude,
     bool? isFreeEvent,
@@ -148,6 +171,7 @@ class EventDto {
       endTime: endTime ?? this.endTime,
       venue: venue ?? this.venue,
       physicalAddress: physicalAddress ?? this.physicalAddress,
+      townName: townName ?? this.townName,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       isFreeEvent: isFreeEvent ?? this.isFreeEvent,
