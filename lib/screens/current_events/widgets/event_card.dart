@@ -8,7 +8,7 @@ import '../../event_details/event_details_screen.dart';
 import '../../../core/constants/current_events_constants.dart';
 
 DateTime _eventListingStartDateTime(EventDto event) {
-  final d = event.startDate;
+  final d = event.effectiveListStartDate;
   final ts = event.startTime;
   if (ts != null && ts.trim().isNotEmpty) {
     final parts = ts.split(':');
@@ -233,8 +233,15 @@ class EventCard extends StatelessWidget {
               ),
               ListingInfoChip(
                 icon: Icons.calendar_today_outlined,
-                label: event.displayDate,
+                label: event.isRecurring
+                    ? 'Next: ${event.displayDate}'
+                    : event.displayDate,
               ),
+              if (event.isRecurring)
+                ListingInfoChip(
+                  icon: Icons.repeat_rounded,
+                  label: 'Recurring',
+                ),
               if (_eventListingShowsOpenClosedChip(event))
                 ListingOpenClosedChip(
                   isOpen: _eventListingChipIsOpen(event),

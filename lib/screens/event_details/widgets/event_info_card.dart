@@ -75,6 +75,18 @@ class EventInfoCard extends StatelessWidget {
                 label: event.displayDate,
                 icon: Icons.calendar_today_rounded,
               ),
+              if (event.isRecurring) ...[
+                DetailMetadataTag(
+                  label: 'Recurring',
+                  icon: Icons.repeat_rounded,
+                ),
+                if (event.recurrencePattern != null &&
+                    event.recurrencePattern!.trim().isNotEmpty)
+                  DetailMetadataTag(
+                    label: event.recurrencePattern!.trim(),
+                    icon: Icons.event_repeat_rounded,
+                  ),
+              ],
               if (event.startTime != null)
                 DetailMetadataTag(
                   label:

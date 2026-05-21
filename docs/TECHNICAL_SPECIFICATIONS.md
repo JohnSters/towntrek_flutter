@@ -103,6 +103,12 @@ TownTrek is a cross-platform mobile application built with Flutter that provides
 - `GET /api/events/current` - Get current/nearby events
 - `GET /api/events/types` - Get available event types
 
+**Event type details (`typeDetails` on detail responses)**  
+`GET /api/events/{id}` may include `typeDetails`: an ordered list of extension rows. Each item has `id`, `name`, `description`, `displayOrder`, and `metadata` (JSON string). For **Market** events, stalls are represented here; parse `metadata` for category and price range (see web `MarketStallViewModel` / `EventTypeDetail`).
+
+**Recurring events (list + detail)**  
+Card/list DTOs expose `isRecurring` and `nextOccurrenceDate`. The client should show **start / range** using `nextOccurrenceDate` when `isRecurring` is true (same id remains the series; occurrences are not separate API entities). Detail DTOs add `recurrencePattern` (`Weekly`, `BiWeekly`, `Monthly`), `recurrenceDaysOfWeek` (comma-separated day names, weekly/bi-weekly), and optional catalogue fields as on the web `Event` model. Background jobs advance `nextOccurrenceDate`; do not assume materialised rows per occurrence.
+
 ### Data Models
 
 #### TownDto

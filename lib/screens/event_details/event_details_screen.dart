@@ -7,6 +7,7 @@ import 'widgets/event_image_gallery.dart';
 import 'widgets/event_location_section.dart';
 import 'widgets/event_contact_section.dart';
 import 'widgets/event_reviews_section.dart';
+import 'widgets/event_market_stalls_section.dart';
 import 'event_details_state.dart';
 import 'event_details_view_model.dart';
 import '../event_all_reviews/event_all_reviews_screen.dart';
@@ -171,6 +172,8 @@ class _EventDetailsScrollContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           EventInfoCard(event: eventDetails),
+          if (eventDetails.typeDetails != null && eventDetails.typeDetails!.isNotEmpty)
+            EventMarketStallsSection(stalls: eventDetails.typeDetails!),
           if (eventDetails.images.isNotEmpty)
             EventImageGallery(images: eventDetails.images),
           EventLocationSection(event: eventDetails),

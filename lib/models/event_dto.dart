@@ -24,6 +24,8 @@ class EventDto {
   final int totalReviews;
   final int viewCount;
   final bool isPriorityListing;
+  final bool isRecurring;
+  final DateTime? nextOccurrenceDate;
 
   const EventDto({
     required this.id,
@@ -49,6 +51,8 @@ class EventDto {
     required this.totalReviews,
     required this.viewCount,
     required this.isPriorityListing,
+    this.isRecurring = false,
+    this.nextOccurrenceDate,
   });
 
   /// Creates an EventDto from JSON
@@ -72,6 +76,12 @@ class EventDto {
         json['IsPriorityListing'] as bool? ??
         json['isPriorityListing'] as bool? ??
         false;
+
+    DateTime? nextOccurrence(String camel, String pascal) {
+      final raw = json[camel] ?? json[pascal];
+      if (raw == null) return null;
+      return DateTime.parse(raw as String);
+    }
 
     return EventDto(
       id: json['Id'] as int? ?? json['id'] as int,
@@ -100,6 +110,8 @@ class EventDto {
       totalReviews: json['TotalReviews'] as int? ?? json['totalReviews'] as int? ?? 0,
       viewCount: json['ViewCount'] as int? ?? json['viewCount'] as int? ?? 0,
       isPriorityListing: featured,
+      isRecurring: json['IsRecurring'] as bool? ?? json['isRecurring'] as bool? ?? false,
+      nextOccurrenceDate: nextOccurrence('nextOccurrenceDate', 'NextOccurrenceDate'),
     );
   }
 
@@ -129,6 +141,8 @@ class EventDto {
       'totalReviews': totalReviews,
       'viewCount': viewCount,
       'isPriorityListing': isPriorityListing,
+      'isRecurring': isRecurring,
+      'nextOccurrenceDate': nextOccurrenceDate?.toIso8601String(),
     };
   }
 
@@ -157,6 +171,8 @@ class EventDto {
     int? totalReviews,
     int? viewCount,
     bool? isPriorityListing,
+    bool? isRecurring,
+    DateTime? nextOccurrenceDate,
   }) {
     return EventDto(
       id: id ?? this.id,
@@ -182,15 +198,28 @@ class EventDto {
       totalReviews: totalReviews ?? this.totalReviews,
       viewCount: viewCount ?? this.viewCount,
       isPriorityListing: isPriorityListing ?? this.isPriorityListing,
+      isRecurring: isRecurring ?? this.isRecurring,
+      nextOccurrenceDate: nextOccurrenceDate ?? this.nextOccurrenceDate,
     );
   }
 
+  /// Start date used for cards and sorting (next occurrence when recurring).
+  DateTime get effectiveListStartDate =>
+      isRecurring && nextOccurrenceDate != null ? nextOccurrenceDate! : startDate;
+
   /// Get display date string
   String get displayDate {
+    final listStart = effectiveListStartDate;
     if (endDate != null) {
-      return '${startDate.month}/${startDate.day} - ${endDate!.month}/${endDate!.day}, ${startDate.year}';
+      final spanDays = endDate!.difference(startDate).inDays;
+      final listEnd = spanDays > 0 ? listStart.add(Duration(days: spanDays)) : endDate!;
+      if (listStart.year != listEnd.year ||
+          listStart.month != listEnd.month ||
+          listStart.day != listEnd.day) {
+        return '${listStart.month}/${listStart.day} - ${listEnd.month}/${listEnd.day}, ${listEnd.year}';
+      }
     }
-    return '${startDate.month}/${startDate.day}, ${startDate.year}';
+    return '${listStart.month}/${listStart.day}, ${listStart.year}';
   }
 
   /// Get display price string
@@ -206,7 +235,7 @@ class EventDto {
 
   /// Get the effective end date/time of the event
   DateTime get effectiveEndDateTime {
-    final end = endDate ?? startDate;
+    final end = endDate ?? effectiveListStartDate;
     // If there's an end time, assume the event ends at that time.
     // Otherwise, assume it ends at the end of the day (23:59).
     final timeString = endTime;

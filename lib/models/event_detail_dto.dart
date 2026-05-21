@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import 'event_image_dto.dart';
 import 'event_review_dto.dart';
+import 'event_type_detail_dto.dart';
 
 /// Detailed event information for individual event pages
 class EventDetailDto {
@@ -46,6 +47,11 @@ class EventDetailDto {
   final String? coverImageUrl;
   final List<EventImageDto> images;
   final List<EventReviewDto> reviews;
+  final List<EventTypeDetailDto>? typeDetails;
+  final bool isRecurring;
+  final String? recurrencePattern;
+  final String? recurrenceDaysOfWeek;
+  final DateTime? nextOccurrenceDate;
 
   const EventDetailDto({
     required this.id,
@@ -88,6 +94,11 @@ class EventDetailDto {
     this.coverImageUrl,
     required this.images,
     required this.reviews,
+    this.typeDetails,
+    this.isRecurring = false,
+    this.recurrencePattern,
+    this.recurrenceDaysOfWeek,
+    this.nextOccurrenceDate,
   });
 
   /// Creates an EventDetailDto from JSON
@@ -117,6 +128,13 @@ class EventDetailDto {
 
     final imgs = json['images'] as List<dynamic>? ?? json['Images'] as List<dynamic>? ?? [];
     final revs = json['reviews'] as List<dynamic>? ?? json['Reviews'] as List<dynamic>? ?? [];
+    final typeRaw = json['typeDetails'] as List<dynamic>? ?? json['TypeDetails'] as List<dynamic>?;
+
+    DateTime? nextOccurrence(String camel, String pascal) {
+      final raw = json[camel] ?? json[pascal];
+      if (raw == null) return null;
+      return DateTime.parse(raw as String);
+    }
 
     return EventDetailDto(
       id: reqInt('id', 'Id'),
@@ -162,6 +180,13 @@ class EventDetailDto {
           imgs.map((e) => EventImageDto.fromJson(e as Map<String, dynamic>)).toList(),
       reviews:
           revs.map((e) => EventReviewDto.fromJson(e as Map<String, dynamic>)).toList(),
+      typeDetails: typeRaw
+          ?.map((e) => EventTypeDetailDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      isRecurring: pickBool('isRecurring', 'IsRecurring'),
+      recurrencePattern: pick<String>('recurrencePattern', 'RecurrencePattern'),
+      recurrenceDaysOfWeek: pick<String>('recurrenceDaysOfWeek', 'RecurrenceDaysOfWeek'),
+      nextOccurrenceDate: nextOccurrence('nextOccurrenceDate', 'NextOccurrenceDate'),
     );
   }
 
@@ -208,6 +233,11 @@ class EventDetailDto {
       'coverImageUrl': coverImageUrl,
       'images': images.map((e) => e.toJson()).toList(),
       'reviews': reviews.map((e) => e.toJson()).toList(),
+      'typeDetails': typeDetails?.map((e) => e.toJson()).toList(),
+      'isRecurring': isRecurring,
+      'recurrencePattern': recurrencePattern,
+      'recurrenceDaysOfWeek': recurrenceDaysOfWeek,
+      'nextOccurrenceDate': nextOccurrenceDate?.toIso8601String(),
     };
   }
 
@@ -253,6 +283,11 @@ class EventDetailDto {
     String? coverImageUrl,
     List<EventImageDto>? images,
     List<EventReviewDto>? reviews,
+    List<EventTypeDetailDto>? typeDetails,
+    bool? isRecurring,
+    String? recurrencePattern,
+    String? recurrenceDaysOfWeek,
+    DateTime? nextOccurrenceDate,
   }) {
     return EventDetailDto(
       id: id ?? this.id,
@@ -295,18 +330,31 @@ class EventDetailDto {
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       images: images ?? this.images,
       reviews: reviews ?? this.reviews,
+      typeDetails: typeDetails ?? this.typeDetails,
+      isRecurring: isRecurring ?? this.isRecurring,
+      recurrencePattern: recurrencePattern ?? this.recurrencePattern,
+      recurrenceDaysOfWeek: recurrenceDaysOfWeek ?? this.recurrenceDaysOfWeek,
+      nextOccurrenceDate: nextOccurrenceDate ?? this.nextOccurrenceDate,
     );
   }
+
+  DateTime get effectiveListStartDate =>
+      isRecurring && nextOccurrenceDate != null ? nextOccurrenceDate! : startDate;
 
   // Getters for display
   String get displayDate {
     final formatter = DateFormat('MMM d, yyyy');
-    if (endDate != null && 
-        endDate!.year != 1 && 
-        (startDate.year != endDate!.year || startDate.month != endDate!.month || startDate.day != endDate!.day)) {
-       return '${formatter.format(startDate)} - ${formatter.format(endDate!)}';
+    final listStart = effectiveListStartDate;
+    if (endDate != null &&
+        endDate!.year != 1 &&
+        (listStart.year != endDate!.year ||
+            listStart.month != endDate!.month ||
+            listStart.day != endDate!.day)) {
+      final spanDays = endDate!.difference(startDate).inDays;
+      final listEnd = spanDays > 0 ? listStart.add(Duration(days: spanDays)) : endDate!;
+      return '${formatter.format(listStart)} - ${formatter.format(listEnd)}';
     }
-    return formatter.format(startDate);
+    return formatter.format(listStart);
   }
 
   String get displayPrice {

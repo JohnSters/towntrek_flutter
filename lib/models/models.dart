@@ -12,6 +12,7 @@ export 'event_image_dto.dart';
 export 'event_list_response.dart';
 export 'event_review_dto.dart';
 export 'event_type_dto.dart';
+export 'event_type_detail_dto.dart';
 export 'operating_hour_dto.dart';
 export 'discovery_dto.dart';
 export 'document_dto.dart';
