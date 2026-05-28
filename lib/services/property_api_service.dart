@@ -15,7 +15,7 @@ class PropertyApiService {
     final queryParams = <String, dynamic>{
       'page': page,
       'pageSize': pageSize,
-      if (townId != null) 'townId': townId,
+      'townId': ?townId,
     };
 
     final response = await _apiClient.get<Map<String, dynamic>>(

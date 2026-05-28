@@ -155,6 +155,19 @@ class _TownFeatureSelectionScreenContentState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (viewModel.showTownAdminHub) ...[
+                          if (viewModel.townAdminProfile != null)
+                            TownAdminBanner(
+                              profile: viewModel.townAdminProfile!,
+                              onOpenDetail: () => showTownAdminDetailSheet(
+                                context,
+                                profile: viewModel.townAdminProfile!,
+                              ),
+                            ),
+                          const SizedBox(
+                            height: TownFeatureConstants.sectionGap,
+                          ),
+                        ],
                         TownPulseCard(
                           town: town,
                           isLoading: viewModel.pulseLoading,
@@ -171,6 +184,12 @@ class _TownFeatureSelectionScreenContentState
                             destination,
                           ),
                         ),
+                        if (viewModel.townNotices.isNotEmpty) ...[
+                          const SizedBox(
+                            height: TownFeatureConstants.sectionGap,
+                          ),
+                          TownNoticeBoard(notices: viewModel.townNotices),
+                        ],
                         const SizedBox(height: TownFeatureConstants.sectionGap),
                         _buildFeatureGrid(context, viewModel, town),
                       ],

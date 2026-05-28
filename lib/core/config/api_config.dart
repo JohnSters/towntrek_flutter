@@ -364,6 +364,19 @@ class ApiConfig {
     return buildUrl('$eventsEndpoint/$eventId', queryParams);
   }
 
+  /// Builds active Town Admin profile URL for a town (`/api/towns/{id}/town-admin`).
+  static String townAdminProfileUrl(int townId) {
+    return buildUrl('$townsEndpoint/$townId/town-admin');
+  }
+
+  /// Builds published town notices list URL (`/api/towns/{id}/town-notices`).
+  static String townNoticesUrl(int townId, {int page = 1, int pageSize = defaultPageSize}) {
+    return buildUrl(
+      '$townsEndpoint/$townId/town-notices',
+      {'page': page, 'pageSize': pageSize},
+    );
+  }
+
   /// Builds stats summary endpoint URL (used by the mobile landing page)
   static String statsSummaryUrl([Map<String, dynamic>? queryParams]) {
     return buildUrl('$statsEndpoint/summary', queryParams);

@@ -269,7 +269,7 @@ class BusinessHeader extends StatelessWidget {
           ),
 
           // Status indicator bar (Full width)
-          if (statusIndicator != null) statusIndicator!,
+          ?statusIndicator,
         ],
       ),
     );

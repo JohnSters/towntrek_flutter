@@ -19,9 +19,9 @@ class CreativeSpaceApiService {
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        if (townId != null) 'townId': townId,
-        if (categoryId != null) 'categoryId': categoryId,
-        if (subCategoryId != null) 'subCategoryId': subCategoryId,
+        'townId': ?townId,
+        'categoryId': ?categoryId,
+        'subCategoryId': ?subCategoryId,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         'page': page,
         'pageSize': pageSize,
@@ -50,9 +50,9 @@ class CreativeSpaceApiService {
     try {
       final queryParams = <String, dynamic>{
         'q': query.trim(),
-        if (townId != null) 'townId': townId,
-        if (categoryId != null) 'categoryId': categoryId,
-        if (subCategoryId != null) 'subCategoryId': subCategoryId,
+        'townId': ?townId,
+        'categoryId': ?categoryId,
+        'subCategoryId': ?subCategoryId,
         'page': page,
         'pageSize': pageSize,
       };
@@ -69,7 +69,9 @@ class CreativeSpaceApiService {
   }
 
   /// Get detailed information for a specific creative space
-  Future<CreativeSpaceDetailDto> getCreativeSpaceDetails(int creativeSpaceId) async {
+  Future<CreativeSpaceDetailDto> getCreativeSpaceDetails(
+    int creativeSpaceId,
+  ) async {
     try {
       final response = await _apiClient.get<Map<String, dynamic>>(
         ApiConfig.creativeSpaceDetailUrl(creativeSpaceId),
@@ -89,7 +91,10 @@ class CreativeSpaceApiService {
       );
 
       return response.data!
-          .map((json) => CreativeCategoryDto.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                CreativeCategoryDto.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       rethrow;
@@ -104,7 +109,10 @@ class CreativeSpaceApiService {
       );
 
       return response.data!
-          .map((json) => CreativeCategoryDto.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                CreativeCategoryDto.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       rethrow;
@@ -119,7 +127,10 @@ class CreativeSpaceApiService {
       );
 
       return response.data!
-          .map((json) => CreativeSubCategoryDto.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                CreativeSubCategoryDto.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       rethrow;

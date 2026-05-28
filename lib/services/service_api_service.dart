@@ -20,9 +20,9 @@ class ServiceApiService {
     try {
       // Build query parameters
       final queryParams = <String, dynamic>{
-        if (townId != null) 'townId': townId,
-        if (categoryId != null) 'categoryId': categoryId,
-        if (subCategoryId != null) 'subCategoryId': subCategoryId,
+        'townId': ?townId,
+        'categoryId': ?categoryId,
+        'subCategoryId': ?subCategoryId,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         'page': page,
         'pageSize': pageSize,
@@ -51,9 +51,9 @@ class ServiceApiService {
     try {
       final queryParams = <String, dynamic>{
         'q': query.trim(),
-        if (townId != null) 'townId': townId,
-        if (categoryId != null) 'categoryId': categoryId,
-        if (subCategoryId != null) 'subCategoryId': subCategoryId,
+        'townId': ?townId,
+        'categoryId': ?categoryId,
+        'subCategoryId': ?subCategoryId,
         'page': page,
         'pageSize': pageSize,
       };
@@ -90,7 +90,9 @@ class ServiceApiService {
       );
 
       return response.data!
-          .map((json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       rethrow;
@@ -105,7 +107,9 @@ class ServiceApiService {
       );
 
       return response.data!
-          .map((json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       rethrow;
@@ -120,11 +124,13 @@ class ServiceApiService {
       );
 
       return response.data!
-          .map((json) => ServiceSubCategoryDto.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                ServiceSubCategoryDto.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       rethrow;
     }
   }
 }
-

@@ -31,6 +31,13 @@ class TownFeatureViewModel extends ChangeNotifier {
   int? pulseDiscoveriesCount;
   bool pulseLoading = true;
 
+  PublicTownAdminProfileDto? townAdminProfile;
+  List<PublicTownNoticeDto> townNotices = const [];
+
+  /// Shown when there is an assigned admin and/or published notices.
+  bool get showTownAdminHub =>
+      townAdminProfile != null || townNotices.isNotEmpty;
+
   bool _alive = true;
 
   /// True when current-events fetch succeeded and at least one event is active.
@@ -58,6 +65,7 @@ class TownFeatureViewModel extends ChangeNotifier {
       _fetchPropertiesTotal(town),
       _fetchEquipmentTotal(town),
       _fetchDiscoveriesCount(town),
+      _fetchTownAdminHub(town),
     ]);
 
     if (!_alive) return;
@@ -140,6 +148,28 @@ class TownFeatureViewModel extends ChangeNotifier {
       }
       pulseEquipmentTotal = 0;
     } catch (_) {}
+  }
+
+  Future<void> _fetchTownAdminHub(TownDto town) async {
+    try {
+      final profile = await serviceLocator.townApiService.getTownAdminProfile(
+        town.id,
+      );
+      if (!_alive) return;
+      townAdminProfile = profile;
+    } catch (_) {}
+
+    try {
+      final list = await serviceLocator.townApiService.getPublishedTownNotices(
+        town.id,
+        pageSize: 10,
+      );
+      if (!_alive) return;
+      townNotices = list;
+    } catch (_) {
+      if (!_alive) return;
+      townNotices = const [];
+    }
   }
 
   Future<void> changeTown(BuildContext context) async {

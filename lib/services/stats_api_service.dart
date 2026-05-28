@@ -10,9 +10,7 @@ class StatsApiService {
 
   /// Get summary counts used by the landing page.
   Future<LandingStatsDto> getLandingStats({int? townId}) async {
-    final queryParams = <String, dynamic>{
-      if (townId != null) 'townId': townId,
-    };
+    final queryParams = <String, dynamic>{'townId': ?townId};
 
     final response = await _apiClient.get<Map<String, dynamic>>(
       ApiConfig.statsSummaryUrl(),
@@ -22,5 +20,3 @@ class StatsApiService {
     return LandingStatsDto.fromJson(response.data!);
   }
 }
-
-

@@ -31,9 +31,9 @@ class BusinessApiService {
 
       // Build query parameters
       final queryParams = <String, dynamic>{
-        if (townId != null) 'townId': townId,
-        if (category != null) 'category': category,
-        if (subCategory != null) 'subCategory': subCategory,
+        'townId': ?townId,
+        'category': ?category,
+        'subCategory': ?subCategory,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         'page': page,
         'pageSize': pageSize,
@@ -72,9 +72,9 @@ class BusinessApiService {
 
       final queryParams = <String, dynamic>{
         'q': query.trim(),
-        if (townId != null) 'townId': townId,
-        if (category != null) 'category': category,
-        if (subCategory != null) 'subCategory': subCategory,
+        'townId': ?townId,
+        'category': ?category,
+        'subCategory': ?subCategory,
         'page': page,
         'pageSize': pageSize,
       };
@@ -126,7 +126,10 @@ class BusinessApiService {
       );
 
       return response.data!
-          .map((json) => CategoryWithCountDto.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                CategoryWithCountDto.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       rethrow;

@@ -171,18 +171,17 @@ class DiscoveryApiService {
       'TownId': townId,
       'Title': title,
       'Category': category,
-      if (description != null) 'Description': description,
-      if (quickTip != null) 'QuickTip': quickTip,
-      if (difficulty != null) 'Difficulty': difficulty,
-      if (duration != null) 'Duration': duration,
+      'Description': ?description,
+      'QuickTip': ?quickTip,
+      'Difficulty': ?difficulty,
+      'Duration': ?duration,
       'IsFreeAccess': isFreeAccess.toString(),
-      if (entryInfo != null) 'EntryInfo': entryInfo,
-      if (seasonalNote != null) 'SeasonalNote': seasonalNote,
-      if (directionsHint != null) 'DirectionsHint': directionsHint,
+      'EntryInfo': ?entryInfo,
+      'SeasonalNote': ?seasonalNote,
+      'DirectionsHint': ?directionsHint,
       if (latitude != null) 'Latitude': _formatCoordinate(latitude),
       if (longitude != null) 'Longitude': _formatCoordinate(longitude),
-      if (submitterDisplayName != null)
-        'SubmitterDisplayName': submitterDisplayName,
+      'SubmitterDisplayName': ?submitterDisplayName,
     });
 
     for (var i = 0; i < images.length && i < 5; i++) {

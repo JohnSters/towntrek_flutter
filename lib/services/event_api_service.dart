@@ -28,7 +28,7 @@ class EventApiService {
       // Build query parameters
       final queryParams = <String, dynamic>{
         'townId': townId,
-        if (eventType != null) 'eventType': eventType,
+        'eventType': ?eventType,
         'page': page,
         'pageSize': pageSize,
       };
@@ -80,8 +80,8 @@ class EventApiService {
       // Build query parameters
       final queryParams = <String, dynamic>{
         'q': query.trim(),
-        if (townId != null) 'townId': townId,
-        if (eventType != null) 'eventType': eventType,
+        'townId': ?townId,
+        'eventType': ?eventType,
         'page': page,
         'pageSize': pageSize,
       };
@@ -110,7 +110,7 @@ class EventApiService {
     try {
       // Build query parameters
       final queryParams = <String, dynamic>{
-        if (townId != null) 'townId': townId,
+        'townId': ?townId,
         'page': page,
         'pageSize': pageSize,
       };
