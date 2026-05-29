@@ -46,11 +46,7 @@ class FeatureTile extends StatelessWidget {
                   color: color.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 12,
-                ),
+                child: Icon(icon, color: color, size: 12),
               ),
               const SizedBox(height: 2),
               Expanded(
@@ -85,10 +81,11 @@ class FeatureTile extends StatelessWidget {
                 ),
               ] else if (count != null && isLoading) ...[
                 SizedBox(
-                  width: LandingPageConstants.loadingIndicatorSize,
-                  height: LandingPageConstants.loadingIndicatorSize,
+                  width: LandingScreenConstants.loadingIndicatorSize,
+                  height: LandingScreenConstants.loadingIndicatorSize,
                   child: CircularProgressIndicator(
-                    strokeWidth: LandingPageConstants.loadingIndicatorStrokeWidth,
+                    strokeWidth:
+                        LandingScreenConstants.loadingIndicatorStrokeWidth,
                     color: color.withValues(alpha: 0.8),
                   ),
                 ),

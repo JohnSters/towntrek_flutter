@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
+import '../../repositories/repositories.dart';
+import '../../services/discovery_api_service.dart';
+import '../../services/town_api_service.dart';
 import '../../services/weather_service.dart';
 import '../business_category/business_category.dart';
 import '../current_events/current_events_screen.dart';
-import '../creative_spaces/creative_spaces_category_page.dart';
-import '../service_category/service_category_page.dart';
+import '../creative_spaces/creative_spaces_category_screen.dart';
+import '../service_category/service_category_screen.dart';
 import '../town_selection/town_selection_screen.dart';
 import '../what_to_do/what_to_do_screen.dart';
 import '../property_list/property_list_screen.dart';
-import '../parcels.dart';
+import '../member_hub.dart';
 import 'town_feature_selection_screen.dart';
 import 'town_feature_selection_state.dart';
 
@@ -20,8 +23,8 @@ class TownFeatureViewModel extends ChangeNotifier {
   TownFeatureState get state => _state;
 
   TownDto get town => switch (_state) {
-        TownFeatureLoaded(town: final t) => t,
-      };
+    TownFeatureLoaded(town: final t) => t,
+  };
 
   WeatherData? pulseWeather;
   int? pulseActiveEventsCount;
@@ -30,6 +33,7 @@ class TownFeatureViewModel extends ChangeNotifier {
   int? pulseEquipmentTotal;
   int? pulseDiscoveriesCount;
   bool pulseLoading = true;
+  bool isFavouriteActionRunning = false;
 
   PublicTownAdminProfileDto? townAdminProfile;
   List<PublicTownNoticeDto> townNotices = const [];
@@ -44,7 +48,31 @@ class TownFeatureViewModel extends ChangeNotifier {
   bool get eventsLive =>
       pulseActiveEventsCount != null && pulseActiveEventsCount! > 0;
 
-  TownFeatureViewModel(TownDto town) : _state = TownFeatureLoaded(town) {
+  final EventRepository _eventRepository;
+  final CreativeSpaceRepository _creativeSpaceRepository;
+  final PropertyRepository _propertyRepository;
+  final DiscoveryApiService _discoveryApiService;
+  final BusinessRepository _businessRepository;
+  final TownApiService _townApiService;
+  final MobileSessionManager _sessionManager;
+
+  TownFeatureViewModel(
+    TownDto town, {
+    required EventRepository eventRepository,
+    required CreativeSpaceRepository creativeSpaceRepository,
+    required PropertyRepository propertyRepository,
+    required DiscoveryApiService discoveryApiService,
+    required BusinessRepository businessRepository,
+    required TownApiService townApiService,
+    required MobileSessionManager sessionManager,
+  }) : _state = TownFeatureLoaded(town),
+       _eventRepository = eventRepository,
+       _creativeSpaceRepository = creativeSpaceRepository,
+       _propertyRepository = propertyRepository,
+       _discoveryApiService = discoveryApiService,
+       _businessRepository = businessRepository,
+       _townApiService = townApiService,
+       _sessionManager = sessionManager {
     _loadPulseMetrics(town);
   }
 
@@ -86,20 +114,22 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchActiveEvents(TownDto town) async {
     try {
-      final response = await serviceLocator.eventRepository.getCurrentEvents(
+      final response = await _eventRepository.getCurrentEvents(
         townId: town.id,
         pageSize: 100,
       );
       if (!_alive) return;
-      pulseActiveEventsCount =
-          response.events.where((e) => !e.shouldHide).length;
+      pulseActiveEventsCount = response.events
+          .where((e) => !e.shouldHide)
+          .length;
     } catch (_) {}
   }
 
   Future<void> _fetchCreativeTotal(TownDto town) async {
     try {
-      final categories = await serviceLocator.creativeSpaceRepository
-          .getCategoriesWithCounts(town.id);
+      final categories = await _creativeSpaceRepository.getCategoriesWithCounts(
+        town.id,
+      );
       if (!_alive) return;
       var sum = 0;
       for (final c in categories) {
@@ -115,7 +145,7 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchPropertiesTotal(TownDto town) async {
     try {
-      final list = await serviceLocator.propertyRepository.getList(
+      final list = await _propertyRepository.getList(
         townId: town.id,
         page: 1,
         pageSize: 1,
@@ -127,7 +157,7 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchDiscoveriesCount(TownDto town) async {
     try {
-      final n = await serviceLocator.discoveryApiService.getDiscoveryCount(town.id);
+      final n = await _discoveryApiService.getDiscoveryCount(town.id);
       if (!_alive) return;
       pulseDiscoveriesCount = n;
     } catch (_) {}
@@ -135,8 +165,9 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchEquipmentTotal(TownDto town) async {
     try {
-      final categories = await serviceLocator.businessRepository
-          .getCategoriesWithCounts(town.id);
+      final categories = await _businessRepository.getCategoriesWithCounts(
+        town.id,
+      );
       if (!_alive) return;
       final target = TownFeatureConstants.equipmentRentalsCategoryKey
           .toLowerCase();
@@ -152,15 +183,13 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchTownAdminHub(TownDto town) async {
     try {
-      final profile = await serviceLocator.townApiService.getTownAdminProfile(
-        town.id,
-      );
+      final profile = await _townApiService.getTownAdminProfile(town.id);
       if (!_alive) return;
       townAdminProfile = profile;
     } catch (_) {}
 
     try {
-      final list = await serviceLocator.townApiService.getPublishedTownNotices(
+      final list = await _townApiService.getPublishedTownNotices(
         town.id,
         pageSize: 10,
       );
@@ -178,7 +207,7 @@ class TownFeatureViewModel extends ChangeNotifier {
     );
 
     if (selectedTown != null && context.mounted) {
-      Navigator.of(context).pushReplacement(
+      await Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => TownFeatureSelectionScreen(town: selectedTown),
         ),
@@ -188,14 +217,16 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   void navigateToBusinesses(BuildContext context, TownDto town) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => BusinessCategoryPage(town: town)),
+      MaterialPageRoute(
+        builder: (context) => BusinessCategoryScreen(town: town),
+      ),
     );
   }
 
   void navigateToEquipmentRentals(BuildContext context, TownDto town) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BusinessCategoryPage(
+        builder: (context) => BusinessCategoryScreen(
           town: town,
           openCategoryKey: TownFeatureConstants.equipmentRentalsCategoryKey,
         ),
@@ -211,7 +242,9 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   void navigateToServices(BuildContext context, TownDto town) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => ServiceCategoryPage(town: town)),
+      MaterialPageRoute(
+        builder: (context) => ServiceCategoryScreen(town: town),
+      ),
     );
   }
 
@@ -233,12 +266,12 @@ class TownFeatureViewModel extends ChangeNotifier {
   void navigateToCreativeSpaces(BuildContext context, TownDto town) {
     CreativeSpacesNavigation.pushCategoryPage(
       context,
-      pageBuilder: (_) => CreativeSpacesCategoryPage(town: town),
+      pageBuilder: (_) => CreativeSpacesCategoryScreen(town: town),
     );
   }
 
   void navigateToParcels(BuildContext context, TownDto town) {
-    final isAuthenticated = serviceLocator.mobileSessionManager.isAuthenticated;
+    final isAuthenticated = _sessionManager.isAuthenticated;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => isAuthenticated
@@ -246,5 +279,24 @@ class TownFeatureViewModel extends ChangeNotifier {
             : GuestBoardScreen(town: town),
       ),
     );
+  }
+
+  Future<String?> toggleFavourite(TownDto town, bool isFavourite) async {
+    if (isFavouriteActionRunning) return null;
+    isFavouriteActionRunning = true;
+    notifyListeners();
+    try {
+      if (isFavourite) {
+        await FavouriteTownStorage.clearFavouriteTown();
+      } else {
+        await FavouriteTownStorage.setFavouriteTown(town);
+      }
+      return isFavourite
+          ? '${town.name} removed from favourites'
+          : '${town.name} saved as favourite';
+    } finally {
+      isFavouriteActionRunning = false;
+      notifyListeners();
+    }
   }
 }

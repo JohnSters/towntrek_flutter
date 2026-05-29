@@ -7,12 +7,12 @@ import 'creative_spaces_state.dart';
 import 'creative_spaces_view_model.dart';
 import 'widgets/creative_space_card.dart';
 
-class CreativeSpacesListPage extends StatelessWidget {
+class CreativeSpacesListScreen extends StatelessWidget {
   final TownDto town;
   final CreativeCategoryDto category;
   final CreativeSubCategoryDto? subCategory;
 
-  const CreativeSpacesListPage({
+  const CreativeSpacesListScreen({
     super.key,
     required this.town,
     required this.category,
@@ -31,7 +31,7 @@ class CreativeSpacesListPage extends StatelessWidget {
         initialCategoryId: category.id,
         initialSubCategoryId: subCategory?.id,
       ),
-      child: _CreativeSpacesListPageContent(
+      child: _CreativeSpacesListScreenContent(
         town: town,
         category: category,
         subCategory: subCategory,
@@ -40,24 +40,24 @@ class CreativeSpacesListPage extends StatelessWidget {
   }
 }
 
-class _CreativeSpacesListPageContent extends StatefulWidget {
+class _CreativeSpacesListScreenContent extends StatefulWidget {
   final TownDto town;
   final CreativeCategoryDto category;
   final CreativeSubCategoryDto? subCategory;
 
-  const _CreativeSpacesListPageContent({
+  const _CreativeSpacesListScreenContent({
     required this.town,
     required this.category,
     this.subCategory,
   });
 
   @override
-  State<_CreativeSpacesListPageContent> createState() =>
-      _CreativeSpacesListPageContentState();
+  State<_CreativeSpacesListScreenContent> createState() =>
+      _CreativeSpacesListScreenContentState();
 }
 
-class _CreativeSpacesListPageContentState
-    extends State<_CreativeSpacesListPageContent> {
+class _CreativeSpacesListScreenContentState
+    extends State<_CreativeSpacesListScreenContent> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -75,8 +75,7 @@ class _CreativeSpacesListPageContentState
     viewModel.search(null);
   }
 
-  String get _titleName =>
-      widget.subCategory?.name ?? widget.category.name;
+  String get _titleName => widget.subCategory?.name ?? widget.category.name;
 
   String get _resultsBandLabel => _titleName;
 
@@ -85,7 +84,7 @@ class _CreativeSpacesListPageContentState
       theme: context.entityListingTheme,
       categoryIcon: Icons.palette_rounded,
       subCategoryName: _titleName,
-      categoryName: CreativeSpacesListPage._heroCategoryName,
+      categoryName: CreativeSpacesListScreen._heroCategoryName,
       townName: widget.town.name,
     );
   }
@@ -126,7 +125,8 @@ class _CreativeSpacesListPageContentState
                         _hero(context),
                         _band(context, 0),
                         Padding(
-                          padding: EntityListingConstants.searchBarSectionPadding,
+                          padding:
+                              EntityListingConstants.searchBarSectionPadding,
                           child: _searchBar(context, viewModel),
                         ),
                         const Expanded(
@@ -213,11 +213,13 @@ class _CreativeSpacesListPageContentState
                                                 .loadMoreSpacesLabel,
                                           ),
                                           style: OutlinedButton.styleFrom(
-                                            minimumSize:
-                                                const Size.fromHeight(44),
+                                            minimumSize: const Size.fromHeight(
+                                              44,
+                                            ),
                                             side: BorderSide(
                                               color: context
-                                                  .entityListingTheme.accent
+                                                  .entityListingTheme
+                                                  .accent
                                                   .withValues(alpha: 0.35),
                                             ),
                                           ),
@@ -226,8 +228,7 @@ class _CreativeSpacesListPageContentState
                                     }
                                     return CreativeSpaceCard(
                                       space: spaces[index],
-                                      listingTheme:
-                                          context.entityListingTheme,
+                                      listingTheme: context.entityListingTheme,
                                     );
                                   },
                                 ),
@@ -313,17 +314,17 @@ class _CreativeSpacesListPageContentState
           Text(
             CreativeSpacesConstants.noSpacesTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                ),
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             emptyMessage,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  height: 1.2,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.2,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),

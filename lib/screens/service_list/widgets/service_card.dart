@@ -5,7 +5,7 @@ import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../core/widgets/listing_info_chip.dart';
 import '../../../models/models.dart';
-import '../../service_detail/service_detail_page.dart';
+import '../../service_detail/service_detail_screen.dart';
 
 /// Listing card for services (design doc §5, §8 Services).
 class ServiceCard extends StatelessWidget {
@@ -23,7 +23,8 @@ class ServiceCard extends StatelessWidget {
   String get _introText {
     final s = service.shortDescription?.trim();
     if (s != null && s.isNotEmpty) return s;
-    final sub = service.subCategoryName ?? service.categoryName ?? 'Local service';
+    final sub =
+        service.subCategoryName ?? service.categoryName ?? 'Local service';
     return '$sub in ${service.townName}';
   }
 
@@ -63,9 +64,7 @@ class ServiceCard extends StatelessWidget {
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        gradient: listingTheme.cardHeaderGradient,
-      ),
+      decoration: BoxDecoration(gradient: listingTheme.cardHeaderGradient),
       child: Row(
         children: [
           Container(
@@ -75,7 +74,9 @@ class ServiceCard extends StatelessWidget {
               color: listingColors.cardBg,
               borderRadius: BorderRadius.circular(13),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.2),
                 width: 0.5,
               ),
             ),
@@ -142,10 +143,7 @@ class ServiceCard extends StatelessWidget {
                 totalReviews: service.totalReviews,
                 noReviewsLabel: 'No reviews',
               ),
-              style: TextStyle(
-                fontSize: 11,
-                color: listingColors.badgeText,
-              ),
+              style: TextStyle(fontSize: 11, color: listingColors.badgeText),
             ),
           ),
         ],
@@ -199,10 +197,7 @@ class ServiceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(
-            color: outline.withValues(alpha: 0.2),
-            width: 0.5,
-          ),
+          top: BorderSide(color: outline.withValues(alpha: 0.2), width: 0.5),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -211,10 +206,7 @@ class ServiceCard extends StatelessWidget {
         children: [
           Text(
             'Tap to view service',
-            style: TextStyle(
-              fontSize: 12,
-              color: listingColors.footerHint,
-            ),
+            style: TextStyle(fontSize: 12, color: listingColors.footerHint),
           ),
           Icon(
             Icons.arrow_forward_ios_rounded,
@@ -229,7 +221,7 @@ class ServiceCard extends StatelessWidget {
   void _navigateToServiceDetails(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ServiceDetailPage(
+        builder: (context) => ServiceDetailScreen(
           serviceId: service.id,
           serviceName: service.name,
         ),

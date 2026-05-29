@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../core/core.dart';
+import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import 'current_events_state.dart';
 
@@ -13,6 +14,7 @@ class CurrentEventsViewModel extends ChangeNotifier {
 
   CurrentEventsState _state;
   int _currentPage = CurrentEventsConstants.defaultPage;
+  String _searchTerm = '';
 
   CurrentEventsViewModel({
     required EventRepository eventRepository,
@@ -20,7 +22,7 @@ class CurrentEventsViewModel extends ChangeNotifier {
     required int townId,
     required String townName,
   }) : _eventRepository = eventRepository,
-      _errorHandler = errorHandler,
+       _errorHandler = errorHandler,
        _townId = townId,
        _townName = townName,
        _state = CurrentEventsLoading() {
@@ -32,6 +34,27 @@ class CurrentEventsViewModel extends ChangeNotifier {
 
   /// Town name for display
   String get townName => _townName;
+  String get searchTerm => _searchTerm;
+
+  List<EventDto> filteredEvents(List<EventDto> events) {
+    final t = _searchTerm.trim().toLowerCase();
+    if (t.isEmpty) return events;
+    return events.where((e) {
+      return e.name.toLowerCase().contains(t) ||
+          e.eventType.toLowerCase().contains(t) ||
+          (e.shortDescription?.toLowerCase().contains(t) ?? false) ||
+          (e.description?.toLowerCase().contains(t) ?? false) ||
+          (e.venue?.toLowerCase().contains(t) ?? false) ||
+          e.physicalAddress.toLowerCase().contains(t) ||
+          (e.townName?.toLowerCase().contains(t) ?? false);
+    }).toList();
+  }
+
+  void setSearchTerm(String value) {
+    if (_searchTerm == value) return;
+    _searchTerm = value;
+    notifyListeners();
+  }
 
   /// Load initial events
   Future<void> loadEvents() async {
@@ -47,7 +70,9 @@ class CurrentEventsViewModel extends ChangeNotifier {
       );
 
       // Filter out hidden events
-      final filteredEvents = response.events.where((event) => !event.shouldHide).toList();
+      final filteredEvents = response.events
+          .where((event) => !event.shouldHide)
+          .toList();
 
       _state = CurrentEventsSuccess(
         events: filteredEvents,
@@ -84,7 +109,9 @@ class CurrentEventsViewModel extends ChangeNotifier {
       );
 
       // Filter out hidden events
-      final newEvents = response.events.where((event) => !event.shouldHide).toList();
+      final newEvents = response.events
+          .where((event) => !event.shouldHide)
+          .toList();
 
       _currentPage++;
       _state = CurrentEventsSuccess(
@@ -94,10 +121,7 @@ class CurrentEventsViewModel extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      await _errorHandler.handleError(
-        e,
-        retryAction: () => loadMoreEvents(),
-      );
+      await _errorHandler.handleError(e, retryAction: () => loadMoreEvents());
       // Revert loading state on error
       _state = currentState.copyWith(isLoadingMore: false);
       notifyListeners();

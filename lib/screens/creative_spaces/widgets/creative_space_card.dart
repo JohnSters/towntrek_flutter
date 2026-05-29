@@ -3,7 +3,7 @@ import '../../../core/core.dart';
 import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../models/models.dart';
-import '../creative_space_detail_page.dart';
+import '../creative_space_detail_screen.dart';
 
 /// Listing card for creative spaces (design doc §5, §8).
 class CreativeSpaceCard extends StatelessWidget {
@@ -37,8 +37,8 @@ class CreativeSpaceCard extends StatelessWidget {
     final line1 = (city != null && city.isNotEmpty)
         ? city
         : (town != null && town.isNotEmpty)
-            ? town
-            : '';
+        ? town
+        : '';
     if (line1.isNotEmpty && prov.isNotEmpty) return '$line1, $prov';
     if (line1.isNotEmpty) return line1;
     return prov;
@@ -90,9 +90,7 @@ class CreativeSpaceCard extends StatelessWidget {
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        gradient: listingTheme.cardHeaderGradient,
-      ),
+      decoration: BoxDecoration(gradient: listingTheme.cardHeaderGradient),
       child: Row(
         children: [
           Container(
@@ -102,7 +100,9 @@ class CreativeSpaceCard extends StatelessWidget {
               color: listingColors.cardBg,
               borderRadius: BorderRadius.circular(13),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.2),
                 width: 0.5,
               ),
             ),
@@ -171,10 +171,7 @@ class CreativeSpaceCard extends StatelessWidget {
                 totalReviews: space.totalReviews,
                 noReviewsLabel: CreativeSpacesConstants.noReviewsLabel,
               ),
-              style: TextStyle(
-                fontSize: 11,
-                color: listingColors.badgeText,
-              ),
+              style: TextStyle(fontSize: 11, color: listingColors.badgeText),
             ),
           ),
         ],
@@ -239,10 +236,7 @@ class CreativeSpaceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(
-            color: outline.withValues(alpha: 0.2),
-            width: 0.5,
-          ),
+          top: BorderSide(color: outline.withValues(alpha: 0.2), width: 0.5),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -251,10 +245,7 @@ class CreativeSpaceCard extends StatelessWidget {
         children: [
           Text(
             'Tap to view space',
-            style: TextStyle(
-              fontSize: 12,
-              color: listingColors.footerHint,
-            ),
+            style: TextStyle(fontSize: 12, color: listingColors.footerHint),
           ),
           Icon(
             Icons.arrow_forward_ios_rounded,
@@ -269,7 +260,7 @@ class CreativeSpaceCard extends StatelessWidget {
   void _navigateToDetail(BuildContext context) {
     CreativeSpacesNavigation.pushDetailPage(
       context,
-      pageBuilder: (_) => CreativeSpaceDetailPage(
+      pageBuilder: (_) => CreativeSpaceDetailScreen(
         creativeSpaceId: space.id,
         creativeSpaceName: space.name,
       ),

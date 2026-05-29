@@ -1,7 +1,14 @@
 export 'detail_towntrek_web_action.dart';
 export 'detail_hours_grid.dart';
 export 'detail_hours_mappers.dart';
+export 'detail_hour_row.dart';
+export 'detail_info_chip.dart';
+export 'detail_info_pill.dart';
+export 'detail_loading_block.dart';
+export 'detail_metadata_tag.dart';
 export 'detail_quick_action_button.dart';
+export 'detail_review_tile.dart';
+export 'detail_event_review_tile.dart';
 export 'detail_section_shell.dart';
 export 'collapsible_detail_text_block.dart';
 export 'detail_social_icon_button.dart';

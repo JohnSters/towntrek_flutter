@@ -20,30 +20,30 @@ class FeatureGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: LandingPageConstants.featureGridHeight,
+      height: LandingScreenConstants.featureGridHeight,
       child: Row(
         children: [
           FeatureTile(
             icon: Icons.store_mall_directory,
-            label: LandingPageConstants.businessLabel,
+            label: LandingScreenConstants.businessLabel,
             count: businessCount,
-            color: const Color(LandingPageConstants.businessTileColor),
+            color: const Color(LandingScreenConstants.businessTileColor),
             isLoading: isLoading,
           ),
-          const SizedBox(width: LandingPageConstants.featureTileSpacing),
+          const SizedBox(width: LandingScreenConstants.featureTileSpacing),
           FeatureTile(
             icon: Icons.handyman,
-            label: LandingPageConstants.serviceLabel,
+            label: LandingScreenConstants.serviceLabel,
             count: serviceCount,
-            color: const Color(LandingPageConstants.serviceTileColor),
+            color: const Color(LandingScreenConstants.serviceTileColor),
             isLoading: isLoading,
           ),
-          const SizedBox(width: LandingPageConstants.featureTileSpacing),
+          const SizedBox(width: LandingScreenConstants.featureTileSpacing),
           FeatureTile(
             icon: Icons.calendar_month,
-            label: LandingPageConstants.eventLabel,
+            label: LandingScreenConstants.eventLabel,
             count: eventCount,
-            color: const Color(LandingPageConstants.eventTileColor),
+            color: const Color(LandingScreenConstants.eventTileColor),
             isLoading: isLoading,
           ),
         ],

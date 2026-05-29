@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:towntrek_flutter/core/theme/entity_listing_theme.dart';
+import '../core/theme/entity_listing_theme.dart';
 
 /// Light/dark listing surfaces and gradients (registered on [ThemeData.extensions]).
 @immutable
-class EntityListingThemeExtension extends ThemeExtension<EntityListingThemeExtension> {
+class EntityListingThemeExtension
+    extends ThemeExtension<EntityListingThemeExtension> {
   final Color pageBg;
   final Color cardBg;
   final Color bodyText;
@@ -81,13 +82,13 @@ class EntityListingThemeExtension extends ThemeExtension<EntityListingThemeExten
 
   /// Resolves [EntityListingTheme] for hero/card gradients (same palette all entities).
   EntityListingTheme toListingTheme() => EntityListingTheme(
-        heroGradientStops: heroGradientStops,
-        resultsBand: resultsBand,
-        cardHeaderGradientStops: cardHeaderGradientStops,
-        textTitle: textTitle,
-        textLocation: textLocation,
-        accent: accent,
-      );
+    heroGradientStops: heroGradientStops,
+    resultsBand: resultsBand,
+    cardHeaderGradientStops: cardHeaderGradientStops,
+    textTitle: textTitle,
+    textLocation: textLocation,
+    accent: accent,
+  );
 
   @override
   EntityListingThemeExtension copyWith({
@@ -134,10 +135,7 @@ class EntityListingThemeExtension extends ThemeExtension<EntityListingThemeExten
     List<Color> lerpStops(List<Color> a, List<Color> b) {
       final n = a.length;
       if (b.length != n) return t < 0.5 ? a : b;
-      return List.generate(
-        n,
-        (i) => Color.lerp(a[i], b[i], t) ?? a[i],
-      );
+      return List.generate(n, (i) => Color.lerp(a[i], b[i], t) ?? a[i]);
     }
 
     return EntityListingThemeExtension(
@@ -149,12 +147,11 @@ class EntityListingThemeExtension extends ThemeExtension<EntityListingThemeExten
       chipBg: Color.lerp(chipBg, other.chipBg, t) ?? chipBg,
       chipIconAndLabel:
           Color.lerp(chipIconAndLabel, other.chipIconAndLabel, t) ??
-              chipIconAndLabel,
+          chipIconAndLabel,
       backFooterLabel:
           Color.lerp(backFooterLabel, other.backFooterLabel, t) ??
-              backFooterLabel,
-      heroGradientStops:
-          lerpStops(heroGradientStops, other.heroGradientStops),
+          backFooterLabel,
+      heroGradientStops: lerpStops(heroGradientStops, other.heroGradientStops),
       resultsBand: Color.lerp(resultsBand, other.resultsBand, t) ?? resultsBand,
       cardHeaderGradientStops: lerpStops(
         cardHeaderGradientStops,

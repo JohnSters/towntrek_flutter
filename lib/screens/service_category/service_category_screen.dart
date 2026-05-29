@@ -4,7 +4,7 @@ import '../../core/core.dart';
 import '../../models/models.dart';
 import '../town_selection/town_selection_screen.dart';
 import '../town_feature_selection/town_feature_selection_screen.dart';
-import '../service_sub_category/service_sub_category_page.dart';
+import '../service_sub_category/service_sub_category_screen.dart';
 import '../../core/constants/service_category_constants.dart';
 import 'service_category_state.dart';
 import 'service_category_view_model.dart';
@@ -12,13 +12,10 @@ import 'widgets/widgets.dart';
 
 /// Service Category Page - Shows available service categories for a town
 /// Uses Provider pattern with ViewModel and sealed classes for clean architecture
-class ServiceCategoryPage extends StatelessWidget {
+class ServiceCategoryScreen extends StatelessWidget {
   final TownDto town;
 
-  const ServiceCategoryPage({
-    super.key,
-    required this.town,
-  });
+  const ServiceCategoryScreen({super.key, required this.town});
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +26,13 @@ class ServiceCategoryPage extends StatelessWidget {
         eventRepository: serviceLocator.eventRepository,
         errorHandler: serviceLocator.errorHandler,
       ),
-      child: const _ServiceCategoryPageContent(),
+      child: const _ServiceCategoryScreenContent(),
     );
   }
 }
 
-class _ServiceCategoryPageContent extends StatelessWidget {
-  const _ServiceCategoryPageContent();
+class _ServiceCategoryScreenContent extends StatelessWidget {
+  const _ServiceCategoryScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +41,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _buildContent(context),
-            ),
+            Expanded(child: _buildContent(context)),
             const ListingBackFooter(label: 'Back'),
           ],
         ),
@@ -74,9 +69,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
                 categoryName: viewModel.town.name,
                 bandColor: context.entityListingTheme.resultsBand,
               ),
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
             ],
           );
         }
@@ -183,13 +176,18 @@ class _ServiceCategoryPageContent extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: state.categories.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final category = state.categories[index];
                       return CategoryCard(
                         category: category,
                         countsAvailable: state.countsAvailable,
-                        onTap: () => _navigateToSubCategories(context, category, state.countsAvailable),
+                        onTap: () => _navigateToSubCategories(
+                          context,
+                          category,
+                          state.countsAvailable,
+                        ),
                       );
                     },
                   ),
@@ -227,7 +225,9 @@ class _ServiceCategoryPageContent extends StatelessWidget {
               context: context,
               hasEvents: hasEvents,
               eventCount: state.currentEventCount,
-              onPressed: hasEvents ? () => viewModel.navigateToEvents(context) : null,
+              onPressed: hasEvents
+                  ? () => viewModel.navigateToEvents(context)
+                  : null,
             ),
           ),
         ],
@@ -257,12 +257,8 @@ class _ServiceCategoryPageContent extends StatelessWidget {
       );
     }
 
-    return LiveEventsStripButton(
-      eventCount: eventCount,
-      onPressed: onPressed!,
-    );
+    return LiveEventsStripButton(eventCount: eventCount, onPressed: onPressed!);
   }
-
 
   void _navigateToSubCategories(
     BuildContext context,
@@ -273,7 +269,7 @@ class _ServiceCategoryPageContent extends StatelessWidget {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ServiceSubCategoryPage(
+        builder: (context) => ServiceSubCategoryScreen(
           category: category,
           town: viewModel.town,
           countsAvailable: countsAvailable,
@@ -283,19 +279,19 @@ class _ServiceCategoryPageContent extends StatelessWidget {
   }
 
   void _changeTown(BuildContext context) {
-    Navigator.of(context).push<TownDto>(
-      MaterialPageRoute(
-        builder: (context) => const TownSelectionScreen(),
-      ),
-    ).then((selectedTown) {
-      if (selectedTown != null && context.mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => TownFeatureSelectionScreen(town: selectedTown),
-          ),
-        );
-      }
-    });
+    Navigator.of(context)
+        .push<TownDto>(
+          MaterialPageRoute(builder: (context) => const TownSelectionScreen()),
+        )
+        .then((selectedTown) {
+          if (selectedTown != null && context.mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) =>
+                    TownFeatureSelectionScreen(town: selectedTown),
+              ),
+            );
+          }
+        });
   }
-
 }

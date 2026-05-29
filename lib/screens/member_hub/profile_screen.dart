@@ -4,40 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../repositories/repositories.dart';
 import '../../theme/member_level_tier_style.dart';
 import 'access_code_entry_screen.dart';
 import 'level_badge.dart';
 import 'parcel_ui.dart';
 import 'progress_screen.dart';
-
-class ParcelProfileViewModel extends ChangeNotifier {
-  ParcelProfileViewModel({required MemberRepository repository})
-    : _repository = repository {
-    load();
-  }
-
-  final MemberRepository _repository;
-
-  bool loading = true;
-  String? error;
-  MemberProfileDto? profile;
-
-  Future<void> load() async {
-    loading = true;
-    error = null;
-    notifyListeners();
-    try {
-      profile = await _repository.getMyProfile();
-      await serviceLocator.mobileSessionManager.loadProgression();
-    } catch (err) {
-      error = err.toString();
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
-  }
-}
+import 'profile_view_model.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -84,15 +56,9 @@ class _ProfileBody extends StatelessWidget {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (viewModel.error != null || viewModel.profile == null) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                      child: Center(
-                        child: Text(
-                          viewModel.error ?? 'Unable to load profile',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ),
+                    return ErrorStateView(
+                      error: viewModel.error ?? 'Unable to load profile',
+                      onRetry: viewModel.load,
                     );
                   }
 
@@ -192,10 +158,15 @@ class _ProfileBody extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: _sectionGap),
+                      _LinkedAccountsCard(
+                        sessionManager: sessionManager,
+                        onSwitched: () =>
+                            context.read<ParcelProfileViewModel>().load(),
+                      ),
                       FilledButton(
                         onPressed: () async {
-                          // [signInWithCode] disconnects the current device on the server
-                          // before redeeming, so the previous session is revoked.
+                          // Adds (or re-links) an account via a TREK code, keeping
+                          // any other accounts already linked on this device.
                           await Navigator.of(context).push<bool>(
                             MaterialPageRoute(
                               builder: (_) => const AccessCodeEntryScreen(),
@@ -205,7 +176,7 @@ class _ProfileBody extends StatelessWidget {
                             await context.read<ParcelProfileViewModel>().load();
                           }
                         },
-                        child: const Text('Use a different access code'),
+                        child: const Text('Add another account'),
                       ),
                       const SizedBox(height: 12),
                       OutlinedButton(
@@ -639,6 +610,150 @@ class _ProfileTierPlaque extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Lists accounts linked on this device and lets the user switch between them.
+/// Hidden unless more than one account is linked.
+class _LinkedAccountsCard extends StatelessWidget {
+  const _LinkedAccountsCard({
+    required this.sessionManager,
+    required this.onSwitched,
+  });
+
+  final MobileSessionManager sessionManager;
+  final Future<void> Function() onSwitched;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: sessionManager,
+      builder: (context, _) {
+        final accounts = sessionManager.accounts;
+        if (accounts.length <= 1) {
+          return const SizedBox.shrink();
+        }
+
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+        final activeId = sessionManager.activeUserId;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: DetailSectionShell(
+            title: 'Linked accounts',
+            icon: Icons.switch_account_outlined,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final account in accounts)
+                  _LinkedAccountTile(
+                    label: (account.displayName?.trim().isNotEmpty ?? false)
+                        ? account.displayName!.trim()
+                        : 'TownTrek account',
+                    isActive: account.userId == activeId,
+                    isBusy: sessionManager.isBusy,
+                    onTap: account.userId == activeId
+                        ? null
+                        : () async {
+                            final ok = await sessionManager
+                                .switchAccount(account.userId);
+                            if (!context.mounted) return;
+                            if (ok) {
+                              await onSwitched();
+                            } else {
+                              showErrorSnack(
+                                context,
+                                'Unable to switch to that account.',
+                              );
+                            }
+                          },
+                  ),
+                const SizedBox(height: 4),
+                Text(
+                  'Switching changes which account posts and earns XP on this device.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LinkedAccountTile extends StatelessWidget {
+  const _LinkedAccountTile({
+    required this.label,
+    required this.isActive,
+    required this.isBusy,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final bool isBusy;
+  final Future<void> Function()? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: isActive
+            ? colorScheme.primaryContainer.withValues(alpha: 0.4)
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: (isActive || isBusy) ? null : () => onTap?.call(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  isActive
+                      ? Icons.check_circle_rounded
+                      : Icons.account_circle_outlined,
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (isActive)
+                  Text(
+                    'Active',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

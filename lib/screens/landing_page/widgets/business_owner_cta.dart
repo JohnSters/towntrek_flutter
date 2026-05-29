@@ -10,7 +10,7 @@ class BusinessOwnerCTA extends StatelessWidget {
   const BusinessOwnerCTA({
     super.key,
     required this.onTap,
-    this.buttonText = LandingPageConstants.businessOwnerTitle,
+    this.buttonText = LandingScreenConstants.businessOwnerTitle,
     this.compact = false,
   });
 
@@ -21,17 +21,23 @@ class BusinessOwnerCTA extends StatelessWidget {
     return FilledButton(
       onPressed: onTap,
       style: FilledButton.styleFrom(
-        backgroundColor: Color(LandingPageConstants.gradientStartColor),
+        backgroundColor: Color(LandingScreenConstants.gradientStartColor),
         foregroundColor: Colors.white,
         minimumSize: Size(
           double.infinity,
-          compact ? LandingPageConstants.compactButtonHeight : LandingPageConstants.buttonHeight,
+          compact
+              ? LandingScreenConstants.compactButtonHeight
+              : LandingScreenConstants.buttonHeight,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusMedium),
+          borderRadius: BorderRadius.circular(
+            LandingScreenConstants.borderRadiusMedium,
+          ),
         ),
         elevation: 2,
-        shadowColor: Color(LandingPageConstants.gradientEndColor).withValues(alpha: 0.3),
+        shadowColor: Color(
+          LandingScreenConstants.gradientEndColor,
+        ).withValues(alpha: 0.3),
       ),
       child: Row(
         children: [
@@ -39,7 +45,9 @@ class BusinessOwnerCTA extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(LandingPageConstants.borderRadiusSmall),
+              borderRadius: BorderRadius.circular(
+                LandingScreenConstants.borderRadiusSmall,
+              ),
             ),
             child: const Icon(
               Icons.add_business,
@@ -51,19 +59,19 @@ class BusinessOwnerCTA extends StatelessWidget {
           Expanded(
             child: Text(
               buttonText,
-              style: (compact ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style:
+                  (compact
+                          ? theme.textTheme.titleMedium
+                          : theme.textTheme.titleLarge)
+                      ?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
               textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(width: 10),
-          const Icon(
-            Icons.arrow_forward,
-            color: Colors.white,
-            size: 16,
-          ),
+          const Icon(Icons.arrow_forward, color: Colors.white, size: 16),
         ],
       ),
     );

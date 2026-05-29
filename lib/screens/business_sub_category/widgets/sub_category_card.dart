@@ -29,7 +29,9 @@ class SubCategoryCard extends StatelessWidget {
     );
 
     return OutlinedButton(
-      onPressed: isDisabled ? null : () => _navigateToBusinessCardPage(context),
+      onPressed: isDisabled
+          ? null
+          : () => _navigateToBusinessCardScreen(context),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.all(14),
         side: BorderSide(
@@ -38,9 +40,7 @@ class SubCategoryCard extends StatelessWidget {
               : colorScheme.primary.withValues(alpha: 0.25),
           width: 1.2,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: isDisabled
             ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
             : colorScheme.primary.withValues(alpha: 0.02),
@@ -117,10 +117,10 @@ class SubCategoryCard extends StatelessWidget {
     );
   }
 
-  void _navigateToBusinessCardPage(BuildContext context) {
+  void _navigateToBusinessCardScreen(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BusinessCardPage(
+        builder: (context) => BusinessCardScreen(
           category: category,
           subCategory: subCategory,
           town: town,

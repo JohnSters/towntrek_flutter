@@ -10,7 +10,7 @@ class AppLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: LandingPageConstants.logoContainerHeight,
+      height: LandingScreenConstants.logoContainerHeight,
       child: SvgPicture.asset(
         'assets/images/logos/towntrek_starter_logo2.svg',
         fit: BoxFit.contain,

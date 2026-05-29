@@ -1,68 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../core/progression/xp_level_math.dart';
 import '../../models/models.dart';
 import '../../theme/member_level_tier_style.dart';
 import 'level_badge.dart';
+import 'progress_state.dart';
+import 'progress_view_model.dart';
 
 /// Three tabs: tier ladder, achievement sets, paginated XP history.
-class ProgressScreen extends StatefulWidget {
+class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
 
   @override
-  State<ProgressScreen> createState() => _ProgressScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ProgressViewModel(
+        memberRepository: serviceLocator.memberRepository,
+        sessionManager: serviceLocator.mobileSessionManager,
+      ),
+      child: const _ProgressScreenBody(),
+    );
+  }
 }
 
-class _ProgressScreenState extends State<ProgressScreen>
+class _ProgressScreenBody extends StatefulWidget {
+  const _ProgressScreenBody();
+
+  @override
+  State<_ProgressScreenBody> createState() => _ProgressScreenBodyState();
+}
+
+class _ProgressScreenBodyState extends State<_ProgressScreenBody>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  XpHistoryPageDto? _historyPage;
-  bool _historyLoading = false;
-  String? _historyError;
-  int _historyPageNum = 1;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTab);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      serviceLocator.mobileSessionManager.loadProgression();
-      _loadHistory();
-    });
   }
 
   void _onTab() {
-    if (_tabController.index == 2 && _historyPage == null && !_historyLoading) {
-      _loadHistory();
-    }
-  }
-
-  Future<void> _loadHistory({int page = 1}) async {
-    setState(() {
-      _historyLoading = true;
-      _historyError = null;
-      _historyPageNum = page;
-    });
-    try {
-      final pageDto = await serviceLocator.memberRepository.getXpHistory(
-        page: page,
-        pageSize: 25,
-      );
-      if (mounted) {
-        setState(() {
-          _historyPage = pageDto;
-          _historyLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _historyError = e.toString();
-          _historyLoading = false;
-        });
-      }
+    final viewModel = context.read<ProgressViewModel>();
+    if (_tabController.index == 2 &&
+        viewModel.historyState is ProgressHistoryInitial &&
+        !viewModel.isHistoryLoading) {
+      viewModel.loadHistory();
     }
   }
 
@@ -75,8 +61,9 @@ class _ProgressScreenState extends State<ProgressScreen>
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<ProgressViewModel>();
     final listing = context.entityListing;
-    final session = serviceLocator.mobileSessionManager;
+    final session = viewModel.sessionManager;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -208,21 +195,23 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 
   Widget _buildHistoryTab(BuildContext context) {
-    if (_historyLoading && _historyPage == null) {
+    final viewModel = context.watch<ProgressViewModel>();
+    final state = viewModel.historyState;
+    if (state is ProgressHistoryLoading || state is ProgressHistoryInitial) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_historyError != null && _historyPage == null) {
+    if (state is ProgressHistoryError) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(_historyError!),
+          child: Text(state.message),
         ),
       );
     }
-    final page = _historyPage;
-    if (page == null) {
-      return const SizedBox.shrink();
-    }
+    if (state is! ProgressHistorySuccess) return const SizedBox.shrink();
+    final page = state.page;
+    final pageNumber = state.pageNumber;
+
     return Column(
       children: [
         Expanded(
@@ -254,18 +243,18 @@ class _ProgressScreenState extends State<ProgressScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton(
-                  onPressed: _historyPageNum <= 1 || _historyLoading
+                  onPressed: pageNumber <= 1 || viewModel.isHistoryLoading
                       ? null
-                      : () => _loadHistory(page: _historyPageNum - 1),
+                      : () => viewModel.loadHistory(page: pageNumber - 1),
                   child: const Text('Previous'),
                 ),
                 Text('Page ${page.page}'),
                 TextButton(
                   onPressed:
-                      _historyPageNum * page.pageSize >= page.total ||
-                          _historyLoading
+                      pageNumber * page.pageSize >= page.total ||
+                          viewModel.isHistoryLoading
                       ? null
-                      : () => _loadHistory(page: _historyPageNum + 1),
+                      : () => viewModel.loadHistory(page: pageNumber + 1),
                   child: const Text('Next'),
                 ),
               ],

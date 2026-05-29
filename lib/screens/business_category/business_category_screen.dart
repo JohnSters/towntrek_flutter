@@ -7,17 +7,13 @@ import 'business_category_view_model.dart';
 import 'widgets/widgets.dart';
 
 /// Page for displaying business categories for a selected town
-class BusinessCategoryPage extends StatelessWidget {
+class BusinessCategoryScreen extends StatelessWidget {
   final TownDto? town;
 
   /// When set, after categories load the matching category (by [CategoryWithCountDto.key], case-insensitive) opens immediately.
   final String? openCategoryKey;
 
-  const BusinessCategoryPage({
-    super.key,
-    this.town,
-    this.openCategoryKey,
-  });
+  const BusinessCategoryScreen({super.key, this.town, this.openCategoryKey});
 
   @override
   Widget build(BuildContext context) {
@@ -30,21 +26,23 @@ class BusinessCategoryPage extends StatelessWidget {
         geolocationService: serviceLocator.geolocationService,
         errorHandler: serviceLocator.errorHandler,
       ),
-      child: _BusinessCategoryPageContent(openCategoryKey: openCategoryKey),
+      child: _BusinessCategoryScreenContent(openCategoryKey: openCategoryKey),
     );
   }
 }
 
-class _BusinessCategoryPageContent extends StatefulWidget {
+class _BusinessCategoryScreenContent extends StatefulWidget {
   final String? openCategoryKey;
 
-  const _BusinessCategoryPageContent({this.openCategoryKey});
+  const _BusinessCategoryScreenContent({this.openCategoryKey});
 
   @override
-  State<_BusinessCategoryPageContent> createState() => _BusinessCategoryPageContentState();
+  State<_BusinessCategoryScreenContent> createState() =>
+      _BusinessCategoryScreenContentState();
 }
 
-class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageContent> {
+class _BusinessCategoryScreenContentState
+    extends State<_BusinessCategoryScreenContent> {
   bool _didOpenInitialCategory = false;
 
   void _tryOpenInitialCategory(
@@ -86,9 +84,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _buildContent(context, viewModel),
-            ),
+            Expanded(child: _buildContent(context, viewModel)),
             const ListingBackFooter(label: 'Back'),
           ],
         ),
@@ -96,7 +92,10 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
     );
   }
 
-  Widget _buildContent(BuildContext context, BusinessCategoryViewModel viewModel) {
+  Widget _buildContent(
+    BuildContext context,
+    BusinessCategoryViewModel viewModel,
+  ) {
     final state = viewModel.state;
 
     if (state is BusinessCategoryLocationLoading) {
@@ -126,7 +125,10 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
     return const SizedBox();
   }
 
-  Widget _buildLocationLoadingView(BuildContext context, BusinessCategoryViewModel viewModel) {
+  Widget _buildLocationLoadingView(
+    BuildContext context,
+    BusinessCategoryViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -167,8 +169,12 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
               vertical: BusinessCategoryConstants.verticalPadding,
             ),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: BusinessCategoryConstants.mediumAlpha),
-              borderRadius: BorderRadius.circular(BusinessCategoryConstants.pillBorderRadius),
+              color: colorScheme.surfaceContainerHighest.withValues(
+                alpha: BusinessCategoryConstants.mediumAlpha,
+              ),
+              borderRadius: BorderRadius.circular(
+                BusinessCategoryConstants.pillBorderRadius,
+              ),
             ),
             child: Text(
               BusinessCategoryConstants.locationLoadingSubtitle,
@@ -198,7 +204,10 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
     );
   }
 
-  Widget _buildTownSelectionView(BuildContext context, BusinessCategoryViewModel viewModel) {
+  Widget _buildTownSelectionView(
+    BuildContext context,
+    BusinessCategoryViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -235,13 +244,16 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
           Text(
             BusinessCategoryConstants.townSelectionSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: BusinessCategoryConstants.mediumAlpha),
+              color: colorScheme.onSurface.withValues(
+                alpha: BusinessCategoryConstants.mediumAlpha,
+              ),
             ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: BusinessCategoryConstants.largeSpacing),
           ElevatedButton.icon(
-            onPressed: () => viewModel.detectLocationAndLoadTown(userInitiatedRetry: true),
+            onPressed: () =>
+                viewModel.detectLocationAndLoadTown(userInitiatedRetry: true),
             icon: const Icon(Icons.location_on),
             label: Text(BusinessCategoryConstants.useMyLocationText),
             style: ElevatedButton.styleFrom(
@@ -262,9 +274,7 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
   }
 
   Widget _buildLoadingView() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorState(
@@ -333,12 +343,16 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
                         Icon(
                           Icons.business,
                           size: BusinessCategoryConstants.iconSizeExtraLarge,
-                          color: colorScheme.onSurface.withValues(alpha: BusinessCategoryConstants.lowAlpha),
+                          color: colorScheme.onSurface.withValues(
+                            alpha: BusinessCategoryConstants.lowAlpha,
+                          ),
                         ),
                         Text(
                           BusinessCategoryConstants.noCategoriesText,
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onSurface.withValues(alpha: BusinessCategoryConstants.mediumAlpha),
+                            color: colorScheme.onSurface.withValues(
+                              alpha: BusinessCategoryConstants.mediumAlpha,
+                            ),
                           ),
                         ),
                       ],
@@ -349,12 +363,14 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: state.categories.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final category = state.categories[index];
                       return BusinessCategoryCard(
                         category: category,
-                        onTap: () => viewModel.navigateToCategory(context, category),
+                        onTap: () =>
+                            viewModel.navigateToCategory(context, category),
                       );
                     },
                   ),
@@ -373,7 +389,8 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
     BusinessCategoryViewModel viewModel,
     BusinessCategorySuccess state,
   ) {
-    final bool hasEvents = state.categoriesLoaded && state.currentEventCount > 0;
+    final bool hasEvents =
+        state.categoriesLoaded && state.currentEventCount > 0;
 
     return SizedBox(
       height: BusinessCategoryConstants.connectedButtonHeight,
@@ -392,7 +409,9 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
               context: context,
               hasEvents: hasEvents,
               eventCount: state.currentEventCount,
-              onPressed: hasEvents ? () => viewModel.navigateToEvents(context) : null,
+              onPressed: hasEvents
+                  ? () => viewModel.navigateToEvents(context)
+                  : null,
             ),
           ),
         ],
@@ -422,10 +441,6 @@ class _BusinessCategoryPageContentState extends State<_BusinessCategoryPageConte
       );
     }
 
-    return LiveEventsStripButton(
-      eventCount: eventCount,
-      onPressed: onPressed!,
-    );
+    return LiveEventsStripButton(eventCount: eventCount, onPressed: onPressed!);
   }
-
 }

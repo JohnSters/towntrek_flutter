@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/core.dart';
 import '../../../models/models.dart';
-import '../../shared/detail_widgets/detail_widgets.dart';
 
 class EventReviewsSection extends StatelessWidget {
   final List<EventReviewDto> reviews;
@@ -30,7 +29,10 @@ class EventReviewsSection extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
@@ -76,5 +78,4 @@ class EventReviewsSection extends StatelessWidget {
       ),
     );
   }
-
 }

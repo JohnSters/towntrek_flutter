@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../screens/parcels/parcel_member_hub_navigation.dart';
+import '../../screens/member_hub/parcel_member_hub_navigation.dart';
 import '../../theme/member_level_tier_style.dart';
 
 /// Bottom sheet: member summary + 2×2 hub actions (same destinations as parcel board footer).
@@ -164,7 +164,7 @@ class _TownHubMemberPanelBody extends StatelessWidget {
                       Semantics(
                         label: rating > 0
                             ? 'Average community rating '
-                                '${rating.toStringAsFixed(1)} out of five'
+                                  '${rating.toStringAsFixed(1)} out of five'
                             : 'No average community rating yet',
                         child: MergeSemantics(
                           child: Row(

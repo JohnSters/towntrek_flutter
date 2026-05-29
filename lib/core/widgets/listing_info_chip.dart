@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../constants/entity_listing_constants.dart';
-import 'package:towntrek_flutter/theme/entity_listing_theme_extension.dart';
+import '../../theme/entity_listing_theme_extension.dart';
 
 /// Info chip for listing card bodies (design doc §5b).
 class ListingInfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const ListingInfoChip({
-    super.key,
-    required this.icon,
-    required this.label,
-  });
+  const ListingInfoChip({super.key, required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +21,7 @@ class ListingInfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 13,
-            color: context.entityListing.chipIconAndLabel,
-          ),
+          Icon(icon, size: 13, color: context.entityListing.chipIconAndLabel),
           const SizedBox(width: 5),
           Text(
             label,
@@ -47,6 +39,7 @@ class ListingInfoChip extends StatelessWidget {
 /// Hours-style open/closed pill for listing cards: green when open, grey when closed.
 class ListingOpenClosedChip extends StatelessWidget {
   final bool isOpen;
+
   /// When closed, shown instead of [EntityListingConstants.listingCardClosed].
   final String? closedLabel;
 

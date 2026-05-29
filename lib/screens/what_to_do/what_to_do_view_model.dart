@@ -4,7 +4,7 @@ import '../../core/core.dart';
 import '../../models/models.dart';
 import '../../services/discovery_api_service.dart'
     show DiscoveryApiService, DiscoveryVoteException;
-import '../discovery_detail/discovery_detail_page.dart';
+import '../discovery_detail/discovery_detail_screen.dart';
 import '../suggest_discovery/suggest_discovery_screen.dart';
 import 'what_to_do_state.dart';
 
@@ -302,7 +302,7 @@ class WhatToDoViewModel extends ChangeNotifier {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) =>
-            DiscoveryDetailPage(discoveryId: id, title: title, town: _town),
+            DiscoveryDetailScreen(discoveryId: id, title: title, town: _town),
       ),
     );
   }

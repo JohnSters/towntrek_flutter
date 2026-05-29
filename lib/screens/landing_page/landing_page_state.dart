@@ -1,9 +1,9 @@
 // State classes for type-safe state management
-sealed class LandingPageState {}
+sealed class LandingScreenState {}
 
-class LandingPageLoading extends LandingPageState {}
+class LandingScreenLoading extends LandingScreenState {}
 
-class LandingPageSuccess extends LandingPageState {
+class LandingScreenSuccess extends LandingScreenState {
   final int businessCount;
   final int serviceCount;
   final int eventCount;
@@ -13,7 +13,7 @@ class LandingPageSuccess extends LandingPageState {
   final String? infoBannerMessage;
   final String? issueBannerMessage;
 
-  LandingPageSuccess({
+  LandingScreenSuccess({
     required this.businessCount,
     required this.serviceCount,
     required this.eventCount,
@@ -25,8 +25,8 @@ class LandingPageSuccess extends LandingPageState {
   });
 }
 
-class LandingPageError extends LandingPageState {
+class LandingScreenError extends LandingScreenState {
   final String message;
 
-  LandingPageError(this.message);
+  LandingScreenError(this.message);
 }

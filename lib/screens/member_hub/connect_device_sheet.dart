@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../core/core.dart';
 import '../../core/utils/url_utils.dart';
 import '../../core/widgets/app_scaffold_messenger.dart';
+import 'connect_device_controller.dart';
+import 'scan_access_code_screen.dart';
 
 enum _ConnectedAccountDecision { continueCurrent, useDifferentCode }
 
@@ -18,7 +20,8 @@ Future<bool> showConnectDeviceSheet(
   Future<void> Function()? onConnected,
 }) async {
   final sessionManager = serviceLocator.mobileSessionManager;
-  if (await sessionManager.ensureAuthenticated()) {
+  final controller = ConnectDeviceController(sessionManager: sessionManager);
+  if (await controller.ensureAuthenticated()) {
     if (!context.mounted) return true;
     final decision = await _askHowToUseExistingSession(context, sessionManager);
     if (decision == null) return false;
@@ -28,7 +31,6 @@ Future<bool> showConnectDeviceSheet(
       }
       return true;
     }
-
   }
 
   if (!context.mounted) return false;
@@ -61,17 +63,52 @@ Future<bool> showConnectDeviceSheet(
 
 /// Runs [action] after a valid session exists, showing [showConnectDeviceSheet]
 /// when the session must be restored with a TREK code.
+///
+/// Errors thrown by [action] are surfaced here: a mid-action 401 (e.g. the
+/// device was revoked server-side or the refresh token expired) re-opens the
+/// connect sheet and resumes the action once reconnected; any other failure is
+/// shown via [showErrorSnack]. This means callers should let [action] throw
+/// rather than swallowing errors themselves.
 Future<void> runWithParcelSession(
   BuildContext context,
   Future<void> Function() action,
 ) async {
   final sessionManager = serviceLocator.mobileSessionManager;
   if (await sessionManager.ensureAuthenticated()) {
-    await action();
+    try {
+      await action();
+    } catch (error) {
+      if (!context.mounted) return;
+      if (isUnauthorizedError(error)) {
+        await showConnectDeviceSheet(
+          context,
+          onConnected: () => _runActionShowingErrors(context, action),
+        );
+      } else {
+        showErrorSnack(context, error);
+      }
+    }
     return;
   }
   if (!context.mounted) return;
-  await showConnectDeviceSheet(context, onConnected: action);
+  await showConnectDeviceSheet(
+    context,
+    onConnected: () => _runActionShowingErrors(context, action),
+  );
+}
+
+/// Runs [action] and surfaces any failure as a snackbar without re-prompting to
+/// connect again (avoids reconnect loops once a session has just been restored).
+Future<void> _runActionShowingErrors(
+  BuildContext context,
+  Future<void> Function() action,
+) async {
+  try {
+    await action();
+  } catch (error) {
+    if (!context.mounted) return;
+    showErrorSnack(context, error);
+  }
 }
 
 Future<_ConnectedAccountDecision?> _askHowToUseExistingSession(
@@ -183,10 +220,12 @@ class _ConnectDeviceSheetBody extends StatefulWidget {
 }
 
 class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
+  late final ConnectDeviceController _controller;
   final _codeController = TextEditingController();
   late final TextEditingController _deviceNameController;
   bool _submitting = false;
   bool _helpExpanded = false;
+
   /// Shown in-sheet: parent [ListenableBuilder]s on [MobileSessionManager] rebuild
   /// during redeem and can prevent post-frame snackbars from ever displaying.
   String? _submitError;
@@ -196,6 +235,9 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
   @override
   void initState() {
     super.initState();
+    _controller = ConnectDeviceController(
+      sessionManager: serviceLocator.mobileSessionManager,
+    );
     _deviceNameController = TextEditingController(text: _defaultDeviceName);
   }
 
@@ -204,6 +246,14 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
     _codeController.dispose();
     _deviceNameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanCode() async {
+    final scanned = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const ScanAccessCodeScreen()),
+    );
+    if (scanned == null || !mounted) return;
+    _codeController.text = scanned;
   }
 
   Future<void> _submit() async {
@@ -217,7 +267,7 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
     });
     Object? err;
     try {
-      await serviceLocator.mobileSessionManager.signInWithCode(
+      await _controller.signInWithCode(
         code: code,
         deviceName: deviceName.isEmpty ? _defaultDeviceName : deviceName,
       );
@@ -278,6 +328,11 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
               filled: true,
               fillColor: colorScheme.surfaceContainerHighest.withValues(
                 alpha: 0.35,
+              ),
+              suffixIcon: IconButton(
+                tooltip: 'Scan QR code',
+                icon: const Icon(Icons.qr_code_scanner_rounded),
+                onPressed: _submitting ? null : _scanCode,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -502,10 +557,7 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
       TextSpan(
         style: baseStyle,
         children: [
-          const TextSpan(
-            text:
-                'Get your code from My Devices at ',
-          ),
+          const TextSpan(text: 'Get your code from My Devices at '),
           WidgetSpan(
             alignment: PlaceholderAlignment.baseline,
             baseline: TextBaseline.alphabetic,
@@ -541,10 +593,7 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
             baseline: TextBaseline.alphabetic,
             child: GestureDetector(
               onTap: () => UrlUtils.launchTowntrekRegister(),
-              child: Text(
-                'Register free at towntrek.co.za',
-                style: linkStyle,
-              ),
+              child: Text('Register free at towntrek.co.za', style: linkStyle),
             ),
           ),
           const TextSpan(text: ' — it takes 2 minutes'),

@@ -6,23 +6,23 @@ import '../../core/constants/landing_page_constants.dart';
 
 // ViewModel for business logic separation
 class LandingViewModel extends ChangeNotifier {
-  LandingPageState _state = LandingPageLoading();
-  LandingPageState get state => _state;
+  LandingScreenState _state = LandingScreenLoading();
+  LandingScreenState get state => _state;
 
   final StatsRepository _statsRepository;
 
   LandingViewModel({required StatsRepository statsRepository})
-      : _statsRepository = statsRepository {
+    : _statsRepository = statsRepository {
     loadStats();
   }
 
   Future<void> loadStats() async {
-    _state = LandingPageLoading();
+    _state = LandingScreenLoading();
     notifyListeners();
 
     try {
       final stats = await _statsRepository.getLandingStats();
-      _state = LandingPageSuccess(
+      _state = LandingScreenSuccess(
         businessCount: stats.businessCount,
         serviceCount: stats.serviceCount,
         eventCount: stats.eventCount,
@@ -35,18 +35,20 @@ class LandingViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Stats loading error: $e');
-      _state = LandingPageError(e.toString());
+      _state = LandingScreenError(e.toString());
       notifyListeners();
     }
   }
 
   Future<void> launchOwnerUrl(BuildContext context) async {
-    final Uri url = Uri.parse(LandingPageConstants.ownerWebsiteUrl);
+    final Uri url = Uri.parse(LandingScreenConstants.ownerWebsiteUrl);
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(LandingPageConstants.launchUrlErrorMessage)),
+            const SnackBar(
+              content: Text(LandingScreenConstants.launchUrlErrorMessage),
+            ),
           );
         }
       }
@@ -58,13 +60,15 @@ class LandingViewModel extends ChangeNotifier {
   Future<void> launchFeedbackEmail(BuildContext context) async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: LandingPageConstants.feedbackEmail,
+      path: LandingScreenConstants.feedbackEmail,
     );
     try {
       if (!await launchUrl(emailUri, mode: LaunchMode.externalApplication)) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(LandingPageConstants.launchEmailErrorMessage)),
+            const SnackBar(
+              content: Text(LandingScreenConstants.launchEmailErrorMessage),
+            ),
           );
         }
       }

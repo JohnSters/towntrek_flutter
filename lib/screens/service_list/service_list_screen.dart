@@ -8,12 +8,12 @@ import 'service_list_view_model.dart';
 import 'widgets/widgets.dart';
 
 /// Service List Page - Shows paginated list of services for a specific sub-category
-class ServiceListPage extends StatelessWidget {
+class ServiceListScreen extends StatelessWidget {
   final ServiceCategoryDto category;
   final ServiceSubCategoryDto subCategory;
   final TownDto town;
 
-  const ServiceListPage({
+  const ServiceListScreen({
     super.key,
     required this.category,
     required this.subCategory,
@@ -30,19 +30,20 @@ class ServiceListPage extends StatelessWidget {
         subCategory: subCategory,
         town: town,
       ),
-      child: const _ServiceListPageContent(),
+      child: const _ServiceListScreenContent(),
     );
   }
 }
 
-class _ServiceListPageContent extends StatefulWidget {
-  const _ServiceListPageContent();
+class _ServiceListScreenContent extends StatefulWidget {
+  const _ServiceListScreenContent();
 
   @override
-  State<_ServiceListPageContent> createState() => _ServiceListPageContentState();
+  State<_ServiceListScreenContent> createState() =>
+      _ServiceListScreenContentState();
 }
 
-class _ServiceListPageContentState extends State<_ServiceListPageContent> {
+class _ServiceListScreenContentState extends State<_ServiceListScreenContent> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -97,9 +98,7 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _buildContent(context, viewModel),
-            ),
+            Expanded(child: _buildContent(context, viewModel)),
             const ListingBackFooter(label: 'Back to services'),
           ],
         ),
@@ -126,8 +125,11 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
               ),
       ServiceListLoadingMore(services: final services, currentPage: _) =>
         _buildSuccessLayout(context, viewModel, services, true, true),
-      ServiceListError(error: final error) =>
-        _buildErrorLayout(context, error: error, viewModel: viewModel),
+      ServiceListError(error: final error) => _buildErrorLayout(
+        context,
+        error: error,
+        viewModel: viewModel,
+      ),
     };
   }
 
@@ -138,15 +140,16 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
     );
   }
 
-  Widget _buildLoadingLayout(BuildContext context, ServiceListViewModel viewModel) {
+  Widget _buildLoadingLayout(
+    BuildContext context,
+    ServiceListViewModel viewModel,
+  ) {
     return Column(
       children: [
         _serviceHero(context, viewModel),
         _resultsBand(context, viewModel),
         _searchPadding(_searchBar(context, viewModel)),
-        const Expanded(
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        const Expanded(child: Center(child: CircularProgressIndicator())),
       ],
     );
   }
@@ -209,7 +212,9 @@ class _ServiceListPageContentState extends State<_ServiceListPageContent> {
                     TextButton.icon(
                       onPressed: () => _clearSearch(viewModel),
                       icon: const Icon(Icons.refresh_rounded),
-                      label: const Text(EntityListingConstants.clearSearchLabel),
+                      label: const Text(
+                        EntityListingConstants.clearSearchLabel,
+                      ),
                     ),
                   ],
                 ],

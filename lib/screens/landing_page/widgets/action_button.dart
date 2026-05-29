@@ -12,7 +12,7 @@ class ActionButton extends StatelessWidget {
   const ActionButton({
     super.key,
     required this.onPressed,
-    this.buttonText = LandingPageConstants.exploreButtonText,
+    this.buttonText = LandingScreenConstants.exploreButtonText,
     this.leadingIcon = Icons.explore,
     this.backgroundColor = const Color(0xFFFF6B35),
     this.compact = false,
@@ -29,11 +29,13 @@ class ActionButton extends StatelessWidget {
         foregroundColor: Colors.white,
         minimumSize: Size(
           double.infinity,
-          compact ? LandingPageConstants.compactButtonHeight : LandingPageConstants.buttonHeight,
+          compact
+              ? LandingScreenConstants.compactButtonHeight
+              : LandingScreenConstants.buttonHeight,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
-            LandingPageConstants.borderRadiusMedium,
+            LandingScreenConstants.borderRadiusMedium,
           ),
         ),
         elevation: 2,
@@ -42,38 +44,36 @@ class ActionButton extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(
-              10,
-            ),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(
-                LandingPageConstants.borderRadiusSmall,
+                LandingScreenConstants.borderRadiusSmall,
               ),
             ),
             child: Icon(
               leadingIcon,
               color: Colors.white,
-                size: compact ? 16 : LandingPageConstants.featureIconSize - 12,
+              size: compact ? 16 : LandingScreenConstants.featureIconSize - 12,
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               buttonText,
-              style: (compact ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style:
+                  (compact
+                          ? theme.textTheme.titleMedium
+                          : theme.textTheme.titleLarge)
+                      ?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
               textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(width: 10),
-          const Icon(
-            Icons.arrow_forward,
-            color: Colors.white,
-            size: 16,
-          ),
+          const Icon(Icons.arrow_forward, color: Colors.white, size: 16),
         ],
       ),
     );

@@ -3,36 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../repositories/repositories.dart';
 import 'parcel_ui.dart';
 import 'request_detail_screen.dart';
-
-class MyActivityViewModel extends ChangeNotifier {
-  MyActivityViewModel({required MemberRepository repository})
-    : _repository = repository {
-    load();
-  }
-
-  final MemberRepository _repository;
-
-  bool loading = true;
-  String? error;
-  MemberActivityDto? activity;
-
-  Future<void> load() async {
-    loading = true;
-    error = null;
-    notifyListeners();
-    try {
-      activity = await _repository.getMyActivity();
-    } catch (err) {
-      error = err.toString();
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
-  }
-}
+import 'my_activity_view_model.dart';
 
 class MyActivityScreen extends StatelessWidget {
   const MyActivityScreen({super.key});
@@ -75,7 +48,9 @@ class _MyActivityBody extends StatelessWidget {
                 labelColor: colorScheme.primary,
                 unselectedLabelColor: colorScheme.onSurfaceVariant,
                 indicatorColor: colorScheme.primary,
-                dividerColor: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                dividerColor: colorScheme.outlineVariant.withValues(
+                  alpha: 0.35,
+                ),
                 tabs: const [
                   Tab(text: 'My Requests'),
                   Tab(text: 'My Deliveries'),
@@ -100,9 +75,7 @@ class _MyActivityBody extends StatelessWidget {
                     }
                     return TabBarView(
                       children: [
-                        _ParcelListView(
-                          items: viewModel.activity!.myRequests,
-                        ),
+                        _ParcelListView(items: viewModel.activity!.myRequests),
                         _ParcelListView(
                           items: viewModel.activity!.myDeliveries,
                         ),

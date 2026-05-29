@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:towntrek_flutter/theme/entity_listing_theme_extension.dart';
 
+import '../../theme/entity_listing_theme_extension.dart';
 import '../constants/business_card_constants.dart';
-import '../theme/entity_listing_theme.dart';
 import '../constants/business_category_constants.dart';
 import '../constants/business_sub_category_constants.dart';
 import '../constants/town_feature_constants.dart';
+import '../theme/entity_listing_theme.dart';
 
 /// UI copy that depends on business category (e.g. equipment rentals → "listings").
 /// Uses [CategoryWithCountDto.key] so both quick-access and Businesses → Categories behave the same.
@@ -21,10 +21,9 @@ class BusinessCategoryCopy {
   static EntityListingTheme listingThemeOf(
     BuildContext context,
     String? categoryKey,
-  ) =>
-      context.entityListingTheme;
+  ) => context.entityListingTheme;
 
-  /// Footer for [BusinessCardPage]: pops to subcategories for this category ([categoryName]).
+  /// Footer for [BusinessCardScreen]: pops to subcategories for this category ([categoryName]).
   static String businessCardBackFooterLabel({
     required String categoryName,
     String? categoryKey,
@@ -39,7 +38,8 @@ class BusinessCategoryCopy {
   static String entityPlural(String? categoryKey) =>
       isEquipmentRentals(categoryKey) ? 'listings' : 'businesses';
 
-  static String noEntitiesYet(String? categoryKey) => isEquipmentRentals(categoryKey)
+  static String noEntitiesYet(String? categoryKey) =>
+      isEquipmentRentals(categoryKey)
       ? 'No listings yet'
       : BusinessSubCategoryConstants.noBusinessesYet;
 
@@ -64,24 +64,26 @@ class BusinessCategoryCopy {
     required int count,
     required String categoryName,
     required String? categoryKey,
-  }) =>
-      '$count ${entityPlural(categoryKey)} \u2022 $categoryName';
+  }) => '$count ${entityPlural(categoryKey)} \u2022 $categoryName';
 
   static String subCategoryInfoBarLine({
     required int count,
     required String subCategoryName,
     required String? categoryKey,
-  }) =>
-      '$count ${entityPlural(categoryKey)} \u2022 $subCategoryName';
+  }) => '$count ${entityPlural(categoryKey)} \u2022 $subCategoryName';
 
   static IconData infoBarIcon(String? categoryKey) =>
-      isEquipmentRentals(categoryKey) ? Icons.construction : Icons.business_center_rounded;
+      isEquipmentRentals(categoryKey)
+      ? Icons.construction
+      : Icons.business_center_rounded;
 
-  static String emptyCardListTitle(String? categoryKey) => isEquipmentRentals(categoryKey)
+  static String emptyCardListTitle(String? categoryKey) =>
+      isEquipmentRentals(categoryKey)
       ? 'No listings found'
       : BusinessCardConstants.noBusinessesFound;
 
-  static String emptyCardListMessage(String? categoryKey) => isEquipmentRentals(categoryKey)
+  static String emptyCardListMessage(String? categoryKey) =>
+      isEquipmentRentals(categoryKey)
       ? 'There are no rental listings in this category yet'
       : BusinessCardConstants.noBusinessesMessage;
 

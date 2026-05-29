@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
+
 import 'core/core.dart';
 import 'core/widgets/app_scaffold_messenger.dart';
 import 'core/config/http_overrides.dart';
@@ -25,8 +28,38 @@ void main() async {
   runApp(const TownTrekApp());
 }
 
-class TownTrekApp extends StatelessWidget {
+class TownTrekApp extends StatefulWidget {
   const TownTrekApp({super.key});
+
+  @override
+  State<TownTrekApp> createState() => _TownTrekAppState();
+}
+
+class _TownTrekAppState extends State<TownTrekApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Proactively refresh a stale session so the next action doesn't fail
+      // with a surprise 401. No-op when no device is connected.
+      final sessionManager = serviceLocator.mobileSessionManager;
+      if (sessionManager.isAuthenticated) {
+        unawaited(sessionManager.ensureAuthenticated());
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +69,7 @@ class TownTrekApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      home: const LandingPage(),
+      home: const LandingScreen(),
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         final theme = Theme.of(context);

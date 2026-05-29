@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import 'creative_spaces_list_page.dart';
+import 'creative_spaces_list_screen.dart';
 import 'widgets/creative_sub_category_card.dart';
 
-class CreativeSpacesSubCategoryPage extends StatelessWidget {
+class CreativeSpacesSubCategoryScreen extends StatelessWidget {
   final TownDto town;
   final CreativeCategoryDto category;
   final bool countsAvailable;
 
-  const CreativeSpacesSubCategoryPage({
+  const CreativeSpacesSubCategoryScreen({
     super.key,
     required this.town,
     required this.category,
@@ -142,7 +142,7 @@ class CreativeSpacesSubCategoryPage extends StatelessWidget {
   ) {
     CreativeSpacesNavigation.pushListPage(
       context,
-      pageBuilder: (_) => CreativeSpacesListPage(
+      pageBuilder: (_) => CreativeSpacesListScreen(
         town: town,
         category: category,
         subCategory: subCategory,

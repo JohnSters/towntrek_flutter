@@ -4,149 +4,11 @@ import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../repositories/repositories.dart';
 import 'board_screen.dart';
 import 'connect_device_sheet.dart';
 import 'parcel_ui.dart';
 import 'parcel_xp_feedback.dart';
-
-class RequestDetailViewModel extends ChangeNotifier {
-  RequestDetailViewModel({
-    required this.requestId,
-    required this.repository,
-    required this.sessionManager,
-  }) {
-    load();
-  }
-
-  final int requestId;
-  final ParcelRepository repository;
-  final MobileSessionManager sessionManager;
-
-  bool loading = true;
-  bool actionLoading = false;
-  String? error;
-  ParcelDetailDto? detail;
-
-  Future<void> load() async {
-    loading = true;
-    error = null;
-    notifyListeners();
-    try {
-      detail = await repository.getDetail(requestId);
-    } catch (err) {
-      error = err.toString();
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> claim() async {
-    final current = detail;
-    if (current == null) return false;
-    return _runOptimistic(
-      optimistic: current.copyWith(
-        status: ParcelStatus.claimed,
-        canClaim: false,
-      ),
-      action: () => repository.claim(requestId),
-    );
-  }
-
-  Future<bool> pickedUp() async {
-    final current = detail;
-    if (current == null) return false;
-    return _runOptimistic(
-      optimistic: current.copyWith(status: ParcelStatus.pickedUp),
-      action: () => repository.pickedUp(requestId),
-    );
-  }
-
-  Future<bool> delivered() async {
-    final current = detail;
-    if (current == null) return false;
-    return _runOptimistic(
-      optimistic: current.copyWith(status: ParcelStatus.delivered),
-      action: () => repository.delivered(requestId),
-    );
-  }
-
-  Future<bool> confirm() async {
-    final current = detail;
-    if (current == null) return false;
-    return _runOptimistic(
-      optimistic: current.copyWith(status: ParcelStatus.confirmed),
-      action: () => repository.confirm(requestId),
-    );
-  }
-
-  Future<bool> cancel(String reason) async {
-    final current = detail;
-    if (current == null) return false;
-    return _runOptimistic(
-      optimistic: current.copyWith(
-        status: ParcelStatus.cancelled,
-        cancelReason: reason,
-      ),
-      action: () => repository.cancel(requestId, reason),
-    );
-  }
-
-  Future<void> report(String reason) async {
-    actionLoading = true;
-    notifyListeners();
-    try {
-      await repository.report(requestId, reason);
-    } finally {
-      actionLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> rate({
-    required int score,
-    required bool rateClaimer,
-    String? note,
-  }) async {
-    actionLoading = true;
-    notifyListeners();
-    try {
-      final updated = await repository.rate(
-        id: requestId,
-        score: score,
-        rateClaimer: rateClaimer,
-        note: note,
-      );
-      detail = updated;
-      sessionManager.mergeFromParcelDetail(updated);
-    } finally {
-      actionLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> _runOptimistic({
-    required ParcelDetailDto optimistic,
-    required Future<ParcelDetailDto> Function() action,
-  }) async {
-    final previous = detail;
-    if (previous == null) return false;
-    actionLoading = true;
-    detail = optimistic;
-    notifyListeners();
-    try {
-      detail = await action();
-      return true;
-    } catch (_) {
-      detail = previous;
-      rethrow;
-    } finally {
-      actionLoading = false;
-      notifyListeners();
-    }
-  }
-}
+import 'request_detail_view_model.dart';
 
 class RequestDetailScreen extends StatelessWidget {
   const RequestDetailScreen({
@@ -242,9 +104,7 @@ Future<void> _tryParcelActionAfterConnect(
     }
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      showErrorSnack(context, error);
     }
   }
 }
@@ -292,15 +152,9 @@ class _RequestDetailBody extends StatelessWidget {
                         return const Center(child: CircularProgressIndicator());
                       }
                       if (viewModel.error != null || detail == null) {
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                          child: Center(
-                            child: Text(
-                              viewModel.error ?? 'Unable to load request',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                          ),
+                        return ErrorStateView(
+                          error: viewModel.error ?? 'Unable to load request',
+                          onRetry: viewModel.load,
                         );
                       }
 
@@ -478,22 +332,14 @@ class _RequestDetailBody extends StatelessWidget {
 
     Future<void> guardedAction(Future<bool> Function() action) async {
       await runWithParcelSession(context, () async {
-        try {
-          final changed = await action();
-          if (changed && context.mounted) {
-            final d = viewModel.detail;
-            if (d != null) {
-              serviceLocator.mobileSessionManager.mergeFromParcelDetail(d);
-              ParcelXpFeedback.showForDetail(d);
-            }
-            Navigator.of(context).pop(true);
+        final changed = await action();
+        if (changed && context.mounted) {
+          final d = viewModel.detail;
+          if (d != null) {
+            serviceLocator.mobileSessionManager.mergeFromParcelDetail(d);
+            ParcelXpFeedback.showForDetail(d);
           }
-        } catch (error) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(error.toString())));
-          }
+          Navigator.of(context).pop(true);
         }
       });
     }
@@ -595,9 +441,7 @@ class _RequestDetailBody extends StatelessWidget {
                   }
                 } catch (error) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(error.toString())));
+                    showErrorSnack(context, error);
                   }
                 }
               },
@@ -629,9 +473,7 @@ class _RequestDetailBody extends StatelessWidget {
                     }
                   } catch (error) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(error.toString())));
+                      showErrorSnack(context, error);
                     }
                   }
                 },

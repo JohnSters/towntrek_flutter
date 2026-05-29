@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../core/core.dart';
+import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import 'property_list_state.dart';
 
@@ -7,6 +8,7 @@ class PropertyListViewModel extends ChangeNotifier {
   final PropertyRepository _propertyRepository;
   final ErrorHandler _errorHandler;
   final int _townId;
+  String _searchTerm = '';
 
   PropertyListState _state = PropertyListLoading();
 
@@ -14,13 +16,34 @@ class PropertyListViewModel extends ChangeNotifier {
     required PropertyRepository propertyRepository,
     required ErrorHandler errorHandler,
     required int townId,
-  })  : _propertyRepository = propertyRepository,
-        _errorHandler = errorHandler,
-        _townId = townId {
+  }) : _propertyRepository = propertyRepository,
+       _errorHandler = errorHandler,
+       _townId = townId {
     load();
   }
 
   PropertyListState get state => _state;
+  String get searchTerm => _searchTerm;
+
+  List<PropertyListingCardDto> filteredItems(
+    List<PropertyListingCardDto> items,
+  ) {
+    final t = _searchTerm.trim().toLowerCase();
+    if (t.isEmpty) return items;
+    return items.where((p) {
+      return p.ownerName.toLowerCase().contains(t) ||
+          p.address.toLowerCase().contains(t) ||
+          (p.summary?.toLowerCase().contains(t) ?? false) ||
+          p.townName.toLowerCase().contains(t) ||
+          p.province.toLowerCase().contains(t);
+    }).toList();
+  }
+
+  void setSearchTerm(String value) {
+    if (_searchTerm == value) return;
+    _searchTerm = value;
+    notifyListeners();
+  }
 
   Future<void> load() async {
     _state = PropertyListLoading();

@@ -8,12 +8,12 @@ import 'business_card_view_model.dart';
 import 'widgets/widgets.dart';
 
 /// Page for displaying businesses in a beautiful card layout for a selected sub-category
-class BusinessCardPage extends StatelessWidget {
+class BusinessCardScreen extends StatelessWidget {
   final CategoryWithCountDto category;
   final SubCategoryWithCountDto subCategory;
   final TownDto town;
 
-  const BusinessCardPage({
+  const BusinessCardScreen({
     super.key,
     required this.category,
     required this.subCategory,
@@ -30,20 +30,21 @@ class BusinessCardPage extends StatelessWidget {
         businessRepository: serviceLocator.businessRepository,
         errorHandler: serviceLocator.errorHandler,
       ),
-      child: const _BusinessCardPageContent(),
+      child: const _BusinessCardScreenContent(),
     );
   }
 }
 
-class _BusinessCardPageContent extends StatefulWidget {
-  const _BusinessCardPageContent();
+class _BusinessCardScreenContent extends StatefulWidget {
+  const _BusinessCardScreenContent();
 
   @override
-  State<_BusinessCardPageContent> createState() =>
-      _BusinessCardPageContentState();
+  State<_BusinessCardScreenContent> createState() =>
+      _BusinessCardScreenContentState();
 }
 
-class _BusinessCardPageContentState extends State<_BusinessCardPageContent> {
+class _BusinessCardScreenContentState
+    extends State<_BusinessCardScreenContent> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -84,8 +85,10 @@ class _BusinessCardPageContentState extends State<_BusinessCardPageContent> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<BusinessCardViewModel>();
-    final listingTheme =
-        BusinessCategoryCopy.listingThemeOf(context, viewModel.category.key);
+    final listingTheme = BusinessCategoryCopy.listingThemeOf(
+      context,
+      viewModel.category.key,
+    );
     final backLabel = BusinessCategoryCopy.businessCardBackFooterLabel(
       categoryName: viewModel.category.name,
       categoryKey: viewModel.category.key,
@@ -96,9 +99,7 @@ class _BusinessCardPageContentState extends State<_BusinessCardPageContent> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _buildContent(context, viewModel, listingTheme),
-            ),
+            Expanded(child: _buildContent(context, viewModel, listingTheme)),
             ListingBackFooter(label: backLabel),
           ],
         ),

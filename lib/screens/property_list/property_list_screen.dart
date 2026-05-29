@@ -41,7 +41,12 @@ class _PropertyListContentState extends State<_PropertyListContent> {
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() => setState(() {}));
+    _searchController.addListener(() {
+      if (!mounted) return;
+      context.read<PropertyListViewModel>().setSearchTerm(
+        _searchController.text,
+      );
+    });
   }
 
   @override
@@ -50,28 +55,15 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     super.dispose();
   }
 
-  List<PropertyListingCardDto> _visibleItems(
-    List<PropertyListingCardDto> items,
-  ) {
-    final t = _searchController.text.trim().toLowerCase();
-    if (t.isEmpty) return items;
-    return items.where((p) {
-      return p.ownerName.toLowerCase().contains(t) ||
-          p.address.toLowerCase().contains(t) ||
-          (p.summary?.toLowerCase().contains(t) ?? false) ||
-          p.townName.toLowerCase().contains(t) ||
-          p.province.toLowerCase().contains(t);
-    }).toList();
-  }
-
-  Widget _searchBar(BuildContext context) {
+  Widget _searchBar(BuildContext context, PropertyListViewModel viewModel) {
     return EntityListingSearchBar(
       controller: _searchController,
       theme: context.entityListingTheme,
       hintText: EntityListingConstants.propertySearchHint,
-      onSubmitted: () => setState(() {}),
+      onSubmitted: () => viewModel.setSearchTerm(_searchController.text),
       onClear: () {
         _searchController.clear();
+        viewModel.setSearchTerm('');
       },
     );
   }
@@ -84,11 +76,12 @@ class _PropertyListContentState extends State<_PropertyListContent> {
   }
 
   void _openDetails(BuildContext context, PropertyListingCardDto listing) {
-    final fallback =
-        listing.address.trim().isNotEmpty ? listing.address : listing.ownerName;
+    final fallback = listing.address.trim().isNotEmpty
+        ? listing.address
+        : listing.ownerName;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PropertyDetailsPage(
+        builder: (context) => PropertyDetailsScreen(
           listingId: listing.id,
           titleFallback: fallback,
         ),
@@ -134,15 +127,13 @@ class _PropertyListContentState extends State<_PropertyListContent> {
   Widget _buildBody(BuildContext context, PropertyListViewModel viewModel) {
     return switch (viewModel.state) {
       PropertyListLoading() => Column(
-          children: [
-            _hero(context),
-            _band(context, 0),
-            _searchPadding(_searchBar(context)),
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ],
-        ),
+        children: [
+          _hero(context),
+          _band(context, 0),
+          _searchPadding(_searchBar(context, viewModel)),
+          const Expanded(child: Center(child: CircularProgressIndicator())),
+        ],
+      ),
       PropertyListSuccess(
         items: final items,
         totalCount: final totalCount,
@@ -157,7 +148,11 @@ class _PropertyListContentState extends State<_PropertyListContent> {
           hasNextPage,
           isLoadingMore,
         ),
-      PropertyListError(error: final error) => _buildError(context, viewModel, error),
+      PropertyListError(error: final error) => _buildError(
+        context,
+        viewModel,
+        error,
+      ),
     };
   }
 
@@ -169,8 +164,8 @@ class _PropertyListContentState extends State<_PropertyListContent> {
     bool hasNextPage,
     bool isLoadingMore,
   ) {
-    final visible = _visibleItems(items);
-    final hasSearch = _searchController.text.trim().isNotEmpty;
+    final visible = viewModel.filteredItems(items);
+    final hasSearch = viewModel.searchTerm.trim().isNotEmpty;
     final bandCount = hasSearch ? visible.length : totalCount;
 
     if (items.isEmpty) {
@@ -178,7 +173,7 @@ class _PropertyListContentState extends State<_PropertyListContent> {
         children: [
           _hero(context),
           _band(context, 0),
-          _searchPadding(_searchBar(context)),
+          _searchPadding(_searchBar(context, viewModel)),
           Expanded(
             child: Center(
               child: Padding(
@@ -187,8 +182,8 @@ class _PropertyListContentState extends State<_PropertyListContent> {
                   'No property listings in this town yet.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -204,7 +199,7 @@ class _PropertyListContentState extends State<_PropertyListContent> {
         children: [
           _hero(context),
           _band(context, 0),
-          _searchPadding(_searchBar(context)),
+          _searchPadding(_searchBar(context, viewModel)),
           Expanded(
             child: Center(
               child: Padding(
@@ -239,10 +234,12 @@ class _PropertyListContentState extends State<_PropertyListContent> {
                     TextButton.icon(
                       onPressed: () {
                         _searchController.clear();
-                        setState(() {});
+                        viewModel.setSearchTerm('');
                       },
                       icon: const Icon(Icons.refresh_rounded),
-                      label: const Text(EntityListingConstants.clearSearchLabel),
+                      label: const Text(
+                        EntityListingConstants.clearSearchLabel,
+                      ),
                     ),
                   ],
                 ),
@@ -257,7 +254,7 @@ class _PropertyListContentState extends State<_PropertyListContent> {
       children: [
         _hero(context),
         _band(context, bandCount),
-        _searchPadding(_searchBar(context)),
+        _searchPadding(_searchBar(context, viewModel)),
         Expanded(
           child: ListView.separated(
             padding: EntityListingConstants.cardListScrollPadding,
@@ -297,7 +294,7 @@ class _PropertyListContentState extends State<_PropertyListContent> {
         children: [
           _hero(context),
           _band(context, 0),
-          _searchPadding(_searchBar(context)),
+          _searchPadding(_searchBar(context, viewModel)),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -306,7 +303,7 @@ class _PropertyListContentState extends State<_PropertyListContent> {
       children: [
         _hero(context),
         _band(context, 0),
-        _searchPadding(_searchBar(context)),
+        _searchPadding(_searchBar(context, viewModel)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),

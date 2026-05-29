@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/core.dart';
 import '../../../models/models.dart';
-import '../../shared/detail_widgets/detail_widgets.dart';
 
 class EventInfoCard extends StatelessWidget {
   final EventDetailDto event;
 
-  const EventInfoCard({
-    super.key,
-    required this.event,
-  });
+  const EventInfoCard({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +93,8 @@ class EventInfoCard extends StatelessWidget {
                 label: event.displayPrice,
                 icon: Icons.payments_outlined,
               ),
-              if (event.ageRestrictions != null && event.ageRestrictions!.isNotEmpty)
+              if (event.ageRestrictions != null &&
+                  event.ageRestrictions!.isNotEmpty)
                 DetailMetadataTag(
                   label: event.ageRestrictions!,
                   icon: Icons.warning_amber_rounded,
@@ -155,7 +152,8 @@ class EventInfoCard extends StatelessWidget {
             ),
           ),
         ],
-        if (event.ticketInfo != null && event.ticketInfo!.trim().isNotEmpty) ...[
+        if (event.ticketInfo != null &&
+            event.ticketInfo!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
           DetailSectionShell(
             expandTitle: true,
@@ -167,7 +165,8 @@ class EventInfoCard extends StatelessWidget {
             ),
           ),
         ],
-        if (event.eventProgram != null && event.eventProgram!.trim().isNotEmpty) ...[
+        if (event.eventProgram != null &&
+            event.eventProgram!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
           DetailSectionShell(
             expandTitle: true,

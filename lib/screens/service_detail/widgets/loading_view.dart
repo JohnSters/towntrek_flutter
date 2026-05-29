@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Body-only loading (hero lives on [ServiceDetailPage]).
+/// Body-only loading (hero lives on [ServiceDetailScreen]).
 class ServiceDetailLoadingView extends StatelessWidget {
   final String serviceName;
 
-  const ServiceDetailLoadingView({
-    super.key,
-    required this.serviceName,
-  });
+  const ServiceDetailLoadingView({super.key, required this.serviceName});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 }

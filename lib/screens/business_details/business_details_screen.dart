@@ -5,17 +5,16 @@ import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
-import '../shared/detail_widgets/detail_widgets.dart';
 import 'business_details_state.dart';
 import 'business_details_view_model.dart';
 import 'widgets/business_documents_section.dart';
 import 'widgets/equipment_hire_rates_section.dart';
 
-class BusinessDetailsPage extends StatelessWidget {
+class BusinessDetailsScreen extends StatelessWidget {
   final int businessId;
   final String businessName;
 
-  const BusinessDetailsPage({
+  const BusinessDetailsScreen({
     super.key,
     required this.businessId,
     required this.businessName,
@@ -31,13 +30,13 @@ class BusinessDetailsPage extends StatelessWidget {
         navigationService: serviceLocator.navigationService,
         errorHandler: serviceLocator.errorHandler,
       ),
-      child: const _BusinessDetailsPageContent(),
+      child: const _BusinessDetailsScreenContent(),
     );
   }
 }
 
-class _BusinessDetailsPageContent extends StatelessWidget {
-  const _BusinessDetailsPageContent();
+class _BusinessDetailsScreenContent extends StatelessWidget {
+  const _BusinessDetailsScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +54,10 @@ class _BusinessDetailsPageContent extends StatelessWidget {
               _BusinessSpecialClosedHint(business: state.business),
             ],
             Expanded(
-              child: _BusinessDetailStateBody(state: state, viewModel: viewModel),
+              child: _BusinessDetailStateBody(
+                state: state,
+                viewModel: viewModel,
+              ),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -66,10 +68,7 @@ class _BusinessDetailsPageContent extends StatelessWidget {
 }
 
 class _BusinessDetailHero extends StatelessWidget {
-  const _BusinessDetailHero({
-    required this.state,
-    required this.viewModel,
-  });
+  const _BusinessDetailHero({required this.state, required this.viewModel});
 
   final BusinessDetailsState state;
   final BusinessDetailsViewModel viewModel;
@@ -125,7 +124,10 @@ class _BusinessDetailsLoadingView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        DetailLoadingBlock(height: 112, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(
+          height: 112,
+          color: colorScheme.surfaceContainerHigh,
+        ),
         const SizedBox(height: 12),
         DetailLoadingBlock(height: 84, color: colorScheme.surfaceContainerLow),
         const SizedBox(height: 12),
@@ -155,10 +157,7 @@ class _BusinessDetailsBody extends StatelessWidget {
   final BusinessDetailDto business;
   final BusinessDetailsViewModel viewModel;
 
-  const _BusinessDetailsBody({
-    required this.business,
-    required this.viewModel,
-  });
+  const _BusinessDetailsBody({required this.business, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -169,9 +168,11 @@ class _BusinessDetailsBody extends StatelessWidget {
         .map((service) => service.serviceType)
         .toList();
 
-    final isEquipmentRental = business.category.toLowerCase() ==
+    final isEquipmentRental =
+        business.category.toLowerCase() ==
         TownFeatureConstants.equipmentRentalsCategoryKey.toLowerCase();
-    final hasSocial = business.facebook != null ||
+    final hasSocial =
+        business.facebook != null ||
         business.instagram != null ||
         business.whatsApp != null;
 
@@ -323,10 +324,8 @@ class _BusinessDetailQuickActionsSection extends StatelessWidget {
               icon: Icons.language_rounded,
               backgroundColor: qa.websiteBackground,
               iconColor: qa.websiteIcon,
-              onPressed: () => ExternalLinkLauncher.openWebsite(
-                context,
-                business.website!,
-              ),
+              onPressed: () =>
+                  ExternalLinkLauncher.openWebsite(context, business.website!),
             ),
           DetailQuickActionButton(
             tooltip: 'Rate Business',
@@ -396,7 +395,8 @@ class _BusinessOpenClosedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final openNow = business.isOpenNow ??
+    final openNow =
+        business.isOpenNow ??
         OperatingHoursOpenCalc.businessIsOpenNow(
           business.operatingHours,
           business.specialOperatingHours,
@@ -429,8 +429,9 @@ class _BusinessSpecialClosedHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final special =
-        OperatingHoursOpenCalc.todaysClosedSpecialEntry(business.specialOperatingHours);
+    final special = OperatingHoursOpenCalc.todaysClosedSpecialEntry(
+      business.specialOperatingHours,
+    );
     if (special == null) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
@@ -505,7 +506,7 @@ class _GalleryTile extends StatelessWidget {
                         strokeWidth: 2,
                         value: loadingProgress.expectedTotalBytes != null
                             ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
+                                  loadingProgress.expectedTotalBytes!
                             : null,
                       ),
                     ),
@@ -534,5 +535,3 @@ class _GalleryTile extends StatelessWidget {
     );
   }
 }
-
-

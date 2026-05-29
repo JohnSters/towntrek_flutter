@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../core/core.dart';
-import '../service_list/service_list_page.dart';
+import '../service_list/service_list_screen.dart';
 import 'service_sub_category_state.dart';
 import 'service_sub_category_view_model.dart';
 import 'widgets/widgets.dart';
 
 /// Service Sub-Category Page - Shows available service sub-categories for a category
 /// Uses Provider pattern with ViewModel and sealed classes for clean architecture
-class ServiceSubCategoryPage extends StatelessWidget {
+class ServiceSubCategoryScreen extends StatelessWidget {
   final ServiceCategoryDto category;
   final TownDto town;
   final bool countsAvailable;
 
-  const ServiceSubCategoryPage({
+  const ServiceSubCategoryScreen({
     super.key,
     required this.category,
     required this.town,
@@ -29,13 +29,13 @@ class ServiceSubCategoryPage extends StatelessWidget {
         town: town,
         countsAvailable: countsAvailable,
       ),
-      child: const _ServiceSubCategoryPageContent(),
+      child: const _ServiceSubCategoryScreenContent(),
     );
   }
 }
 
-class _ServiceSubCategoryPageContent extends StatelessWidget {
-  const _ServiceSubCategoryPageContent();
+class _ServiceSubCategoryScreenContent extends StatelessWidget {
+  const _ServiceSubCategoryScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +44,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _buildContent(context),
-            ),
+            Expanded(child: _buildContent(context)),
             const ListingBackFooter(label: 'Back'),
           ],
         ),
@@ -54,7 +52,10 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(BuildContext context, ServiceSubCategoryViewModel viewModel) {
+  Widget _buildHero(
+    BuildContext context,
+    ServiceSubCategoryViewModel viewModel,
+  ) {
     return EntityListingHeroHeader(
       theme: context.entityListingTheme,
       categoryIcon: Icons.handyman_rounded,
@@ -92,9 +93,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
             children: [
               _buildHero(context, viewModel),
               _buildBand(context, viewModel, _serviceCountForBand(viewModel)),
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
             ],
           );
         }
@@ -192,14 +191,16 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: state.sortedSubCategories.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final subCategory = state.sortedSubCategories[index];
                       return SubCategoryCard(
                         subCategory: subCategory,
                         countsAvailable: state.countsAvailable,
                         townName: state.town.name,
-                        onTap: () => _navigateToServiceList(context, state, subCategory),
+                        onTap: () =>
+                            _navigateToServiceList(context, state, subCategory),
                       );
                     },
                   ),
@@ -219,7 +220,7 @@ class _ServiceSubCategoryPageContent extends StatelessWidget {
   ) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ServiceListPage(
+        builder: (context) => ServiceListScreen(
           category: state.category,
           subCategory: subCategory,
           town: state.town,

@@ -16,7 +16,10 @@ class MobileSessionManager extends ChangeNotifier {
     required ApiClient apiClient,
   }) : _mobileAuthRepository = mobileAuthRepository,
        _memberRepository = memberRepository,
-       _apiClient = apiClient;
+       _apiClient = apiClient {
+    // Let the network layer transparently refresh + replay on a 401.
+    _apiClient.onUnauthorized = _handleUnauthorizedRefresh;
+  }
 
   final MobileAuthRepository _mobileAuthRepository;
   final MemberRepository _memberRepository;
@@ -28,32 +31,49 @@ class MobileSessionManager extends ChangeNotifier {
   bool _initializing = false;
   bool _busy = false;
   String? _errorMessage;
+  int _lastDisplayAwardedXp = 0;
+
+  List<MobileAccountSession> _accounts = const [];
+  String? _activeUserId;
 
   MobileAuthResponseDto? get session => _session;
   MemberProfileDto? get profile => _profile;
   MemberProgressionDto? get memberProgression => _memberProgression;
-  String? get currentUserId => _profile?.userId;
+  String? get currentUserId => _profile?.userId ?? _activeUserId;
   String? get currentDisplayName => _profile?.displayName;
   bool get isInitializing => _initializing;
   bool get isBusy => _busy;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _session != null;
 
+  /// All accounts currently linked on this device, for the account switcher.
+  List<MobileAccountSession> get accounts => List.unmodifiable(_accounts);
+  String? get activeUserId => _activeUserId;
+  bool get hasMultipleAccounts => _accounts.length > 1;
+
+  /// XP amount to display for the most recent [applyXpDelta]. Reflects the full
+  /// jump in total XP (e.g. a parcel-post award plus the daily-streak award that
+  /// the server granted on the same request), not just the parcel event amount.
+  int get lastDisplayAwardedXp => _lastDisplayAwardedXp;
+
   Future<void> initialize() async {
     if (_initializing) return;
     _initializing = true;
     notifyListeners();
     try {
-      _session = await MobileSessionStorage.read();
-      if (_session != null) {
-        _applyAccessToken(_session!.accessToken);
-        if (_session!.accessTokenExpiresAt.isBefore(
-          DateTime.now().toUtc().add(const Duration(minutes: 1)),
-        )) {
+      final store = await MobileSessionStorage.readStore();
+      _accounts = store.accounts;
+      _activeUserId = store.activeUserId;
+      final active = store.active;
+      if (active != null) {
+        _session = active.session;
+        _applyAccessToken(active.session.accessToken);
+        if (_isNearExpiry(active.session)) {
           await refreshSession();
         } else {
           await loadProfile();
           await loadProgression();
+          await _syncActiveDisplayName();
         }
       }
     } catch (error) {
@@ -65,13 +85,12 @@ class MobileSessionManager extends ChangeNotifier {
     }
   }
 
+  /// Redeems a TREK code and links the account, keeping any previously linked
+  /// accounts (multi-account). The newly linked account becomes active.
   Future<void> signInWithCode({
     required String code,
     required String deviceName,
   }) async {
-    if (_session != null) {
-      await signOut(notify: false);
-    }
     _busy = true;
     _errorMessage = null;
     notifyListeners();
@@ -80,14 +99,64 @@ class MobileSessionManager extends ChangeNotifier {
         code: code,
         deviceName: deviceName,
       );
+      final userId = decodeUserIdFromJwt(session.accessToken) ??
+          'device:${session.deviceId}';
       _session = session;
+      _activeUserId = userId;
       _applyAccessToken(session.accessToken);
-      await MobileSessionStorage.save(session);
+      final store = await MobileSessionStorage.upsertAndActivate(
+        MobileAccountSession(
+          userId: userId,
+          displayName: _displayNameForUser(userId),
+          session: session,
+        ),
+      );
+      _accounts = store.accounts;
+      _profile = null;
+      _memberProgression = null;
       await loadProfile();
       await loadProgression();
+      await _syncActiveDisplayName();
     } catch (error) {
       _errorMessage = resolveUserFacingApiError(error);
       rethrow;
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+  }
+
+  /// Switches the active account to a previously-linked [userId]. Returns false
+  /// if no such account is linked on this device.
+  Future<bool> switchAccount(String userId) async {
+    if (userId == _activeUserId) return true;
+    MobileAccountSession? target;
+    for (final account in _accounts) {
+      if (account.userId == userId) {
+        target = account;
+        break;
+      }
+    }
+    if (target == null) return false;
+
+    _busy = true;
+    notifyListeners();
+    try {
+      _session = target.session;
+      _activeUserId = userId;
+      _applyAccessToken(target.session.accessToken);
+      _profile = null;
+      _memberProgression = null;
+      final store = await MobileSessionStorage.setActive(userId);
+      _accounts = store.accounts;
+      if (_isNearExpiry(target.session)) {
+        await refreshSession();
+      } else {
+        await loadProfile();
+        await loadProgression();
+        await _syncActiveDisplayName();
+      }
+      return true;
     } finally {
       _busy = false;
       notifyListeners();
@@ -99,9 +168,7 @@ class MobileSessionManager extends ChangeNotifier {
       return false;
     }
 
-    if (_session!.accessTokenExpiresAt.isAfter(
-      DateTime.now().toUtc().add(const Duration(minutes: 1)),
-    )) {
+    if (!_isNearExpiry(_session!)) {
       return true;
     }
 
@@ -120,13 +187,40 @@ class MobileSessionManager extends ChangeNotifier {
       );
       _session = refreshed;
       _applyAccessToken(refreshed.accessToken);
-      await MobileSessionStorage.save(refreshed);
+      await _persistRefreshedSession(refreshed);
       await loadProfile();
       await loadProgression();
+      await _syncActiveDisplayName();
       notifyListeners();
       return true;
     } catch (error) {
       debugPrint('Failed to refresh mobile session: $error');
+      await signOut();
+      return false;
+    }
+  }
+
+  /// Refresh used by the 401 interceptor. Swaps the access token and reloads
+  /// profile/progression in the background so those requests never await this
+  /// in-flight refresh (which would deadlock the interceptor).
+  Future<bool> _handleUnauthorizedRefresh() async {
+    final existing = _session;
+    if (existing == null) {
+      return false;
+    }
+    try {
+      final refreshed = await _mobileAuthRepository.refresh(
+        refreshToken: existing.refreshToken,
+      );
+      _session = refreshed;
+      _applyAccessToken(refreshed.accessToken);
+      await _persistRefreshedSession(refreshed);
+      unawaited(loadProfile());
+      unawaited(loadProgression());
+      notifyListeners();
+      return true;
+    } catch (error) {
+      debugPrint('Failed to refresh mobile session (interceptor): $error');
       await signOut();
       return false;
     }
@@ -175,9 +269,15 @@ class MobileSessionManager extends ChangeNotifier {
     }
     final p = _memberProgression;
     if (p == null) {
+      _lastDisplayAwardedXp = delta.awarded;
       unawaited(loadProgression());
       return;
     }
+    // The parcel response only reports its own event amount in [delta.awarded],
+    // but [delta.newTotal] also includes any same-request streak award. Show the
+    // larger of the two so the user sees their true XP gain.
+    final totalJump = delta.newTotal - p.totalXp;
+    _lastDisplayAwardedXp = totalJump > delta.awarded ? totalJump : delta.awarded;
     final level = delta.currentLevel;
     final into = XpLevelMath.xpIntoCurrentLevel(delta.newTotal, level);
     final toNext = XpLevelMath.xpToNextLevel(delta.newTotal, level);
@@ -201,7 +301,10 @@ class MobileSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Disconnects the active account (revokes its device server-side) and removes
+  /// it locally. If other accounts remain, the most recent becomes active.
   Future<void> signOut({bool notify = true}) async {
+    final removingUserId = _activeUserId;
     if (_session != null) {
       try {
         await _mobileAuthRepository.disconnect();
@@ -209,14 +312,80 @@ class MobileSessionManager extends ChangeNotifier {
         // Best-effort: still clear local session if the token is expired or offline.
       }
     }
-    _session = null;
-    _profile = null;
-    _memberProgression = null;
-    _apiClient.clearHeader('Authorization');
-    await MobileSessionStorage.clear();
+
+    final store = removingUserId != null
+        ? await MobileSessionStorage.remove(removingUserId)
+        : await MobileSessionStorage.readStore();
+    _accounts = store.accounts;
+    _activeUserId = store.activeUserId;
+
+    final active = store.active;
+    if (active != null) {
+      _session = active.session;
+      _applyAccessToken(active.session.accessToken);
+      _profile = null;
+      _memberProgression = null;
+      await loadProfile();
+      await loadProgression();
+      await _syncActiveDisplayName();
+    } else {
+      _session = null;
+      _profile = null;
+      _memberProgression = null;
+      _apiClient.clearHeader('Authorization');
+    }
+
     if (notify) {
       notifyListeners();
     }
+  }
+
+  bool _isNearExpiry(MobileAuthResponseDto session) {
+    return session.accessTokenExpiresAt.isBefore(
+      DateTime.now().toUtc().add(const Duration(minutes: 1)),
+    );
+  }
+
+  String? _displayNameForUser(String userId) {
+    for (final account in _accounts) {
+      if (account.userId == userId) return account.displayName;
+    }
+    return null;
+  }
+
+  Future<void> _persistRefreshedSession(MobileAuthResponseDto refreshed) async {
+    final userId =
+        _activeUserId ?? decodeUserIdFromJwt(refreshed.accessToken);
+    if (userId == null) return;
+    _activeUserId = userId;
+    final store = await MobileSessionStorage.upsertAndActivate(
+      MobileAccountSession(
+        userId: userId,
+        displayName: _displayNameForUser(userId),
+        session: refreshed,
+      ),
+    );
+    _accounts = store.accounts;
+  }
+
+  /// Persists the loaded profile's display name onto the active account so the
+  /// account switcher can label it.
+  Future<void> _syncActiveDisplayName() async {
+    final userId = _activeUserId;
+    final session = _session;
+    final name = _profile?.displayName;
+    if (userId == null || session == null || name == null || name.isEmpty) {
+      return;
+    }
+    if (_displayNameForUser(userId) == name) return;
+    final store = await MobileSessionStorage.upsertAndActivate(
+      MobileAccountSession(
+        userId: userId,
+        displayName: name,
+        session: session,
+      ),
+    );
+    _accounts = store.accounts;
   }
 
   void _applyAccessToken(String token) {

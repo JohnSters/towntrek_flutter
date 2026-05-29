@@ -8,14 +8,14 @@ import '../town_loader/town_loader_screen.dart';
 import '../town_feature_selection/town_feature_selection_screen.dart';
 import 'widgets/widgets.dart';
 
-class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
+class LandingScreen extends StatefulWidget {
+  const LandingScreen({super.key});
 
   @override
-  State<LandingPage> createState() => _LandingPageState();
+  State<LandingScreen> createState() => _LandingScreenState();
 }
 
-class _LandingPageState extends State<LandingPage> {
+class _LandingScreenState extends State<LandingScreen> {
   @override
   void initState() {
     super.initState();
@@ -27,13 +27,13 @@ class _LandingPageState extends State<LandingPage> {
     return ChangeNotifierProvider(
       create: (_) =>
           LandingViewModel(statsRepository: serviceLocator.statsRepository),
-      child: const _LandingPageContent(),
+      child: const _LandingScreenContent(),
     );
   }
 }
 
-class _LandingPageContent extends StatelessWidget {
-  const _LandingPageContent();
+class _LandingScreenContent extends StatelessWidget {
+  const _LandingScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -51,87 +51,92 @@ class _LandingPageContent extends StatelessWidget {
                 onRefresh: () => context.read<LandingViewModel>().loadStats(),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(LandingPageConstants.horizontalPadding),
+                  padding: const EdgeInsets.all(
+                    LandingScreenConstants.horizontalPadding,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                    const SizedBox(height: 8),
-                    const AppLogo(),
-                    const SizedBox(height: 16),
-                    Text(
-                      LandingPageConstants.subtitleText,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                        height: 1.3,
+                      const SizedBox(height: 8),
+                      const AppLogo(),
+                      const SizedBox(height: 16),
+                      Text(
+                        LandingScreenConstants.subtitleText,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          height: 1.3,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      LandingPageConstants.descriptionText,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.5,
+                      const SizedBox(height: 14),
+                      Text(
+                        LandingScreenConstants.descriptionText,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    _buildLandingBanners(viewModel.state),
-                    const SizedBox(height: 20),
-                    ActionButton(
-                      onPressed: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const TownLoaderScreen(),
-                          ),
-                        );
-                      },
-                      buttonText: 'Explore Now!',
-                      compact: true,
-                    ),
-                    const SizedBox(height: 10),
-                    BusinessOwnerCTA(
-                      onTap: () => viewModel.launchOwnerUrl(context),
-                      buttonText: 'Add your business!',
-                      compact: true,
-                    ),
-                    ValueListenableBuilder<TownDto?>(
-                      valueListenable: FavouriteTownStorage.favouriteTownNotifier,
-                      builder: (context, favouriteTown, _) {
-                        if (favouriteTown == null) {
-                          return const SizedBox.shrink();
-                        }
+                      _buildLandingBanners(viewModel.state),
+                      const SizedBox(height: 20),
+                      ActionButton(
+                        onPressed: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const TownLoaderScreen(),
+                            ),
+                          );
+                        },
+                        buttonText: 'Explore Now!',
+                        compact: true,
+                      ),
+                      const SizedBox(height: 10),
+                      BusinessOwnerCTA(
+                        onTap: () => viewModel.launchOwnerUrl(context),
+                        buttonText: 'Add your business!',
+                        compact: true,
+                      ),
+                      ValueListenableBuilder<TownDto?>(
+                        valueListenable:
+                            FavouriteTownStorage.favouriteTownNotifier,
+                        builder: (context, favouriteTown, _) {
+                          if (favouriteTown == null) {
+                            return const SizedBox.shrink();
+                          }
 
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: ActionButton(
-                            onPressed: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => TownFeatureSelectionScreen(
-                                    town: favouriteTown,
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: ActionButton(
+                              onPressed: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        TownFeatureSelectionScreen(
+                                          town: favouriteTown,
+                                        ),
                                   ),
-                                ),
-                              );
-                            },
-                            buttonText: 'Favourite Town: ${favouriteTown.name}',
-                            leadingIcon: Icons.star_rounded,
-                            backgroundColor: const Color(0xFF1E88E5),
-                            compact: true,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                                );
+                              },
+                              buttonText:
+                                  'Favourite Town: ${favouriteTown.name}',
+                              leadingIcon: Icons.star_rounded,
+                              backgroundColor: const Color(0xFF1E88E5),
+                              compact: true,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                LandingPageConstants.horizontalPadding,
+                LandingScreenConstants.horizontalPadding,
                 10,
-                LandingPageConstants.horizontalPadding,
+                LandingScreenConstants.horizontalPadding,
                 8,
               ),
               child: _buildPlatformStats(viewModel.state),
@@ -145,10 +150,10 @@ class _LandingPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPlatformStats(LandingPageState state) {
+  Widget _buildPlatformStats(LandingScreenState state) {
     return switch (state) {
-      LandingPageLoading() => const PlatformStatsCard(isLoading: true),
-      LandingPageSuccess(
+      LandingScreenLoading() => const PlatformStatsCard(isLoading: true),
+      LandingScreenSuccess(
         businessCount: final businessCount,
         serviceCount: final serviceCount,
         eventCount: final eventCount,
@@ -164,13 +169,13 @@ class _LandingPageContent extends StatelessWidget {
           propertyListingCount: propertyListingCount,
           equipmentRentalBusinessCount: equipmentRentalBusinessCount,
         ),
-      LandingPageError() => const PlatformStatsCard(),
+      LandingScreenError() => const PlatformStatsCard(),
     };
   }
 
-  Widget _buildLandingBanners(LandingPageState state) {
+  Widget _buildLandingBanners(LandingScreenState state) {
     return switch (state) {
-      LandingPageSuccess(
+      LandingScreenSuccess(
         infoBannerMessage: final infoBannerMessage,
         issueBannerMessage: final issueBannerMessage,
       ) =>
@@ -251,7 +256,7 @@ class _LandingFooter extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            LandingPageConstants.appTagline,
+            LandingScreenConstants.appTagline,
             style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -261,9 +266,7 @@ class _LandingFooter extends StatelessWidget {
           TextButton.icon(
             onPressed: onSendFeedback,
             icon: const Icon(Icons.mail_outline, size: 18),
-            label: const Text(
-              LandingPageConstants.feedbackButtonText,
-            ),
+            label: const Text(LandingScreenConstants.feedbackButtonText),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,

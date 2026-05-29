@@ -7,7 +7,6 @@ import '../../core/utils/listing_aggregate_rating.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import '../business_details/widgets/business_documents_section.dart';
-import '../shared/detail_widgets/detail_widgets.dart';
 import 'creative_space_detail_state.dart';
 import 'creative_space_detail_view_model.dart';
 
@@ -83,7 +82,8 @@ const _kGallerySurfaceTones = <({Gradient header, Color title, Color body})>[
 const double _kGalleryMultiselectAccordionMaxWidth = 600;
 
 bool _useGalleryMultiselectAccordionLayout(BuildContext context) {
-  return MediaQuery.sizeOf(context).width < _kGalleryMultiselectAccordionMaxWidth;
+  return MediaQuery.sizeOf(context).width <
+      _kGalleryMultiselectAccordionMaxWidth;
 }
 
 /// Expandable row + chips; reuses [ _kGallerySurfaceTones ] (mobile layout only).
@@ -257,7 +257,8 @@ class _GallerySurfaceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
-    final tone = _kGallerySurfaceTones[toneIndex % _kGallerySurfaceTones.length];
+    final tone =
+        _kGallerySurfaceTones[toneIndex % _kGallerySurfaceTones.length];
     final h = uppercaseHeader ? headerLabel.toUpperCase() : headerLabel;
     final radius = compact ? 10.0 : 14.0;
     final headerPad = compact
@@ -324,7 +325,8 @@ class _GallerySurfaceCard extends StatelessWidget {
                           (s) => Chip(
                             label: Text(s, style: chipLabelStyle),
                             visualDensity: VisualDensity.compact,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
                             padding: compact
                                 ? EdgeInsets.zero
                                 : const EdgeInsets.symmetric(horizontal: 4),
@@ -355,7 +357,8 @@ bool _creativeSpaceHasSocial(CreativeSpaceDetailDto space) {
 bool _shouldShowGalleryStudio(CreativeSpaceDetailDto space) {
   final g = space.galleryStudio;
   if (g == null || !g.hasAnyVisible) return false;
-  return space.categoryKey == CreativeSpacesConstants.categoryKeyArtGalleriesStudios;
+  return space.categoryKey ==
+      CreativeSpacesConstants.categoryKeyArtGalleriesStudios;
 }
 
 /// Group composite art-form tokens (`Medium|Option`) for display (mirrors server grouping).
@@ -385,9 +388,7 @@ typedef _GalleryMultiselectTileRec = ({
 });
 
 ({List<_GalleryMultiselectTileRec> tiles, bool hasArtFormTiles})
-    _buildGalleryMultiselectTileData(
-  CreativeSpaceGalleryStudioDetailDto detail,
-) {
+_buildGalleryMultiselectTileData(CreativeSpaceGalleryStudioDetailDto detail) {
   final artGroups = _groupArtFormTokensForDisplay(detail.artFormsOffered);
   final artFormEntries = artGroups.entries.toList();
   var toneCursor = 0;
@@ -424,11 +425,11 @@ typedef _GalleryMultiselectTileRec = ({
   return (tiles: multiselectTiles, hasArtFormTiles: hasArtFormTiles);
 }
 
-class CreativeSpaceDetailPage extends StatelessWidget {
+class CreativeSpaceDetailScreen extends StatelessWidget {
   final int creativeSpaceId;
   final String creativeSpaceName;
 
-  const CreativeSpaceDetailPage({
+  const CreativeSpaceDetailScreen({
     super.key,
     required this.creativeSpaceId,
     required this.creativeSpaceName,
@@ -443,13 +444,13 @@ class CreativeSpaceDetailPage extends StatelessWidget {
         creativeSpaceId: creativeSpaceId,
         creativeSpaceName: creativeSpaceName,
       ),
-      child: const _CreativeSpaceDetailPageContent(),
+      child: const _CreativeSpaceDetailScreenContent(),
     );
   }
 }
 
-class _CreativeSpaceDetailPageContent extends StatelessWidget {
-  const _CreativeSpaceDetailPageContent();
+class _CreativeSpaceDetailScreenContent extends StatelessWidget {
+  const _CreativeSpaceDetailScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -469,10 +470,7 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
                 CreativeSpaceDetailLoading() =>
                   const _CreativeSpaceLoadingView(),
                 CreativeSpaceDetailError(error: final error) =>
-                  _CreativeSpaceErrorState(
-                    error: error,
-                    viewModel: viewModel,
-                  ),
+                  _CreativeSpaceErrorState(error: error, viewModel: viewModel),
                 CreativeSpaceDetailSuccess(creativeSpace: final space) =>
                   _CreativeSpaceDetailBody(space: space),
               },
@@ -486,10 +484,7 @@ class _CreativeSpaceDetailPageContent extends StatelessWidget {
 }
 
 class _CreativeDetailHero extends StatelessWidget {
-  const _CreativeDetailHero({
-    required this.state,
-    required this.viewModel,
-  });
+  const _CreativeDetailHero({required this.state, required this.viewModel});
 
   final CreativeSpaceDetailState state;
   final CreativeSpaceDetailViewModel viewModel;
@@ -597,10 +592,7 @@ class _CreativeOpenClosedBanner extends StatelessWidget {
     // Same source as list cards: server [CreativeSpaceOpenStatusHelper] (SAST, weekly hours only).
     final openNow = space.isOpenNow;
 
-    return EntityOpenClosedBanner(
-      isOpen: openNow,
-      viewCount: space.viewCount,
-    );
+    return EntityOpenClosedBanner(isOpen: openNow, viewCount: space.viewCount);
   }
 }
 
@@ -774,8 +766,7 @@ class _InfoSection extends StatelessWidget {
                   final starIndex = index + 1;
                   final score = space.rating!;
                   final isFilled = starIndex <= score;
-                  final isHalf =
-                      starIndex - 0.5 <= score && starIndex > score;
+                  final isHalf = starIndex - 0.5 <= score && starIndex > score;
                   return Icon(
                     isFilled
                         ? Icons.star_rounded
@@ -792,14 +783,14 @@ class _InfoSection extends StatelessWidget {
                 Text(
                   space.totalReviews > 0
                       ? CreativeSpacesConstants.ratingSummaryTemplate
-                          .replaceAll(
-                            '{rating}',
-                            space.rating!.toStringAsFixed(1),
-                          )
-                          .replaceAll(
-                            '{reviews}',
-                            space.totalReviews.toString(),
-                          )
+                            .replaceAll(
+                              '{rating}',
+                              space.rating!.toStringAsFixed(1),
+                            )
+                            .replaceAll(
+                              '{reviews}',
+                              space.totalReviews.toString(),
+                            )
                       : space.rating!.toStringAsFixed(1),
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
@@ -865,7 +856,8 @@ class _QuickActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final qa = context.detailQuickActions;
-    final canNavigate = (space.latitude != null && space.longitude != null) ||
+    final canNavigate =
+        (space.latitude != null && space.longitude != null) ||
         (space.physicalAddress != null &&
             space.physicalAddress!.trim().isNotEmpty);
 
@@ -1008,8 +1000,7 @@ class _CreativeSocialSection extends StatelessWidget {
         spacing: 10,
         runSpacing: 10,
         children: [
-          if (space.facebookUrl != null &&
-              space.facebookUrl!.trim().isNotEmpty)
+          if (space.facebookUrl != null && space.facebookUrl!.trim().isNotEmpty)
             DetailSocialIconButton(
               tooltip: 'Facebook',
               icon: FontAwesomeIcons.facebookF,
@@ -1062,18 +1053,21 @@ class _GalleryStudioSection extends StatelessWidget {
     final multiselectTiles = tileData.tiles;
     final hasArtFormTiles = tileData.hasArtFormTiles;
 
-    final hasFeaturedArtists = detail.featuredArtists != null &&
+    final hasFeaturedArtists =
+        detail.featuredArtists != null &&
         detail.featuredArtists!.trim().isNotEmpty;
-    final hasExhibitionFormat = detail.exhibitionFormat != null &&
+    final hasExhibitionFormat =
+        detail.exhibitionFormat != null &&
         detail.exhibitionFormat!.trim().isNotEmpty;
     final hasStudioVisitsChip = detail.offersStudioVisits;
     final hasGalleryNarrativeFooter =
         hasFeaturedArtists || hasExhibitionFormat || hasStudioVisitsChip;
-    final hasGalleryIntroText = (detail.galleryType != null &&
-            detail.galleryType!.trim().isNotEmpty) ||
+    final hasGalleryIntroText =
+        (detail.galleryType != null && detail.galleryType!.trim().isNotEmpty) ||
         (detail.curatorialTheme != null &&
             detail.curatorialTheme!.trim().isNotEmpty);
-    final showTopNarrativeDivider = hasGalleryNarrativeFooter &&
+    final showTopNarrativeDivider =
+        hasGalleryNarrativeFooter &&
         (multiselectTiles.isNotEmpty || hasGalleryIntroText);
 
     return DetailSectionShell(
@@ -1209,7 +1203,11 @@ class _GalleryStudioSection extends StatelessWidget {
           if (hasStudioVisitsChip)
             Chip(
               label: const Text('Studio visits available'),
-              avatar: Icon(Icons.meeting_room_rounded, size: 18, color: cs.primary),
+              avatar: Icon(
+                Icons.meeting_room_rounded,
+                size: 18,
+                color: cs.primary,
+              ),
             ),
         ],
       ),
@@ -1265,7 +1263,7 @@ class _GallerySection extends StatelessWidget {
                             strokeWidth: 2,
                             value: loadingProgress.expectedTotalBytes != null
                                 ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
+                                      loadingProgress.expectedTotalBytes!
                                 : null,
                           ),
                         ),
@@ -1314,8 +1312,8 @@ class _RegularCreativeHoursSection extends StatelessWidget {
             Text(
               summary!.trim(),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
           ],

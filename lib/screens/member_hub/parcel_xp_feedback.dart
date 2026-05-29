@@ -20,10 +20,17 @@ class ParcelXpFeedback {
       return;
     }
 
-    if (delta.awarded > 0) {
+    // Prefer the session's combined amount (parcel award + any same-request
+    // streak award) so the toast matches the XP bar jump.
+    final sessionAwarded =
+        serviceLocator.mobileSessionManager.lastDisplayAwardedXp;
+    final shownAwarded = sessionAwarded > delta.awarded
+        ? sessionAwarded
+        : delta.awarded;
+    if (shownAwarded > 0) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('+${delta.awarded} XP'),
+          content: Text('+$shownAwarded XP'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
         ),

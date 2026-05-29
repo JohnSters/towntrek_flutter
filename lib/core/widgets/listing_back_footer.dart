@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-
-import 'package:towntrek_flutter/theme/entity_listing_theme_extension.dart';
+import '../../theme/entity_listing_theme_extension.dart';
 
 /// Pinned pill footer for listing screens (design doc §6).
 class ListingBackFooter extends StatelessWidget {
   final String label;
 
-  const ListingBackFooter({
-    super.key,
-    required this.label,
-  });
+  const ListingBackFooter({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {

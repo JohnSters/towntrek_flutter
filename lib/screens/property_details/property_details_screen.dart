@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../shared/detail_widgets/detail_widgets.dart';
 import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/property_listing_format.dart';
@@ -41,11 +40,11 @@ List<({PropertyListingImageDto img, String url})> _propertyGalleryPairs(
   return out;
 }
 
-class PropertyDetailsPage extends StatelessWidget {
+class PropertyDetailsScreen extends StatelessWidget {
   final int listingId;
   final String titleFallback;
 
-  const PropertyDetailsPage({
+  const PropertyDetailsScreen({
     super.key,
     required this.listingId,
     required this.titleFallback,
@@ -61,13 +60,13 @@ class PropertyDetailsPage extends StatelessWidget {
         navigationService: serviceLocator.navigationService,
         errorHandler: serviceLocator.errorHandler,
       ),
-      child: const _PropertyDetailsPageContent(),
+      child: const _PropertyDetailsScreenContent(),
     );
   }
 }
 
-class _PropertyDetailsPageContent extends StatelessWidget {
-  const _PropertyDetailsPageContent();
+class _PropertyDetailsScreenContent extends StatelessWidget {
+  const _PropertyDetailsScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +87,10 @@ class _PropertyDetailsPageContent extends StatelessWidget {
                 viewCount: state.listing.viewCount,
               ),
             Expanded(
-              child: _PropertyDetailStateBody(state: state, viewModel: viewModel),
+              child: _PropertyDetailStateBody(
+                state: state,
+                viewModel: viewModel,
+              ),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -99,10 +101,7 @@ class _PropertyDetailsPageContent extends StatelessWidget {
 }
 
 class _PropertyDetailHero extends StatelessWidget {
-  const _PropertyDetailHero({
-    required this.state,
-    required this.viewModel,
-  });
+  const _PropertyDetailHero({required this.state, required this.viewModel});
 
   final PropertyDetailsState state;
   final PropertyDetailsViewModel viewModel;
@@ -169,9 +168,9 @@ class _FeaturedBar extends StatelessWidget {
         'Featured listing',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: cs.onTertiaryContainer,
-              fontWeight: FontWeight.w700,
-            ),
+          color: cs.onTertiaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -186,7 +185,10 @@ class _PropertyDetailsLoadingView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        DetailLoadingBlock(height: 112, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(
+          height: 112,
+          color: colorScheme.surfaceContainerHigh,
+        ),
         const SizedBox(height: 12),
         DetailLoadingBlock(height: 84, color: colorScheme.surfaceContainerLow),
         const SizedBox(height: 12),
@@ -214,16 +216,12 @@ class _PropertyDetailsBody extends StatelessWidget {
   final PropertyListingDetailDto listing;
   final PropertyDetailsViewModel viewModel;
 
-  const _PropertyDetailsBody({
-    required this.listing,
-    required this.viewModel,
-  });
+  const _PropertyDetailsBody({required this.listing, required this.viewModel});
 
   String _combinedDescriptionText() {
     final short = listing.shortDescription?.trim();
     final long = listing.description?.trim();
-    if ((short == null || short.isEmpty) &&
-        (long == null || long.isEmpty)) {
+    if ((short == null || short.isEmpty) && (long == null || long.isEmpty)) {
       return '';
     }
     if (short != null &&
@@ -276,13 +274,16 @@ class _PropertyDetailsBody extends StatelessWidget {
                       price: listing.price,
                     ),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: colorScheme.primary,
-                        ),
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.surface.withValues(alpha: 0.55),
                       borderRadius: BorderRadius.circular(999),
@@ -290,8 +291,8 @@ class _PropertyDetailsBody extends StatelessWidget {
                     child: Text(
                       propertyListingTypeLabel(listing.listingType),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -301,9 +302,9 @@ class _PropertyDetailsBody extends StatelessWidget {
                 text: _combinedDescriptionText(),
                 headerLabel: 'Description',
                 textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.4,
-                      color: colorScheme.onSurface.withValues(alpha: 0.88),
-                    ),
+                  height: 1.4,
+                  color: colorScheme.onSurface.withValues(alpha: 0.88),
+                ),
               ),
             ],
           ),
@@ -355,17 +356,17 @@ class _PropertyDetailsBody extends StatelessWidget {
               if (listing.townName.trim().isNotEmpty)
                 Text(
                   listing.townName.trim(),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               if (listing.address.trim().isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(
                   listing.address.trim(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.35,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.35),
                 ),
               ],
             ],
@@ -378,9 +379,9 @@ class _PropertyDetailsBody extends StatelessWidget {
             icon: Icons.person_outline_rounded,
             child: Text(
               listing.ownerName.trim(),
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -452,7 +453,7 @@ class _GalleryTile extends StatelessWidget {
                         strokeWidth: 2,
                         value: loadingProgress.expectedTotalBytes != null
                             ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
+                                  loadingProgress.expectedTotalBytes!
                             : null,
                       ),
                     ),
@@ -481,4 +482,3 @@ class _GalleryTile extends StatelessWidget {
     );
   }
 }
-

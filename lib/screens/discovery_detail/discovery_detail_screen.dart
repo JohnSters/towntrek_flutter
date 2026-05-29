@@ -10,59 +10,11 @@ import '../../core/utils/url_utils.dart';
 import '../../core/widgets/discovery_map_picker_page.dart';
 import '../../core/widgets/discovery_map_widget.dart';
 import '../../models/models.dart';
+import 'discovery_detail_formatters.dart';
 import 'discovery_detail_view_model.dart';
 
-/// Meta chips aligned with [WhatToDoScreen] list cards.
-/// Seasonal notes are shown in full in a dedicated section (not as a chip).
-List<Widget> _discoveryDetailQuickFactChips(TownDiscoveryDetailDto d) {
-  final chips = <Widget>[
-    ListingInfoChip(icon: Icons.sell_outlined, label: d.categoryName),
-  ];
-  if (d.difficulty != null && d.difficulty!.trim().isNotEmpty) {
-    chips.add(
-      ListingInfoChip(
-        icon: Icons.terrain_outlined,
-        label: d.difficulty!.trim(),
-      ),
-    );
-  }
-  if (d.duration != null && d.duration!.trim().isNotEmpty) {
-    chips.add(
-      ListingInfoChip(
-        icon: Icons.schedule_outlined,
-        label: d.duration!.trim(),
-      ),
-    );
-  }
-  chips.add(
-    ListingInfoChip(
-      icon: d.isFreeAccess ? Icons.money_off_outlined : Icons.payments_outlined,
-      label: d.isFreeAccess ? 'Free' : 'Paid',
-    ),
-  );
-  return chips;
-}
-
-/// Gallery from API [images], or a single slide from cover/thumbnail when list is empty.
-List<DiscoveryImageDto> _galleryImagesForDetail(TownDiscoveryDetailDto d) {
-  if (d.images.isNotEmpty) return d.images;
-  final raw = d.coverImageUrl ?? d.thumbnailUrl;
-  if (raw != null && raw.trim().isNotEmpty) {
-    return [
-      DiscoveryImageDto(
-        url: raw.trim(),
-        thumbnailUrl: d.thumbnailUrl?.trim().isNotEmpty == true
-            ? d.thumbnailUrl!.trim()
-            : null,
-        sortOrder: 0,
-      ),
-    ];
-  }
-  return const [];
-}
-
-class DiscoveryDetailPage extends StatelessWidget {
-  const DiscoveryDetailPage({
+class DiscoveryDetailScreen extends StatelessWidget {
+  const DiscoveryDetailScreen({
     super.key,
     required this.discoveryId,
     required this.title,
@@ -181,7 +133,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final listingTheme = context.entityListingTheme;
-    final images = _galleryImagesForDetail(d);
+    final images = galleryImagesForDetail(d);
     final hasPin = d.latitude != null && d.longitude != null;
     final directionsText = d.directionsHint?.trim();
     final hasDirectionsText =
@@ -298,7 +250,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _discoveryDetailQuickFactChips(d),
+                  children: discoveryDetailQuickFactChips(d),
                 ),
                 if (!d.isFreeAccess &&
                     d.entryInfo != null &&

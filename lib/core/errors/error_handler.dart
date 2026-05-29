@@ -4,7 +4,15 @@ import 'package:flutter/material.dart';
 import 'app_error.dart';
 import '../network/api_client.dart';
 
-/// Centralized error handling service
+/// Centralized error handling service for general browse screens (businesses,
+/// properties, events, creative spaces, etc.), producing [AppError]s with a
+/// title + retry action for full-screen error states.
+///
+/// NOTE: Parcel / member-hub and connect-device flows do NOT use this. They
+/// standardize on [ApiException] + [resolveUserFacingApiError] (see
+/// `lib/core/network/api_client.dart`) and surface errors via `showErrorSnack`
+/// / `ErrorStateView` (`lib/core/widgets/error_feedback.dart`). Prefer that path
+/// for any new parcel/member code so we keep a single error vocabulary there.
 class ErrorHandler {
   static final ErrorHandler _instance = ErrorHandler._internal();
   factory ErrorHandler() => _instance;

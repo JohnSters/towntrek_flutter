@@ -34,11 +34,11 @@ class BusinessCategoryViewModel extends ChangeNotifier {
     required EventRepository eventRepository,
     required GeolocationService geolocationService,
     required ErrorHandler errorHandler,
-  })  : _businessRepository = businessRepository,
-        _townRepository = townRepository,
-        _eventRepository = eventRepository,
-        _geolocationService = geolocationService,
-        _errorHandler = errorHandler {
+  }) : _businessRepository = businessRepository,
+       _townRepository = townRepository,
+       _eventRepository = eventRepository,
+       _geolocationService = geolocationService,
+       _errorHandler = errorHandler {
     _initializePage();
   }
 
@@ -73,7 +73,9 @@ class BusinessCategoryViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> detectLocationAndLoadTown({bool userInitiatedRetry = false}) async {
+  Future<void> detectLocationAndLoadTown({
+    bool userInitiatedRetry = false,
+  }) async {
     if (_isDisposed) return;
     if (_userCancelledAutoDetect && !userInitiatedRetry) return;
     if (userInitiatedRetry) {
@@ -97,11 +99,16 @@ class BusinessCategoryViewModel extends ChangeNotifier {
       }
 
       // Try to find nearest town based on location
-      final nearestTownResult = await _geolocationService.findNearestTown(townsResult);
+      final nearestTownResult = await _geolocationService.findNearestTown(
+        townsResult,
+      );
       if (_shouldAbortDetection(runId)) return;
 
       if (nearestTownResult.isSuccess) {
-        await loadCategoriesForTown(nearestTownResult.data, runFromDetection: runId);
+        await loadCategoriesForTown(
+          nearestTownResult.data,
+          runFromDetection: runId,
+        );
       } else {
         // Location detection failed, show town selection
         _state = BusinessCategoryTownSelection();
@@ -109,16 +116,24 @@ class BusinessCategoryViewModel extends ChangeNotifier {
       }
     } catch (e) {
       if (_shouldAbortDetection(runId)) return;
-      final appError = await _errorHandler.handleError(e, retryAction: _initializePage);
+      final appError = await _errorHandler.handleError(
+        e,
+        retryAction: _initializePage,
+      );
       if (_shouldAbortDetection(runId)) return;
       _state = BusinessCategoryError(appError);
       notifyListeners();
     }
   }
 
-  Future<void> loadCategoriesForTown(TownDto town, {int? runFromDetection}) async {
+  Future<void> loadCategoriesForTown(
+    TownDto town, {
+    int? runFromDetection,
+  }) async {
     if (_isDisposed) return;
-    if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) return;
+    if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) {
+      return;
+    }
 
     final contentRunId = ++_contentRunId;
     _state = BusinessCategoryLoading();
@@ -126,9 +141,13 @@ class BusinessCategoryViewModel extends ChangeNotifier {
 
     try {
       // Step 1: Load categories first
-      final categories = await _businessRepository.getCategoriesWithCounts(town.id);
+      final categories = await _businessRepository.getCategoriesWithCounts(
+        town.id,
+      );
       if (!_canUpdateContent(contentRunId)) return;
-      if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) return;
+      if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) {
+        return;
+      }
 
       // Step 2: Update state with categories (marking as loaded)
       _state = BusinessCategorySuccess(
@@ -141,7 +160,9 @@ class BusinessCategoryViewModel extends ChangeNotifier {
       // Step 3: Wait for UI to settle before checking events
       await Future.delayed(BusinessCategoryConstants.uiSettleDelay);
       if (!_canUpdateContent(contentRunId)) return;
-      if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) return;
+      if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) {
+        return;
+      }
 
       // Step 4: Now load events sequentially after categories are done
       if (_state is BusinessCategorySuccess) {
@@ -149,8 +170,13 @@ class BusinessCategoryViewModel extends ChangeNotifier {
       }
     } catch (e) {
       if (!_canUpdateContent(contentRunId)) return;
-      if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) return;
-      final appError = await _errorHandler.handleError(e, retryAction: () => loadCategoriesForTown(town));
+      if (runFromDetection != null && _shouldAbortDetection(runFromDetection)) {
+        return;
+      }
+      final appError = await _errorHandler.handleError(
+        e,
+        retryAction: () => loadCategoriesForTown(town),
+      );
       if (!_canUpdateContent(contentRunId)) return;
       _state = BusinessCategoryError(appError);
       notifyListeners();
@@ -158,23 +184,31 @@ class BusinessCategoryViewModel extends ChangeNotifier {
   }
 
   Future<void> _checkCurrentEvents(int townId, int contentRunId) async {
-    if (!_canUpdateContent(contentRunId) || _state is! BusinessCategorySuccess) return;
+    if (!_canUpdateContent(contentRunId) ||
+        _state is! BusinessCategorySuccess) {
+      return;
+    }
 
     try {
       final eventsResponse = await _eventRepository.getCurrentEvents(
         townId: townId,
-        pageSize: BusinessCategoryConstants.eventCheckPageSize, // Just need to know if there are any events
+        pageSize: BusinessCategoryConstants
+            .eventCheckPageSize, // Just need to know if there are any events
       );
 
-      if (_canUpdateContent(contentRunId) && _state is BusinessCategorySuccess) {
+      if (_canUpdateContent(contentRunId) &&
+          _state is BusinessCategorySuccess) {
         final currentState = _state as BusinessCategorySuccess;
-        _state = currentState.copyWith(currentEventCount: eventsResponse.totalCount);
+        _state = currentState.copyWith(
+          currentEventCount: eventsResponse.totalCount,
+        );
         notifyListeners();
       }
     } catch (e) {
       // Silently fail for event checking - don't show error to user
       // Events are secondary feature, don't interrupt main flow
-      if (_canUpdateContent(contentRunId) && _state is BusinessCategorySuccess) {
+      if (_canUpdateContent(contentRunId) &&
+          _state is BusinessCategorySuccess) {
         final currentState = _state as BusinessCategorySuccess;
         _state = currentState.copyWith(currentEventCount: 0);
         notifyListeners();
@@ -188,9 +222,7 @@ class BusinessCategoryViewModel extends ChangeNotifier {
     _isSelectingTownManually = true;
 
     final selectedTown = await Navigator.of(context).push<TownDto>(
-      MaterialPageRoute(
-        builder: (context) => const TownSelectionScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const TownSelectionScreen()),
     );
     _isSelectingTownManually = false;
 
@@ -202,21 +234,22 @@ class BusinessCategoryViewModel extends ChangeNotifier {
 
   void changeTown(BuildContext context) {
     // Navigate to town selection screen
-    Navigator.of(context).push<TownDto>(
-      MaterialPageRoute(
-        builder: (context) => const TownSelectionScreen(),
-      ),
-    ).then((selectedTown) {
-      // If a town was selected, navigate to TownFeatureSelectionScreen with new town
-      // This resets the flow to the "Hub" for the new town
-      if (selectedTown != null && context.mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => TownFeatureSelectionScreen(town: selectedTown),
-          ),
-        );
-      }
-    });
+    Navigator.of(context)
+        .push<TownDto>(
+          MaterialPageRoute(builder: (context) => const TownSelectionScreen()),
+        )
+        .then((selectedTown) {
+          // If a town was selected, navigate to TownFeatureSelectionScreen with new town
+          // This resets the flow to the "Hub" for the new town
+          if (selectedTown != null && context.mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) =>
+                    TownFeatureSelectionScreen(town: selectedTown),
+              ),
+            );
+          }
+        });
   }
 
   void navigateToEvents(BuildContext context) {
@@ -238,7 +271,7 @@ class BusinessCategoryViewModel extends ChangeNotifier {
       final currentState = _state as BusinessCategorySuccess;
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => BusinessSubCategoryPage(
+          builder: (context) => BusinessSubCategoryScreen(
             category: category,
             town: currentState.town,
           ),

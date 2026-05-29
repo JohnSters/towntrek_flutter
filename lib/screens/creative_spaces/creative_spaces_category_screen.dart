@@ -6,15 +6,15 @@ import '../../models/models.dart';
 import 'creative_spaces_state.dart';
 import 'creative_spaces_view_model.dart';
 import 'widgets/creative_category_card.dart';
-import 'creative_spaces_list_page.dart';
-import 'creative_spaces_sub_category_page.dart';
+import 'creative_spaces_list_screen.dart';
+import 'creative_spaces_sub_category_screen.dart';
 
-class CreativeSpacesCategoryPage extends StatelessWidget {
+class CreativeSpacesCategoryScreen extends StatelessWidget {
   static const String routeName = CreativeSpacesNavigation.categoryRouteName;
 
   final TownDto town;
 
-  const CreativeSpacesCategoryPage({super.key, required this.town});
+  const CreativeSpacesCategoryScreen({super.key, required this.town});
 
   @override
   Widget build(BuildContext context) {
@@ -24,15 +24,15 @@ class CreativeSpacesCategoryPage extends StatelessWidget {
         errorHandler: serviceLocator.errorHandler,
         townId: town.id,
       ),
-      child: _CreativeSpacesCategoryPageContent(town: town),
+      child: _CreativeSpacesCategoryScreenContent(town: town),
     );
   }
 }
 
-class _CreativeSpacesCategoryPageContent extends StatelessWidget {
+class _CreativeSpacesCategoryScreenContent extends StatelessWidget {
   final TownDto town;
 
-  const _CreativeSpacesCategoryPageContent({required this.town});
+  const _CreativeSpacesCategoryScreenContent({required this.town});
 
   Widget _browseHero(BuildContext context) {
     return EntityListingHeroHeader(
@@ -140,20 +140,14 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
     final out = <Widget>[];
     for (var i = 0; i < categories.length; i++) {
       if (i > 0) {
-        out.add(
-          const SizedBox(height: CreativeSpacesConstants.sectionSpacing),
-        );
+        out.add(const SizedBox(height: CreativeSpacesConstants.sectionSpacing));
       }
       final category = categories[i];
       out.add(
         CreativeCategoryCard(
           category: category,
           countsAvailable: countsAvailable,
-          onTap: () => _openCategory(
-            context,
-            category,
-            countsAvailable,
-          ),
+          onTap: () => _openCategory(context, category, countsAvailable),
         ),
       );
     }
@@ -239,14 +233,14 @@ class _CreativeSpacesCategoryPageContent extends StatelessWidget {
       CreativeSpacesNavigation.pushListPage(
         context,
         pageBuilder: (_) =>
-            CreativeSpacesListPage(town: town, category: category),
+            CreativeSpacesListScreen(town: town, category: category),
       );
       return;
     }
 
     CreativeSpacesNavigation.pushSubCategoryPage(
       context,
-      pageBuilder: (_) => CreativeSpacesSubCategoryPage(
+      pageBuilder: (_) => CreativeSpacesSubCategoryScreen(
         town: town,
         category: category,
         countsAvailable: countsAvailable,

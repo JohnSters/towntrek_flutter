@@ -7,11 +7,11 @@ import 'business_sub_category.dart';
 
 /// Page for displaying business sub-categories for a selected category
 /// Uses Provider pattern with BusinessSubCategoryViewModel for state management
-class BusinessSubCategoryPage extends StatelessWidget {
+class BusinessSubCategoryScreen extends StatelessWidget {
   final CategoryWithCountDto category;
   final TownDto town;
 
-  const BusinessSubCategoryPage({
+  const BusinessSubCategoryScreen({
     super.key,
     required this.category,
     required this.town,
@@ -20,17 +20,15 @@ class BusinessSubCategoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => BusinessSubCategoryViewModel(
-        category: category,
-        town: town,
-      ),
-      child: const _BusinessSubCategoryPageContent(),
+      create: (_) =>
+          BusinessSubCategoryViewModel(category: category, town: town),
+      child: const _BusinessSubCategoryScreenContent(),
     );
   }
 }
 
-class _BusinessSubCategoryPageContent extends StatelessWidget {
-  const _BusinessSubCategoryPageContent();
+class _BusinessSubCategoryScreenContent extends StatelessWidget {
+  const _BusinessSubCategoryScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -39,9 +37,7 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _buildContent(context),
-            ),
+            Expanded(child: _buildContent(context)),
             const ListingBackFooter(label: 'Back'),
           ],
         ),
@@ -49,17 +45,25 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(BuildContext context, BusinessSubCategoryViewModel viewModel) {
+  Widget _buildHero(
+    BuildContext context,
+    BusinessSubCategoryViewModel viewModel,
+  ) {
     return EntityListingHeroHeader(
       theme: context.entityListingTheme,
-      categoryIcon: BusinessCategoryConfig.getCategoryIcon(viewModel.category.key),
+      categoryIcon: BusinessCategoryConfig.getCategoryIcon(
+        viewModel.category.key,
+      ),
       subCategoryName: viewModel.category.name,
       categoryName: TownFeatureConstants.businessesTitle,
       townName: viewModel.town.name,
     );
   }
 
-  Widget _buildBand(BuildContext context, BusinessSubCategoryViewModel viewModel) {
+  Widget _buildBand(
+    BuildContext context,
+    BusinessSubCategoryViewModel viewModel,
+  ) {
     return ListingResultsBand(
       count: viewModel.category.businessCount,
       categoryName: viewModel.category.name,
@@ -77,9 +81,7 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
             children: [
               _buildHero(context, viewModel),
               _buildBand(context, viewModel),
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
             ],
           );
         }
@@ -146,7 +148,9 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
       children: [
         EntityListingHeroHeader(
           theme: context.entityListingTheme,
-          categoryIcon: BusinessCategoryConfig.getCategoryIcon(state.category.key),
+          categoryIcon: BusinessCategoryConfig.getCategoryIcon(
+            state.category.key,
+          ),
           subCategoryName: state.category.name,
           categoryName: TownFeatureConstants.businessesTitle,
           townName: state.town.name,
@@ -174,7 +178,8 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: state.sortedSubCategories.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final subCategory = state.sortedSubCategories[index];
                       return SubCategoryCard(
@@ -184,7 +189,9 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
                       );
                     },
                   ),
-                const SizedBox(height: BusinessSubCategoryConstants.bottomSpacing),
+                const SizedBox(
+                  height: BusinessSubCategoryConstants.bottomSpacing,
+                ),
               ],
             ),
           ),
@@ -210,7 +217,9 @@ class _BusinessSubCategoryPageContent extends StatelessWidget {
                   alpha: BusinessSubCategoryConstants.emptyStateIconOpacity,
                 ),
               ),
-              SizedBox(height: BusinessSubCategoryConstants.emptyStateIconSpacing),
+              SizedBox(
+                height: BusinessSubCategoryConstants.emptyStateIconSpacing,
+              ),
               Text(
                 BusinessSubCategoryConstants.noSubCategoriesFound,
                 style: theme.textTheme.bodyLarge?.copyWith(

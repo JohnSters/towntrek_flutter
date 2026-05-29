@@ -1,41 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
 import 'level_badge.dart';
+import 'leaderboard_state.dart';
+import 'leaderboard_view_model.dart';
 
-class LeaderboardScreen extends StatefulWidget {
+class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key, required this.town});
 
   final TownDto town;
 
   @override
-  State<LeaderboardScreen> createState() => _LeaderboardScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => LeaderboardViewModel(
+        town: town,
+        memberRepository: serviceLocator.memberRepository,
+        sessionManager: serviceLocator.mobileSessionManager,
+      ),
+      child: const _LeaderboardScreenBody(),
+    );
+  }
 }
 
-class _LeaderboardScreenState extends State<LeaderboardScreen> {
-  String _season = 'alltime';
-  LeaderboardResponseDto? _data;
-  bool _loading = true;
-  String? _error;
+class _LeaderboardScreenBody extends StatefulWidget {
+  const _LeaderboardScreenBody();
 
+  @override
+  State<_LeaderboardScreenBody> createState() => _LeaderboardScreenBodyState();
+}
+
+class _LeaderboardScreenBodyState extends State<_LeaderboardScreenBody> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final canLoad = await _maybeShowDisclosure();
-      if (!mounted || !canLoad) return;
-      await _load();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureDisclosure());
   }
 
-  Future<bool> _maybeShowDisclosure() async {
-    final session = serviceLocator.mobileSessionManager;
-    await session.loadProgression();
-    if (!mounted) return false;
-    final seen =
-        session.memberProgression?.leaderboardDisclosureSeen ?? true;
-    if (seen) return true;
+  Future<void> _ensureDisclosure() async {
+    if (!mounted) return;
+    final viewModel = context.read<LeaderboardViewModel>();
+    if (!viewModel.requiresDisclosure) return;
 
     final accepted = await showModalBottomSheet<bool>(
       context: context,
@@ -78,51 +85,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       },
     );
 
-    if (accepted == true && mounted) {
-      try {
-        await serviceLocator.memberRepository.markLeaderboardDisclosureSeen();
-        serviceLocator.mobileSessionManager.setLeaderboardDisclosureSeenLocal();
-      } catch (_) {
-        /* non-blocking */
-      }
-      return true;
+    if (!mounted) return;
+    if (accepted == true) {
+      await viewModel.acceptDisclosure();
+      return;
     }
-
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
-    return false;
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final res = await serviceLocator.memberRepository.getLeaderboard(
-        townId: widget.town.id,
-        season: _season,
-      );
-      if (mounted) {
-        setState(() {
-          _data = res;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
-      }
-    }
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<LeaderboardViewModel>();
     final listing = context.entityListing;
+
     return Scaffold(
       backgroundColor: listing.pageBg,
       body: SafeArea(
@@ -134,7 +109,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               categoryIcon: Icons.leaderboard_outlined,
               subCategoryName: 'Leaderboard',
               categoryName: TownFeatureConstants.parcelsTitle,
-              townName: widget.town.name,
+              townName: viewModel.town.name,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
@@ -143,38 +118,33 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ButtonSegment(value: 'alltime', label: Text('All-time')),
                   ButtonSegment(value: 'current', label: Text('Season')),
                 ],
-                selected: {_season},
+                selected: {viewModel.season},
                 onSelectionChanged: (s) {
                   if (s.isEmpty) return;
-                  setState(() => _season = s.first);
-                  _load();
+                  viewModel.selectSeason(s.first);
                 },
               ),
             ),
-            if (_loading)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
-            else if (_error != null)
-              Expanded(
-                child: Center(
+            Expanded(
+              child: switch (viewModel.state) {
+                LeaderboardLoading() => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                LeaderboardError(message: final message) => Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(_error!),
+                    child: Text(message),
                   ),
                 ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
+                LeaderboardSuccess(data: final data) => ListView.builder(
                   padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-                  itemCount: _data?.rows.length ?? 0,
+                  itemCount: data.rows.length,
                   itemBuilder: (context, i) {
-                    final row = _data!.rows[i];
+                    final row = data.rows[i];
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text('${i + 1}'),
-                        ),
+                        leading: CircleAvatar(child: Text('${i + 1}')),
                         title: Text(row.displayName),
                         subtitle: Text('${row.levelTitle} • ${row.xpValue} XP'),
                         trailing: LevelBadge(level: row.level),
@@ -182,7 +152,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     );
                   },
                 ),
-              ),
+              },
+            ),
             const ListingBackFooter(label: 'Back'),
           ],
         ),

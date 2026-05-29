@@ -1,25 +1,41 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
 import '../../core/utils/url_utils.dart';
-import '../../core/widgets/app_scaffold_messenger.dart';
+import 'access_code_entry_view_model.dart';
+import 'scan_access_code_screen.dart';
 
-class AccessCodeEntryScreen extends StatefulWidget {
+class AccessCodeEntryScreen extends StatelessWidget {
   const AccessCodeEntryScreen({super.key});
 
   @override
-  State<AccessCodeEntryScreen> createState() => _AccessCodeEntryScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AccessCodeEntryViewModel(
+        sessionManager: serviceLocator.mobileSessionManager,
+      ),
+      child: const _AccessCodeEntryScreenBody(),
+    );
+  }
 }
 
-class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
+class _AccessCodeEntryScreenBody extends StatefulWidget {
+  const _AccessCodeEntryScreenBody();
+
+  @override
+  State<_AccessCodeEntryScreenBody> createState() =>
+      _AccessCodeEntryScreenBodyState();
+}
+
+class _AccessCodeEntryScreenBodyState
+    extends State<_AccessCodeEntryScreenBody> {
   final _codeController = TextEditingController();
   final _deviceController = TextEditingController(
     text: 'TownTrek ${Platform.operatingSystem}',
   );
-  bool _submitting = false;
-  String? _submitError;
 
   @override
   void dispose() {
@@ -28,48 +44,33 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
     super.dispose();
   }
 
+  Future<void> _scanCode() async {
+    final scanned = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const ScanAccessCodeScreen()),
+    );
+    if (scanned == null || !mounted) return;
+    _codeController.text = scanned;
+  }
+
   Future<void> _submit() async {
     final code = _codeController.text.trim();
     final deviceName = _deviceController.text.trim();
     if (code.isEmpty || deviceName.isEmpty) return;
 
-    setState(() {
-      _submitting = true;
-      _submitError = null;
-    });
-    Object? err;
-    try {
-      await serviceLocator.mobileSessionManager.signInWithCode(
-        code: code,
-        deviceName: deviceName,
-      );
-    } catch (e) {
-      err = e;
-    }
-    if (!mounted) {
-      if (err != null) {
-        final msg = resolveUserFacingApiError(err);
-        AppScaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-      return;
-    }
-    setState(() {
-      _submitting = false;
-      _submitError = err == null ? null : resolveUserFacingApiError(err);
-    });
-    if (err == null) {
+    final viewModel = context.read<AccessCodeEntryViewModel>();
+    final ok = await viewModel.submit(
+      code: code,
+      deviceName: deviceName,
+      mapError: resolveUserFacingApiError,
+    );
+    if (ok && mounted) {
       Navigator.of(context).pop(true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<AccessCodeEntryViewModel>();
     final listing = context.entityListing;
     final theme = Theme.of(context);
     final baseHint = theme.textTheme.bodySmall?.copyWith(
@@ -118,9 +119,14 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                           TextField(
                             controller: _codeController,
                             textCapitalization: TextCapitalization.characters,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Enter your TownTrek code',
                               hintText: 'TREK-0000-XXXX',
+                              suffixIcon: IconButton(
+                                tooltip: 'Scan QR code',
+                                icon: const Icon(Icons.qr_code_scanner_rounded),
+                                onPressed: viewModel.submitting ? null : _scanCode,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -157,7 +163,7 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                 ),
               ),
             ),
-            if (_submitError != null)
+            if (viewModel.submitError != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                 child: Material(
@@ -176,7 +182,7 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            _submitError!,
+                            viewModel.submitError!,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onErrorContainer,
                               height: 1.4,
@@ -193,8 +199,12 @@ class _AccessCodeEntryScreenState extends State<AccessCodeEntryScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _submitting ? null : _submit,
-                  child: Text(_submitting ? 'Connecting…' : 'Connect this device'),
+                  onPressed: viewModel.submitting ? null : _submit,
+                  child: Text(
+                    viewModel.submitting
+                        ? 'Connecting…'
+                        : 'Connect this device',
+                  ),
                 ),
               ),
             ),

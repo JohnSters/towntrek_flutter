@@ -6,4 +6,5 @@ export 'widgets/event_contact_section.dart';
 export 'widgets/event_image_gallery.dart';
 export 'widgets/event_info_card.dart';
 export 'widgets/event_location_section.dart';
+export 'widgets/event_market_stalls_section.dart';
 export 'widgets/event_reviews_section.dart';

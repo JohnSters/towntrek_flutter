@@ -35,6 +35,7 @@ export 'utils/mobile_session_storage.dart';
 export 'utils/discovery_install_id_storage.dart';
 export 'utils/result.dart';
 export 'widgets/error_view.dart';
+export 'widgets/error_feedback.dart';
 export 'widgets/event_notification_banner.dart';
 export 'widgets/full_screen_image_viewer.dart';
 export 'widgets/navigation_footer.dart';

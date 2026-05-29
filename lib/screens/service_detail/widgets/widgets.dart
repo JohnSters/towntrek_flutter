@@ -9,3 +9,5 @@ export 'operating_hours_section.dart';
 export 'service_documents_section.dart';
 export 'service_features_section.dart';
 export 'service_info_card.dart';
+export 'service_logo_section.dart';
+export 'service_status_indicator.dart';

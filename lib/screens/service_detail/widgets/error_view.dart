@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/service_detail_constants.dart';
 
-/// Body-only error (hero lives on [ServiceDetailPage]).
+/// Body-only error (hero lives on [ServiceDetailScreen]).
 class ServiceDetailErrorView extends StatelessWidget {
   final String serviceName;
   final String? error;

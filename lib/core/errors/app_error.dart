@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Base class for all application errors
+/// Base class for application errors used by the general browse screens via
+/// [ErrorHandler]. Parcel / member-hub / connect-device flows instead use
+/// [ApiException] + `resolveUserFacingApiError` (`lib/core/network/api_client.dart`);
+/// do not introduce [AppError] into those flows to avoid two parallel systems.
 abstract class AppError implements Exception {
   final String title;
   final String message;

@@ -26,8 +26,8 @@ class BusinessCardViewModel extends ChangeNotifier {
     required this.town,
     required BusinessRepository businessRepository,
     required ErrorHandler errorHandler,
-  })  : _businessRepository = businessRepository,
-        _errorHandler = errorHandler {
+  }) : _businessRepository = businessRepository,
+       _errorHandler = errorHandler {
     loadBusinesses();
   }
 
@@ -49,8 +49,9 @@ class BusinessCardViewModel extends ChangeNotifier {
         (_searchTerm == null || _searchTerm!.trim().isEmpty)) {
       return;
     }
-    _searchTerm =
-        normalizedTerm == null || normalizedTerm.isEmpty ? null : normalizedTerm;
+    _searchTerm = normalizedTerm == null || normalizedTerm.isEmpty
+        ? null
+        : normalizedTerm;
     await loadBusinesses();
   }
 
@@ -132,7 +133,7 @@ class BusinessCardViewModel extends ChangeNotifier {
   void onBusinessTap(BuildContext context, BusinessDto business) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BusinessDetailsPage(
+        builder: (context) => BusinessDetailsScreen(
           businessId: business.id,
           businessName: business.name,
         ),

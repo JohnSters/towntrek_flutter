@@ -27,7 +27,7 @@ class UrlUtils {
 
   /// Opens the TownTrek web registration page (TREK code / device linking flow).
   static Future<bool> launchTowntrekRegister() async {
-    final uri = Uri.parse(LandingPageConstants.registerAccountUrl);
+    final uri = Uri.parse(LandingScreenConstants.registerAccountUrl);
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }

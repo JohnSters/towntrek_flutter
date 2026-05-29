@@ -59,6 +59,11 @@ class ApiClient {
 
   Dio get dio => _dio;
 
+  /// Hook invoked by [_AuthRefreshInterceptor] on a 401 to attempt a single
+  /// token refresh. Returns `true` if a fresh access token was applied (the
+  /// failed request is then replayed). Registered by `MobileSessionManager`.
+  Future<bool> Function()? onUnauthorized;
+
   void _initializeDio() {
     _dio = Dio(
       BaseOptions(
@@ -98,6 +103,9 @@ class ApiClient {
       _dio.interceptors.add(_LoggingInterceptor());
     }
     _dio.interceptors.addAll([
+      // Runs before [_ErrorInterceptor] so it can transparently refresh + replay
+      // on 401 before the error is transformed/surfaced to callers.
+      _AuthRefreshInterceptor(this),
       _ErrorInterceptor(),
       _RetryInterceptor(),
     ]);
@@ -257,22 +265,31 @@ class _LoggingInterceptor extends Interceptor {
 }
 
 /// Parses JSON body `error` / `message` fields (shared by interceptors and UI).
+///
+/// Handles all server shapes:
+/// - structured envelope `{ "error": { "code": "...", "message": "..." } }`
+/// - flat string `{ "error": "..." }` / `{ "message": "..." }`
+/// - legacy PascalCase `{ "Error": { "Message": "..." } }`
 String? extractApiErrorMessageFromResponseData(dynamic responseData) {
   if (responseData == null) return null;
 
   // Most common case: JSON object
   if (responseData is Map) {
-    final dynamic direct =
-        responseData['error'] ?? responseData['message'] ?? responseData['Error'] ?? responseData['Message'];
-
-    if (direct != null) return direct.toString();
-
-    // Handle GlobalExceptionMiddleware shape: { "Error": { "Message": "..." } }
-    final dynamic nestedError = responseData['Error'] ?? responseData['error'];
+    // Structured envelope first: { error: { code, message } } (camel or Pascal).
+    final dynamic nestedError = responseData['error'] ?? responseData['Error'];
     if (nestedError is Map) {
-      final dynamic nestedMessage = nestedError['Message'] ?? nestedError['message'];
+      final dynamic nestedMessage =
+          nestedError['message'] ?? nestedError['Message'];
       if (nestedMessage != null) return nestedMessage.toString();
     }
+
+    // Flat string forms.
+    final dynamic direct = responseData['error'] ??
+        responseData['message'] ??
+        responseData['Error'] ??
+        responseData['Message'];
+    if (direct is String) return direct;
+    if (direct != null && direct is! Map) return direct.toString();
 
     return null;
   }
@@ -293,6 +310,97 @@ String? extractApiErrorMessageFromResponseData(dynamic responseData) {
   }
 
   return null;
+}
+
+/// Extracts the stable machine-readable error code from the structured envelope
+/// `{ "error": { "code": "...", ... } }` when present, else `null`.
+String? extractApiErrorCodeFromResponseData(dynamic responseData) {
+  if (responseData is Map) {
+    final dynamic nestedError = responseData['error'] ?? responseData['Error'];
+    if (nestedError is Map) {
+      final dynamic code = nestedError['code'] ?? nestedError['Code'];
+      if (code != null) return code.toString();
+    }
+    return null;
+  }
+  if (responseData is String && responseData.trim().isNotEmpty) {
+    try {
+      return extractApiErrorCodeFromResponseData(jsonDecode(responseData.trim()));
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/// Attempts a single token refresh + request replay when the server returns 401.
+///
+/// Concurrent 401s share one in-flight refresh (single-flight) so we never fire
+/// multiple refreshes. Mobile auth endpoints are skipped to avoid recursion, and
+/// each request is only retried once (guarded by [_triedRefreshKey]).
+class _AuthRefreshInterceptor extends Interceptor {
+  _AuthRefreshInterceptor(this._client);
+
+  final ApiClient _client;
+
+  static const String _triedRefreshKey = '__triedRefresh';
+  static Future<bool>? _inFlightRefresh;
+
+  bool _isAuthEndpoint(String path) => path.contains('/api/mobile/');
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final response = err.response;
+    final requestOptions = err.requestOptions;
+    final refresh = _client.onUnauthorized;
+
+    final shouldAttempt =
+        err.type == DioExceptionType.badResponse &&
+        response?.statusCode == 401 &&
+        refresh != null &&
+        requestOptions.extra[_triedRefreshKey] != true &&
+        !_isAuthEndpoint(requestOptions.path) &&
+        _hasAuthHeader(requestOptions);
+
+    if (!shouldAttempt) {
+      return handler.next(err);
+    }
+
+    requestOptions.extra[_triedRefreshKey] = true;
+
+    bool refreshed = false;
+    try {
+      refreshed = await (_inFlightRefresh ??= refresh());
+    } catch (_) {
+      refreshed = false;
+    } finally {
+      _inFlightRefresh = null;
+    }
+
+    if (!refreshed) {
+      return handler.next(err);
+    }
+
+    // Replay with the freshly applied Authorization header from the client.
+    final freshAuth = _client.dio.options.headers['Authorization'];
+    if (freshAuth != null) {
+      requestOptions.headers['Authorization'] = freshAuth;
+    }
+
+    try {
+      final replay = await _client.dio.fetch<dynamic>(requestOptions);
+      return handler.resolve(replay);
+    } on DioException catch (replayError) {
+      return handler.next(replayError);
+    } catch (_) {
+      return handler.next(err);
+    }
+  }
+
+  bool _hasAuthHeader(RequestOptions options) {
+    final value = options.headers['Authorization'];
+    return value is String && value.isNotEmpty;
+  }
 }
 
 /// Error interceptor for standardized error handling
@@ -335,6 +443,7 @@ class _ErrorInterceptor extends Interceptor {
 
         String message = 'An error occurred while processing your request.';
         final extracted = extractApiErrorMessageFromResponseData(responseData);
+        final code = extractApiErrorCodeFromResponseData(responseData);
 
         if (statusCode != null) {
           switch (statusCode) {
@@ -344,6 +453,7 @@ class _ErrorInterceptor extends Interceptor {
                 type: ApiExceptionType.badRequest,
                 message: message,
                 statusCode: statusCode,
+                code: code,
                 originalException: dioException,
               );
 
@@ -354,6 +464,7 @@ class _ErrorInterceptor extends Interceptor {
                 type: ApiExceptionType.unauthorized,
                 message: message,
                 statusCode: statusCode,
+                code: code,
                 originalException: dioException,
               );
 
@@ -363,6 +474,7 @@ class _ErrorInterceptor extends Interceptor {
                 type: ApiExceptionType.forbidden,
                 message: message,
                 statusCode: statusCode,
+                code: code,
                 originalException: dioException,
               );
 
@@ -372,6 +484,7 @@ class _ErrorInterceptor extends Interceptor {
                 type: ApiExceptionType.notFound,
                 message: message,
                 statusCode: statusCode,
+                code: code,
                 originalException: dioException,
               );
 
@@ -384,6 +497,7 @@ class _ErrorInterceptor extends Interceptor {
                 type: ApiExceptionType.server,
                 message: message,
                 statusCode: statusCode,
+                code: code,
                 originalException: dioException,
               );
 
@@ -394,6 +508,7 @@ class _ErrorInterceptor extends Interceptor {
                   type: ApiExceptionType.client,
                   message: message,
                   statusCode: statusCode,
+                  code: code,
                   originalException: dioException,
                 );
               } else if (statusCode >= 500) {
@@ -402,6 +517,7 @@ class _ErrorInterceptor extends Interceptor {
                   type: ApiExceptionType.server,
                   message: message,
                   statusCode: statusCode,
+                  code: code,
                   originalException: dioException,
                 );
               }
@@ -498,19 +614,42 @@ class ApiException implements Exception {
   final ApiExceptionType type;
   final String message;
   final int? statusCode;
+
+  /// Stable machine-readable error code from the API envelope (see backend
+  /// `ApiErrorCodes`), when the server provided one. Lets the UI branch on a
+  /// specific condition (e.g. claim trust too low) rather than parsing text.
+  final String? code;
   final DioException? originalException;
 
   const ApiException({
     required this.type,
     required this.message,
     this.statusCode,
+    this.code,
     this.originalException,
   });
 
   @override
   String toString() {
-    return 'ApiException(type: $type, message: $message, statusCode: $statusCode)';
+    return 'ApiException(type: $type, message: $message, statusCode: $statusCode, code: $code)';
   }
+}
+
+/// Whether [error] represents a 401 from the API (after the auth interceptor has
+/// already had its single chance to refresh). Callers use this to re-prompt the
+/// user to connect their device rather than showing a generic error.
+bool isUnauthorizedError(Object error) {
+  if (error is ApiException) {
+    return error.type == ApiExceptionType.unauthorized;
+  }
+  if (error is DioException) {
+    final inner = error.error;
+    if (inner is ApiException) {
+      return inner.type == ApiExceptionType.unauthorized;
+    }
+    return error.response?.statusCode == 401;
+  }
+  return false;
 }
 
 /// User-visible text for failures from [ApiClient] / Dio (e.g. redeem-code errors).

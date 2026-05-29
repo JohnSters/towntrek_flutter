@@ -38,13 +38,19 @@ class _CurrentEventsScreenContent extends StatefulWidget {
       _CurrentEventsScreenContentState();
 }
 
-class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent> {
+class _CurrentEventsScreenContentState
+    extends State<_CurrentEventsScreenContent> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() => setState(() {}));
+    _searchController.addListener(() {
+      if (!mounted) return;
+      context.read<CurrentEventsViewModel>().setSearchTerm(
+        _searchController.text,
+      );
+    });
   }
 
   @override
@@ -53,28 +59,15 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     super.dispose();
   }
 
-  List<EventDto> _visibleEvents(List<EventDto> events) {
-    final t = _searchController.text.trim().toLowerCase();
-    if (t.isEmpty) return events;
-    return events.where((e) {
-      return e.name.toLowerCase().contains(t) ||
-          e.eventType.toLowerCase().contains(t) ||
-          (e.shortDescription?.toLowerCase().contains(t) ?? false) ||
-          (e.description?.toLowerCase().contains(t) ?? false) ||
-          (e.venue?.toLowerCase().contains(t) ?? false) ||
-          e.physicalAddress.toLowerCase().contains(t) ||
-          (e.townName?.toLowerCase().contains(t) ?? false);
-    }).toList();
-  }
-
-  Widget _searchBar(BuildContext context) {
+  Widget _searchBar(BuildContext context, CurrentEventsViewModel viewModel) {
     return EntityListingSearchBar(
       controller: _searchController,
       theme: context.entityListingTheme,
       hintText: EntityListingConstants.eventSearchHint,
-      onSubmitted: () => setState(() {}),
+      onSubmitted: () => viewModel.setSearchTerm(_searchController.text),
       onClear: () {
         _searchController.clear();
+        viewModel.setSearchTerm('');
       },
     );
   }
@@ -114,9 +107,7 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _buildContent(context, viewModel),
-            ),
+            Expanded(child: _buildContent(context, viewModel)),
             const ListingBackFooter(label: 'Back to events'),
           ],
         ),
@@ -127,15 +118,13 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
   Widget _buildContent(BuildContext context, CurrentEventsViewModel viewModel) {
     return switch (viewModel.state) {
       CurrentEventsLoading() => Column(
-          children: [
-            _eventsHero(context, viewModel),
-            _resultsBand(context, 0),
-            _searchPadding(_searchBar(context)),
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ],
-        ),
+        children: [
+          _eventsHero(context, viewModel),
+          _resultsBand(context, 0),
+          _searchPadding(_searchBar(context, viewModel)),
+          const Expanded(child: Center(child: CircularProgressIndicator())),
+        ],
+      ),
       CurrentEventsSuccess(
         events: final events,
         hasNextPage: final hasNextPage,
@@ -148,16 +137,13 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
           hasNextPage,
           isLoadingMore,
         ),
-      CurrentEventsError(error: final error) =>
-        _buildErrorLayout(context, error: error, viewModel: viewModel),
+      CurrentEventsError(error: final error) => _buildErrorLayout(
+        context,
+        error: error,
+        viewModel: viewModel,
+      ),
       CurrentEventsLoadingMore(events: final events, currentPage: _) =>
-        _buildSuccessBranch(
-          context,
-          viewModel,
-          events,
-          true,
-          true,
-        ),
+        _buildSuccessBranch(context, viewModel, events, true, true),
     };
   }
 
@@ -171,7 +157,7 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
         children: [
           _eventsHero(context, viewModel),
           _resultsBand(context, 0),
-          _searchPadding(_searchBar(context)),
+          _searchPadding(_searchBar(context, viewModel)),
           Expanded(child: ErrorView(error: error)),
         ],
       );
@@ -181,7 +167,7 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
       children: [
         _eventsHero(context, viewModel),
         _resultsBand(context, 0),
-        _searchPadding(_searchBar(context)),
+        _searchPadding(_searchBar(context, viewModel)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(18),
@@ -207,15 +193,15 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
     bool hasNextPage,
     bool isLoadingMore,
   ) {
-    final hasSearch = _searchController.text.trim().isNotEmpty;
-    final visible = _visibleEvents(events);
+    final hasSearch = viewModel.searchTerm.trim().isNotEmpty;
+    final visible = viewModel.filteredEvents(events);
 
     if (events.isEmpty) {
       return Column(
         children: [
           _eventsHero(context, viewModel),
           _resultsBand(context, 0),
-          _searchPadding(_searchBar(context)),
+          _searchPadding(_searchBar(context, viewModel)),
           Expanded(
             child: Center(
               child: Column(
@@ -225,8 +211,8 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
                     CurrentEventsConstants.emptyIcon,
                     size: CurrentEventsConstants.emptyStateIconSize,
                     color: Theme.of(context).colorScheme.onSurface.withValues(
-                          alpha: CurrentEventsConstants.emptyStateIconOpacity,
-                        ),
+                      alpha: CurrentEventsConstants.emptyStateIconOpacity,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -254,7 +240,7 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
         children: [
           _eventsHero(context, viewModel),
           _resultsBand(context, 0),
-          _searchPadding(_searchBar(context)),
+          _searchPadding(_searchBar(context, viewModel)),
           Expanded(
             child: Center(
               child: Padding(
@@ -285,9 +271,12 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
                     TextButton.icon(
                       onPressed: () {
                         _searchController.clear();
+                        viewModel.setSearchTerm('');
                       },
                       icon: const Icon(Icons.refresh_rounded),
-                      label: const Text(EntityListingConstants.clearSearchLabel),
+                      label: const Text(
+                        EntityListingConstants.clearSearchLabel,
+                      ),
                     ),
                   ],
                 ),
@@ -304,7 +293,7 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
       children: [
         _eventsHero(context, viewModel),
         _resultsBand(context, bandCount),
-        _searchPadding(_searchBar(context)),
+        _searchPadding(_searchBar(context, viewModel)),
         Expanded(
           child: RefreshIndicator(
             onRefresh: viewModel.refreshEvents,
@@ -323,7 +312,8 @@ class _CurrentEventsScreenContentState extends State<_CurrentEventsScreenContent
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        vertical: CurrentEventsConstants.loadMorePaddingVertical,
+                        vertical:
+                            CurrentEventsConstants.loadMorePaddingVertical,
                       ),
                       child: CircularProgressIndicator(),
                     ),

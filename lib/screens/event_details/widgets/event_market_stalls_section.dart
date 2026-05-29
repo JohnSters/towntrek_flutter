@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/core.dart';
 import '../../../models/models.dart';
-import '../../shared/detail_widgets/detail_widgets.dart';
 
 /// Market stall rows from `typeDetails` on event detail responses.
 class EventMarketStallsSection extends StatelessWidget {
   final List<EventTypeDetailDto> stalls;
 
-  const EventMarketStallsSection({
-    super.key,
-    required this.stalls,
-  });
+  const EventMarketStallsSection({super.key, required this.stalls});
 
   @override
   Widget build(BuildContext context) {
@@ -69,9 +65,7 @@ class _StallTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

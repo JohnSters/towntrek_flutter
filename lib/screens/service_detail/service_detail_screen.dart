@@ -6,43 +6,15 @@ import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/service_utils.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
-import '../shared/detail_widgets/detail_widgets.dart';
+import 'service_detail_formatters.dart';
 import 'service_detail_state.dart';
 import 'service_detail_view_model.dart';
 
-/// Short summary plus full description when both exist and differ.
-String _combinedServiceDescription(ServiceDetailDto service) {
-  final short = service.shortDescription?.trim();
-  final long = service.description.trim();
-  if (long.isNotEmpty) {
-    if (short != null && short.isNotEmpty && short != long) {
-      return '$short\n\n$long';
-    }
-    return long;
-  }
-  if (short != null && short.isNotEmpty) return short;
-  return '';
-}
-
-List<String> _serviceFeatureTagList(ServiceDetailDto service) {
-  return [
-    if (service.serviceArea?.trim().isNotEmpty == true) service.serviceArea!.trim(),
-    if (service.priceRange?.trim().isNotEmpty == true) service.priceRange!.trim(),
-    if (service.hourlyRate != null) 'R${service.hourlyRate!.toStringAsFixed(0)}/hr',
-    if (service.offersQuotes) 'Quotes',
-    if (service.mobileService) 'Mobile',
-    if (service.onSiteService) 'On-site',
-    if (service.availableWeekends) 'Weekends',
-    if (service.availableAfterHours) 'After Hours',
-    if (service.emergencyService) 'Emergency',
-  ];
-}
-
-class ServiceDetailPage extends StatelessWidget {
+class ServiceDetailScreen extends StatelessWidget {
   final int serviceId;
   final String serviceName;
 
-  const ServiceDetailPage({
+  const ServiceDetailScreen({
     super.key,
     required this.serviceId,
     required this.serviceName,
@@ -57,13 +29,13 @@ class ServiceDetailPage extends StatelessWidget {
         serviceId: serviceId,
         serviceName: serviceName,
       ),
-      child: const _ServiceDetailPageContent(),
+      child: const _ServiceDetailScreenContent(),
     );
   }
 }
 
-class _ServiceDetailPageContent extends StatelessWidget {
-  const _ServiceDetailPageContent();
+class _ServiceDetailScreenContent extends StatelessWidget {
+  const _ServiceDetailScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +51,10 @@ class _ServiceDetailPageContent extends StatelessWidget {
             if (state is ServiceDetailSuccess)
               _ServiceOpenClosedBanner(service: state.serviceDetails),
             Expanded(
-              child: _ServiceDetailStateBody(state: state, viewModel: viewModel),
+              child: _ServiceDetailStateBody(
+                state: state,
+                viewModel: viewModel,
+              ),
             ),
             const ListingBackFooter(label: 'Back'),
           ],
@@ -90,10 +65,7 @@ class _ServiceDetailPageContent extends StatelessWidget {
 }
 
 class _ServiceDetailHero extends StatelessWidget {
-  const _ServiceDetailHero({
-    required this.state,
-    required this.viewModel,
-  });
+  const _ServiceDetailHero({required this.state, required this.viewModel});
 
   final ServiceDetailState state;
   final ServiceDetailViewModel viewModel;
@@ -124,10 +96,7 @@ class _ServiceDetailHero extends StatelessWidget {
 }
 
 class _ServiceDetailStateBody extends StatelessWidget {
-  const _ServiceDetailStateBody({
-    required this.state,
-    required this.viewModel,
-  });
+  const _ServiceDetailStateBody({required this.state, required this.viewModel});
 
   final ServiceDetailState state;
   final ServiceDetailViewModel viewModel;
@@ -136,14 +105,10 @@ class _ServiceDetailStateBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (state) {
       ServiceDetailLoading() => const _ServiceDetailsLoadingView(),
-      ServiceDetailSuccess(serviceDetails: final serviceDetails) => _ServiceDetailBody(
-        service: serviceDetails,
-        viewModel: viewModel,
-      ),
-      ServiceDetailError(title: final title, message: final message) => _ErrorStateView(
-        title: title,
-        message: message,
-      ),
+      ServiceDetailSuccess(serviceDetails: final serviceDetails) =>
+        _ServiceDetailBody(service: serviceDetails, viewModel: viewModel),
+      ServiceDetailError(title: final title, message: final message) =>
+        _ErrorStateView(title: title, message: message),
     };
   }
 }
@@ -152,10 +117,7 @@ class _ErrorStateView extends StatelessWidget {
   final String title;
   final String message;
 
-  const _ErrorStateView({
-    required this.title,
-    required this.message,
-  });
+  const _ErrorStateView({required this.title, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -173,17 +135,11 @@ class _ErrorStateView extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-            ),
+            Text(message, textAlign: TextAlign.center),
           ],
         ),
       ),
@@ -200,7 +156,10 @@ class _ServiceDetailsLoadingView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
       children: [
-        DetailLoadingBlock(height: 106, color: colorScheme.surfaceContainerHigh),
+        DetailLoadingBlock(
+          height: 106,
+          color: colorScheme.surfaceContainerHigh,
+        ),
         const SizedBox(height: 12),
         SizedBox(
           height: 96,
@@ -228,17 +187,15 @@ class _ServiceDetailBody extends StatelessWidget {
   final ServiceDetailDto service;
   final ServiceDetailViewModel viewModel;
 
-  const _ServiceDetailBody({
-    required this.service,
-    required this.viewModel,
-  });
+  const _ServiceDetailBody({required this.service, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final description = _combinedServiceDescription(service);
-    final serviceTags = _serviceFeatureTagList(service);
-    final hasSocial = service.facebook?.trim().isNotEmpty == true ||
+    final description = combinedServiceDescription(service);
+    final serviceTags = serviceFeatureTagList(service);
+    final hasSocial =
+        service.facebook?.trim().isNotEmpty == true ||
         service.instagram?.trim().isNotEmpty == true ||
         service.whatsApp?.trim().isNotEmpty == true;
 
@@ -387,8 +344,10 @@ class _ServiceDetailQuickActionsSection extends StatelessWidget {
               icon: Icons.mail_rounded,
               backgroundColor: qa.emailBackground,
               iconColor: qa.emailIcon,
-              onPressed: () =>
-                  ExternalLinkLauncher.sendEmail(context, service.emailAddress!),
+              onPressed: () => ExternalLinkLauncher.sendEmail(
+                context,
+                service.emailAddress!,
+              ),
             ),
           if (service.website?.trim().isNotEmpty == true)
             DetailQuickActionButton(
@@ -519,7 +478,7 @@ class _GalleryTile extends StatelessWidget {
                         strokeWidth: 2,
                         value: loadingProgress.expectedTotalBytes != null
                             ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
+                                  loadingProgress.expectedTotalBytes!
                             : null,
                       ),
                     ),

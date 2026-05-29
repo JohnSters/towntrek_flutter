@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../parcels/connect_device_sheet.dart';
+import '../member_hub/connect_device_sheet.dart';
 import 'town_feature_selection_state.dart';
 import 'town_feature_selection_view_model.dart';
 import 'town_hub_member_sheet.dart';
@@ -16,7 +16,16 @@ class TownFeatureSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => TownFeatureViewModel(town),
+      create: (_) => TownFeatureViewModel(
+        town,
+        eventRepository: serviceLocator.eventRepository,
+        creativeSpaceRepository: serviceLocator.creativeSpaceRepository,
+        propertyRepository: serviceLocator.propertyRepository,
+        discoveryApiService: serviceLocator.discoveryApiService,
+        businessRepository: serviceLocator.businessRepository,
+        townApiService: serviceLocator.townApiService,
+        sessionManager: serviceLocator.mobileSessionManager,
+      ),
       child: _TownFeatureSelectionScreenContent(initialTown: town),
     );
   }
@@ -34,46 +43,10 @@ class _TownFeatureSelectionScreenContent extends StatefulWidget {
 
 class _TownFeatureSelectionScreenContentState
     extends State<_TownFeatureSelectionScreenContent> {
-  bool _isFavouriteActionRunning = false;
-
   @override
   void initState() {
     super.initState();
     FavouriteTownStorage.ensureInitialized();
-  }
-
-  Future<void> _toggleFavourite(TownDto town, bool isFavourite) async {
-    if (_isFavouriteActionRunning) return;
-
-    setState(() {
-      _isFavouriteActionRunning = true;
-    });
-
-    try {
-      if (isFavourite) {
-        await FavouriteTownStorage.clearFavouriteTown();
-      } else {
-        await FavouriteTownStorage.setFavouriteTown(town);
-      }
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isFavourite
-                ? '${town.name} removed from favourites'
-                : '${town.name} saved as favourite',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isFavouriteActionRunning = false;
-        });
-      }
-    }
   }
 
   @override
@@ -126,9 +99,18 @@ class _TownFeatureSelectionScreenContentState
                     builder: (context, favouriteTown, _) {
                       final isFavourite = favouriteTown?.id == town.id;
                       return IconButton(
-                        onPressed: _isFavouriteActionRunning
+                        onPressed: viewModel.isFavouriteActionRunning
                             ? null
-                            : () => _toggleFavourite(town, isFavourite),
+                            : () async {
+                                final message = await viewModel.toggleFavourite(
+                                  town,
+                                  isFavourite,
+                                );
+                                if (!context.mounted || message == null) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(message)),
+                                );
+                              },
                         tooltip: isFavourite
                             ? 'Remove favourite town'
                             : 'Set as favourite town',
