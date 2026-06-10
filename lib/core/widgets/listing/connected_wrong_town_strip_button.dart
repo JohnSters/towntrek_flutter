@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants/business_category_constants.dart';
+import '../../constants/business_category_constants.dart';
 
 /// Left half of the listing header strip — matches [LiveEventsStripButton] layout
 /// (fixed-height [Material] + [InkWell]) so no page background shows through gaps.

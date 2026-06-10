@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/presentation/event_display.dart';
 import '../../../models/models.dart';
 import '../../../core/constants/current_events_constants.dart';
 

@@ -47,20 +47,15 @@ class BusinessRepositoryImpl implements BusinessRepository {
     String? search,
     int page = 1,
     int pageSize = 20,
-  }) async {
-    try {
-      return await _apiService.getBusinesses(
-        townId: townId,
-        category: category,
-        subCategory: subCategory,
-        search: search,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      // Here you could add caching logic, error transformation, etc.
-      rethrow;
-    }
+  }) {
+    return _apiService.getBusinesses(
+      townId: townId,
+      category: category,
+      subCategory: subCategory,
+      search: search,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   @override
@@ -71,45 +66,29 @@ class BusinessRepositoryImpl implements BusinessRepository {
     String? subCategory,
     int page = 1,
     int pageSize = 20,
-  }) async {
-    try {
-      return await _apiService.searchBusinesses(
-        query: query,
-        townId: townId,
-        category: category,
-        subCategory: subCategory,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      rethrow;
-    }
+  }) {
+    return _apiService.searchBusinesses(
+      query: query,
+      townId: townId,
+      category: category,
+      subCategory: subCategory,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   @override
-  Future<BusinessDetailDto> getBusinessDetails(int businessId) async {
-    try {
-      return await _apiService.getBusinessDetails(businessId);
-    } catch (e) {
-      rethrow;
-    }
+  Future<BusinessDetailDto> getBusinessDetails(int businessId) {
+    return _apiService.getBusinessDetails(businessId);
   }
 
   @override
-  Future<List<CategoryDto>> getCategories() async {
-    try {
-      return await _apiService.getCategories();
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<CategoryDto>> getCategories() {
+    return _apiService.getCategories();
   }
 
   @override
-  Future<List<CategoryWithCountDto>> getCategoriesWithCounts(int townId) async {
-    try {
-      return await _apiService.getCategoriesWithCounts(townId);
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<CategoryWithCountDto>> getCategoriesWithCounts(int townId) {
+    return _apiService.getCategoriesWithCounts(townId);
   }
 }

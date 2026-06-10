@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/config/api_config.dart';
-import '../../../core/theme/entity_listing_theme.dart';
+import '../../../theme/listing_gradients.dart';
 import '../../../theme/entity_listing_theme_extension.dart';
-import '../../../core/widgets/listing_info_chip.dart';
+import '../../../core/presentation/event_display.dart';
+import '../../../core/widgets/listing/listing_info_chip.dart';
 import '../../../models/models.dart';
 import '../../event_details/event_details_screen.dart';
 import '../../../core/constants/current_events_constants.dart';
@@ -35,7 +36,7 @@ bool _eventListingChipIsOpen(EventDto event) {
 class EventCard extends StatelessWidget {
   final EventDto event;
   final String townName;
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
 
   const EventCard({
     super.key,

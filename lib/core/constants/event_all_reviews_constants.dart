@@ -1,5 +1,5 @@
 /// Constants for the Event All Reviews Screen
-class EventAllReviewsConstants {
+abstract final class EventAllReviewsConstants {
   // Spacing constants
   static const double pagePadding = 16.0;
   static const double cardMargin = 12.0;

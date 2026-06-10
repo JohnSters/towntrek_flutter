@@ -13,7 +13,7 @@ class TownApiService {
   Future<List<TownDto>> getTowns() async {
     try {
       final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.townsUrl(),
+        ApiEndpoints.townsUrl(),
       );
 
       return response.data!
@@ -28,7 +28,7 @@ class TownApiService {
   Future<TownDto> getTownDetails(int townId) async {
     try {
       final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.townDetailUrl(townId),
+        ApiEndpoints.townDetailUrl(townId),
       );
 
       return TownDto.fromJson(response.data!);
@@ -41,7 +41,7 @@ class TownApiService {
   Future<PublicTownAdminProfileDto?> getTownAdminProfile(int townId) async {
     try {
       final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.townAdminProfileUrl(townId),
+        ApiEndpoints.townAdminProfileUrl(townId),
       );
       final data = response.data;
       if (data == null) return null;
@@ -59,7 +59,7 @@ class TownApiService {
   }) async {
     try {
       final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.townNoticesUrl(townId, page: page, pageSize: pageSize),
+        ApiEndpoints.townNoticesUrl(townId, page: page, pageSize: pageSize),
       );
       final data = response.data;
       if (data == null) return [];

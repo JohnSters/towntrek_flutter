@@ -5,17 +5,6 @@ import 'operating_hours_display_format.dart';
 import 'operating_hours_open_calc.dart';
 
 class BusinessUtils {
-  /// Uses [OperatingHoursOpenCalc] (SA local time, same rules as server).
-  static bool isBusinessCurrentlyOpen(
-    List<OperatingHourDto> operatingHours, {
-    List<SpecialOperatingHourDto> specialOperatingHours = const [],
-  }) {
-    return OperatingHoursOpenCalc.businessIsOpenNow(
-      operatingHours,
-      specialOperatingHours,
-    );
-  }
-
   /// List/search cards: if the API sends weekly or special hours, recompute open/closed
   /// on-device (same rules as details) so specials cannot disagree with [isOpenNow].
   static bool isBusinessOpenForListingCard(BusinessDto business) {

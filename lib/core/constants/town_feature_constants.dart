@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 /// Constants for the Town Feature Selection Screen
-class TownFeatureConstants {
+abstract final class TownFeatureConstants {
   // Spacing
   static const double pagePadding = 16.0;
   static const double gridGap = 12.0;

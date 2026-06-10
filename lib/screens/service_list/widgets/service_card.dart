@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/entity_listing_theme.dart';
+import '../../../theme/listing_gradients.dart';
 import '../../../theme/entity_listing_theme_extension.dart';
 import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
-import '../../../core/widgets/listing_info_chip.dart';
+import '../../../core/widgets/listing/listing_info_chip.dart';
 import '../../../models/models.dart';
 import '../../service_detail/service_detail_screen.dart';
 
 /// Listing card for services (design doc §5, §8 Services).
 class ServiceCard extends StatelessWidget {
   final ServiceDto service;
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
 
   const ServiceCard({
     super.key,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/property_details_constants.dart';
 import '../../core/core.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';

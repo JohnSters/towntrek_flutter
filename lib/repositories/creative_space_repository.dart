@@ -50,19 +50,15 @@ class CreativeSpaceRepositoryImpl implements CreativeSpaceRepository {
     String? search,
     int page = 1,
     int pageSize = 20,
-  }) async {
-    try {
-      return await _apiService.getCreativeSpaces(
-        townId: townId,
-        categoryId: categoryId,
-        subCategoryId: subCategoryId,
-        search: search,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      rethrow;
-    }
+  }) {
+    return _apiService.getCreativeSpaces(
+      townId: townId,
+      categoryId: categoryId,
+      subCategoryId: subCategoryId,
+      search: search,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   @override
@@ -73,54 +69,34 @@ class CreativeSpaceRepositoryImpl implements CreativeSpaceRepository {
     int? subCategoryId,
     int page = 1,
     int pageSize = 20,
-  }) async {
-    try {
-      return await _apiService.searchCreativeSpaces(
-        query: query,
-        townId: townId,
-        categoryId: categoryId,
-        subCategoryId: subCategoryId,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      rethrow;
-    }
+  }) {
+    return _apiService.searchCreativeSpaces(
+      query: query,
+      townId: townId,
+      categoryId: categoryId,
+      subCategoryId: subCategoryId,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   @override
-  Future<CreativeSpaceDetailDto> getCreativeSpaceDetails(int creativeSpaceId) async {
-    try {
-      return await _apiService.getCreativeSpaceDetails(creativeSpaceId);
-    } catch (e) {
-      rethrow;
-    }
+  Future<CreativeSpaceDetailDto> getCreativeSpaceDetails(int creativeSpaceId) {
+    return _apiService.getCreativeSpaceDetails(creativeSpaceId);
   }
 
   @override
-  Future<List<CreativeCategoryDto>> getCategories() async {
-    try {
-      return await _apiService.getCategories();
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<CreativeCategoryDto>> getCategories() {
+    return _apiService.getCategories();
   }
 
   @override
-  Future<List<CreativeCategoryDto>> getCategoriesWithCounts(int townId) async {
-    try {
-      return await _apiService.getCategoriesWithCounts(townId);
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<CreativeCategoryDto>> getCategoriesWithCounts(int townId) {
+    return _apiService.getCategoriesWithCounts(townId);
   }
 
   @override
-  Future<List<CreativeSubCategoryDto>> getSubCategories(int categoryId) async {
-    try {
-      return await _apiService.getSubCategories(categoryId);
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<CreativeSubCategoryDto>> getSubCategories(int categoryId) {
+    return _apiService.getSubCategories(categoryId);
   }
 }

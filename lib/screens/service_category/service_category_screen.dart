@@ -5,7 +5,6 @@ import '../../models/models.dart';
 import '../town_selection/town_selection_screen.dart';
 import '../town_feature_selection/town_feature_selection_screen.dart';
 import '../service_sub_category/service_sub_category_screen.dart';
-import '../../core/constants/service_category_constants.dart';
 import 'service_category_state.dart';
 import 'service_category_view_model.dart';
 import 'widgets/widgets.dart';
@@ -249,7 +248,7 @@ class _ServiceCategoryScreenContent extends StatelessWidget {
         onPressed: onPressed,
         icon: const Icon(Icons.event),
         label: const Text('No Events'),
-        style: BusinessCategoryConstants.connectedHeaderButtonStyle(
+        style: connectedHeaderButtonStyle(
           theme,
           backgroundColor: colorScheme.surfaceContainerHighest,
           foregroundColor: colorScheme.onSurfaceVariant,

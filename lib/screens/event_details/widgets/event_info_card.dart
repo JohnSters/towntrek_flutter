@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/core.dart';
+import '../../../core/presentation/event_display.dart';
 import '../../../models/models.dart';
 
 class EventInfoCard extends StatelessWidget {

@@ -5,7 +5,7 @@ import '../constants/business_card_constants.dart';
 import '../constants/business_category_constants.dart';
 import '../constants/business_sub_category_constants.dart';
 import '../constants/town_feature_constants.dart';
-import '../theme/entity_listing_theme.dart';
+import '../../theme/listing_gradients.dart';
 
 /// UI copy that depends on business category (e.g. equipment rentals → "listings").
 /// Uses [CategoryWithCountDto.key] so both quick-access and Businesses → Categories behave the same.
@@ -18,7 +18,7 @@ class BusinessCategoryCopy {
   }
 
   /// Listing gradients/text roles for current theme brightness (same palette for all categories).
-  static EntityListingTheme listingThemeOf(
+  static ListingGradients listingThemeOf(
     BuildContext context,
     String? categoryKey,
   ) => context.entityListingTheme;

@@ -47,18 +47,13 @@ class EventRepositoryImpl implements EventRepository {
     String? eventType,
     int page = 1,
     int pageSize = 20,
-  }) async {
-    try {
-      return await _apiService.getEvents(
-        townId: townId,
-        eventType: eventType,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      // Here you could add caching logic, error transformation, etc.
-      rethrow;
-    }
+  }) {
+    return _apiService.getEvents(
+      townId: townId,
+      eventType: eventType,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   @override
@@ -68,27 +63,19 @@ class EventRepositoryImpl implements EventRepository {
     String? eventType,
     int page = 1,
     int pageSize = 20,
-  }) async {
-    try {
-      return await _apiService.searchEvents(
-        query: query,
-        townId: townId,
-        eventType: eventType,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      rethrow;
-    }
+  }) {
+    return _apiService.searchEvents(
+      query: query,
+      townId: townId,
+      eventType: eventType,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   @override
-  Future<EventDetailDto> getEventDetails(int eventId) async {
-    try {
-      return await _apiService.getEventDetail(eventId);
-    } catch (e) {
-      rethrow;
-    }
+  Future<EventDetailDto> getEventDetails(int eventId) {
+    return _apiService.getEventDetails(eventId);
   }
 
   @override
@@ -96,24 +83,16 @@ class EventRepositoryImpl implements EventRepository {
     int? townId,
     int page = 1,
     int pageSize = 20,
-  }) async {
-    try {
-      return await _apiService.getCurrentEvents(
-        townId: townId,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      rethrow;
-    }
+  }) {
+    return _apiService.getCurrentEvents(
+      townId: townId,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   @override
-  Future<List<EventTypeDto>> getEventTypes() async {
-    try {
-      return await _apiService.getEventTypes();
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<EventTypeDto>> getEventTypes() {
+    return _apiService.getEventTypes();
   }
 }

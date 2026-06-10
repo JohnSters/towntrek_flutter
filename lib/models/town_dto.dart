@@ -1,11 +1,4 @@
-int _townInt(Map<String, dynamic> json, String camel, String pascal) {
-  final v = json[camel] ?? json[pascal];
-  if (v == null) return 0;
-  if (v is int) return v;
-  if (v is num) return v.toInt();
-  if (v is String) return int.tryParse(v.trim()) ?? 0;
-  return 0;
-}
+import '../core/json/json_helpers.dart';
 
 /// Data transfer object for town information
 class TownDto {
@@ -58,17 +51,17 @@ class TownDto {
       businessCount: json['businessCount'] as int,
       servicesCount: (json['serviceCount'] as int?) ?? 0,
       eventsCount: (json['eventCount'] as int?) ?? 0,
-      propertyListingCount: _townInt(
+      propertyListingCount: JsonHelpers.dualInt(
         json,
         'propertyListingCount',
         'PropertyListingCount',
       ),
-      creativeSpaceCount: _townInt(
+      creativeSpaceCount: JsonHelpers.dualInt(
         json,
         'creativeSpaceCount',
         'CreativeSpaceCount',
       ),
-      equipmentRentalBusinessCount: _townInt(
+      equipmentRentalBusinessCount: JsonHelpers.dualInt(
         json,
         'equipmentRentalBusinessCount',
         'EquipmentRentalBusinessCount',

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../core/core.dart';
+import '../../core/presentation/event_display.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
 import 'current_events_state.dart';

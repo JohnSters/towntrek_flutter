@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../models/mobile_auth_dto.dart';
+import 'jwt_utils.dart';
 
 /// Snapshot of all locally-linked accounts and which one is active.
 class MobileAccountStore {

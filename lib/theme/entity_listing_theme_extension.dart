@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../core/theme/entity_listing_theme.dart';
+import 'listing_gradients.dart';
 
 /// Light/dark listing surfaces and gradients (registered on [ThemeData.extensions]).
 @immutable
@@ -80,8 +80,8 @@ class EntityListingThemeExtension
     accent: Color(0xFF64B5F6),
   );
 
-  /// Resolves [EntityListingTheme] for hero/card gradients (same palette all entities).
-  EntityListingTheme toListingTheme() => EntityListingTheme(
+  /// Resolves [ListingGradients] for hero/card gradients (same palette all entities).
+  ListingGradients toListingGradients() => ListingGradients(
     heroGradientStops: heroGradientStops,
     resultsBand: resultsBand,
     cardHeaderGradientStops: cardHeaderGradientStops,
@@ -171,5 +171,8 @@ extension EntityListingThemeContext on BuildContext {
       EntityListingThemeExtension.light;
 
   /// Hero / card header gradients and listing text roles for the current brightness.
-  EntityListingTheme get entityListingTheme => entityListing.toListingTheme();
+  ListingGradients get listingGradients => entityListing.toListingGradients();
+
+  /// Deprecated alias — prefer [listingGradients].
+  ListingGradients get entityListingTheme => listingGradients;
 }

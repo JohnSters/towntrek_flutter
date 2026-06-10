@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 
 import '../network/api_client.dart';
 import '../progression/xp_level_math.dart';
+import '../utils/jwt_utils.dart';
+import '../utils/logger.dart';
 import '../utils/mobile_session_storage.dart';
 import '../../models/models.dart';
 import '../../repositories/member_repository.dart';
@@ -77,7 +79,7 @@ class MobileSessionManager extends ChangeNotifier {
         }
       }
     } catch (error) {
-      debugPrint('Failed to initialize mobile session: $error');
+      Logger.e('Failed to initialize mobile session: $error');
       await signOut(notify: false);
     } finally {
       _initializing = false;
@@ -194,7 +196,7 @@ class MobileSessionManager extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (error) {
-      debugPrint('Failed to refresh mobile session: $error');
+      Logger.e('Failed to refresh mobile session: $error');
       await signOut();
       return false;
     }
@@ -220,7 +222,7 @@ class MobileSessionManager extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (error) {
-      debugPrint('Failed to refresh mobile session (interceptor): $error');
+      Logger.e('Failed to refresh mobile session (interceptor): $error');
       await signOut();
       return false;
     }
@@ -235,7 +237,7 @@ class MobileSessionManager extends ChangeNotifier {
     try {
       _profile = await _memberRepository.getMyProfile();
     } catch (error) {
-      debugPrint('Failed to load member profile: $error');
+      Logger.e('Failed to load member profile: $error');
       _profile = null;
     }
   }
@@ -250,7 +252,7 @@ class MobileSessionManager extends ChangeNotifier {
       _memberProgression = await _memberRepository.getMyProgression();
       notifyListeners();
     } catch (error) {
-      debugPrint('Failed to load member progression: $error');
+      Logger.e('Failed to load member progression: $error');
     }
   }
 

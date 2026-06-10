@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants/business_category_constants.dart';
+import '../../constants/business_category_constants.dart';
 
 /// Events strip control: green base, slow shimmer, live ring behind icon, icon pulse, "Live" pill.
 class LiveEventsStripButton extends StatefulWidget {

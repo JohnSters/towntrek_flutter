@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:towntrek_flutter/core/widgets/discovery_vote_rail.dart';
+import 'package:towntrek_flutter/core/widgets/discovery/discovery_vote_rail.dart';
 
 void main() {
   testWidgets('shows score and triggers vote callbacks', (tester) async {

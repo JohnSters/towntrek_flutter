@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/widgets/listing_info_chip.dart';
+import '../../core/widgets/listing/listing_info_chip.dart';
 import '../../models/models.dart';
 
 /// Meta chips aligned with What-To-Do list cards.

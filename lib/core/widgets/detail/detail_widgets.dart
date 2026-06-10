@@ -1,6 +1,5 @@
 export 'detail_towntrek_web_action.dart';
 export 'detail_hours_grid.dart';
-export 'detail_hours_mappers.dart';
 export 'detail_hour_row.dart';
 export 'detail_info_chip.dart';
 export 'detail_info_pill.dart';

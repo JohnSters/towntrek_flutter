@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/town_feature_constants.dart';
-import '../../../core/theme/entity_listing_theme.dart';
+import '../../../theme/listing_gradients.dart';
 import '../../../theme/entity_listing_theme_extension.dart';
 import '../../../core/utils/business_utils.dart';
 import '../../../core/utils/listing_aggregate_rating.dart';
 import '../../../core/utils/url_utils.dart';
-import '../../../core/widgets/listing_info_chip.dart';
+import '../../../core/widgets/listing/listing_info_chip.dart';
 import '../../../models/business_dto.dart';
 
 class BusinessCardWidget extends StatelessWidget {
   final BusinessDto business;
   final VoidCallback? onTap;
   final String? categoryKey;
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
   final String? townName;
   final String? provinceName;
 

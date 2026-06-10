@@ -1,21 +1,6 @@
+import '../core/json/json_helpers.dart';
+
 /// Picks a value from API JSON whether the server uses camelCase or PascalCase.
-int _landingStatInt(Map<String, dynamic> json, String camel, String pascal) {
-  final v = json[camel] ?? json[pascal];
-  if (v == null) return 0;
-  if (v is int) return v;
-  if (v is num) return v.toInt();
-  if (v is String) return int.tryParse(v.trim()) ?? 0;
-  return 0;
-}
-
-String? _landingStatString(Map<String, dynamic> json, String camel, String pascal) {
-  final v = json[camel] ?? json[pascal];
-  if (v == null) return null;
-  final normalized = v.toString().trim();
-  if (normalized.isEmpty) return null;
-  return normalized;
-}
-
 class LandingStatsDto {
   final int businessCount;
   final int serviceCount;
@@ -42,14 +27,14 @@ class LandingStatsDto {
   });
 
   factory LandingStatsDto.fromJson(Map<String, dynamic> json) {
-    final business = _landingStatInt(json, 'businessCount', 'BusinessCount');
-    final services = _landingStatInt(json, 'serviceCount', 'ServiceCount');
-    final events = _landingStatInt(json, 'eventCount', 'EventCount');
+    final business = JsonHelpers.dualInt(json, 'businessCount', 'BusinessCount');
+    final services = JsonHelpers.dualInt(json, 'serviceCount', 'ServiceCount');
+    final events = JsonHelpers.dualInt(json, 'eventCount', 'EventCount');
     final creative =
-        _landingStatInt(json, 'creativeSpaceCount', 'CreativeSpaceCount');
+        JsonHelpers.dualInt(json, 'creativeSpaceCount', 'CreativeSpaceCount');
     final properties =
-        _landingStatInt(json, 'propertyListingCount', 'PropertyListingCount');
-    final equipment = _landingStatInt(
+        JsonHelpers.dualInt(json, 'propertyListingCount', 'PropertyListingCount');
+    final equipment = JsonHelpers.dualInt(
       json,
       'equipmentRentalBusinessCount',
       'EquipmentRentalBusinessCount',
@@ -57,24 +42,22 @@ class LandingStatsDto {
     final hasTotalKey = json.containsKey('totalListingCount') ||
         json.containsKey('TotalListingCount');
     final total = hasTotalKey
-        ? _landingStatInt(json, 'totalListingCount', 'TotalListingCount')
+        ? JsonHelpers.dualInt(json, 'totalListingCount', 'TotalListingCount')
         : business + services + events + creative + properties;
-    final infoBannerMessage = _landingStatString(
+    final infoBannerMessage = JsonHelpers.dualString(
       json,
       'infoBannerMessage',
       'InfoBannerMessage',
     );
-    final issueBannerMessage = _landingStatString(
+    final issueBannerMessage = JsonHelpers.dualString(
       json,
       'issueBannerMessage',
       'IssueBannerMessage',
     );
 
-    final genRaw = json['generatedAtUtc'] ?? json['GeneratedAtUtc'];
-    DateTime? generatedAtUtc;
-    if (genRaw is String && genRaw.isNotEmpty) {
-      generatedAtUtc = DateTime.tryParse(genRaw);
-    }
+    final generatedAtUtc = JsonHelpers.utcDate(
+      JsonHelpers.dualKey(json, 'generatedAtUtc', 'GeneratedAtUtc'),
+    );
 
     return LandingStatsDto(
       businessCount: business,

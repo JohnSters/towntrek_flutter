@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
+import '../../core/presentation/event_display.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
-import '../../services/discovery_api_service.dart';
-import '../../services/town_api_service.dart';
 import '../../services/weather_service.dart';
 import '../business_category/business_category.dart';
 import '../current_events/current_events_screen.dart';
@@ -51,9 +50,10 @@ class TownFeatureViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
   final CreativeSpaceRepository _creativeSpaceRepository;
   final PropertyRepository _propertyRepository;
-  final DiscoveryApiService _discoveryApiService;
+  final DiscoveryRepository _discoveryRepository;
   final BusinessRepository _businessRepository;
-  final TownApiService _townApiService;
+  final TownRepository _townRepository;
+  final WeatherService _weatherService;
   final MobileSessionManager _sessionManager;
 
   TownFeatureViewModel(
@@ -61,17 +61,19 @@ class TownFeatureViewModel extends ChangeNotifier {
     required EventRepository eventRepository,
     required CreativeSpaceRepository creativeSpaceRepository,
     required PropertyRepository propertyRepository,
-    required DiscoveryApiService discoveryApiService,
+    required DiscoveryRepository discoveryRepository,
     required BusinessRepository businessRepository,
-    required TownApiService townApiService,
+    required TownRepository townRepository,
+    required WeatherService weatherService,
     required MobileSessionManager sessionManager,
   }) : _state = TownFeatureLoaded(town),
        _eventRepository = eventRepository,
        _creativeSpaceRepository = creativeSpaceRepository,
        _propertyRepository = propertyRepository,
-       _discoveryApiService = discoveryApiService,
+       _discoveryRepository = discoveryRepository,
        _businessRepository = businessRepository,
-       _townApiService = townApiService,
+       _townRepository = townRepository,
+       _weatherService = weatherService,
        _sessionManager = sessionManager {
     _loadPulseMetrics(town);
   }
@@ -106,7 +108,7 @@ class TownFeatureViewModel extends ChangeNotifier {
     final lng = town.longitude;
     if (lat == null || lng == null) return;
     try {
-      final data = await WeatherService().getCurrentWeather(lat, lng);
+      final data = await _weatherService.getCurrentWeather(lat, lng);
       if (!_alive) return;
       pulseWeather = data;
     } catch (_) {}
@@ -157,7 +159,7 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchDiscoveriesCount(TownDto town) async {
     try {
-      final n = await _discoveryApiService.getDiscoveryCount(town.id);
+      final n = await _discoveryRepository.getDiscoveryCount(town.id);
       if (!_alive) return;
       pulseDiscoveriesCount = n;
     } catch (_) {}
@@ -183,13 +185,13 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchTownAdminHub(TownDto town) async {
     try {
-      final profile = await _townApiService.getTownAdminProfile(town.id);
+      final profile = await _townRepository.getTownAdminProfile(town.id);
       if (!_alive) return;
       townAdminProfile = profile;
     } catch (_) {}
 
     try {
-      final list = await _townApiService.getPublishedTownNotices(
+      final list = await _townRepository.getPublishedTownNotices(
         town.id,
         pageSize: 10,
       );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/entity_listing_theme_extension.dart';
+import '../../../theme/entity_listing_theme_extension.dart';
 
 /// Pinned pill footer for listing screens (design doc §6).
 class ListingBackFooter extends StatelessWidget {

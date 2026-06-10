@@ -433,7 +433,7 @@ class _BusinessCategoryScreenContentState
         onPressed: onPressed,
         icon: const Icon(Icons.event),
         label: const Text('No Events'),
-        style: BusinessCategoryConstants.connectedHeaderButtonStyle(
+        style: connectedHeaderButtonStyle(
           theme,
           backgroundColor: colorScheme.surfaceContainerHighest,
           foregroundColor: colorScheme.onSurfaceVariant,

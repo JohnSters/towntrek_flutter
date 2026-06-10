@@ -8,6 +8,11 @@ import '../network/api_client.dart';
 /// properties, events, creative spaces, etc.), producing [AppError]s with a
 /// title + retry action for full-screen error states.
 ///
+/// This adapts the transport-level [ApiException] (already produced by the
+/// interceptors in `lib/core/network/api_client.dart`) into a presentation
+/// [AppError]. It does NOT re-map raw [DioException]s from scratch - the HTTP
+/// status -> message classification lives in one place (the interceptor).
+///
 /// NOTE: Parcel / member-hub and connect-device flows do NOT use this. They
 /// standardize on [ApiException] + [resolveUserFacingApiError] (see
 /// `lib/core/network/api_client.dart`) and surface errors via `showErrorSnack`
@@ -22,9 +27,12 @@ class ErrorHandler {
 
   /// Convert any exception to a user-friendly AppError
   Future<AppError> handleError(dynamic error, {VoidCallback? retryAction}) async {
-    // Handle Dio exceptions
-    if (error is DioException) {
-      return await _handleDioError(error, retryAction);
+    // Transport failures arrive as an [ApiException] (wrapped in a
+    // [DioException] by the error interceptor). Unwrap and adapt it rather than
+    // re-deriving the status mapping here.
+    final apiException = _asApiException(error);
+    if (apiException != null) {
+      return _fromApiException(apiException, retryAction);
     }
 
     // Handle location exceptions
@@ -33,7 +41,9 @@ class ErrorHandler {
     }
 
     // Handle JSON parsing errors (TypeError, CastError, etc.)
-    if (error is TypeError || error.toString().contains('type') || error.toString().contains('cast')) {
+    if (error is TypeError ||
+        error.toString().contains('type') ||
+        error.toString().contains('cast')) {
       return AppErrors.invalidData(retryAction);
     }
 
@@ -41,21 +51,36 @@ class ErrorHandler {
     return AppErrors.unknown(retryAction);
   }
 
-  /// Handle Dio-specific errors
-  Future<AppError> _handleDioError(DioException error, VoidCallback? retryAction) async {
+  /// Extracts the canonical [ApiException] from [error] when present.
+  ApiException? _asApiException(Object? error) {
+    if (error is ApiException) return error;
+    if (error is DioException) {
+      final inner = error.error;
+      if (inner is ApiException) return inner;
+    }
+    return null;
+  }
+
+  /// Adapts a transport [ApiException] into a presentation [AppError].
+  Future<AppError> _fromApiException(
+    ApiException error,
+    VoidCallback? retryAction,
+  ) async {
+    // HTTP responses carry a status code: branch on it (keeps 408/429 nuances).
+    final statusCode = error.statusCode;
+    if (statusCode != null) {
+      return _fromHttpStatus(statusCode, error, retryAction);
+    }
+
+    // No status code: classify by transport type.
     switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
+      case ApiExceptionType.timeout:
         return AppErrors.connectionTimeout(retryAction);
 
-      case DioExceptionType.connectionError:
-        return await _handleConnectionError(error, retryAction);
+      case ApiExceptionType.network:
+        return _handleNoConnection(retryAction);
 
-      case DioExceptionType.badResponse:
-        return _handleBadResponse(error, retryAction);
-
-      case DioExceptionType.cancel:
+      case ApiExceptionType.cancelled:
         return ValidationError(
           title: 'Request Cancelled',
           message: 'The request was cancelled. Please try again.',
@@ -63,17 +88,23 @@ class ErrorHandler {
           action: retryAction,
         );
 
-      default:
+      case ApiExceptionType.badRequest:
+      case ApiExceptionType.unauthorized:
+      case ApiExceptionType.forbidden:
+      case ApiExceptionType.notFound:
+      case ApiExceptionType.server:
+      case ApiExceptionType.client:
+      case ApiExceptionType.unknown:
         return AppErrors.unknown(retryAction);
     }
   }
 
-  /// Handle connection-related errors
-  Future<AppError> _handleConnectionError(DioException error, VoidCallback? retryAction) async {
+  /// Decides between "no internet" and "server unreachable" for connection
+  /// failures that have no HTTP status code.
+  Future<AppError> _handleNoConnection(VoidCallback? retryAction) async {
     try {
       final connectivityResults = await _connectivity.checkConnectivity();
 
-      // Check if there's any network connectivity
       if (connectivityResults.contains(ConnectivityResult.none) ||
           connectivityResults.every((result) => result == ConnectivityResult.none)) {
         return AppErrors.noInternet(retryAction);
@@ -87,16 +118,18 @@ class ErrorHandler {
     }
   }
 
-  /// Handle HTTP error responses
-  AppError _handleBadResponse(DioException error, VoidCallback? retryAction) {
-    final statusCode = error.response?.statusCode;
-
+  /// Maps an HTTP status code (with the server-provided [ApiException.message])
+  /// to a presentation [AppError].
+  AppError _fromHttpStatus(
+    int statusCode,
+    ApiException error,
+    VoidCallback? retryAction,
+  ) {
     switch (statusCode) {
       case 400:
-        final detail = extractApiErrorMessageFromResponseData(error.response?.data);
         return ValidationError(
           title: 'Invalid Request',
-          message: detail ?? 'Please check your input and try again.',
+          message: error.message,
           actionText: retryAction != null ? 'Retry' : null,
           action: retryAction,
         );
@@ -141,9 +174,9 @@ class ErrorHandler {
         return AppErrors.internalServerError(retryAction);
 
       default:
-        if (statusCode != null && statusCode >= 500) {
+        if (statusCode >= 500) {
           return AppErrors.internalServerError(retryAction);
-        } else if (statusCode != null && statusCode >= 400) {
+        } else if (statusCode >= 400) {
           return ValidationError(
             title: 'Request Error',
             message: 'There was an issue with your request. Please try again.',
@@ -169,4 +202,3 @@ class ErrorHandler {
     }
   }
 }
-

@@ -23,31 +23,21 @@ class BusinessApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      // Validate parameters
-      if (townId == null && (search == null || search.trim().isEmpty)) {
-        throw ArgumentError('Either townId or search term must be provided');
-      }
+    final queryParams = <String, dynamic>{
+      'townId': ?townId,
+      'category': ?category,
+      'subCategory': ?subCategory,
+      if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      // Build query parameters
-      final queryParams = <String, dynamic>{
-        'townId': ?townId,
-        'category': ?category,
-        'subCategory': ?subCategory,
-        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.businessesUrl(),
+      queryParameters: queryParams,
+    );
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.businessesUrl(),
-        queryParameters: queryParams,
-      );
-
-      return BusinessListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return BusinessListResponse.fromJson(response.data!);
   }
 
   /// Search businesses with flexible criteria
@@ -65,74 +55,53 @@ class BusinessApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      if (query.trim().isEmpty && townId == null) {
-        throw ArgumentError('Search query or townId required');
-      }
+    final queryParams = <String, dynamic>{
+      'q': query.trim(),
+      'townId': ?townId,
+      'category': ?category,
+      'subCategory': ?subCategory,
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      final queryParams = <String, dynamic>{
-        'q': query.trim(),
-        'townId': ?townId,
-        'category': ?category,
-        'subCategory': ?subCategory,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.businessSearchUrl(),
+      queryParameters: queryParams,
+    );
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.businessSearchUrl(),
-        queryParameters: queryParams,
-      );
-
-      return BusinessListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return BusinessListResponse.fromJson(response.data!);
   }
 
   /// Get detailed information for a specific business
   Future<BusinessDetailDto> getBusinessDetails(int businessId) async {
-    try {
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.businessDetailUrl(businessId),
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.businessDetailUrl(businessId),
+    );
 
-      return BusinessDetailDto.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return BusinessDetailDto.fromJson(response.data!);
   }
 
   /// Get available business categories with subcategories
   Future<List<CategoryDto>> getCategories() async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.categoriesUrl(),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.categoriesUrl(),
+    );
 
-      return response.data!
-          .map((json) => CategoryDto.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map((json) => CategoryDto.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get categories with business counts for a specific town
   Future<List<CategoryWithCountDto>> getCategoriesWithCounts(int townId) async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.categoriesWithCountsUrl(townId),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.categoriesWithCountsUrl(townId),
+    );
 
-      return response.data!
-          .map(
-            (json) =>
-                CategoryWithCountDto.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map(
+          (json) => CategoryWithCountDto.fromJson(json as Map<String, dynamic>),
+        )
+        .toList();
   }
 }

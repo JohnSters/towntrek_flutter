@@ -8,7 +8,7 @@ import '../creative_space_detail_screen.dart';
 /// Listing card for creative spaces (design doc §5, §8).
 class CreativeSpaceCard extends StatelessWidget {
   final CreativeSpaceDto space;
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
 
   const CreativeSpaceCard({
     super.key,

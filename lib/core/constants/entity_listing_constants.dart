@@ -1,8 +1,9 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_layout.dart';
+
 /// Shared layout and copy for entity listing screens (search bar, empty search).
-class EntityListingConstants {
-  EntityListingConstants._();
+abstract final class EntityListingConstants {
 
   /// Space below [ListingResultsBand] before the next row (search, first card,
   /// loading area). Matches typical vertical gaps between listing cards on browse
@@ -20,7 +21,7 @@ class EntityListingConstants {
   static const EdgeInsets cardListScrollPadding =
       EdgeInsets.fromLTRB(16, 16, 16, 20);
 
-  static const double searchBarRadius = 14.0;
+  static const double searchBarRadius = AppRadii.searchBar;
   static const double searchBarContentPadding = 12.0;
   static const String clearSearchLabel = 'Clear search';
   /// Listing cards (business, service, creative space, etc.): hours-style pill.

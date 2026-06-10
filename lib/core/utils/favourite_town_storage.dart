@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/town_dto.dart';
+import 'logger.dart';
 
 /// Stores a single locally pinned town for quick access.
 class FavouriteTownStorage {
@@ -36,7 +37,7 @@ class FavouriteTownStorage {
 
       return TownDto.fromJson(decoded);
     } catch (error) {
-      debugPrint('Failed to read favourite town: $error');
+      Logger.e('Failed to read favourite town: $error');
       return null;
     }
   }

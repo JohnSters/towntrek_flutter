@@ -3,10 +3,8 @@ import 'package:image_picker/image_picker.dart' as image_picker;
 import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
-import '../../core/constants/discovery_constants.dart';
 import '../../core/utils/external_link_launcher.dart';
-import '../../core/widgets/discovery_map_picker_page.dart';
-import '../../core/widgets/discovery_map_widget.dart';
+import '../discovery/map_picker_screen.dart';
 import '../../models/models.dart';
 import 'suggest_discovery_view_model.dart';
 
@@ -21,7 +19,7 @@ class SuggestDiscoveryScreen extends StatelessWidget {
       create: (_) {
         final vm = SuggestDiscoveryViewModel(
           town: town,
-          discoveryApiService: serviceLocator.discoveryApiService,
+          discoveryRepository: serviceLocator.discoveryRepository,
         );
         vm.init();
         return vm;
@@ -275,7 +273,7 @@ class _SuggestDiscoveryContent extends StatelessWidget {
                                         context,
                                       ).push<DiscoveryLocationSelection>(
                                         MaterialPageRoute(
-                                          builder: (_) => DiscoveryMapPickerPage(
+                                          builder: (_) => DiscoveryMapPickerScreen(
                                             title: 'Choose discovery location',
                                             initialLatitude: vm.pinLat,
                                             initialLongitude: vm.pinLng,

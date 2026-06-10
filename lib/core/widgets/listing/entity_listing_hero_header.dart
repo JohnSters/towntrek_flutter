@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../theme/entity_listing_theme.dart';
+import '../../../theme/listing_gradients.dart';
 
 /// Listing-screen hero (design doc §3). Page-level [SafeArea] wraps the screen body.
 class EntityListingHeroHeader extends StatelessWidget {
-  final EntityListingTheme theme;
+  final ListingGradients theme;
   final IconData categoryIcon;
   final String subCategoryName;
   final String categoryName;

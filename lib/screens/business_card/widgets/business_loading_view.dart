@@ -8,7 +8,7 @@ class BusinessLoadingView extends StatelessWidget {
   final CategoryWithCountDto category;
   final SubCategoryWithCountDto subCategory;
   final TownDto town;
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
   final Widget searchBar;
 
   const BusinessLoadingView({

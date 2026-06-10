@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants/entity_listing_constants.dart';
+import '../../constants/entity_listing_constants.dart';
 
 /// Dark strip below hero (design doc §4).
 class ListingResultsBand extends StatelessWidget {

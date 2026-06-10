@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/config/business_category_config.dart';
-import '../../../core/widgets/entity_listing_hero_header.dart';
-import '../../../core/theme/entity_listing_theme.dart';
+import '../../../core/widgets/listing/entity_listing_hero_header.dart';
+import '../../../theme/listing_gradients.dart';
 
 /// Business / equipment listing hero; icon from [BusinessCategoryConfig].
 class BusinessCardHeroHeader extends StatelessWidget {
-  final EntityListingTheme theme;
+  final ListingGradients theme;
   final String subCategoryName;
   final String categoryName;
   final String categoryKey;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Constants for Event Details Screen
 /// Contains all spacing, sizing, colors, strings, and styling values
-class EventDetailsConstants {
+abstract final class EventDetailsConstants {
   // Private constructor to prevent instantiation
   EventDetailsConstants._();
 

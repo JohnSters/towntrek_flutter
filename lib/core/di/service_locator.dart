@@ -33,6 +33,7 @@ class ServiceLocator {
   late final ParcelApiService _parcelApiService;
   late final GeolocationService _geolocationService;
   late final NavigationService _navigationService;
+  late final WeatherService _weatherService;
   late final ErrorHandler _errorHandler;
   late final MobileSessionManager _mobileSessionManager;
 
@@ -47,6 +48,7 @@ class ServiceLocator {
   late final MobileAuthRepository _mobileAuthRepository;
   late final MemberRepository _memberRepository;
   late final ParcelRepository _parcelRepository;
+  late final DiscoveryRepository _discoveryRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -71,6 +73,7 @@ class ServiceLocator {
     _parcelApiService = ParcelApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _navigationService = NavigationServiceImpl();
+    _weatherService = WeatherServiceImpl();
 
     // Initialize repositories
     _businessRepository = BusinessRepositoryImpl(_businessApiService);
@@ -83,6 +86,7 @@ class ServiceLocator {
     _mobileAuthRepository = MobileAuthRepositoryImpl(_mobileAuthApiService);
     _memberRepository = MemberRepositoryImpl(_memberApiService);
     _parcelRepository = ParcelRepositoryImpl(_parcelApiService);
+    _discoveryRepository = DiscoveryRepositoryImpl(_discoveryApiService);
     _mobileSessionManager = MobileSessionManager(
       mobileAuthRepository: _mobileAuthRepository,
       memberRepository: _memberRepository,
@@ -118,12 +122,6 @@ class ServiceLocator {
   BusinessApiService get businessApiService {
     _ensureInitialized();
     return _businessApiService;
-  }
-
-  /// Get the town API service
-  TownApiService get townApiService {
-    _ensureInitialized();
-    return _townApiService;
   }
 
   /// Get the creative space API service
@@ -205,9 +203,9 @@ class ServiceLocator {
     return _mobileSessionManager;
   }
 
-  DiscoveryApiService get discoveryApiService {
+  DiscoveryRepository get discoveryRepository {
     _ensureInitialized();
-    return _discoveryApiService;
+    return _discoveryRepository;
   }
 
   /// Get the geolocation service
@@ -220,6 +218,12 @@ class ServiceLocator {
   NavigationService get navigationService {
     _ensureInitialized();
     return _navigationService;
+  }
+
+  /// Get the weather service
+  WeatherService get weatherService {
+    _ensureInitialized();
+    return _weatherService;
   }
 
   /// Get the error handler

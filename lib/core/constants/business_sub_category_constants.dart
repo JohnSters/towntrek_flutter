@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Constants for Business Sub-Category Page
 /// Contains all spacing, sizing, colors, strings, and styling values
-class BusinessSubCategoryConstants {
+abstract final class BusinessSubCategoryConstants {
   // Private constructor to prevent instantiation
   BusinessSubCategoryConstants._();
 

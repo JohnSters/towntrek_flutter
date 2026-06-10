@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/models.dart';
 import '../../../services/weather_service.dart';
+import 'weather_icon.dart';
 
 /// Routes available from compact Town Pulse cells (weather is shown but not navigable).
 enum TownPulseDestination {
@@ -117,7 +118,9 @@ class TownPulseCard extends StatelessWidget {
         weather != null ? '${weather!.temperature.round()}°' : '–';
     final weatherLabel =
         weather != null ? _shortWeatherLabel(weather!.description) : 'Weather';
-    final weatherIcon = weather?.icon ?? Icons.wb_cloudy_rounded;
+    final weatherIcon = weather != null
+        ? weatherIconForCode(weather!.weatherCode)
+        : Icons.wb_cloudy_rounded;
     final weatherColor = weather != null
         ? _weatherColor(weather!.weatherCode)
         : const Color(0xFF78909C);

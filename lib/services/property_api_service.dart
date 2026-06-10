@@ -19,7 +19,7 @@ class PropertyApiService {
     };
 
     final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConfig.propertiesUrl(),
+      ApiEndpoints.propertiesUrl(),
       queryParameters: queryParams,
     );
 
@@ -28,7 +28,7 @@ class PropertyApiService {
 
   Future<PropertyListingDetailDto> getDetail(int id) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConfig.propertyDetailUrl(id),
+      ApiEndpoints.propertyDetailUrl(id),
     );
     return PropertyListingDetailDto.fromJson(response.data!);
   }

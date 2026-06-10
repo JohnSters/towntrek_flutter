@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/core.dart';
 import '../../../models/models.dart';
-import '../../../core/constants/service_list_constants.dart';
-
 /// Empty state when no services are found (listing shell matches success state).
 class ServiceListEmptyStateView extends StatelessWidget {
   final ServiceCategoryDto category;

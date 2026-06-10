@@ -1,8 +1,8 @@
-import '../../utils/operating_hours_display_format.dart';
-import '../../utils/operating_hours_open_calc.dart';
-import '../../utils/service_utils.dart';
-import '../../../models/models.dart';
-import 'detail_hours_grid.dart';
+import '../../models/models.dart';
+import '../widgets/detail/detail_hours_grid.dart';
+import 'operating_hours_display_format.dart';
+import 'operating_hours_open_calc.dart';
+import 'service_utils.dart';
 
 const _orderedDays = <String>[
   'Monday',

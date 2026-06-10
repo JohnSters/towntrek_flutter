@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Constants for Service List Page
 /// Contains all spacing, sizing, colors, strings, and pagination settings
-class ServiceListConstants {
-  // Private constructor to prevent instantiation
-  ServiceListConstants._();
-
+abstract final class ServiceListConstants {
   // Pagination settings
   static const int defaultPageSize = 20;
   static const int defaultPage = 1;

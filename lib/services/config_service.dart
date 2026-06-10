@@ -29,8 +29,4 @@ class ConfigService {
       return _mapboxAccessToken;
     }
   }
-
-  void clearCache() {
-    _mapboxAccessToken = null;
-  }
 }

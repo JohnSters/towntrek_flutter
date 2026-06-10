@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'core/core.dart';
-import 'core/widgets/app_scaffold_messenger.dart';
 import 'core/config/http_overrides.dart';
 import 'screens/landing_page.dart';
 import 'theme/app_theme.dart';

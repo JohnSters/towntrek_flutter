@@ -1,7 +1,9 @@
+import 'app_layout.dart';
+
 /// Constants for the Town Selection Screen
-class TownSelectionConstants {
+abstract final class TownSelectionConstants {
   // Spacing constants
-  static const double horizontalPadding = 24.0;
+  static const double horizontalPadding = AppSpacing.screenHorizontal;
   static const double verticalPadding = 16.0;
   static const double smallSpacing = 4.0;
   static const double mediumSpacing = 8.0;

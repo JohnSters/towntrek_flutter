@@ -1,5 +1,5 @@
 /// Constants for Business Card page layout, spacing, and strings
-class BusinessCardConstants {
+abstract final class BusinessCardConstants {
   // Header heights
   static const double loadingHeaderHeight = 120.0;
   static const double successHeaderHeight = 140.0;

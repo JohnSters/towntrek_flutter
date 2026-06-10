@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/entity_listing_theme.dart';
+import '../../../theme/listing_gradients.dart';
 import '../../../theme/entity_listing_theme_extension.dart';
 import '../../../core/utils/property_listing_format.dart';
 import '../../../core/utils/url_utils.dart';
-import '../../../core/widgets/listing_info_chip.dart';
+import '../../../core/widgets/listing/listing_info_chip.dart';
 import '../../../models/models.dart';
 
 /// Property listing card (design doc §5, §8 Properties).
 class PropertyListingCardWidget extends StatelessWidget {
   final PropertyListingCardDto listing;
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
   final VoidCallback? onTap;
 
   const PropertyListingCardWidget({

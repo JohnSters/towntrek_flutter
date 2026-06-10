@@ -4,11 +4,9 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/core.dart';
-import '../../core/constants/discovery_constants.dart';
 import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
-import '../../core/widgets/discovery_map_picker_page.dart';
-import '../../core/widgets/discovery_map_widget.dart';
+import '../discovery/map_picker_screen.dart';
 import '../../models/models.dart';
 import 'discovery_detail_formatters.dart';
 import 'discovery_detail_view_model.dart';
@@ -30,7 +28,7 @@ class DiscoveryDetailScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => DiscoveryDetailViewModel(
         discoveryId: discoveryId,
-        discoveryApiService: serviceLocator.discoveryApiService,
+        discoveryRepository: serviceLocator.discoveryRepository,
         errorHandler: serviceLocator.errorHandler,
       ),
       child: _DiscoveryDetailBody(initialTitle: title, town: town),
@@ -406,7 +404,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => DiscoveryMapPickerPage(
+                          builder: (_) => DiscoveryMapPickerScreen(
                             title: d.title,
                             initialLatitude: d.latitude,
                             initialLongitude: d.longitude,
@@ -446,7 +444,7 @@ class _SuccessScrollState extends State<_SuccessScroll> {
             child: TextButton(
               onPressed: () => ExternalLinkLauncher.openUri(
                 context,
-                Uri.parse(DiscoveryConstants.reportDiscoveryMailto(d.id)),
+                Uri.parse(UrlUtils.reportDiscoveryMailto(d.id)),
               ),
               style: TextButton.styleFrom(
                 foregroundColor: colorScheme.onSurfaceVariant,

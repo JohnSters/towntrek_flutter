@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 import '../../core/utils/url_utils.dart';
-import '../../core/widgets/app_scaffold_messenger.dart';
 import 'connect_device_controller.dart';
 import 'scan_access_code_screen.dart';
 

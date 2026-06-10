@@ -1,3 +1,4 @@
+import '../core/json/json_helpers.dart';
 import 'property_listing_image_dto.dart';
 
 /// Full property listing payload from `GET api/properties/{id}`
@@ -44,7 +45,7 @@ class PropertyListingDetailDto {
       telephoneNumber: json['telephoneNumber'] as String? ?? '',
       townName: json['townName'] as String? ?? '',
       listingType: json['listingType'] as int? ?? 0,
-      price: _readPrice(json['price']),
+      price: JsonHelpers.price(json['price']),
       shortDescription: json['shortDescription'] as String?,
       description: json['description'] as String?,
       latitude: _readDouble(json['latitude']),
@@ -55,12 +56,6 @@ class PropertyListingDetailDto {
           .map((e) => PropertyListingImageDto.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
-  }
-
-  static double _readPrice(dynamic value) {
-    if (value == null) return 0;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString()) ?? 0;
   }
 
   static double? _readDouble(dynamic value) {

@@ -1,13 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../core.dart';
-import 'discovery_map_widget.dart';
+import '../../core/core.dart';
 
 typedef DiscoveryLocationSelection = ({double latitude, double longitude});
 
-class DiscoveryMapPickerPage extends StatefulWidget {
-  const DiscoveryMapPickerPage({
+class DiscoveryMapPickerScreen extends StatefulWidget {
+  const DiscoveryMapPickerScreen({
     super.key,
     required this.title,
     this.initialLatitude,
@@ -29,10 +28,11 @@ class DiscoveryMapPickerPage extends StatefulWidget {
   final String confirmLabel;
 
   @override
-  State<DiscoveryMapPickerPage> createState() => _DiscoveryMapPickerPageState();
+  State<DiscoveryMapPickerScreen> createState() =>
+      _DiscoveryMapPickerScreenState();
 }
 
-class _DiscoveryMapPickerPageState extends State<DiscoveryMapPickerPage> {
+class _DiscoveryMapPickerScreenState extends State<DiscoveryMapPickerScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   List<_MapSearchResult> _results = const [];

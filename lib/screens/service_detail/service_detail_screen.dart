@@ -107,43 +107,12 @@ class _ServiceDetailStateBody extends StatelessWidget {
       ServiceDetailLoading() => const _ServiceDetailsLoadingView(),
       ServiceDetailSuccess(serviceDetails: final serviceDetails) =>
         _ServiceDetailBody(service: serviceDetails, viewModel: viewModel),
-      ServiceDetailError(title: final title, message: final message) =>
-        _ErrorStateView(title: title, message: message),
-    };
-  }
-}
-
-class _ErrorStateView extends StatelessWidget {
-  final String title;
-  final String message;
-
-  const _ErrorStateView({required this.title, required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center),
-          ],
+      ServiceDetailError(title: final title, message: final message) => Center(
+        child: ErrorView(
+          error: ValidationError(title: title, message: message),
         ),
       ),
-    );
+    };
   }
 }
 

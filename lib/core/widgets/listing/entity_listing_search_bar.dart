@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../constants/entity_listing_constants.dart';
-import '../theme/entity_listing_theme.dart';
+import '../../constants/entity_listing_constants.dart';
+import '../../../theme/listing_gradients.dart';
 
 /// Search field used on entity listing pages (matches Creative Spaces list styling).
 class EntityListingSearchBar extends StatelessWidget {
   final TextEditingController controller;
-  final EntityListingTheme theme;
+  final ListingGradients theme;
   final String hintText;
   final VoidCallback onSubmitted;
   final VoidCallback onClear;

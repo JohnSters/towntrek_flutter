@@ -17,25 +17,21 @@ class CreativeSpaceApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      final queryParams = <String, dynamic>{
-        'townId': ?townId,
-        'categoryId': ?categoryId,
-        'subCategoryId': ?subCategoryId,
-        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final queryParams = <String, dynamic>{
+      'townId': ?townId,
+      'categoryId': ?categoryId,
+      'subCategoryId': ?subCategoryId,
+      if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.creativeSpacesUrl(),
-        queryParameters: queryParams,
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.creativeSpacesUrl(),
+      queryParameters: queryParams,
+    );
 
-      return CreativeSpaceListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return CreativeSpaceListResponse.fromJson(response.data!);
   }
 
   /// Search creative spaces with flexible criteria
@@ -47,93 +43,71 @@ class CreativeSpaceApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      final queryParams = <String, dynamic>{
-        'q': query.trim(),
-        'townId': ?townId,
-        'categoryId': ?categoryId,
-        'subCategoryId': ?subCategoryId,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final queryParams = <String, dynamic>{
+      'q': query.trim(),
+      'townId': ?townId,
+      'categoryId': ?categoryId,
+      'subCategoryId': ?subCategoryId,
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.creativeSpacesSearchUrl(),
-        queryParameters: queryParams,
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.creativeSpacesSearchUrl(),
+      queryParameters: queryParams,
+    );
 
-      return CreativeSpaceListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return CreativeSpaceListResponse.fromJson(response.data!);
   }
 
   /// Get detailed information for a specific creative space
   Future<CreativeSpaceDetailDto> getCreativeSpaceDetails(
     int creativeSpaceId,
   ) async {
-    try {
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.creativeSpaceDetailUrl(creativeSpaceId),
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.creativeSpaceDetailUrl(creativeSpaceId),
+    );
 
-      return CreativeSpaceDetailDto.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return CreativeSpaceDetailDto.fromJson(response.data!);
   }
 
   /// Get available creative space categories with nested subcategories
   Future<List<CreativeCategoryDto>> getCategories() async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.creativeSpaceCategoriesUrl(),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.creativeSpaceCategoriesUrl(),
+    );
 
-      return response.data!
-          .map(
-            (json) =>
-                CreativeCategoryDto.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map(
+          (json) => CreativeCategoryDto.fromJson(json as Map<String, dynamic>),
+        )
+        .toList();
   }
 
   /// Get creative space categories with counts for a specific town
   Future<List<CreativeCategoryDto>> getCategoriesWithCounts(int townId) async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.creativeSpaceCategoriesWithCountsUrl(townId),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.creativeSpaceCategoriesWithCountsUrl(townId),
+    );
 
-      return response.data!
-          .map(
-            (json) =>
-                CreativeCategoryDto.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map(
+          (json) => CreativeCategoryDto.fromJson(json as Map<String, dynamic>),
+        )
+        .toList();
   }
 
   /// Get subcategories for a given category
   Future<List<CreativeSubCategoryDto>> getSubCategories(int categoryId) async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.creativeSpaceSubCategoriesUrl(categoryId),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.creativeSpaceSubCategoriesUrl(categoryId),
+    );
 
-      return response.data!
-          .map(
-            (json) =>
-                CreativeSubCategoryDto.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map(
+          (json) =>
+              CreativeSubCategoryDto.fromJson(json as Map<String, dynamic>),
+        )
+        .toList();
   }
 }

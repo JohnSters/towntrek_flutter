@@ -4,8 +4,6 @@ import '../../core/utils/external_link_launcher.dart';
 import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
 import '../../repositories/repositories.dart';
-import '../../core/errors/error_handler.dart';
-import '../../core/constants/service_detail_constants.dart';
 import 'service_detail_state.dart';
 
 /// ViewModel for Service Detail page

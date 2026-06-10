@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../repositories/repositories.dart';
 import 'landing_page_state.dart';
 import '../../core/constants/landing_page_constants.dart';
+import '../../core/utils/logger.dart';
 
 // ViewModel for business logic separation
 class LandingViewModel extends ChangeNotifier {
@@ -34,7 +35,7 @@ class LandingViewModel extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      debugPrint('Stats loading error: $e');
+      Logger.w('Stats loading error: $e');
       _state = LandingScreenError(e.toString());
       notifyListeners();
     }
@@ -53,7 +54,7 @@ class LandingViewModel extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error launching URL: $e');
+      Logger.w('Error launching URL: $e');
     }
   }
 
@@ -73,7 +74,7 @@ class LandingViewModel extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error launching email: $e');
+      Logger.w('Error launching email: $e');
     }
   }
 }

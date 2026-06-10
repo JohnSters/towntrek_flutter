@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Constants for Service Sub-Category page
 /// All magic numbers, spacing, colors, strings, and layout values
 
-class ServiceSubCategoryConstants {
+abstract final class ServiceSubCategoryConstants {
   // Private constructor to prevent instantiation
   ServiceSubCategoryConstants._();
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../theme/listing_status_colors.dart';
 import '../../constants/entity_listing_constants.dart';
 
 /// Strip under the detail hero: open/closed (green / grey) and/or a views pill.
@@ -53,9 +54,15 @@ class EntityOpenClosedBanner extends StatelessWidget {
     }
 
     final open = isOpen!;
-    final bg = open ? const Color(0xFFE9F7EF) : const Color(0xFF3A3A3A);
-    final fg = open ? const Color(0xFF1D7A38) : Colors.white;
-    final border = open ? const Color(0xFFBFE5CB) : const Color(0xFF4A4A4A);
+    final bg = open
+        ? ListingStatusColors.detailOpenBg
+        : ListingStatusColors.detailClosedBg;
+    final fg = open
+        ? ListingStatusColors.detailOpenFg
+        : ListingStatusColors.detailClosedFg;
+    final border = open
+        ? ListingStatusColors.detailOpenBorder
+        : ListingStatusColors.detailClosedBorder;
 
     return Container(
       width: double.infinity,
@@ -132,8 +139,8 @@ class _ViewsPill extends StatelessWidget {
         borderColor = colorScheme.outline.withValues(alpha: 0.28);
       case _ViewsPillVariant.onOpenBar:
         bg = colorScheme.surface.withValues(alpha: 0.95);
-        fg = const Color(0xFF146C2E);
-        borderColor = const Color(0xFFBFE5CB);
+        fg = ListingStatusColors.detailOpenPillFg;
+        borderColor = ListingStatusColors.detailOpenPillBorder;
       case _ViewsPillVariant.onClosedBar:
         if (isDark) {
           bg = colorScheme.surfaceContainerHighest.withValues(alpha: 0.55);

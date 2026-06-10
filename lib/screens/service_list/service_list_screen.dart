@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/service_list_constants.dart';
 import '../../core/core.dart';
 import '../../models/models.dart';
 import 'service_list_state.dart';

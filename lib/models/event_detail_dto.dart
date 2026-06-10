@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'event_image_dto.dart';
 import 'event_review_dto.dart';
 import 'event_type_detail_dto.dart';
@@ -336,35 +335,6 @@ class EventDetailDto {
       recurrenceDaysOfWeek: recurrenceDaysOfWeek ?? this.recurrenceDaysOfWeek,
       nextOccurrenceDate: nextOccurrenceDate ?? this.nextOccurrenceDate,
     );
-  }
-
-  DateTime get effectiveListStartDate =>
-      isRecurring && nextOccurrenceDate != null ? nextOccurrenceDate! : startDate;
-
-  // Getters for display
-  String get displayDate {
-    final formatter = DateFormat('MMM d, yyyy');
-    final listStart = effectiveListStartDate;
-    if (endDate != null &&
-        endDate!.year != 1 &&
-        (listStart.year != endDate!.year ||
-            listStart.month != endDate!.month ||
-            listStart.day != endDate!.day)) {
-      final spanDays = endDate!.difference(startDate).inDays;
-      final listEnd = spanDays > 0 ? listStart.add(Duration(days: spanDays)) : endDate!;
-      return '${formatter.format(listStart)} - ${formatter.format(listEnd)}';
-    }
-    return formatter.format(listStart);
-  }
-
-  String get displayPrice {
-    if (isFreeEvent) {
-      return 'Free';
-    }
-    if (entryFeeAmount != null) {
-      return '${entryFeeAmount!.toStringAsFixed(2)} ${entryFeeCurrency ?? 'ZAR'}';
-    }
-    return 'Price TBA';
   }
 
   @override

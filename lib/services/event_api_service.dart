@@ -19,43 +19,29 @@ class EventApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      // Validate parameters
-      if (townId == null) {
-        throw ArgumentError('townId parameter is required');
-      }
+    final queryParams = <String, dynamic>{
+      'townId': ?townId,
+      'eventType': ?eventType,
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      // Build query parameters
-      final queryParams = <String, dynamic>{
-        'townId': townId,
-        'eventType': ?eventType,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.eventsUrl(),
+      queryParameters: queryParams,
+    );
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.eventsUrl(),
-        queryParameters: queryParams,
-      );
-
-      return EventListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return EventListResponse.fromJson(response.data!);
   }
 
   /// Get detailed information for a specific event
   /// - eventId: The ID of the event to retrieve
-  Future<EventDetailDto> getEventDetail(int eventId) async {
-    try {
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.eventDetailUrl(eventId),
-      );
+  Future<EventDetailDto> getEventDetails(int eventId) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.eventDetailUrl(eventId),
+    );
 
-      return EventDetailDto.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return EventDetailDto.fromJson(response.data!);
   }
 
   /// Search events with flexible criteria
@@ -71,30 +57,20 @@ class EventApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      // Validate parameters
-      if (query.trim().isEmpty && townId == null) {
-        throw ArgumentError('Search query or townId required');
-      }
+    final queryParams = <String, dynamic>{
+      'q': query.trim(),
+      'townId': ?townId,
+      'eventType': ?eventType,
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      // Build query parameters
-      final queryParams = <String, dynamic>{
-        'q': query.trim(),
-        'townId': ?townId,
-        'eventType': ?eventType,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.eventSearchUrl(),
+      queryParameters: queryParams,
+    );
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.eventSearchUrl(),
-        queryParameters: queryParams,
-      );
-
-      return EventListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return EventListResponse.fromJson(response.data!);
   }
 
   /// Get current/nearby events for mobile display
@@ -107,37 +83,28 @@ class EventApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      // Build query parameters
-      final queryParams = <String, dynamic>{
-        'townId': ?townId,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final queryParams = <String, dynamic>{
+      'townId': ?townId,
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.currentEventsUrl(),
-        queryParameters: queryParams,
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.currentEventsUrl(),
+      queryParameters: queryParams,
+    );
 
-      return EventListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return EventListResponse.fromJson(response.data!);
   }
 
   /// Get available event types for filtering
   Future<List<EventTypeDto>> getEventTypes() async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.eventTypesUrl(),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.eventTypesUrl(),
+    );
 
-      return response.data!
-          .map((e) => EventTypeDto.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map((e) => EventTypeDto.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

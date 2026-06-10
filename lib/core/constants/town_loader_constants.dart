@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 /// Constants for the Town Loader Screen
-class TownLoaderConstants {
+abstract final class TownLoaderConstants {
   // Spacing constants
   static const double horizontalPadding = 20.0;
   static const double verticalPadding = 12.0;

@@ -7,16 +7,16 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../services/discovery_api_service.dart' show DiscoveryApiService, DiscoverySubmitException;
+import '../../repositories/repositories.dart';
 
 class SuggestDiscoveryViewModel extends ChangeNotifier {
   SuggestDiscoveryViewModel({
     required this.town,
-    required DiscoveryApiService discoveryApiService,
-  }) : _api = discoveryApiService;
+    required DiscoveryRepository discoveryRepository,
+  }) : _repository = discoveryRepository;
 
   final TownDto town;
-  final DiscoveryApiService _api;
+  final DiscoveryRepository _repository;
 
   final formKey = GlobalKey<FormState>();
   final titleController = TextEditingController();
@@ -54,7 +54,7 @@ class SuggestDiscoveryViewModel extends ChangeNotifier {
     loadingCategories = true;
     notifyListeners();
     try {
-      categories = await _api.getCategories();
+      categories = await _repository.getCategories();
       if (categories.isNotEmpty) {
         selectedCategoryId = categories.first.id;
       }
@@ -127,7 +127,7 @@ class SuggestDiscoveryViewModel extends ChangeNotifier {
     loading = true;
     notifyListeners();
     try {
-      await _api.submitSuggestion(
+      await _repository.submitSuggestion(
         townId: town.id,
         title: titleController.text.trim(),
         category: selectedCategoryId!,

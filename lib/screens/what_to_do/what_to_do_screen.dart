@@ -17,7 +17,7 @@ class WhatToDoScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => WhatToDoViewModel(
-        discoveryApiService: serviceLocator.discoveryApiService,
+        discoveryRepository: serviceLocator.discoveryRepository,
         errorHandler: serviceLocator.errorHandler,
         town: town,
       ),
@@ -308,7 +308,7 @@ class _FeaturedCard extends StatelessWidget {
     required this.onTap,
   });
 
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
   final TownDiscoveryDto discovery;
   final VoidCallback onTap;
 
@@ -493,7 +493,7 @@ class _DiscoveryListCard extends StatelessWidget {
     this.votePending = false,
   });
 
-  final EntityListingTheme listingTheme;
+  final ListingGradients listingTheme;
   final TownDiscoveryDto discovery;
   final VoidCallback onTap;
   final VoidCallback onVoteUp;
@@ -756,7 +756,7 @@ class _EmptyDiscoveries extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            WhatToDoConstants.emptyDescription(townName),
+            WhatToDoCopy.emptyDescription(townName),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),

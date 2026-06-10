@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Constants for Service Category page
 /// All magic numbers, spacing, colors, strings, and layout values
 
-class ServiceCategoryConstants {
+abstract final class ServiceCategoryConstants {
   // Spacing and sizing
   static const double pagePadding = 24.0;
   static const double cardSpacing = 16.0;

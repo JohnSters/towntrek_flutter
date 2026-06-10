@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// Listing-screen hero/card gradients and per-card text roles (design doc §1).
-/// Surfaces ([pageBg], [cardBg], etc.) live on [EntityListingThemeExtension] — use
-/// `context.entityListing` / `context.entityListingTheme` from [entity_listing_theme_extension.dart].
+/// Surfaces ([pageBg], [cardBg], etc.) live on [EntityListingThemeExtension] - use
+/// `context.entityListing` / `context.listingGradients` from
+/// [entity_listing_theme_extension.dart].
 @immutable
-class EntityListingTheme {
+class ListingGradients {
   final List<Color> heroGradientStops;
   final Color resultsBand;
   final List<Color> cardHeaderGradientStops;
@@ -12,7 +13,7 @@ class EntityListingTheme {
   final Color textLocation;
   final Color accent;
 
-  const EntityListingTheme({
+  const ListingGradients({
     required this.heroGradientStops,
     required this.resultsBand,
     required this.cardHeaderGradientStops,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Constants for Service Detail Page
 /// Contains all spacing, sizing, colors, strings, and styling values
-class ServiceDetailConstants {
+abstract final class ServiceDetailConstants {
   // Private constructor to prevent instantiation
   ServiceDetailConstants._();
 

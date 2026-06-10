@@ -1,3 +1,5 @@
+import '../core/json/json_helpers.dart';
+
 /// Card summary for a property listing (public API)
 class PropertyListingCardDto {
   final int id;
@@ -37,7 +39,7 @@ class PropertyListingCardDto {
       townName: json['townName'] as String? ?? '',
       province: json['province'] as String? ?? '',
       listingType: json['listingType'] as int? ?? 0,
-      price: _readPrice(json['price']),
+      price: JsonHelpers.price(json['price']),
       primaryImageUrl: json['primaryImageUrl'] as String?,
       isFeatured: json['isFeatured'] as bool? ?? false,
       viewCount: json['viewCount'] as int? ?? 0,
@@ -46,9 +48,4 @@ class PropertyListingCardDto {
     );
   }
 
-  static double _readPrice(dynamic value) {
-    if (value == null) return 0;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString()) ?? 0;
-  }
 }

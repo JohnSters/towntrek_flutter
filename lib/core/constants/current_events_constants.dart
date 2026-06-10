@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Constants for Current Events Screen
 /// Contains all spacing, sizing, colors, strings, and styling values
-class CurrentEventsConstants {
+abstract final class CurrentEventsConstants {
   // Private constructor to prevent instantiation
   CurrentEventsConstants._();
 

@@ -64,7 +64,7 @@ class _BusinessCardScreenContentState
 
   Widget _searchBar(
     BusinessCardViewModel viewModel,
-    EntityListingTheme listingTheme,
+    ListingGradients listingTheme,
   ) {
     return EntityListingSearchBar(
       controller: _searchController,
@@ -110,7 +110,7 @@ class _BusinessCardScreenContentState
   Widget _buildContent(
     BuildContext context,
     BusinessCardViewModel viewModel,
-    EntityListingTheme listingTheme,
+    ListingGradients listingTheme,
   ) {
     final state = viewModel.state;
 
@@ -151,7 +151,7 @@ class _BusinessCardScreenContentState
     BuildContext context, {
     required AppError error,
     required BusinessCardViewModel viewModel,
-    required EntityListingTheme listingTheme,
+    required ListingGradients listingTheme,
   }) {
     final header = BusinessCardHeroHeader(
       theme: listingTheme,
@@ -206,7 +206,7 @@ class _BusinessCardScreenContentState
   Widget _buildEmptyView(
     BuildContext context,
     BusinessCardViewModel viewModel,
-    EntityListingTheme listingTheme,
+    ListingGradients listingTheme,
   ) {
     return Column(
       children: [
@@ -231,7 +231,7 @@ class _BusinessCardScreenContentState
   Widget _buildSearchEmptyView(
     BuildContext context,
     BusinessCardViewModel viewModel,
-    EntityListingTheme listingTheme,
+    ListingGradients listingTheme,
     BusinessCardSuccess state,
   ) {
     final theme = Theme.of(context);
@@ -301,7 +301,7 @@ class _BusinessCardScreenContentState
     BuildContext context,
     BusinessCardViewModel viewModel,
     BusinessCardSuccess state,
-    EntityListingTheme listingTheme,
+    ListingGradients listingTheme,
   ) {
     return Column(
       children: [
@@ -329,7 +329,7 @@ class _BusinessCardScreenContentState
     BuildContext context,
     BusinessCardViewModel viewModel,
     BusinessCardSuccess state,
-    EntityListingTheme listingTheme,
+    ListingGradients listingTheme,
   ) {
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {

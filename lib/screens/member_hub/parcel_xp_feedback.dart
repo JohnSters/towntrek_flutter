@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
-import '../../core/widgets/app_scaffold_messenger.dart';
 import '../../models/models.dart';
 import '../../theme/member_level_tier_style.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../network/api_client.dart';
+import '../../network/api_client.dart';
 import 'app_scaffold_messenger.dart';
 
 /// Shows a user-facing error SnackBar from any thrown [error].

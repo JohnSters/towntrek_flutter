@@ -1,6 +1,7 @@
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/api_config.dart';
+import '../constants/discovery_constants.dart';
 import '../constants/landing_page_constants.dart';
 
 /// Utility functions for handling URLs
@@ -30,4 +31,9 @@ class UrlUtils {
     final uri = Uri.parse(LandingScreenConstants.registerAccountUrl);
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
+
+  /// Builds the `mailto:` URI for reporting a discovery to support.
+  static String reportDiscoveryMailto(int discoveryId) =>
+      'mailto:${DiscoveryConstants.reportEmail}'
+      '?subject=${Uri.encodeComponent('Report Discovery #$discoveryId')}';
 }

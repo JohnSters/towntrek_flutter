@@ -17,26 +17,21 @@ class ServiceApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      // Build query parameters
-      final queryParams = <String, dynamic>{
-        'townId': ?townId,
-        'categoryId': ?categoryId,
-        'subCategoryId': ?subCategoryId,
-        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final queryParams = <String, dynamic>{
+      'townId': ?townId,
+      'categoryId': ?categoryId,
+      'subCategoryId': ?subCategoryId,
+      if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.servicesUrl(),
-        queryParameters: queryParams,
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.servicesUrl(),
+      queryParameters: queryParams,
+    );
 
-      return ServiceListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return ServiceListResponse.fromJson(response.data!);
   }
 
   /// Search services with flexible criteria
@@ -48,89 +43,64 @@ class ServiceApiService {
     int page = 1,
     int pageSize = ApiConfig.defaultPageSize,
   }) async {
-    try {
-      final queryParams = <String, dynamic>{
-        'q': query.trim(),
-        'townId': ?townId,
-        'categoryId': ?categoryId,
-        'subCategoryId': ?subCategoryId,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    final queryParams = <String, dynamic>{
+      'q': query.trim(),
+      'townId': ?townId,
+      'categoryId': ?categoryId,
+      'subCategoryId': ?subCategoryId,
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.serviceSearchUrl(),
-        queryParameters: queryParams,
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.serviceSearchUrl(),
+      queryParameters: queryParams,
+    );
 
-      return ServiceListResponse.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return ServiceListResponse.fromJson(response.data!);
   }
 
   /// Get detailed information for a specific service
   Future<ServiceDetailDto> getServiceDetails(int serviceId) async {
-    try {
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiConfig.serviceDetailUrl(serviceId),
-      );
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.serviceDetailUrl(serviceId),
+    );
 
-      return ServiceDetailDto.fromJson(response.data!);
-    } catch (e) {
-      rethrow;
-    }
+    return ServiceDetailDto.fromJson(response.data!);
   }
 
   /// Get available service categories with subcategories
   Future<List<ServiceCategoryDto>> getCategories() async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.serviceCategoriesUrl(),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.serviceCategoriesUrl(),
+    );
 
-      return response.data!
-          .map(
-            (json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map((json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get service categories with counts for a specific town
   Future<List<ServiceCategoryDto>> getCategoriesWithCounts(int townId) async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.serviceCategoriesWithCountsUrl(townId),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.serviceCategoriesWithCountsUrl(townId),
+    );
 
-      return response.data!
-          .map(
-            (json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map((json) => ServiceCategoryDto.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get subcategories for a given category
   Future<List<ServiceSubCategoryDto>> getSubCategories(int categoryId) async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>(
-        ApiConfig.serviceSubCategoriesUrl(categoryId),
-      );
+    final response = await _apiClient.get<List<dynamic>>(
+      ApiEndpoints.serviceSubCategoriesUrl(categoryId),
+    );
 
-      return response.data!
-          .map(
-            (json) =>
-                ServiceSubCategoryDto.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
+    return response.data!
+        .map(
+          (json) => ServiceSubCategoryDto.fromJson(json as Map<String, dynamic>),
+        )
+        .toList();
   }
 }

@@ -1,7 +1,9 @@
+import 'app_layout.dart';
+
 /// Constants for the Landing Page
-class LandingScreenConstants {
+abstract final class LandingScreenConstants {
   // Spacing constants
-  static const double horizontalPadding = 24.0;
+  static const double horizontalPadding = AppSpacing.screenHorizontal;
   static const double verticalSpacingLarge = 40.0;
   static const double verticalSpacingMedium = 24.0;
   static const double verticalSpacingSmall = 16.0;

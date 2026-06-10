@@ -13,7 +13,7 @@ class StatsApiService {
     final queryParams = <String, dynamic>{'townId': ?townId};
 
     final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConfig.statsSummaryUrl(),
+      ApiEndpoints.statsSummaryUrl(),
       queryParameters: queryParams,
     );
 

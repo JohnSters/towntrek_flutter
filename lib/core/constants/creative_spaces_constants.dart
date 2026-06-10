@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Constants for Creative Spaces screens, including layout, labels, and visuals.
-class CreativeSpacesConstants {
-  CreativeSpacesConstants._();
+import 'app_layout.dart';
 
+/// Constants for Creative Spaces screens, including layout, labels, and visuals.
+abstract final class CreativeSpacesConstants {
   // Page layout
   static const double pagePadding = 16.0;
   static const double pageHeaderHeight = 112.0;
   static const double sectionSpacing = 10.0;
   static const double cardSpacing = 10.0;
   static const double contentSpacing = 18.0;
-  static const double searchBarRadius = 14.0;
+  static const double searchBarRadius = AppRadii.searchBar;
   static const double searchBarContentPadding = 12.0;
   static const double contextStripActionSpacing = 6.0;
 
@@ -117,14 +117,6 @@ class CreativeSpacesConstants {
   static const Color creativeSecondary = Color(0xFF7B1FA2); // Violet
   static const Color creativeHighlight = Color(0xFFFFD6E7); // Soft rose
   static const Color creativeTint = Color(0xFFFFF2F8); // Light creative tint
-  static const Color quickActionMapBackground = Color(0xFFF3F4FF);
-  static const Color quickActionMapIcon = Color(0xFF3F51B5);
-  static const Color quickActionCallBackground = Color(0xFFE8F5E9);
-  static const Color quickActionCallIcon = Color(0xFF2E7D32);
-  static const Color quickActionEmailBackground = Color(0xFFFCE4EC);
-  static const Color quickActionEmailIcon = Color(0xFFC2185B);
-  static const Color quickActionWebsiteBackground = Color(0xFFF3E5F5);
-  static const Color quickActionWebsiteIcon = Color(0xFF6A1B9A);
   static const Color categoryPillTextColor = Color(0xFFAD1457);
   static const Color categoryPillBackgroundColor = Color(0xFFFCE4EC);
   static const Color subCategoryPillTextColor = Color(0xFF6A1B9A);

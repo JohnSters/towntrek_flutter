@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:logger/logger.dart' as logger_package;
 
 /// Simple logger utility for consistent logging throughout the app
@@ -12,7 +13,10 @@ class Logger {
       printEmojis: true,
       dateTimeFormat: logger_package.DateTimeFormat.none,
     ),
-    level: logger_package.Level.debug, // TODO: Change to Level.info for production
+    // Verbose in debug; only info-and-above in release builds.
+    level: kReleaseMode
+        ? logger_package.Level.info
+        : logger_package.Level.debug,
   );
 
   /// Log debug message

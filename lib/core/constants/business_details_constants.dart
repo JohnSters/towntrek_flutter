@@ -1,5 +1,5 @@
 /// Constants for Business Details page layout, spacing, and strings
-class BusinessDetailsConstants {
+abstract final class BusinessDetailsConstants {
   // Header heights and spacing
   static const double headerHeight = 140.0;
   static const double headerHorizontalPadding = 24.0;

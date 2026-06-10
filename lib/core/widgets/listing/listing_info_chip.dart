@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../constants/entity_listing_constants.dart';
-import '../../theme/entity_listing_theme_extension.dart';
+import '../../constants/entity_listing_constants.dart';
+import '../../../theme/entity_listing_theme_extension.dart';
+import '../../../theme/listing_status_colors.dart';
 
 /// Info chip for listing card bodies (design doc §5b).
 class ListingInfoChip extends StatelessWidget {
@@ -49,12 +50,12 @@ class ListingOpenClosedChip extends StatelessWidget {
     this.closedLabel,
   });
 
-  static const Color _openBg = Color(0xFFE8F5E9);
-  static const Color _openFg = Color(0xFF2E7D32);
-  static const Color _openBorder = Color(0xFFC8E6C9);
-  static const Color _closedBg = Color(0xFFECEFF1);
-  static const Color _closedFg = Color(0xFF546E7A);
-  static const Color _closedBorder = Color(0xFFB0BEC5);
+  static const Color _openBg = ListingStatusColors.chipOpenBg;
+  static const Color _openFg = ListingStatusColors.chipOpenFg;
+  static const Color _openBorder = ListingStatusColors.chipOpenBorder;
+  static const Color _closedBg = ListingStatusColors.chipClosedBg;
+  static const Color _closedFg = ListingStatusColors.chipClosedFg;
+  static const Color _closedBorder = ListingStatusColors.chipClosedBorder;
 
   @override
   Widget build(BuildContext context) {

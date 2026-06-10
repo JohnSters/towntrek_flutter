@@ -1,16 +1,11 @@
+import '../core/json/json_helpers.dart';
 import 'parcel_dto.dart';
 import 'town_dto.dart';
-
-int _memberEnumInt(dynamic value, int fallback) {
-  if (value is int) return value;
-  if (value is num) return value.toInt();
-  return int.tryParse(value?.toString() ?? '') ?? fallback;
-}
 
 enum MemberTrustLevel { newMember, community, trusted }
 
 MemberTrustLevel _trustLevelFromJson(dynamic value) {
-  switch (_memberEnumInt(value, 1)) {
+  switch (JsonHelpers.enumInt(value, 1)) {
     case 2:
       return MemberTrustLevel.community;
     case 3:

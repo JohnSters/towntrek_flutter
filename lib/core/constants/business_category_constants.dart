@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'app_layout.dart';
 
 /// Constants for Business Category page layout, spacing, and strings
-class BusinessCategoryConstants {
+abstract final class BusinessCategoryConstants {
   // Header heights
   static const double headerHeight = 120.0;
 
@@ -11,7 +11,7 @@ class BusinessCategoryConstants {
   static const double categoryIconContainerSize = 48.0;
 
   // Spacing and padding
-  static const double horizontalPadding = 24.0;
+  static const double horizontalPadding = AppSpacing.screenHorizontal;
   static const double verticalPadding = 12.0;
   static const double contentPadding = 20.0;
   static const double smallSpacing = 16.0;
@@ -34,34 +34,6 @@ class BusinessCategoryConstants {
   static const double connectedButtonHorizontalPadding = 10.0;
   static const double connectedButtonVerticalPadding = 7.0;
   static const double connectedButtonIconSize = 19.0;
-
-  /// Shared compact [FilledButton] style for the Wrong Town / Events row.
-  static ButtonStyle connectedHeaderButtonStyle(
-    ThemeData theme, {
-    Color? backgroundColor,
-    Color? foregroundColor,
-    double elevation = 0,
-    Color? shadowColor,
-    OutlinedBorder? shape,
-  }) {
-    return FilledButton.styleFrom(
-      minimumSize: Size(0, connectedButtonHeight),
-      maximumSize: Size(double.infinity, connectedButtonHeight),
-      padding: EdgeInsets.symmetric(
-        horizontal: connectedButtonHorizontalPadding,
-        vertical: connectedButtonVerticalPadding,
-      ),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
-      iconSize: connectedButtonIconSize,
-      textStyle: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-      backgroundColor: backgroundColor,
-      foregroundColor: foregroundColor,
-      elevation: elevation,
-      shadowColor: shadowColor,
-      shape: shape ?? const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-    );
-  }
 
   // Card styling
   static const double cardElevation = 0.0;

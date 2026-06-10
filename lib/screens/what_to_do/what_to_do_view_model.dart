@@ -2,24 +2,23 @@ import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
 import '../../models/models.dart';
-import '../../services/discovery_api_service.dart'
-    show DiscoveryApiService, DiscoveryVoteException;
+import '../../repositories/repositories.dart';
 import '../discovery_detail/discovery_detail_screen.dart';
 import '../suggest_discovery/suggest_discovery_screen.dart';
 import 'what_to_do_state.dart';
 
 class WhatToDoViewModel extends ChangeNotifier {
   WhatToDoViewModel({
-    required DiscoveryApiService discoveryApiService,
+    required DiscoveryRepository discoveryRepository,
     required ErrorHandler errorHandler,
     required TownDto town,
-  }) : _discoveryApiService = discoveryApiService,
+  }) : _discoveryRepository = discoveryRepository,
        _errorHandler = errorHandler,
        _town = town {
     load();
   }
 
-  final DiscoveryApiService _discoveryApiService;
+  final DiscoveryRepository _discoveryRepository;
   final ErrorHandler _errorHandler;
   final TownDto _town;
   final Set<int> _voteInFlightIds = <int>{};
@@ -34,13 +33,13 @@ class WhatToDoViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final categories = await _discoveryApiService.getCategories();
-      final count = await _discoveryApiService.getDiscoveryCount(_town.id);
-      final featured = await _discoveryApiService.getFeatured(
+      final categories = await _discoveryRepository.getCategories();
+      final count = await _discoveryRepository.getDiscoveryCount(_town.id);
+      final featured = await _discoveryRepository.getFeatured(
         _town.id,
         count: 5,
       );
-      final first = await _discoveryApiService.getDiscoveries(
+      final first = await _discoveryRepository.getDiscoveries(
         _town.id,
         page: 1,
         pageSize: WhatToDoConstants.pageSize,
@@ -85,7 +84,7 @@ class WhatToDoViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await _discoveryApiService.getDiscoveries(
+      final res = await _discoveryRepository.getDiscoveries(
         _town.id,
         category: categoryId,
         page: 1,
@@ -123,7 +122,7 @@ class WhatToDoViewModel extends ChangeNotifier {
 
     try {
       final nextPage = s.page + 1;
-      final res = await _discoveryApiService.getDiscoveries(
+      final res = await _discoveryRepository.getDiscoveries(
         _town.id,
         category: s.selectedCategoryId,
         page: nextPage,
@@ -143,7 +142,7 @@ class WhatToDoViewModel extends ChangeNotifier {
         _state = cur.copyWith(loadingMore: false);
       }
       notifyListeners();
-      debugPrint('loadMore failed: $error');
+      Logger.w('loadMore failed: $error');
     }
   }
 
@@ -169,7 +168,7 @@ class WhatToDoViewModel extends ChangeNotifier {
         -1 => 'down',
         _ => 'clear',
       };
-      final summary = await _discoveryApiService.voteDiscovery(
+      final summary = await _discoveryRepository.voteDiscovery(
         discovery.id,
         action,
       );
@@ -206,12 +205,12 @@ class WhatToDoViewModel extends ChangeNotifier {
     if (currentState is! WhatToDoSuccess) return;
 
     try {
-      final count = await _discoveryApiService.getDiscoveryCount(_town.id);
-      final featured = await _discoveryApiService.getFeatured(
+      final count = await _discoveryRepository.getDiscoveryCount(_town.id);
+      final featured = await _discoveryRepository.getFeatured(
         _town.id,
         count: 5,
       );
-      final res = await _discoveryApiService.getDiscoveries(
+      final res = await _discoveryRepository.getDiscoveries(
         _town.id,
         category: currentState.selectedCategoryId,
         page: 1,
@@ -231,7 +230,7 @@ class WhatToDoViewModel extends ChangeNotifier {
       );
       notifyListeners();
     } catch (error) {
-      debugPrint('refresh after vote failed: $error');
+      Logger.w('refresh after vote failed: $error');
     }
   }
 
