@@ -13,6 +13,7 @@ import '../town_selection/town_selection_screen.dart';
 import '../what_to_do/what_to_do_screen.dart';
 import '../property_list/property_list_screen.dart';
 import '../member_hub.dart';
+import '../forum/forum_list_screen.dart';
 import 'town_feature_selection_screen.dart';
 import 'town_feature_selection_state.dart';
 
@@ -279,6 +280,17 @@ class TownFeatureViewModel extends ChangeNotifier {
         builder: (_) => isAuthenticated
             ? BoardScreen(town: town)
             : GuestBoardScreen(town: town),
+      ),
+    );
+  }
+
+  void navigateToForum(BuildContext context, TownDto town) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ForumListScreen(
+          townId: town.id,
+          townName: town.name,
+        ),
       ),
     );
   }

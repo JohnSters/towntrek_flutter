@@ -39,6 +39,7 @@ export 'member_progression_dto.dart';
 export 'member_dto.dart';
 export 'mobile_auth_dto.dart';
 export 'parcel_dto.dart';
+export 'forum_dto.dart';
 export 'property_listing_card_dto.dart';
 export 'property_listing_detail_dto.dart';
 export 'property_listing_image_dto.dart';

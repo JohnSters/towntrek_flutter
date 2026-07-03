@@ -29,6 +29,10 @@ dependencies:
   # URL Launcher for external links, calls, emails
   url_launcher: ^6.2.5
 
+  # Markdown rendering (forum posts)
+  flutter_markdown: ^0.7.7+1
+  markdown: ^7.3.0
+
   # Internationalization for date formatting
   intl: ^0.20.2
 

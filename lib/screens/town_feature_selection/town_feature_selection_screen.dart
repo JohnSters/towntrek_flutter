@@ -258,6 +258,14 @@ class _TownFeatureSelectionScreenContentState
       onTap: () => viewModel.navigateToParcels(context, town),
     );
 
+    final forum = FeatureData(
+      title: TownFeatureConstants.forumTitle,
+      description: TownFeatureConstants.forumDescription,
+      icon: Icons.forum_outlined,
+      color: const Color(TownFeatureConstants.forumColor),
+      onTap: () => viewModel.navigateToForum(context, town),
+    );
+
     const gap = SizedBox(height: TownFeatureConstants.gridGap);
     const hGap = SizedBox(width: TownFeatureConstants.gridGap);
 
@@ -300,6 +308,10 @@ class _TownFeatureSelectionScreenContentState
         if (town.isParcelBoardEnabled) ...[
           gap,
           FeatureHeroCard(feature: parcels),
+        ],
+        if (town.isForumEnabled) ...[
+          gap,
+          FeatureHeroCard(feature: forum),
         ],
       ],
     );

@@ -4,6 +4,7 @@ export 'discovery_repository.dart';
 export 'member_repository.dart';
 export 'mobile_auth_repository.dart';
 export 'parcel_repository.dart';
+export 'forum_repository.dart';
 export 'town_repository.dart';
 export 'event_repository.dart';
 export 'creative_space_repository.dart';

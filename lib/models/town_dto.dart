@@ -11,6 +11,7 @@ class TownDto {
   final double? latitude;
   final double? longitude;
   final bool isParcelBoardEnabled;
+  final bool isForumEnabled;
   final int businessCount;
   final int servicesCount;
   final int eventsCount;
@@ -28,6 +29,7 @@ class TownDto {
     this.latitude,
     this.longitude,
     this.isParcelBoardEnabled = false,
+    this.isForumEnabled = true,
     required this.businessCount,
     this.servicesCount = 0,
     this.eventsCount = 0,
@@ -48,6 +50,7 @@ class TownDto {
       latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
       longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
       isParcelBoardEnabled: (json['isParcelBoardEnabled'] as bool?) ?? false,
+      isForumEnabled: (json['isForumEnabled'] as bool?) ?? true,
       businessCount: json['businessCount'] as int,
       servicesCount: (json['serviceCount'] as int?) ?? 0,
       eventsCount: (json['eventCount'] as int?) ?? 0,

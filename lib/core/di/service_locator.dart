@@ -31,6 +31,7 @@ class ServiceLocator {
   late final MobileAuthApiService _mobileAuthApiService;
   late final MemberApiService _memberApiService;
   late final ParcelApiService _parcelApiService;
+  late final ForumApiService _forumApiService;
   late final GeolocationService _geolocationService;
   late final NavigationService _navigationService;
   late final WeatherService _weatherService;
@@ -48,6 +49,7 @@ class ServiceLocator {
   late final MobileAuthRepository _mobileAuthRepository;
   late final MemberRepository _memberRepository;
   late final ParcelRepository _parcelRepository;
+  late final ForumRepository _forumRepository;
   late final DiscoveryRepository _discoveryRepository;
 
   /// Initialize all dependencies
@@ -71,6 +73,7 @@ class ServiceLocator {
     _mobileAuthApiService = MobileAuthApiService(_apiClient);
     _memberApiService = MemberApiService(_apiClient);
     _parcelApiService = ParcelApiService(_apiClient);
+    _forumApiService = ForumApiService(_apiClient);
     _geolocationService = GeolocationServiceImpl();
     _navigationService = NavigationServiceImpl();
     _weatherService = WeatherServiceImpl();
@@ -86,6 +89,7 @@ class ServiceLocator {
     _mobileAuthRepository = MobileAuthRepositoryImpl(_mobileAuthApiService);
     _memberRepository = MemberRepositoryImpl(_memberApiService);
     _parcelRepository = ParcelRepositoryImpl(_parcelApiService);
+    _forumRepository = ForumRepositoryImpl(_forumApiService);
     _discoveryRepository = DiscoveryRepositoryImpl(_discoveryApiService);
     _mobileSessionManager = MobileSessionManager(
       mobileAuthRepository: _mobileAuthRepository,
@@ -196,6 +200,11 @@ class ServiceLocator {
   ParcelRepository get parcelRepository {
     _ensureInitialized();
     return _parcelRepository;
+  }
+
+  ForumRepository get forumRepository {
+    _ensureInitialized();
+    return _forumRepository;
   }
 
   MobileSessionManager get mobileSessionManager {

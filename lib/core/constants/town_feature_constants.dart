@@ -30,6 +30,7 @@ abstract final class TownFeatureConstants {
   static const int propertiesColor = 0xFF2E7D32; // Green 800
   static const int equipmentRentalsColor = 0xFFFF9800; // Amber / equipment pillar
   static const int parcelsColor = 0xFF6D4C41; // Brown 600
+  static const int forumColor = 0xFF33658A; // TownTrek lapis
 
   /// Business category key from server seed (matches web `?category=equipment-rentals`).
   static const String equipmentRentalsCategoryKey = 'equipment-rentals';
@@ -63,5 +64,8 @@ abstract final class TownFeatureConstants {
   static const String parcelsTitle = 'Parcels & Routes';
   static const String parcelsDescription =
       'Ask for help with collections, drop-offs, and local routes';
+  static const String forumTitle = 'Community Forum';
+  static const String forumDescription =
+      'Local conversations, updates, and neighbourly help';
   static const String changeTownTooltip = 'Wrong Town?';
 }
