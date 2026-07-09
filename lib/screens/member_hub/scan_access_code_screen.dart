@@ -107,7 +107,7 @@ class _ScanAccessCodeScreenState extends State<ScanAccessCodeScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
               child: Text(
-                'Point your camera at the QR code on the My Devices page.',
+                'Point your camera at the QR code if it is on another screen. Otherwise go back and paste or type your code.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.white,

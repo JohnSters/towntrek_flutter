@@ -14,6 +14,11 @@ class AccessCodeEntryViewModel extends ChangeNotifier {
   bool get submitting => _submitting;
   String? get submitError => _submitError;
 
+  void setSubmitError(String message) {
+    _submitError = message;
+    notifyListeners();
+  }
+
   Future<bool> submit({
     required String code,
     required String deviceName,

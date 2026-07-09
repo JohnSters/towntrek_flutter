@@ -31,4 +31,18 @@ abstract final class ForumConstants {
   static const int reportReasonMaxLength = 500;
   static const int defaultPageSize = 20;
   static const int forumColor = 0xFF33658A;
+
+  static const double cardRadius = 18;
+  static const double cardSpacing = 12;
+  static const double guidelinesRadius = 12;
+
+  static const String badgeAnnouncement = 'Announcement';
+  static const String badgePinned = 'Pinned';
+  static const String badgeLocked = 'Locked';
+  static const String filterRecent = 'Recent';
+  static const String filterUnanswered = 'Unanswered';
+  static const String filterAnnouncements = 'Announcements';
+  static const String filterMyPosts = 'My posts';
+  static const String filterMyPostsValue = 'MyPosts';
+  static const String allTopicsLabel = 'All topics';
 }

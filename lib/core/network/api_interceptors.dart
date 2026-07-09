@@ -42,6 +42,35 @@ Map<String, dynamic> redactHeadersForLog(Map<String, dynamic> headers) {
   return out;
 }
 
+const Set<String> _sensitivePayloadKeys = {
+  'code',
+  'accesstoken',
+  'refreshtoken',
+  'token',
+  'authorization',
+  'password',
+};
+
+/// Deep-walks [data] and replaces sensitive auth fields with `***` for logs.
+dynamic redactPayloadForLog(dynamic data) {
+  if (data is Map) {
+    final out = <String, dynamic>{};
+    for (final e in data.entries) {
+      final key = e.key.toString();
+      if (_sensitivePayloadKeys.contains(key.toLowerCase())) {
+        out[key] = '***';
+      } else {
+        out[key] = redactPayloadForLog(e.value);
+      }
+    }
+    return out;
+  }
+  if (data is List) {
+    return data.map(redactPayloadForLog).toList();
+  }
+  return data;
+}
+
 /// Builds the interceptors wired into [ApiClient].
 List<Interceptor> buildApiInterceptors(ApiClient client) {
   final interceptors = <Interceptor>[
@@ -64,7 +93,9 @@ class LoggingInterceptor extends Interceptor {
       Logger.d('Query Parameters: ${formatPayloadForLog(options.queryParameters)}');
     }
     if (options.data != null) {
-      Logger.d('Request Data: ${formatPayloadForLog(options.data)}');
+      Logger.d(
+        'Request Data: ${formatPayloadForLog(redactPayloadForLog(options.data))}',
+      );
     }
     Logger.d(
       'Headers: ${formatPayloadForLog(redactHeadersForLog(Map<String, dynamic>.from(options.headers)))}',
@@ -75,7 +106,9 @@ class LoggingInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     Logger.i('✅ API Response: ${response.statusCode} ${response.requestOptions.uri}');
-    Logger.d('Response Data: ${formatPayloadForLog(response.data)}');
+    Logger.d(
+      'Response Data: ${formatPayloadForLog(redactPayloadForLog(response.data))}',
+    );
     super.onResponse(response, handler);
   }
 
@@ -85,7 +118,9 @@ class LoggingInterceptor extends Interceptor {
     Logger.e('Error Message: ${err.message}');
     if (err.response != null) {
       Logger.e('Status Code: ${err.response?.statusCode}');
-      Logger.e('Error Response: ${formatPayloadForLog(err.response?.data)}');
+      Logger.e(
+        'Error Response: ${formatPayloadForLog(redactPayloadForLog(err.response?.data))}',
+      );
     }
     super.onError(err, handler);
   }

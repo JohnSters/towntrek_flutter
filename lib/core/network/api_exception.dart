@@ -42,21 +42,41 @@ class ApiException implements Exception {
   }
 }
 
+/// Backend [ApiErrorCodes.RefreshInvalid] — refresh token is revoked or unknown.
+const String kApiErrorCodeRefreshInvalid = 'REFRESH_INVALID';
+
+ApiException? _asApiException(Object error) {
+  if (error is ApiException) return error;
+  if (error is DioException) {
+    final inner = error.error;
+    if (inner is ApiException) return inner;
+  }
+  return null;
+}
+
 /// Whether [error] represents a 401 from the API (after the auth interceptor has
 /// already had its single chance to refresh). Callers use this to re-prompt the
 /// user to connect their device rather than showing a generic error.
 bool isUnauthorizedError(Object error) {
-  if (error is ApiException) {
-    return error.type == ApiExceptionType.unauthorized;
+  final api = _asApiException(error);
+  if (api != null) {
+    return api.type == ApiExceptionType.unauthorized;
   }
   if (error is DioException) {
-    final inner = error.error;
-    if (inner is ApiException) {
-      return inner.type == ApiExceptionType.unauthorized;
-    }
     return error.response?.statusCode == 401;
   }
   return false;
+}
+
+/// Whether a token-refresh failure means the local session must be cleared
+/// (invalid/revoked refresh token or unauthorized), as opposed to a transient
+/// network/server error where the session should be kept.
+bool isAuthDeadRefreshError(Object error) {
+  final api = _asApiException(error);
+  if (api == null) return false;
+  if (api.type == ApiExceptionType.unauthorized) return true;
+  return api.type == ApiExceptionType.badRequest &&
+      api.code == kApiErrorCodeRefreshInvalid;
 }
 
 /// User-visible text for failures from [ApiClient] / Dio (e.g. redeem-code errors).

@@ -7,7 +7,7 @@ import '../../core/utils/url_utils.dart';
 import 'connect_device_controller.dart';
 import 'scan_access_code_screen.dart';
 
-enum _ConnectedAccountDecision { continueCurrent, useDifferentCode }
+enum _ConnectedAccountDecision { continueCurrent, linkAnotherAccount }
 
 /// Shows the connect-device bottom sheet. Returns `true` if the user ends with a
 /// valid session (including when already authenticated before the sheet opens).
@@ -143,7 +143,7 @@ Future<_ConnectedAccountDecision?> _askHowToUseExistingSession(
             ),
             const SizedBox(height: 10),
             Text(
-              'You are currently signed in as $accountLabel. Continue with this account or switch to a different TREK code on this emulator.',
+              'You are currently signed in as $accountLabel. Continue with this account, or link another TownTrek account with a different access code.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: listing.bodyText,
                 height: 1.45,
@@ -193,9 +193,9 @@ Future<_ConnectedAccountDecision?> _askHowToUseExistingSession(
               onPressed: () {
                 Navigator.of(
                   sheetContext,
-                ).pop(_ConnectedAccountDecision.useDifferentCode);
+                ).pop(_ConnectedAccountDecision.linkAnotherAccount);
               },
-              child: const Text('Use a different access code'),
+              child: const Text('Link another account'),
             ),
           ],
         ),
@@ -258,7 +258,12 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
   Future<void> _submit() async {
     final code = _codeController.text.trim();
     final deviceName = _deviceNameController.text.trim();
-    if (code.isEmpty) return;
+    if (code.isEmpty) {
+      setState(() {
+        _submitError = 'Enter your TownTrek code';
+      });
+      return;
+    }
 
     setState(() {
       _submitting = true;
@@ -482,7 +487,7 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
                           listing,
                           '3',
                           Text(
-                            'Generate your TREK code and enter it here',
+                            'Generate your TREK code, then enter or paste it here. Scan the QR only if the code is on another screen.',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: listing.bodyText,
                               height: 1.45,
@@ -556,7 +561,9 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
       TextSpan(
         style: baseStyle,
         children: [
-          const TextSpan(text: 'Get your code from My Devices at '),
+          const TextSpan(
+            text: 'Get your code from My Devices at ',
+          ),
           WidgetSpan(
             alignment: PlaceholderAlignment.baseline,
             baseline: TextBaseline.alphabetic,
@@ -567,7 +574,7 @@ class _ConnectDeviceSheetBodyState extends State<_ConnectDeviceSheetBody> {
           ),
           const TextSpan(
             text:
-                '. You can also rename this device so it is easier to manage later.',
+                '. Copy it there and paste it here, or type it. Scan QR if the code is on another screen. You can also rename this device so it is easier to manage later.',
           ),
         ],
       ),

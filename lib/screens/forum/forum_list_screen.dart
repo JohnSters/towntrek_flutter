@@ -65,6 +65,7 @@ class _ForumListScreenContentState extends State<_ForumListScreenContent> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ForumListViewModel>();
+    final listing = context.entityListing;
 
     return ListenableBuilder(
       listenable: serviceLocator.mobileSessionManager,
@@ -81,6 +82,7 @@ class _ForumListScreenContentState extends State<_ForumListScreenContent> {
         }
 
         return Scaffold(
+          backgroundColor: listing.pageBg,
           appBar: AppBar(
             title: Text('${ForumConstants.pageTitle} · ${viewModel.townName}'),
           ),
@@ -130,12 +132,16 @@ class _ForumListScreenContentState extends State<_ForumListScreenContent> {
     int index, {
     required bool isAuthenticated,
   }) {
+    final listing = context.entityListing;
+
     if (index == 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Text(
           ForumConstants.pageSubtitle,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: listing.bodyText,
+              ),
         ),
       );
     }
@@ -151,6 +157,8 @@ class _ForumListScreenContentState extends State<_ForumListScreenContent> {
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
+            filled: true,
+            fillColor: listing.cardBg,
             hintText: ForumConstants.searchHint,
             prefixIcon: const Icon(Icons.search),
             suffixIcon: IconButton(
@@ -173,7 +181,7 @@ class _ForumListScreenContentState extends State<_ForumListScreenContent> {
           child: Row(
             children: [
               _CategoryChip(
-                label: 'All topics',
+                label: ForumConstants.allTopicsLabel,
                 selected: viewModel.selectedCategoryId == null,
                 onTap: () => viewModel.setCategory(null),
               ),
@@ -190,35 +198,36 @@ class _ForumListScreenContentState extends State<_ForumListScreenContent> {
       );
     }
     if (index == 4) {
+      final segments = <ButtonSegment<String>>[
+        const ButtonSegment(
+          value: 'Recent',
+          label: Text(ForumConstants.filterRecent),
+        ),
+        const ButtonSegment(
+          value: 'Unanswered',
+          label: Text(ForumConstants.filterUnanswered),
+        ),
+        const ButtonSegment(
+          value: 'Announcements',
+          label: Text(ForumConstants.filterAnnouncements),
+        ),
+        if (isAuthenticated)
+          const ButtonSegment(
+            value: ForumConstants.filterMyPostsValue,
+            label: Text(ForumConstants.filterMyPosts),
+          ),
+      ];
+
       return Padding(
         padding: const EdgeInsets.only(bottom: 16),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _FilterChip(
-                label: 'Recent',
-                selected: viewModel.filter == 'Recent',
-                onTap: () => viewModel.setFilter('Recent'),
-              ),
-              _FilterChip(
-                label: 'Unanswered',
-                selected: viewModel.filter == 'Unanswered',
-                onTap: () => viewModel.setFilter('Unanswered'),
-              ),
-              _FilterChip(
-                label: 'Announcements',
-                selected: viewModel.filter == 'Announcements',
-                onTap: () => viewModel.setFilter('Announcements'),
-              ),
-              if (isAuthenticated)
-                _FilterChip(
-                  label: 'My posts',
-                  selected: viewModel.filter == 'MyPosts',
-                  onTap: () => viewModel.setFilter('MyPosts'),
-                ),
-            ],
-          ),
+        child: SegmentedButton<String>(
+          segments: segments,
+          selected: {viewModel.filter},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) {
+            if (selection.isEmpty) return;
+            viewModel.setFilter(selection.first);
+          },
         ),
       );
     }
@@ -273,12 +282,19 @@ class _GuidelinesBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final listing = context.entityListing;
+    final outline = Theme.of(context).colorScheme.outline;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(12),
+        color: listing.cardBg,
+        borderRadius: BorderRadius.circular(ForumConstants.guidelinesRadius),
+        border: Border.all(
+          color: outline.withValues(alpha: 0.25),
+          width: 0.5,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,13 +302,15 @@ class _GuidelinesBanner extends StatelessWidget {
           Icon(
             Icons.favorite_outline,
             size: 18,
-            color: Theme.of(context).colorScheme.primary,
+            color: listing.accent,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               ForumConstants.guidelinesText,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: listing.bodyText,
+                  ),
             ),
           ),
         ],
@@ -314,36 +332,29 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final listing = context.entityListing;
+    final borderColor = selected
+        ? colorScheme.primary
+        : colorScheme.outline.withValues(alpha: 0.38);
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
         label: Text(label),
         selected: selected,
         onSelected: (_) => onTap(),
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
+        showCheckmark: true,
+        checkmarkColor: colorScheme.onPrimary,
+        selectedColor: colorScheme.primary,
+        backgroundColor: listing.cardBg,
+        side: BorderSide(color: borderColor, width: 0.5),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+        labelStyle: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: selected ? colorScheme.onPrimary : colorScheme.onSurface,
+        ),
       ),
     );
   }
@@ -360,31 +371,50 @@ class _EmptyTopics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Icon(
-              Icons.forum_outlined,
-              size: 40,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              ForumConstants.emptyTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text('${ForumConstants.emptyDescription} ($townName).'),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onStartTopic,
-              icon: const Icon(Icons.add),
-              label: const Text(ForumConstants.startTopicCta),
-            ),
-          ],
+    final listing = context.entityListing;
+    final outline = Theme.of(context).colorScheme.outline;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: listing.cardBg,
+        borderRadius: BorderRadius.circular(ForumConstants.cardRadius),
+        border: Border.all(
+          color: outline.withValues(alpha: 0.25),
+          width: 0.5,
         ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.forum_outlined,
+            size: 40,
+            color: listing.accent,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            ForumConstants.emptyTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: listing.textTitle,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${ForumConstants.emptyDescription} ($townName).',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: listing.bodyText,
+                ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: onStartTopic,
+            icon: const Icon(Icons.add),
+            label: const Text(ForumConstants.startTopicCta),
+          ),
+        ],
       ),
     );
   }
@@ -398,59 +428,95 @@ class _TopicCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (topic.isAnnouncement || topic.isPinned || topic.isLocked)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      if (topic.isAnnouncement)
-                        const _StatusBadge(
-                          label: 'Announcement',
-                          color: Colors.orange,
-                        ),
-                      if (topic.isPinned)
-                        const _StatusBadge(
-                          label: 'Pinned',
-                          color: Colors.blueGrey,
-                        ),
-                      if (topic.isLocked)
-                        const _StatusBadge(
-                          label: 'Locked',
-                          color: Colors.grey,
-                        ),
-                    ],
+    final listing = context.entityListing;
+    final outline = Theme.of(context).colorScheme.outline;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: ForumConstants.cardSpacing),
+      child: Material(
+        color: listing.cardBg,
+        borderRadius: BorderRadius.circular(ForumConstants.cardRadius),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(ForumConstants.cardRadius),
+              border: Border.all(
+                color: outline.withValues(alpha: 0.25),
+                width: 0.5,
+              ),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (topic.isAnnouncement || topic.isPinned || topic.isLocked)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        if (topic.isAnnouncement)
+                          const _StatusPill(
+                            label: ForumConstants.badgeAnnouncement,
+                            kind: _StatusKind.announcement,
+                          ),
+                        if (topic.isPinned)
+                          const _StatusPill(
+                            label: ForumConstants.badgePinned,
+                            kind: _StatusKind.pinned,
+                          ),
+                        if (topic.isLocked)
+                          const _StatusPill(
+                            label: ForumConstants.badgeLocked,
+                            kind: _StatusKind.locked,
+                          ),
+                      ],
+                    ),
                   ),
+                Text(
+                  topic.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: listing.textTitle,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-              Text(topic.title, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 6),
-              Text(
-                topic.bodyPreview,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 12,
-                runSpacing: 4,
-                children: [
-                  Text(topic.authorDisplayName),
-                  Text('${topic.replyCount} replies'),
-                  Text('${topic.reactionCount} likes'),
+                if (topic.bodyPreview.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    topic.bodyPreview,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: listing.bodyText,
+                        ),
+                  ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    ListingInfoChip(
+                      icon: Icons.person_outline,
+                      label: topic.authorDisplayName,
+                    ),
+                    ListingInfoChip(
+                      icon: Icons.chat_bubble_outline,
+                      label: '${topic.replyCount} replies',
+                    ),
+                    ListingInfoChip(
+                      icon: Icons.thumb_up_outlined,
+                      label: '${topic.reactionCount} likes',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -458,20 +524,58 @@ class _TopicCard extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
+enum _StatusKind { announcement, pinned, locked }
 
-  const _StatusBadge({required this.label, required this.color});
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final _StatusKind kind;
+
+  const _StatusPill({required this.label, required this.kind});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: TextStyle(
-        color: color,
-        fontWeight: FontWeight.bold,
-        fontSize: 12,
+    final listing = context.entityListing;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final Color bg;
+    final Color fg;
+    final IconData icon;
+
+    switch (kind) {
+      case _StatusKind.announcement:
+        bg = colorScheme.tertiaryContainer.withValues(alpha: 0.65);
+        fg = colorScheme.onTertiaryContainer;
+        icon = Icons.campaign_outlined;
+      case _StatusKind.pinned:
+        bg = listing.chipBg;
+        fg = listing.accent;
+        icon = Icons.push_pin_outlined;
+      case _StatusKind.locked:
+        bg = colorScheme.surfaceContainerHighest;
+        fg = listing.footerHint;
+        icon = Icons.lock_outline;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: fg),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
+          ),
+        ],
       ),
     );
   }

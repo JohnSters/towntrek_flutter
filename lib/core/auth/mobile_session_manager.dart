@@ -197,8 +197,13 @@ class MobileSessionManager extends ChangeNotifier {
       return true;
     } catch (error) {
       Logger.e('Failed to refresh mobile session: $error');
-      await signOut();
-      return false;
+      if (isAuthDeadRefreshError(error)) {
+        await signOut();
+        return false;
+      }
+      // Transient failure: keep the local session. Still usable if the access
+      // token has not expired yet.
+      return !_isAccessTokenExpired(existing);
     }
   }
 
@@ -223,7 +228,11 @@ class MobileSessionManager extends ChangeNotifier {
       return true;
     } catch (error) {
       Logger.e('Failed to refresh mobile session (interceptor): $error');
-      await signOut();
+      if (isAuthDeadRefreshError(error)) {
+        await signOut();
+      }
+      // Transient: keep session so a later retry can refresh; return false so
+      // the original 401 propagates to the caller.
       return false;
     }
   }
@@ -346,6 +355,10 @@ class MobileSessionManager extends ChangeNotifier {
     return session.accessTokenExpiresAt.isBefore(
       DateTime.now().toUtc().add(const Duration(minutes: 1)),
     );
+  }
+
+  bool _isAccessTokenExpired(MobileAuthResponseDto session) {
+    return session.accessTokenExpiresAt.isBefore(DateTime.now().toUtc());
   }
 
   String? _displayNameForUser(String userId) {

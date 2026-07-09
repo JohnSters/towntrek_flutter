@@ -55,12 +55,16 @@ class _AccessCodeEntryScreenBodyState
   Future<void> _submit() async {
     final code = _codeController.text.trim();
     final deviceName = _deviceController.text.trim();
-    if (code.isEmpty || deviceName.isEmpty) return;
-
     final viewModel = context.read<AccessCodeEntryViewModel>();
+    if (code.isEmpty) {
+      viewModel.setSubmitError('Enter your TownTrek code');
+      return;
+    }
+
+    final defaultDeviceName = 'TownTrek ${Platform.operatingSystem}';
     final ok = await viewModel.submit(
       code: code,
-      deviceName: deviceName,
+      deviceName: deviceName.isEmpty ? defaultDeviceName : deviceName,
       mapError: resolveUserFacingApiError,
     );
     if (ok && mounted) {
@@ -103,7 +107,7 @@ class _AccessCodeEntryScreenBodyState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Link this phone with a short code from your TownTrek profile.',
+                      'Link this phone with a short code from My Devices on your TownTrek profile. Enter or paste the code here.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: listing.bodyText,
                         height: 1.45,
@@ -155,6 +159,10 @@ class _AccessCodeEntryScreenBodyState
                               onTap: () => UrlUtils.launchTowntrekRegister(),
                               child: Text('towntrek.co.za', style: linkHint),
                             ),
+                          ),
+                          const TextSpan(
+                            text:
+                                '. Copy and paste it here, or type it. Scan QR only if the code is on another screen.',
                           ),
                         ],
                       ),
