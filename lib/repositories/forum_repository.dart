@@ -11,11 +11,17 @@ abstract class ForumRepository {
     int page,
     int pageSize,
   });
-  Future<ForumTopicDetailDto> getTopicDetail(int topicId);
+  Future<ForumTopicDetailDto> getTopicDetail(
+    int topicId, {
+    int postsPage,
+    int postsPageSize,
+  });
   Future<ForumTopicDetailDto> createTopic(CreateForumTopicRequestDto request);
   Future<ForumPostDto> createPost(int topicId, CreateForumPostRequestDto request);
   Future<void> toggleReaction(int postId);
   Future<bool> toggleSubscription(int topicId);
+  Future<void> reportPost(int postId, String reason);
+  Future<void> reportTopic(int topicId, String reason);
 }
 
 class ForumRepositoryImpl implements ForumRepository {
@@ -46,8 +52,16 @@ class ForumRepositoryImpl implements ForumRepository {
       );
 
   @override
-  Future<ForumTopicDetailDto> getTopicDetail(int topicId) =>
-      _apiService.getTopicDetail(topicId);
+  Future<ForumTopicDetailDto> getTopicDetail(
+    int topicId, {
+    int postsPage = 1,
+    int postsPageSize = 20,
+  }) =>
+      _apiService.getTopicDetail(
+        topicId,
+        postsPage: postsPage,
+        postsPageSize: postsPageSize,
+      );
 
   @override
   Future<ForumTopicDetailDto> createTopic(CreateForumTopicRequestDto request) =>
@@ -63,4 +77,12 @@ class ForumRepositoryImpl implements ForumRepository {
   @override
   Future<bool> toggleSubscription(int topicId) =>
       _apiService.toggleSubscription(topicId);
+
+  @override
+  Future<void> reportPost(int postId, String reason) =>
+      _apiService.reportPost(postId, ForumPostReportRequestDto(reason: reason));
+
+  @override
+  Future<void> reportTopic(int topicId, String reason) =>
+      _apiService.reportTopic(topicId, ForumPostReportRequestDto(reason: reason));
 }

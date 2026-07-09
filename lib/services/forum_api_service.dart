@@ -28,7 +28,7 @@ class ForumApiService {
       '/api/forum/topics',
       queryParameters: {
         'townId': townId,
-        if (categoryId != null) 'categoryId': categoryId,
+        'categoryId': ?categoryId,
         if (query != null && query.isNotEmpty) 'query': query,
         'filter': filter,
         'page': page,
@@ -38,9 +38,17 @@ class ForumApiService {
     return ForumTopicsResponseDto.fromJson(response.data!);
   }
 
-  Future<ForumTopicDetailDto> getTopicDetail(int topicId) async {
+  Future<ForumTopicDetailDto> getTopicDetail(
+    int topicId, {
+    int postsPage = 1,
+    int postsPageSize = 20,
+  }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/forum/topics/$topicId',
+      queryParameters: {
+        'postsPage': postsPage,
+        'postsPageSize': postsPageSize,
+      },
     );
     return ForumTopicDetailDto.fromJson(response.data!);
   }
@@ -73,5 +81,19 @@ class ForumApiService {
       '/api/forum/topics/$topicId/subscription',
     );
     return response.data?['isSubscribed'] as bool? ?? false;
+  }
+
+  Future<void> reportPost(int postId, ForumPostReportRequestDto request) async {
+    await _apiClient.post<Map<String, dynamic>>(
+      '/api/forum/posts/$postId/report',
+      data: request.toJson(),
+    );
+  }
+
+  Future<void> reportTopic(int topicId, ForumPostReportRequestDto request) async {
+    await _apiClient.post<Map<String, dynamic>>(
+      '/api/forum/topics/$topicId/report',
+      data: request.toJson(),
+    );
   }
 }

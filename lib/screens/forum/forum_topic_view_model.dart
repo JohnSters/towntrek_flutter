@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/forum_constants.dart';
 import '../../core/errors/app_error.dart';
 import '../../core/errors/error_handler.dart';
 import '../../models/forum_dto.dart';
@@ -19,8 +20,15 @@ class ForumTopicViewModel extends ChangeNotifier {
 
   bool loading = true;
   bool submitting = false;
+  bool loadingMoreReplies = false;
   AppError? error;
   ForumTopicDetailDto? topic;
+
+  bool get hasMoreReplies {
+    final current = topic;
+    if (current == null) return false;
+    return current.posts.length < current.postsTotalCount;
+  }
 
   Future<void> load() async {
     loading = true;
@@ -28,7 +36,11 @@ class ForumTopicViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      topic = await _forumRepository.getTopicDetail(topicId);
+      topic = await _forumRepository.getTopicDetail(
+        topicId,
+        postsPage: 1,
+        postsPageSize: ForumConstants.defaultPageSize,
+      );
     } catch (e) {
       error = await _errorHandler.handleError(e, retryAction: load);
     } finally {
@@ -37,10 +49,43 @@ class ForumTopicViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> submitReply(String body) async {
+  Future<void> loadMoreReplies() async {
+    final current = topic;
+    if (current == null || loadingMoreReplies || !hasMoreReplies) return;
+
+    loadingMoreReplies = true;
+    notifyListeners();
+
+    try {
+      final nextPage = current.postsPage + 1;
+      final page = await _forumRepository.getTopicDetail(
+        topicId,
+        postsPage: nextPage,
+        postsPageSize: current.postsPageSize,
+      );
+      final existingIds = current.posts.map((p) => p.id).toSet();
+      final newPosts =
+          page.posts.where((p) => !existingIds.contains(p.id)).toList();
+      topic = current.copyWith(
+        posts: [...current.posts, ...newPosts],
+        postsPage: page.postsPage,
+        postsPageSize: page.postsPageSize,
+        postsTotalCount: page.postsTotalCount,
+      );
+    } catch (e) {
+      // Keep existing posts; surface via snackbar from the screen.
+      rethrow;
+    } finally {
+      loadingMoreReplies = false;
+      notifyListeners();
+    }
+  }
+
+  /// Throws on failure so [runWithParcelSession] can handle 401 / snackbars.
+  Future<void> submitReply(String body) async {
     final trimmed = body.trim();
     if (trimmed.isEmpty || topic == null || topic!.isLocked) {
-      return false;
+      return;
     }
 
     submitting = true;
@@ -51,49 +96,37 @@ class ForumTopicViewModel extends ChangeNotifier {
         CreateForumPostRequestDto(body: trimmed),
       );
       await load();
-      return true;
-    } catch (e) {
-      error = await _errorHandler.handleError(e);
-      notifyListeners();
-      return false;
     } finally {
       submitting = false;
       notifyListeners();
     }
   }
 
+  /// Throws on failure so [runWithParcelSession] can handle 401 / snackbars.
   Future<void> toggleReaction(int postId) async {
-    try {
-      await _forumRepository.toggleReaction(postId);
-      await load();
-    } catch (e) {
-      error = await _errorHandler.handleError(e, retryAction: load);
-      notifyListeners();
-    }
+    await _forumRepository.toggleReaction(postId);
+    await load();
   }
 
+  /// Throws on failure so [runWithParcelSession] can handle 401 / snackbars.
   Future<void> toggleSubscription() async {
     if (topic == null) return;
-    try {
-      final subscribed = await _forumRepository.toggleSubscription(topicId);
-      topic = ForumTopicDetailDto(
-        id: topic!.id,
-        townId: topic!.townId,
-        categoryName: topic!.categoryName,
-        title: topic!.title,
-        body: topic!.body,
-        authorDisplayName: topic!.authorDisplayName,
-        authorRoleBadge: topic!.authorRoleBadge,
-        isSubscribedByCurrentUser: subscribed,
-        isLocked: topic!.isLocked,
-        createdAt: topic!.createdAt,
-        lastActivityAt: topic!.lastActivityAt,
-        posts: topic!.posts,
-      );
-      notifyListeners();
-    } catch (e) {
-      error = await _errorHandler.handleError(e);
-      notifyListeners();
-    }
+    final subscribed = await _forumRepository.toggleSubscription(topicId);
+    topic = topic!.copyWith(isSubscribedByCurrentUser: subscribed);
+    notifyListeners();
+  }
+
+  /// Throws on failure so [runWithParcelSession] can handle 401 / snackbars.
+  Future<void> reportPost(int postId, String reason) async {
+    final trimmed = reason.trim();
+    if (trimmed.isEmpty) return;
+    await _forumRepository.reportPost(postId, trimmed);
+  }
+
+  /// Throws on failure so [runWithParcelSession] can handle 401 / snackbars.
+  Future<void> reportTopic(String reason) async {
+    final trimmed = reason.trim();
+    if (trimmed.isEmpty) return;
+    await _forumRepository.reportTopic(topicId, trimmed);
   }
 }
