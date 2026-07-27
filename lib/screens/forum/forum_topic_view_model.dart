@@ -103,9 +103,69 @@ class ForumTopicViewModel extends ChangeNotifier {
   }
 
   /// Throws on failure so [runWithParcelSession] can handle 401 / snackbars.
-  Future<void> toggleReaction(int postId) async {
-    await _forumRepository.toggleReaction(postId);
+  Future<void> toggleReaction(int postId, {String type = 'Like'}) async {
+    await _forumRepository.toggleReaction(postId, type: type);
     await load();
+  }
+
+  Future<void> updateTopic(String title, String body) async {
+    final trimmedTitle = title.trim();
+    final trimmedBody = body.trim();
+    if (trimmedTitle.isEmpty || trimmedBody.isEmpty) return;
+
+    submitting = true;
+    notifyListeners();
+    try {
+      topic = await _forumRepository.updateTopic(
+        topicId,
+        UpdateForumTopicRequestDto(title: trimmedTitle, body: trimmedBody),
+      );
+    } finally {
+      submitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updatePost(int postId, String body) async {
+    final trimmed = body.trim();
+    if (trimmed.isEmpty) return;
+
+    submitting = true;
+    notifyListeners();
+    try {
+      await _forumRepository.updatePost(
+        postId,
+        UpdateForumPostRequestDto(body: trimmed),
+      );
+      await load();
+    } finally {
+      submitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> softDeleteTopic() async {
+    submitting = true;
+    notifyListeners();
+    try {
+      await _forumRepository.softDeleteTopic(topicId);
+      topic = null;
+    } finally {
+      submitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> softDeletePost(int postId) async {
+    submitting = true;
+    notifyListeners();
+    try {
+      await _forumRepository.softDeletePost(postId);
+      await load();
+    } finally {
+      submitting = false;
+      notifyListeners();
+    }
   }
 
   /// Throws on failure so [runWithParcelSession] can handle 401 / snackbars.

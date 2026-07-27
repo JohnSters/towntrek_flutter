@@ -113,9 +113,148 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
     await runWithParcelSession(context, () => viewModel.toggleSubscription());
   }
 
-  Future<void> _toggleReaction(int postId) async {
+  Future<void> _toggleReaction(int postId, {String type = 'Like'}) async {
     final viewModel = context.read<ForumTopicViewModel>();
-    await runWithParcelSession(context, () => viewModel.toggleReaction(postId));
+    await runWithParcelSession(
+      context,
+      () => viewModel.toggleReaction(postId, type: type),
+    );
+  }
+
+  Future<void> _editTopic() async {
+    final viewModel = context.read<ForumTopicViewModel>();
+    final topic = viewModel.topic;
+    if (topic == null || !topic.canEditWithinWindow) return;
+
+    final titleController = TextEditingController(text: topic.title);
+    final bodyController = TextEditingController(text: topic.body);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit topic'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Title'),
+              maxLength: ForumConstants.titleMaxLength,
+            ),
+            TextField(
+              controller: bodyController,
+              decoration: const InputDecoration(labelText: 'Message'),
+              maxLines: 5,
+              maxLength: ForumConstants.bodyMaxLength,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    final title = titleController.text;
+    final body = bodyController.text;
+    titleController.dispose();
+    bodyController.dispose();
+    if (saved != true || !mounted) return;
+
+    await runWithParcelSession(
+      context,
+      () => viewModel.updateTopic(title, body),
+    );
+  }
+
+  Future<void> _editPost(int postId, String currentBody) async {
+    final viewModel = context.read<ForumTopicViewModel>();
+    final bodyController = TextEditingController(text: currentBody);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit reply'),
+        content: TextField(
+          controller: bodyController,
+          decoration: const InputDecoration(labelText: 'Reply'),
+          maxLines: 5,
+          maxLength: ForumConstants.bodyMaxLength,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    final body = bodyController.text;
+    bodyController.dispose();
+    if (saved != true || !mounted) return;
+
+    await runWithParcelSession(context, () => viewModel.updatePost(postId, body));
+  }
+
+  Future<void> _deleteTopic() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete topic?'),
+        content: const Text('This removes the topic from the forum.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final viewModel = context.read<ForumTopicViewModel>();
+    await runWithParcelSession(context, () async {
+      await viewModel.softDeleteTopic();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  Future<void> _deletePost(int postId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete reply?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final viewModel = context.read<ForumTopicViewModel>();
+    await runWithParcelSession(context, () => viewModel.softDeletePost(postId));
   }
 
   Future<void> _submitReply() async {
@@ -173,10 +312,24 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
                   onSelected: (value) {
                     if (value == 'report') {
                       _reportTopic();
+                    } else if (value == 'edit') {
+                      _editTopic();
+                    } else if (value == 'delete') {
+                      _deleteTopic();
                     }
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
+                  itemBuilder: (_) => [
+                    if (topic.canEditWithinWindow) ...[
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Edit topic'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete topic'),
+                      ),
+                    ],
+                    const PopupMenuItem(
                       value: 'report',
                       child: Text('Report topic'),
                     ),
@@ -249,20 +402,52 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
                                     ),
                                     const Divider(height: 32),
                                     ...topic.posts.map(
-                                      (post) => _PostBlock(
-                                        author: post.authorDisplayName,
-                                        badge: post.authorRoleBadge,
-                                        body: post.body,
-                                        createdAt: post.createdAt,
-                                        isModeratedHidden:
-                                            post.isModeratedHidden,
-                                        reactionCount: post.reactionCount,
-                                        reacted: post.reactedByCurrentUser,
-                                        onLike: post.isModeratedHidden
-                                            ? null
-                                            : () => _toggleReaction(post.id),
-                                        onReport: () => _reportPost(post.id),
-                                      ),
+                                      (post) {
+                                        final canEditPost =
+                                            post.isOwnedByCurrentUser &&
+                                                DateTime.now()
+                                                        .toUtc()
+                                                        .difference(
+                                                          post.createdAt
+                                                              .toUtc(),
+                                                        )
+                                                        .inHours <
+                                                    24 &&
+                                                !post.isModeratedHidden;
+                                        return _PostBlock(
+                                          author: post.authorDisplayName,
+                                          badge: post.authorRoleBadge,
+                                          body: post.body,
+                                          createdAt: post.createdAt,
+                                          isModeratedHidden:
+                                              post.isModeratedHidden,
+                                          reactionCount: post.reactionCount,
+                                          reacted: post.reactedByCurrentUser,
+                                          thanksCount: post.thanksCount,
+                                          thanked: post.thankedByCurrentUser,
+                                          onLike: post.isModeratedHidden
+                                              ? null
+                                              : () => _toggleReaction(post.id),
+                                          onThanks: post.isModeratedHidden
+                                              ? null
+                                              : () => _toggleReaction(
+                                                    post.id,
+                                                    type: 'Thanks',
+                                                  ),
+                                          onEdit: canEditPost
+                                              ? () => _editPost(
+                                                    post.id,
+                                                    post.body,
+                                                  )
+                                              : null,
+                                          onDelete: canEditPost
+                                              ? () => _deletePost(post.id)
+                                              : null,
+                                          onReport: post.isOwnedByCurrentUser
+                                              ? null
+                                              : () => _reportPost(post.id),
+                                        );
+                                      },
                                     ),
                                     if (viewModel.hasMoreReplies) ...[
                                       const SizedBox(height: 8),
@@ -399,7 +584,12 @@ class _PostBlock extends StatelessWidget {
   final bool isModeratedHidden;
   final int? reactionCount;
   final bool reacted;
+  final int? thanksCount;
+  final bool thanked;
   final VoidCallback? onLike;
+  final VoidCallback? onThanks;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final VoidCallback? onReport;
 
   const _PostBlock({
@@ -411,7 +601,12 @@ class _PostBlock extends StatelessWidget {
     this.isModeratedHidden = false,
     this.reactionCount,
     this.reacted = false,
+    this.thanksCount,
+    this.thanked = false,
     this.onLike,
+    this.onThanks,
+    this.onEdit,
+    this.onDelete,
     this.onReport,
   });
 
@@ -450,18 +645,34 @@ class _PostBlock extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onReport != null && !isOriginalPost)
+              if (!isOriginalPost &&
+                  (onReport != null || onEdit != null || onDelete != null))
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'report') {
-                      onReport!();
+                      onReport?.call();
+                    } else if (value == 'edit') {
+                      onEdit?.call();
+                    } else if (value == 'delete') {
+                      onDelete?.call();
                     }
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: 'report',
-                      child: Text('Report reply'),
-                    ),
+                  itemBuilder: (_) => [
+                    if (onEdit != null)
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Edit reply'),
+                      ),
+                    if (onDelete != null)
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete reply'),
+                      ),
+                    if (onReport != null)
+                      const PopupMenuItem(
+                        value: 'report',
+                        child: Text('Report reply'),
+                      ),
                   ],
                 ),
             ],
@@ -496,12 +707,30 @@ class _PostBlock extends StatelessWidget {
                     ),
               ),
             ),
-          if (onLike != null) ...[
+          if (onLike != null || onThanks != null) ...[
             const SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: onLike,
-              icon: Icon(reacted ? Icons.thumb_up : Icons.thumb_up_outlined),
-              label: Text('Like (${reactionCount ?? 0})'),
+            Wrap(
+              spacing: 8,
+              children: [
+                if (onLike != null)
+                  TextButton.icon(
+                    onPressed: onLike,
+                    icon: Icon(
+                      reacted ? Icons.thumb_up : Icons.thumb_up_outlined,
+                    ),
+                    label: Text('Like (${reactionCount ?? 0})'),
+                  ),
+                if (onThanks != null)
+                  TextButton.icon(
+                    onPressed: onThanks,
+                    icon: Icon(
+                      thanked
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                    ),
+                    label: Text('Thanks (${thanksCount ?? 0})'),
+                  ),
+              ],
             ),
           ],
         ],

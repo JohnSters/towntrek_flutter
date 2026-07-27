@@ -18,7 +18,14 @@ abstract class ForumRepository {
   });
   Future<ForumTopicDetailDto> createTopic(CreateForumTopicRequestDto request);
   Future<ForumPostDto> createPost(int topicId, CreateForumPostRequestDto request);
-  Future<void> toggleReaction(int postId);
+  Future<ForumTopicDetailDto> updateTopic(
+    int topicId,
+    UpdateForumTopicRequestDto request,
+  );
+  Future<ForumPostDto> updatePost(int postId, UpdateForumPostRequestDto request);
+  Future<void> softDeleteTopic(int topicId);
+  Future<void> softDeletePost(int postId);
+  Future<void> toggleReaction(int postId, {String type});
   Future<bool> toggleSubscription(int topicId);
   Future<void> reportPost(int postId, String reason);
   Future<void> reportTopic(int topicId, String reason);
@@ -72,7 +79,26 @@ class ForumRepositoryImpl implements ForumRepository {
       _apiService.createPost(topicId, request);
 
   @override
-  Future<void> toggleReaction(int postId) => _apiService.toggleReaction(postId);
+  Future<ForumTopicDetailDto> updateTopic(
+    int topicId,
+    UpdateForumTopicRequestDto request,
+  ) =>
+      _apiService.updateTopic(topicId, request);
+
+  @override
+  Future<ForumPostDto> updatePost(int postId, UpdateForumPostRequestDto request) =>
+      _apiService.updatePost(postId, request);
+
+  @override
+  Future<void> softDeleteTopic(int topicId) =>
+      _apiService.softDeleteTopic(topicId);
+
+  @override
+  Future<void> softDeletePost(int postId) => _apiService.softDeletePost(postId);
+
+  @override
+  Future<void> toggleReaction(int postId, {String type = 'Like'}) =>
+      _apiService.toggleReaction(postId, type: type);
 
   @override
   Future<bool> toggleSubscription(int topicId) =>

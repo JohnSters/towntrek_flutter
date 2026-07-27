@@ -116,8 +116,11 @@ class ForumPostDto {
   final String status;
   final String authorDisplayName;
   final String authorRoleBadge;
+  final bool isOwnedByCurrentUser;
   final int reactionCount;
   final bool reactedByCurrentUser;
+  final int thanksCount;
+  final bool thankedByCurrentUser;
   final bool isModeratedHidden;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -129,8 +132,11 @@ class ForumPostDto {
     this.status = 'Active',
     required this.authorDisplayName,
     required this.authorRoleBadge,
+    this.isOwnedByCurrentUser = false,
     required this.reactionCount,
     required this.reactedByCurrentUser,
+    this.thanksCount = 0,
+    this.thankedByCurrentUser = false,
     this.isModeratedHidden = false,
     required this.createdAt,
     this.updatedAt,
@@ -144,8 +150,11 @@ class ForumPostDto {
       status: json['status'] as String? ?? 'Active',
       authorDisplayName: json['authorDisplayName'] as String? ?? 'Member',
       authorRoleBadge: json['authorRoleBadge'] as String? ?? 'Resident',
+      isOwnedByCurrentUser: json['isOwnedByCurrentUser'] as bool? ?? false,
       reactionCount: json['reactionCount'] as int? ?? 0,
       reactedByCurrentUser: json['reactedByCurrentUser'] as bool? ?? false,
+      thanksCount: json['thanksCount'] as int? ?? 0,
+      thankedByCurrentUser: json['thankedByCurrentUser'] as bool? ?? false,
       isModeratedHidden: json['isModeratedHidden'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] != null
@@ -164,6 +173,7 @@ class ForumTopicDetailDto {
   final String body;
   final String authorDisplayName;
   final String authorRoleBadge;
+  final bool isOwnedByCurrentUser;
   final bool isSubscribedByCurrentUser;
   final bool isPinned;
   final bool isAnnouncement;
@@ -184,6 +194,7 @@ class ForumTopicDetailDto {
     required this.body,
     required this.authorDisplayName,
     required this.authorRoleBadge,
+    this.isOwnedByCurrentUser = false,
     required this.isSubscribedByCurrentUser,
     this.isPinned = false,
     this.isAnnouncement = false,
@@ -196,7 +207,13 @@ class ForumTopicDetailDto {
     this.postsTotalCount = 0,
   });
 
+  bool get canEditWithinWindow =>
+      isOwnedByCurrentUser &&
+      DateTime.now().toUtc().difference(createdAt.toUtc()).inHours < 24;
+
   ForumTopicDetailDto copyWith({
+    String? title,
+    String? body,
     bool? isSubscribedByCurrentUser,
     List<ForumPostDto>? posts,
     int? postsPage,
@@ -208,10 +225,11 @@ class ForumTopicDetailDto {
       townId: townId,
       forumCategoryId: forumCategoryId,
       categoryName: categoryName,
-      title: title,
-      body: body,
+      title: title ?? this.title,
+      body: body ?? this.body,
       authorDisplayName: authorDisplayName,
       authorRoleBadge: authorRoleBadge,
+      isOwnedByCurrentUser: isOwnedByCurrentUser,
       isSubscribedByCurrentUser:
           isSubscribedByCurrentUser ?? this.isSubscribedByCurrentUser,
       isPinned: isPinned,
@@ -237,6 +255,7 @@ class ForumTopicDetailDto {
       body: json['body'] as String,
       authorDisplayName: json['authorDisplayName'] as String? ?? 'Member',
       authorRoleBadge: json['authorRoleBadge'] as String? ?? 'Resident',
+      isOwnedByCurrentUser: json['isOwnedByCurrentUser'] as bool? ?? false,
       isSubscribedByCurrentUser:
           json['isSubscribedByCurrentUser'] as bool? ?? false,
       isPinned: json['isPinned'] as bool? ?? false,
@@ -289,4 +308,21 @@ class ForumPostReportRequestDto {
   const ForumPostReportRequestDto({required this.reason});
 
   Map<String, dynamic> toJson() => {'reason': reason};
+}
+
+class UpdateForumTopicRequestDto {
+  final String title;
+  final String body;
+
+  const UpdateForumTopicRequestDto({required this.title, required this.body});
+
+  Map<String, dynamic> toJson() => {'title': title, 'body': body};
+}
+
+class UpdateForumPostRequestDto {
+  final String body;
+
+  const UpdateForumPostRequestDto({required this.body});
+
+  Map<String, dynamic> toJson() => {'body': body};
 }

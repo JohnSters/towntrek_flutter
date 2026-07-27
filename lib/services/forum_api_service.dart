@@ -96,4 +96,34 @@ class ForumApiService {
       data: request.toJson(),
     );
   }
+
+  Future<ForumTopicDetailDto> updateTopic(
+    int topicId,
+    UpdateForumTopicRequestDto request,
+  ) async {
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      '/api/forum/topics/$topicId',
+      data: request.toJson(),
+    );
+    return ForumTopicDetailDto.fromJson(response.data!);
+  }
+
+  Future<ForumPostDto> updatePost(
+    int postId,
+    UpdateForumPostRequestDto request,
+  ) async {
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      '/api/forum/posts/$postId',
+      data: request.toJson(),
+    );
+    return ForumPostDto.fromJson(response.data!);
+  }
+
+  Future<void> softDeleteTopic(int topicId) async {
+    await _apiClient.delete<Map<String, dynamic>>('/api/forum/topics/$topicId');
+  }
+
+  Future<void> softDeletePost(int postId) async {
+    await _apiClient.delete<Map<String, dynamic>>('/api/forum/posts/$postId');
+  }
 }
