@@ -124,7 +124,7 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
   Future<void> _editTopic() async {
     final viewModel = context.read<ForumTopicViewModel>();
     final topic = viewModel.topic;
-    if (topic == null || !topic.canEditWithinWindow) return;
+    if (topic == null || !topic.allowsEdit) return;
 
     final titleController = TextEditingController(text: topic.title);
     final bodyController = TextEditingController(text: topic.body);
@@ -319,7 +319,7 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
                     }
                   },
                   itemBuilder: (_) => [
-                    if (topic.canEditWithinWindow) ...[
+                    if (topic.allowsEdit) ...[
                       const PopupMenuItem(
                         value: 'edit',
                         child: Text('Edit topic'),
@@ -364,7 +364,8 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
                                     ],
                                     if (topic.isAnnouncement ||
                                         topic.isPinned ||
-                                        topic.isLocked) ...[
+                                        topic.isLocked ||
+                                        topic.isArchived) ...[
                                       const SizedBox(height: 8),
                                       Wrap(
                                         spacing: 8,
@@ -385,6 +386,11 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
                                               label: 'Locked',
                                               color: Colors.grey,
                                             ),
+                                          if (topic.isArchived)
+                                            const _StatusBadge(
+                                              label: 'Archived',
+                                              color: Colors.brown,
+                                            ),
                                         ],
                                       ),
                                     ],
@@ -403,17 +409,7 @@ class _ForumTopicScreenContentState extends State<_ForumTopicScreenContent> {
                                     const Divider(height: 32),
                                     ...topic.posts.map(
                                       (post) {
-                                        final canEditPost =
-                                            post.isOwnedByCurrentUser &&
-                                                DateTime.now()
-                                                        .toUtc()
-                                                        .difference(
-                                                          post.createdAt
-                                                              .toUtc(),
-                                                        )
-                                                        .inHours <
-                                                    24 &&
-                                                !post.isModeratedHidden;
+                                        final canEditPost = post.allowsEdit;
                                         return _PostBlock(
                                           author: post.authorDisplayName,
                                           badge: post.authorRoleBadge,

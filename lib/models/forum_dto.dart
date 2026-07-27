@@ -36,6 +36,7 @@ class ForumTopicSummaryDto {
   final int forumCategoryId;
   final String title;
   final String bodyPreview;
+  final String status;
   final String authorDisplayName;
   final String authorRoleBadge;
   final int replyCount;
@@ -52,6 +53,7 @@ class ForumTopicSummaryDto {
     required this.forumCategoryId,
     required this.title,
     required this.bodyPreview,
+    this.status = 'Active',
     required this.authorDisplayName,
     required this.authorRoleBadge,
     required this.replyCount,
@@ -63,6 +65,8 @@ class ForumTopicSummaryDto {
     this.isLocked = false,
   });
 
+  bool get isArchived => status == 'Archived';
+
   factory ForumTopicSummaryDto.fromJson(Map<String, dynamic> json) {
     return ForumTopicSummaryDto(
       id: json['id'] as int,
@@ -70,6 +74,7 @@ class ForumTopicSummaryDto {
       forumCategoryId: json['forumCategoryId'] as int,
       title: json['title'] as String,
       bodyPreview: json['bodyPreview'] as String? ?? '',
+      status: json['status'] as String? ?? 'Active',
       authorDisplayName: json['authorDisplayName'] as String? ?? 'Member',
       authorRoleBadge: json['authorRoleBadge'] as String? ?? 'Resident',
       replyCount: json['replyCount'] as int? ?? 0,
@@ -117,6 +122,8 @@ class ForumPostDto {
   final String authorDisplayName;
   final String authorRoleBadge;
   final bool isOwnedByCurrentUser;
+  final bool? canEdit;
+  final bool? canDelete;
   final int reactionCount;
   final bool reactedByCurrentUser;
   final int thanksCount;
@@ -133,6 +140,8 @@ class ForumPostDto {
     required this.authorDisplayName,
     required this.authorRoleBadge,
     this.isOwnedByCurrentUser = false,
+    this.canEdit,
+    this.canDelete,
     required this.reactionCount,
     required this.reactedByCurrentUser,
     this.thanksCount = 0,
@@ -141,6 +150,14 @@ class ForumPostDto {
     required this.createdAt,
     this.updatedAt,
   });
+
+  bool get allowsEdit =>
+      canEdit ??
+      (isOwnedByCurrentUser &&
+          !isModeratedHidden &&
+          DateTime.now().toUtc().difference(createdAt.toUtc()).inHours < 24);
+
+  bool get allowsDelete => canDelete ?? allowsEdit;
 
   factory ForumPostDto.fromJson(Map<String, dynamic> json) {
     return ForumPostDto(
@@ -151,6 +168,8 @@ class ForumPostDto {
       authorDisplayName: json['authorDisplayName'] as String? ?? 'Member',
       authorRoleBadge: json['authorRoleBadge'] as String? ?? 'Resident',
       isOwnedByCurrentUser: json['isOwnedByCurrentUser'] as bool? ?? false,
+      canEdit: json['canEdit'] as bool?,
+      canDelete: json['canDelete'] as bool?,
       reactionCount: json['reactionCount'] as int? ?? 0,
       reactedByCurrentUser: json['reactedByCurrentUser'] as bool? ?? false,
       thanksCount: json['thanksCount'] as int? ?? 0,
@@ -171,9 +190,12 @@ class ForumTopicDetailDto {
   final String categoryName;
   final String title;
   final String body;
+  final String status;
   final String authorDisplayName;
   final String authorRoleBadge;
   final bool isOwnedByCurrentUser;
+  final bool? canEdit;
+  final bool? canDelete;
   final bool isSubscribedByCurrentUser;
   final bool isPinned;
   final bool isAnnouncement;
@@ -192,9 +214,12 @@ class ForumTopicDetailDto {
     required this.categoryName,
     required this.title,
     required this.body,
+    this.status = 'Active',
     required this.authorDisplayName,
     required this.authorRoleBadge,
     this.isOwnedByCurrentUser = false,
+    this.canEdit,
+    this.canDelete,
     required this.isSubscribedByCurrentUser,
     this.isPinned = false,
     this.isAnnouncement = false,
@@ -207,13 +232,24 @@ class ForumTopicDetailDto {
     this.postsTotalCount = 0,
   });
 
-  bool get canEditWithinWindow =>
-      isOwnedByCurrentUser &&
-      DateTime.now().toUtc().difference(createdAt.toUtc()).inHours < 24;
+  bool get isArchived => status == 'Archived';
+
+  bool get allowsEdit =>
+      canEdit ??
+      (isOwnedByCurrentUser &&
+          DateTime.now().toUtc().difference(createdAt.toUtc()).inHours < 24);
+
+  bool get allowsDelete => canDelete ?? allowsEdit;
+
+  /// Fallback when API omits canEdit/canDelete.
+  bool get canEditWithinWindow => allowsEdit;
 
   ForumTopicDetailDto copyWith({
     String? title,
     String? body,
+    String? status,
+    bool? canEdit,
+    bool? canDelete,
     bool? isSubscribedByCurrentUser,
     List<ForumPostDto>? posts,
     int? postsPage,
@@ -227,9 +263,12 @@ class ForumTopicDetailDto {
       categoryName: categoryName,
       title: title ?? this.title,
       body: body ?? this.body,
+      status: status ?? this.status,
       authorDisplayName: authorDisplayName,
       authorRoleBadge: authorRoleBadge,
       isOwnedByCurrentUser: isOwnedByCurrentUser,
+      canEdit: canEdit ?? this.canEdit,
+      canDelete: canDelete ?? this.canDelete,
       isSubscribedByCurrentUser:
           isSubscribedByCurrentUser ?? this.isSubscribedByCurrentUser,
       isPinned: isPinned,
@@ -253,9 +292,12 @@ class ForumTopicDetailDto {
       categoryName: json['categoryName'] as String? ?? '',
       title: json['title'] as String,
       body: json['body'] as String,
+      status: json['status'] as String? ?? 'Active',
       authorDisplayName: json['authorDisplayName'] as String? ?? 'Member',
       authorRoleBadge: json['authorRoleBadge'] as String? ?? 'Resident',
       isOwnedByCurrentUser: json['isOwnedByCurrentUser'] as bool? ?? false,
+      canEdit: json['canEdit'] as bool?,
+      canDelete: json['canDelete'] as bool?,
       isSubscribedByCurrentUser:
           json['isSubscribedByCurrentUser'] as bool? ?? false,
       isPinned: json['isPinned'] as bool? ?? false,

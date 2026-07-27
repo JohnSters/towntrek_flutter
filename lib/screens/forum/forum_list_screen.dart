@@ -451,7 +451,10 @@ class _TopicCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (topic.isAnnouncement || topic.isPinned || topic.isLocked)
+                if (topic.isAnnouncement ||
+                    topic.isPinned ||
+                    topic.isLocked ||
+                    topic.isArchived)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Wrap(
@@ -472,6 +475,11 @@ class _TopicCard extends StatelessWidget {
                           const _StatusPill(
                             label: ForumConstants.badgeLocked,
                             kind: _StatusKind.locked,
+                          ),
+                        if (topic.isArchived)
+                          const _StatusPill(
+                            label: ForumConstants.badgeArchived,
+                            kind: _StatusKind.archived,
                           ),
                       ],
                     ),
@@ -524,7 +532,7 @@ class _TopicCard extends StatelessWidget {
   }
 }
 
-enum _StatusKind { announcement, pinned, locked }
+enum _StatusKind { announcement, pinned, locked, archived }
 
 class _StatusPill extends StatelessWidget {
   final String label;
@@ -554,6 +562,10 @@ class _StatusPill extends StatelessWidget {
         bg = colorScheme.surfaceContainerHighest;
         fg = listing.footerHint;
         icon = Icons.lock_outline;
+      case _StatusKind.archived:
+        bg = colorScheme.surfaceContainerHighest;
+        fg = listing.footerHint;
+        icon = Icons.inventory_2_outlined;
     }
 
     return Container(

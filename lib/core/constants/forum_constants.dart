@@ -39,6 +39,7 @@ abstract final class ForumConstants {
   static const String badgeAnnouncement = 'Announcement';
   static const String badgePinned = 'Pinned';
   static const String badgeLocked = 'Locked';
+  static const String badgeArchived = 'Archived';
   static const String filterRecent = 'Recent';
   static const String filterUnanswered = 'Unanswered';
   static const String filterAnnouncements = 'Announcements';
