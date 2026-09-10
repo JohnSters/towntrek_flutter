@@ -72,11 +72,15 @@ dynamic redactPayloadForLog(dynamic data) {
 }
 
 /// Builds the interceptors wired into [ApiClient].
+///
+/// Dio 5 runs error interceptors in the same FIFO order they are added
+/// (`future.catchError`). AuthRefresh must run before Error/Retry so a 401 can
+/// be refreshed instead of being mapped and rejected.
 List<Interceptor> buildApiInterceptors(ApiClient client) {
   final interceptors = <Interceptor>[
     AuthRefreshInterceptor(client),
+    RetryInterceptor(client.dio),
     ErrorInterceptor(),
-    RetryInterceptor(),
   ];
   if (ApiConfig.environment != AppEnvironment.production) {
     interceptors.insert(0, LoggingInterceptor());
@@ -170,7 +174,8 @@ class AuthRefreshInterceptor extends Interceptor {
       return handler.next(err);
     }
 
-    final freshAuth = _client.dio.options.headers['Authorization'];
+    final freshAuth = _client.dio.options.headers['Authorization'] ??
+        _client.dio.options.headers['authorization'];
     if (freshAuth != null) {
       requestOptions.headers['Authorization'] = freshAuth;
     }
@@ -186,8 +191,14 @@ class AuthRefreshInterceptor extends Interceptor {
   }
 
   bool _hasAuthHeader(RequestOptions options) {
-    final value = options.headers['Authorization'];
-    return value is String && value.isNotEmpty;
+    for (final entry in options.headers.entries) {
+      if (entry.key.toString().toLowerCase() != 'authorization') {
+        continue;
+      }
+      final value = entry.value;
+      return value is String && value.isNotEmpty;
+    }
+    return false;
   }
 }
 
@@ -336,17 +347,21 @@ ApiException mapDioExceptionToApiException(DioException dioException) {
 
 /// Retry interceptor for failed requests
 class RetryInterceptor extends Interceptor {
+  RetryInterceptor(this._dio);
+
+  final Dio _dio;
+
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final requestOptions = err.requestOptions;
 
     if (_shouldNotRetry(err)) {
-      return handler.reject(err);
+      return handler.next(err);
     }
 
     final retryCount = requestOptions.extra['retryCount'] ?? 0;
     if (retryCount >= ApiConfig.maxRetries) {
-      return handler.reject(err);
+      return handler.next(err);
     }
 
     requestOptions.extra['retryCount'] = retryCount + 1;
@@ -358,7 +373,7 @@ class RetryInterceptor extends Interceptor {
     await Future.delayed(ApiConfig.retryDelay * (retryCount + 1));
 
     try {
-      final response = await ApiClient.instance.dio.request(
+      final response = await _dio.request(
         requestOptions.path,
         options: Options(
           method: requestOptions.method,
@@ -369,8 +384,8 @@ class RetryInterceptor extends Interceptor {
         queryParameters: requestOptions.queryParameters,
       );
       return handler.resolve(response);
-    } catch (e) {
-      return handler.reject(err);
+    } catch (_) {
+      return handler.next(err);
     }
   }
 

@@ -1,9 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import '../../models/mobile_auth_dto.dart';
 import 'jwt_utils.dart';
+import 'mobile_secure_storage.dart';
 
 /// Snapshot of all locally-linked accounts and which one is active.
 class MobileAccountStore {
@@ -32,7 +31,7 @@ class MobileAccountStore {
 class MobileSessionStorage {
   static const String _legacySessionKey = 'mobile_auth_session';
   static const String _storeKey = 'mobile_auth_sessions';
-  static const FlutterSecureStorage _storage = FlutterSecureStorage();
+  static final _storage = MobileSecureStorage.instance;
 
   /// Reads all linked accounts, migrating the legacy single-session key if found.
   static Future<MobileAccountStore> readStore() async {

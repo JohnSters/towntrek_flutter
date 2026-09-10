@@ -5,6 +5,7 @@ abstract class MobileAuthRepository {
   Future<MobileAuthResponseDto> redeemCode({
     required String code,
     required String deviceName,
+    required String installId,
   });
 
   Future<MobileAuthResponseDto> refresh({
@@ -23,8 +24,13 @@ class MobileAuthRepositoryImpl implements MobileAuthRepository {
   Future<MobileAuthResponseDto> redeemCode({
     required String code,
     required String deviceName,
+    required String installId,
   }) async {
-    return _apiService.redeemCode(code: code, deviceName: deviceName);
+    return _apiService.redeemCode(
+      code: code,
+      deviceName: deviceName,
+      installId: installId,
+    );
   }
 
   @override

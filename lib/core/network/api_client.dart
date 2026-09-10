@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config/api_config.dart';
 import 'api_interceptors.dart';
@@ -16,6 +17,13 @@ class ApiClient {
 
   ApiClient._() {
     _initializeDio();
+  }
+
+  /// Builds a client around [dio] so interceptor tests do not touch the singleton.
+  @visibleForTesting
+  ApiClient.test(Dio dio) {
+    _dio = dio;
+    _dio.interceptors.addAll(buildApiInterceptors(this));
   }
 
   static ApiClient get instance {

@@ -6,6 +6,7 @@ import '../network/api_client.dart';
 import '../progression/xp_level_math.dart';
 import '../utils/jwt_utils.dart';
 import '../utils/logger.dart';
+import '../utils/mobile_install_id_storage.dart';
 import '../utils/mobile_session_storage.dart';
 import '../../models/models.dart';
 import '../../repositories/member_repository.dart';
@@ -34,6 +35,7 @@ class MobileSessionManager extends ChangeNotifier {
   bool _busy = false;
   String? _errorMessage;
   int _lastDisplayAwardedXp = 0;
+  Future<bool>? _inFlightRefresh;
 
   List<MobileAccountSession> _accounts = const [];
   String? _activeUserId;
@@ -71,7 +73,14 @@ class MobileSessionManager extends ChangeNotifier {
         _session = active.session;
         _applyAccessToken(active.session.accessToken);
         if (_isNearExpiry(active.session)) {
-          await refreshSession();
+          final refreshed = await refreshSession();
+          if (!refreshed &&
+              _session != null &&
+              !_isAccessTokenExpired(_session!)) {
+            await loadProfile();
+            await loadProgression();
+            await _syncActiveDisplayName();
+          }
         } else {
           await loadProfile();
           await loadProgression();
@@ -97,9 +106,11 @@ class MobileSessionManager extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
+      final installId = await MobileInstallIdStorage.getInstallId();
       final session = await _mobileAuthRepository.redeemCode(
         code: code,
         deviceName: deviceName,
+        installId: installId,
       );
       final userId = decodeUserIdFromJwt(session.accessToken) ??
           'device:${session.deviceId}';
@@ -177,7 +188,33 @@ class MobileSessionManager extends ChangeNotifier {
     return refreshSession();
   }
 
-  Future<bool> refreshSession() async {
+  Future<bool> refreshSession() {
+    return _refreshShared(loadProfileAfter: true);
+  }
+
+  /// Refresh used by the 401 interceptor. Swaps the access token and reloads
+  /// profile/progression in the background so those requests never await this
+  /// in-flight refresh (which would deadlock the interceptor).
+  Future<bool> _handleUnauthorizedRefresh() {
+    return _refreshShared(loadProfileAfter: false);
+  }
+
+  Future<bool> _refreshShared({required bool loadProfileAfter}) {
+    final inFlight = _inFlightRefresh;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = _performRefresh(loadProfileAfter: loadProfileAfter);
+    _inFlightRefresh = future;
+    return future.whenComplete(() {
+      if (identical(_inFlightRefresh, future)) {
+        _inFlightRefresh = null;
+      }
+    });
+  }
+
+  Future<bool> _performRefresh({required bool loadProfileAfter}) async {
     final existing = _session;
     if (existing == null) {
       return false;
@@ -190,9 +227,14 @@ class MobileSessionManager extends ChangeNotifier {
       _session = refreshed;
       _applyAccessToken(refreshed.accessToken);
       await _persistRefreshedSession(refreshed);
-      await loadProfile();
-      await loadProgression();
-      await _syncActiveDisplayName();
+      if (loadProfileAfter) {
+        await loadProfile();
+        await loadProgression();
+        await _syncActiveDisplayName();
+      } else {
+        unawaited(loadProfile());
+        unawaited(loadProgression());
+      }
       notifyListeners();
       return true;
     } catch (error) {
@@ -204,36 +246,6 @@ class MobileSessionManager extends ChangeNotifier {
       // Transient failure: keep the local session. Still usable if the access
       // token has not expired yet.
       return !_isAccessTokenExpired(existing);
-    }
-  }
-
-  /// Refresh used by the 401 interceptor. Swaps the access token and reloads
-  /// profile/progression in the background so those requests never await this
-  /// in-flight refresh (which would deadlock the interceptor).
-  Future<bool> _handleUnauthorizedRefresh() async {
-    final existing = _session;
-    if (existing == null) {
-      return false;
-    }
-    try {
-      final refreshed = await _mobileAuthRepository.refresh(
-        refreshToken: existing.refreshToken,
-      );
-      _session = refreshed;
-      _applyAccessToken(refreshed.accessToken);
-      await _persistRefreshedSession(refreshed);
-      unawaited(loadProfile());
-      unawaited(loadProgression());
-      notifyListeners();
-      return true;
-    } catch (error) {
-      Logger.e('Failed to refresh mobile session (interceptor): $error');
-      if (isAuthDeadRefreshError(error)) {
-        await signOut();
-      }
-      // Transient: keep session so a later retry can refresh; return false so
-      // the original 401 propagates to the caller.
-      return false;
     }
   }
 

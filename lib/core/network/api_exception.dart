@@ -73,10 +73,24 @@ bool isUnauthorizedError(Object error) {
 /// network/server error where the session should be kept.
 bool isAuthDeadRefreshError(Object error) {
   final api = _asApiException(error);
-  if (api == null) return false;
-  if (api.type == ApiExceptionType.unauthorized) return true;
-  return api.type == ApiExceptionType.badRequest &&
-      api.code == kApiErrorCodeRefreshInvalid;
+  if (api != null) {
+    if (api.type == ApiExceptionType.unauthorized) return true;
+    if (api.type == ApiExceptionType.badRequest &&
+        api.code == kApiErrorCodeRefreshInvalid) {
+      return true;
+    }
+  }
+
+  if (error is DioException) {
+    if (error.response?.statusCode == 401) return true;
+    final code = extractApiErrorCodeFromResponseData(error.response?.data);
+    if (error.response?.statusCode == 400 &&
+        code == kApiErrorCodeRefreshInvalid) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /// User-visible text for failures from [ApiClient] / Dio (e.g. redeem-code errors).

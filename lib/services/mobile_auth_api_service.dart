@@ -9,10 +9,15 @@ class MobileAuthApiService {
   Future<MobileAuthResponseDto> redeemCode({
     required String code,
     required String deviceName,
+    required String installId,
   }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       '/api/mobile/redeem-code',
-      data: {'code': code, 'deviceName': deviceName},
+      data: {
+        'code': code,
+        'deviceName': deviceName,
+        'installId': installId,
+      },
     );
     return MobileAuthResponseDto.fromJson(response.data!);
   }
@@ -27,7 +32,7 @@ class MobileAuthApiService {
     return MobileAuthResponseDto.fromJson(response.data!);
   }
 
-  /// Revokes this device session on the server and invalidates unused mobile access codes.
+  /// Revokes this device session on the server.
   Future<void> disconnect() async {
     await _apiClient.post<Map<String, dynamic>>(
       '/api/mobile/disconnect',

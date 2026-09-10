@@ -194,8 +194,7 @@ class _ProfileBody extends StatelessWidget {
                                 title: const Text('Disconnect this device?'),
                                 content: Text(
                                   'You will need a new TownTrek code from My Devices on '
-                                  'towntrek.co.za to use Parcel features on this device. '
-                                  'Any unused codes on your account will be cancelled.',
+                                  'towntrek.co.za to use Parcel features on this device.',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     height: 1.4,
                                   ),
