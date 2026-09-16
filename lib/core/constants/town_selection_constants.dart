@@ -83,12 +83,11 @@ abstract final class TownSelectionConstants {
   static const String noTownsAvailable = 'No towns available';
   static const String noTownsMatchSearch = 'No towns match your search';
   static const String noTownsAvailableDescription = 'Please check your connection and try again';
-  static const String noTownsMatchDescription = 'Try a different search term';
-  static const String requestTownButtonLabel = "Can't find your town? Email us";
-  static const String requestTownEmail = 'admin@bytecraftdigital.com';
-  static const String requestTownEmailSubject = 'Town request for TownTrek';
-  static const String requestTownEmailBodyIntro = 'Hi TownTrek team,';
-  static const String requestTownEmailBodyPrompt = 'Please add this town to TownTrek:';
+  static const String noTownsMatchDescription =
+      'Try a different search term, or request the town if you have a Towntrek account.';
+  static const String requestTownButtonLabel = "Can't find your town? Request it";
+  static const String signInToRequestButtonLabel = 'Sign in to request this town';
+  static const String createAccountToRequestLabel = 'Create a free account';
 
   // Plural labels
   static const String businessLabel = 'Business';

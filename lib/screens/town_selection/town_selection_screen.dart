@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/core.dart';
-import '../../core/utils/external_link_launcher.dart';
+import '../../core/utils/url_utils.dart';
 import '../../models/models.dart';
+import '../member_hub/connect_device_sheet.dart';
+import '../request_town/request_town_screen.dart';
 import 'town_selection_state.dart';
 import 'town_selection_view_model.dart';
 
@@ -38,7 +40,7 @@ class _TownSelectionScreenContent extends StatelessWidget {
             Expanded(
               child: _buildTownList(context, viewModel.state, viewModel),
             ),
-            _buildRequestTownButton(context, viewModel),
+            _buildMissingTownActions(context, viewModel),
           ],
         ),
       ),
@@ -225,7 +227,7 @@ class _TownSelectionScreenContent extends StatelessWidget {
         ),
       TownSelectionSuccess(filteredTowns: final filteredTowns) =>
         filteredTowns.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(context, viewModel)
           : ListView.builder(
               padding: const EdgeInsets.all(TownSelectionConstants.verticalPadding),
               itemCount: filteredTowns.length,
@@ -234,86 +236,93 @@ class _TownSelectionScreenContent extends StatelessWidget {
                 return _buildTownCard(context, town);
               },
             ),
-      TownSelectionEmpty() => _buildEmptyState(),
+      TownSelectionEmpty() => _buildEmptyState(context, viewModel),
     };
   }
 
-  Widget _buildRequestTownButton(BuildContext context, TownSelectionViewModel viewModel) {
+  Widget _buildMissingTownActions(BuildContext context, TownSelectionViewModel viewModel) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        TownSelectionConstants.horizontalPadding,
-        TownSelectionConstants.verticalSpacingSmall,
-        TownSelectionConstants.horizontalPadding,
-        TownSelectionConstants.verticalPadding,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: TownSelectionConstants.shadowAlpha),
-            blurRadius: TownSelectionConstants.shadowBlurRadius,
-            offset: const Offset(0, -2),
+    return ListenableBuilder(
+      listenable: serviceLocator.mobileSessionManager,
+      builder: (context, _) {
+        final isAuthenticated =
+            serviceLocator.mobileSessionManager.isAuthenticated;
+
+        return Container(
+          padding: const EdgeInsets.fromLTRB(
+            TownSelectionConstants.horizontalPadding,
+            TownSelectionConstants.verticalSpacingSmall,
+            TownSelectionConstants.horizontalPadding,
+            TownSelectionConstants.verticalPadding,
           ),
-        ],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        child: FilledButton.icon(
-          onPressed: () => _requestTownByEmail(context, viewModel.searchController.text),
-          icon: const Icon(
-            Icons.email_outlined,
-            size: TownSelectionConstants.emailButtonIconSize,
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: TownSelectionConstants.shadowAlpha),
+                blurRadius: TownSelectionConstants.shadowBlurRadius,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-          label: Text(
-            TownSelectionConstants.requestTownButtonLabel,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => _openRequestTown(context, viewModel.searchController.text),
+                  icon: Icon(
+                    isAuthenticated ? Icons.map_outlined : Icons.link,
+                    size: TownSelectionConstants.emailButtonIconSize,
+                  ),
+                  label: Text(
+                    isAuthenticated
+                        ? TownSelectionConstants.requestTownButtonLabel
+                        : TownSelectionConstants.signInToRequestButtonLabel,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: TownSelectionConstants.emailButtonVerticalPadding,
+                    ),
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusMedium),
+                    ),
+                  ),
+                ),
+              ),
+              if (!isAuthenticated)
+                TextButton(
+                  onPressed: UrlUtils.launchTowntrekRegister,
+                  child: const Text(TownSelectionConstants.createAccountToRequestLabel),
+                ),
+            ],
           ),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              vertical: TownSelectionConstants.emailButtonVerticalPadding,
-            ),
-            backgroundColor: colorScheme.primary,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(TownSelectionConstants.borderRadiusMedium),
-            ),
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Future<void> _requestTownByEmail(BuildContext context, String searchQuery) async {
-    final trimmedQuery = searchQuery.trim();
-    final bodyTownLine = trimmedQuery.isEmpty ? '[Add town name here]' : trimmedQuery;
-    final body = [
-      TownSelectionConstants.requestTownEmailBodyIntro,
-      '',
-      TownSelectionConstants.requestTownEmailBodyPrompt,
-      bodyTownLine,
-      '',
-      'Thanks!',
-    ].join('\n');
+  Future<void> _openRequestTown(BuildContext context, String searchQuery) async {
+    final sessionManager = serviceLocator.mobileSessionManager;
+    if (!sessionManager.isAuthenticated) {
+      final connected = await showConnectDeviceSheet(context);
+      if (!connected || !context.mounted) return;
+    }
 
-    final uri = Uri(
-      scheme: 'mailto',
-      path: TownSelectionConstants.requestTownEmail,
-      queryParameters: {
-        'subject': TownSelectionConstants.requestTownEmailSubject,
-        'body': body,
-      },
-    );
-
-    await ExternalLinkLauncher.openUri(
-      context,
-      uri,
-      failureMessage: 'Unable to open email app',
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RequestTownScreen(initialName: searchQuery.trim()),
+      ),
     );
   }
 
@@ -492,40 +501,54 @@ class _TownSelectionScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Builder(
-      builder: (context) {
-        final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
+  Widget _buildEmptyState(BuildContext context, TownSelectionViewModel viewModel) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final searching = viewModel.searchController.text.trim().isNotEmpty;
 
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.location_city,
-                size: TownSelectionConstants.emptyStateIconSize,
-                color: colorScheme.onSurface.withValues(alpha: TownSelectionConstants.emptyStateIconAlpha),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(TownSelectionConstants.horizontalPadding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.location_city,
+              size: TownSelectionConstants.emptyStateIconSize,
+              color: colorScheme.onSurface.withValues(alpha: TownSelectionConstants.emptyStateIconAlpha),
+            ),
+            const SizedBox(height: TownSelectionConstants.verticalSpacingMedium),
+            Text(
+              searching
+                  ? TownSelectionConstants.noTownsMatchSearch
+                  : TownSelectionConstants.noTownsAvailable,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
               ),
-              const SizedBox(height: TownSelectionConstants.verticalSpacingMedium),
-              Text(
-                TownSelectionConstants.noTownsAvailable,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: colorScheme.onSurface,
-                ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: TownSelectionConstants.verticalSpacingSmall),
+            Text(
+              searching
+                  ? TownSelectionConstants.noTownsMatchDescription
+                  : TownSelectionConstants.noTownsAvailableDescription,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: TownSelectionConstants.verticalSpacingSmall),
-              Text(
-                TownSelectionConstants.noTownsAvailableDescription,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: TownSelectionConstants.verticalSpacingMedium),
+            TextButton(
+              onPressed: () => _openRequestTown(context, viewModel.searchController.text),
+              child: Text(
+                serviceLocator.mobileSessionManager.isAuthenticated
+                    ? TownSelectionConstants.requestTownButtonLabel
+                    : TownSelectionConstants.signInToRequestButtonLabel,
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -28,6 +28,7 @@ class ServiceLocator {
   late final PropertyApiService _propertyApiService;
   late final ConfigService _configService;
   late final DiscoveryApiService _discoveryApiService;
+  late final TownRequestApiService _townRequestApiService;
   late final MobileAuthApiService _mobileAuthApiService;
   late final MemberApiService _memberApiService;
   late final ParcelApiService _parcelApiService;
@@ -51,6 +52,7 @@ class ServiceLocator {
   late final ParcelRepository _parcelRepository;
   late final ForumRepository _forumRepository;
   late final DiscoveryRepository _discoveryRepository;
+  late final TownRequestRepository _townRequestRepository;
 
   /// Initialize all dependencies
   void initialize() {
@@ -70,6 +72,7 @@ class ServiceLocator {
     _propertyApiService = PropertyApiService(_apiClient);
     _configService = ConfigService(_apiClient);
     _discoveryApiService = DiscoveryApiService(_apiClient);
+    _townRequestApiService = TownRequestApiService(_apiClient);
     _mobileAuthApiService = MobileAuthApiService(_apiClient);
     _memberApiService = MemberApiService(_apiClient);
     _parcelApiService = ParcelApiService(_apiClient);
@@ -91,6 +94,7 @@ class ServiceLocator {
     _parcelRepository = ParcelRepositoryImpl(_parcelApiService);
     _forumRepository = ForumRepositoryImpl(_forumApiService);
     _discoveryRepository = DiscoveryRepositoryImpl(_discoveryApiService);
+    _townRequestRepository = TownRequestRepositoryImpl(_townRequestApiService);
     _mobileSessionManager = MobileSessionManager(
       mobileAuthRepository: _mobileAuthRepository,
       memberRepository: _memberRepository,
@@ -215,6 +219,11 @@ class ServiceLocator {
   DiscoveryRepository get discoveryRepository {
     _ensureInitialized();
     return _discoveryRepository;
+  }
+
+  TownRequestRepository get townRequestRepository {
+    _ensureInitialized();
+    return _townRequestRepository;
   }
 
   /// Get the geolocation service

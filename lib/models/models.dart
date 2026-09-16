@@ -15,6 +15,7 @@ export 'event_type_dto.dart';
 export 'event_type_detail_dto.dart';
 export 'operating_hour_dto.dart';
 export 'discovery_dto.dart';
+export 'town_request_dto.dart';
 export 'document_dto.dart';
 export 'review_dto.dart';
 export 'special_operating_hour_dto.dart';

@@ -8,6 +8,7 @@ export 'constants/parcel_feature_flags.dart';
 export 'constants/creative_spaces_constants.dart';
 export 'constants/town_loader_constants.dart';
 export 'constants/town_selection_constants.dart';
+export 'constants/request_town_constants.dart';
 export 'constants/business_card_constants.dart';
 export 'constants/entity_listing_constants.dart';
 export 'constants/discovery_constants.dart';

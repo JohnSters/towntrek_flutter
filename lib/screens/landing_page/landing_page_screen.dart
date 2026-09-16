@@ -6,6 +6,7 @@ import 'landing_page_state.dart';
 import 'landing_page_view_model.dart';
 import '../town_loader/town_loader_screen.dart';
 import '../town_feature_selection/town_feature_selection_screen.dart';
+import '../town_selection/town_selection_screen.dart';
 import 'widgets/widgets.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -90,6 +91,23 @@ class _LandingScreenContent extends StatelessWidget {
                         },
                         buttonText: 'Explore Now!',
                         compact: true,
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          final town = await Navigator.of(context).push<TownDto>(
+                            MaterialPageRoute(
+                              builder: (context) => const TownSelectionScreen(),
+                            ),
+                          );
+                          if (town == null || !context.mounted) return;
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  TownFeatureSelectionScreen(town: town),
+                            ),
+                          );
+                        },
+                        child: const Text(RequestTownConstants.landingCta),
                       ),
                       const SizedBox(height: 10),
                       BusinessOwnerCTA(
