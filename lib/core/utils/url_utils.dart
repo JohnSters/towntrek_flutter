@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/api_config.dart';
 import '../constants/discovery_constants.dart';
 import '../constants/landing_page_constants.dart';
+import '../constants/town_flyer_constants.dart';
+import '../constants/town_media_constants.dart';
 
 /// Utility functions for handling URLs
 class UrlUtils {
@@ -36,4 +38,19 @@ class UrlUtils {
   static String reportDiscoveryMailto(int discoveryId) =>
       'mailto:${DiscoveryConstants.reportEmail}'
       '?subject=${Uri.encodeComponent('Report Discovery #$discoveryId')}';
+
+  /// Builds the `mailto:` URI for reporting a town flyer.
+  static String reportFlyerMailto(int flyerId) =>
+      'mailto:${TownFlyerConstants.reportEmail}'
+      '?subject=${Uri.encodeComponent('Report Town Flyer #$flyerId')}';
+
+  /// Builds the `mailto:` URI for reporting a town recording.
+  static String reportTownMediaMailto(int mediaId, String townName) {
+    final town = townName.trim();
+    final subject = town.isEmpty
+        ? 'Report town recording #$mediaId'
+        : 'Report town recording #$mediaId ($town)';
+    return 'mailto:${TownMediaConstants.reportEmail}'
+        '?subject=${Uri.encodeComponent(subject)}';
+  }
 }

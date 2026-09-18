@@ -112,24 +112,7 @@ class MobileSessionManager extends ChangeNotifier {
         deviceName: deviceName,
         installId: installId,
       );
-      final userId = decodeUserIdFromJwt(session.accessToken) ??
-          'device:${session.deviceId}';
-      _session = session;
-      _activeUserId = userId;
-      _applyAccessToken(session.accessToken);
-      final store = await MobileSessionStorage.upsertAndActivate(
-        MobileAccountSession(
-          userId: userId,
-          displayName: _displayNameForUser(userId),
-          session: session,
-        ),
-      );
-      _accounts = store.accounts;
-      _profile = null;
-      _memberProgression = null;
-      await loadProfile();
-      await loadProgression();
-      await _syncActiveDisplayName();
+      await _activateSession(session);
     } catch (error) {
       _errorMessage = resolveUserFacingApiError(error);
       rethrow;
@@ -137,6 +120,134 @@ class MobileSessionManager extends ChangeNotifier {
       _busy = false;
       notifyListeners();
     }
+  }
+
+  Future<void> registerMember({
+    required String fullName,
+    required String email,
+    required String password,
+    String? phone,
+    required bool acceptTerms,
+    required String deviceName,
+  }) async {
+    _busy = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final installId = await MobileInstallIdStorage.getInstallId();
+      final session = await _mobileAuthRepository.registerMember(
+        fullName: fullName,
+        email: email,
+        password: password,
+        phone: phone,
+        acceptTerms: acceptTerms,
+        deviceName: deviceName,
+        installId: installId,
+      );
+      await _activateSession(session);
+    } catch (error) {
+      _errorMessage = resolveUserFacingApiError(error);
+      rethrow;
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loginWithPassword({
+    required String email,
+    required String password,
+    required String deviceName,
+  }) async {
+    _busy = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final installId = await MobileInstallIdStorage.getInstallId();
+      final session = await _mobileAuthRepository.login(
+        email: email,
+        password: password,
+        deviceName: deviceName,
+        installId: installId,
+      );
+      await _activateSession(session);
+    } catch (error) {
+      _errorMessage = resolveUserFacingApiError(error);
+      rethrow;
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> upgradeFreeBasic() async {
+    _busy = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final session = await _mobileAuthRepository.upgradeFreeBasic();
+      await _activateSession(session);
+    } catch (error) {
+      _errorMessage = resolveUserFacingApiError(error);
+      rethrow;
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deactivateAccount() async {
+    _busy = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _mobileAuthRepository.deactivateAccount(confirm: true);
+      final removingUserId = _activeUserId;
+      _session = null;
+      _profile = null;
+      _memberProgression = null;
+      _apiClient.clearHeader('Authorization');
+      if (removingUserId != null) {
+        final store = await MobileSessionStorage.remove(removingUserId);
+        _accounts = store.accounts;
+        _activeUserId = store.activeUserId;
+        final active = store.active;
+        if (active != null) {
+          _session = active.session;
+          _applyAccessToken(active.session.accessToken);
+          await loadProfile();
+          await loadProgression();
+          await _syncActiveDisplayName();
+        }
+      }
+    } catch (error) {
+      _errorMessage = resolveUserFacingApiError(error);
+      rethrow;
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _activateSession(MobileAuthResponseDto session) async {
+    final userId =
+        decodeUserIdFromJwt(session.accessToken) ?? 'device:${session.deviceId}';
+    _session = session;
+    _activeUserId = userId;
+    _applyAccessToken(session.accessToken);
+    final store = await MobileSessionStorage.upsertAndActivate(
+      MobileAccountSession(
+        userId: userId,
+        displayName: _displayNameForUser(userId),
+        session: session,
+      ),
+    );
+    _accounts = store.accounts;
+    _profile = null;
+    _memberProgression = null;
+    await loadProfile();
+    await loadProgression();
+    await _syncActiveDisplayName();
   }
 
   /// Switches the active account to a previously-linked [userId]. Returns false

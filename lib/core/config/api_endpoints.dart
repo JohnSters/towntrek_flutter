@@ -101,8 +101,14 @@ abstract final class ApiEndpoints {
   static String townAdminProfileUrl(int townId) =>
       buildUrl('$townsEndpoint/$townId/town-admin');
 
+  static String townAdminsUrl(int townId) =>
+      buildUrl('$townsEndpoint/$townId/town-admins');
+
   static String townNoticesUrl(int townId, {int page = 1, int pageSize = ApiConfig.defaultPageSize}) =>
       buildUrl('$townsEndpoint/$townId/town-notices', {'page': page, 'pageSize': pageSize});
+
+  static String townMediaUrl(int townId) =>
+      buildUrl('$townsEndpoint/$townId/media');
 
   static String statsSummaryUrl([Map<String, dynamic>? queryParams]) =>
       buildUrl('$statsEndpoint/summary', queryParams);

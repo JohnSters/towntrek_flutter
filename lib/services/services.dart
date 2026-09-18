@@ -6,6 +6,7 @@ export 'parcel_api_service.dart';
 export 'forum_api_service.dart';
 export 'discovery_api_service.dart';
 export 'town_request_api_service.dart';
+export 'town_flyer_api_service.dart';
 export 'business_api_service.dart';
 export 'town_api_service.dart';
 export 'event_api_service.dart';

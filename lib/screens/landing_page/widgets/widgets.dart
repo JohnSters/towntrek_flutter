@@ -5,3 +5,4 @@ export 'feature_grid.dart';
 export 'feature_tile.dart';
 export 'landing_message_banner.dart';
 export 'platform_stats_card.dart';
+export 'town_availability_fab.dart';

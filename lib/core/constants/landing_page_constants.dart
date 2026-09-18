@@ -15,6 +15,9 @@ abstract final class LandingScreenConstants {
   static const double logoPadding = 15.0;
   static const double buttonHeight = 56.0;
   static const double compactButtonHeight = 50.0;
+  static const double townAvailabilityFabSize = 56.0;
+  static const double townAvailabilityFabMargin = 16.0;
+  static const double townAvailabilityFabIconSize = 26.0;
   static const double featureIconSize = 32.0;
   static const double loadingIndicatorSize = 12.0;
   static const double loadingIndicatorStrokeWidth = 2.0;

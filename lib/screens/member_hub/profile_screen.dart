@@ -228,6 +228,59 @@ class _ProfileBody extends StatelessWidget {
                         },
                         child: const Text('Disconnect this device'),
                       ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: colorScheme.error,
+                        ),
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (dialogContext) {
+                              return AlertDialog(
+                                title: const Text('Deactivate this account?'),
+                                content: Text(
+                                  'This signs you out on all devices, hides your live flyers, '
+                                  'and stops this account from being used. You can contact support if you need it restored.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    height: 1.4,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: colorScheme.error,
+                                      foregroundColor: colorScheme.onError,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(true),
+                                    child: const Text('Deactivate'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (confirmed != true || !context.mounted) {
+                            return;
+                          }
+                          try {
+                            await serviceLocator.mobileSessionManager
+                                .deactivateAccount();
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            showErrorSnack(context, error);
+                          }
+                        },
+                        child: const Text('Deactivate account'),
+                      ),
                     ],
                   );
                 },

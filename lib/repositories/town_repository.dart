@@ -1,6 +1,7 @@
 import '../services/town_api_service.dart';
 import '../models/town_admin_public_dto.dart';
 import '../models/town_dto.dart';
+import '../models/town_media_dto.dart';
 
 /// Abstract interface for town data operations
 abstract class TownRepository {
@@ -9,6 +10,9 @@ abstract class TownRepository {
 
   /// Get detailed information for a specific town
   Future<TownDto> getTownDetails(int townId);
+
+  /// Active Town Admin public profiles for a town (empty if none).
+  Future<List<PublicTownAdminProfileDto>> getTownAdminProfiles(int townId);
 
   /// Active Town Admin public profile, or `null` if none.
   Future<PublicTownAdminProfileDto?> getTownAdminProfile(int townId);
@@ -19,6 +23,9 @@ abstract class TownRepository {
     int page = 1,
     int pageSize = 10,
   });
+
+  /// Live town recordings for the mobile hub, or `null` when disabled/unavailable.
+  Future<TownMediaDto?> getTownMedia(int townId);
 }
 
 /// Implementation of TownRepository using API service
@@ -38,6 +45,11 @@ class TownRepositoryImpl implements TownRepository {
   }
 
   @override
+  Future<List<PublicTownAdminProfileDto>> getTownAdminProfiles(int townId) {
+    return _apiService.getTownAdminProfiles(townId);
+  }
+
+  @override
   Future<PublicTownAdminProfileDto?> getTownAdminProfile(int townId) {
     return _apiService.getTownAdminProfile(townId);
   }
@@ -53,5 +65,10 @@ class TownRepositoryImpl implements TownRepository {
       page: page,
       pageSize: pageSize,
     );
+  }
+
+  @override
+  Future<TownMediaDto?> getTownMedia(int townId) {
+    return _apiService.getTownMedia(townId);
   }
 }

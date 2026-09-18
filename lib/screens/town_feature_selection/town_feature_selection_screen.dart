@@ -22,6 +22,7 @@ class TownFeatureSelectionScreen extends StatelessWidget {
         creativeSpaceRepository: serviceLocator.creativeSpaceRepository,
         propertyRepository: serviceLocator.propertyRepository,
         discoveryRepository: serviceLocator.discoveryRepository,
+        townFlyerRepository: serviceLocator.townFlyerRepository,
         businessRepository: serviceLocator.businessRepository,
         townRepository: serviceLocator.townRepository,
         weatherService: serviceLocator.weatherService,
@@ -138,19 +139,6 @@ class _TownFeatureSelectionScreenContentState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (viewModel.showTownAdminHub) ...[
-                          if (viewModel.townAdminProfile != null)
-                            TownAdminBanner(
-                              profile: viewModel.townAdminProfile!,
-                              onOpenDetail: () => showTownAdminDetailSheet(
-                                context,
-                                profile: viewModel.townAdminProfile!,
-                              ),
-                            ),
-                          const SizedBox(
-                            height: TownFeatureConstants.sectionGap,
-                          ),
-                        ],
                         TownPulseCard(
                           town: town,
                           isLoading: viewModel.pulseLoading,
@@ -167,14 +155,53 @@ class _TownFeatureSelectionScreenContentState
                             destination,
                           ),
                         ),
+                        const SizedBox(height: TownFeatureConstants.sectionGap),
                         if (viewModel.townNotices.isNotEmpty) ...[
+                          TownNoticeBoard(notices: viewModel.townNotices),
                           const SizedBox(
                             height: TownFeatureConstants.sectionGap,
                           ),
-                          TownNoticeBoard(notices: viewModel.townNotices),
                         ],
-                        const SizedBox(height: TownFeatureConstants.sectionGap),
-                        _buildFeatureGrid(context, viewModel, town),
+                        if (viewModel.townAdminProfile != null) ...[
+                          TownAdminBanner(
+                            profile: viewModel.townAdminProfile!,
+                            profiles: viewModel.townAdminProfiles,
+                            onSelect: viewModel.selectTownAdmin,
+                            onOpenDetail: () => showTownAdminDetailSheet(
+                              context,
+                              profile: viewModel.townAdminProfile!,
+                            ),
+                          ),
+                          const SizedBox(
+                            height: TownFeatureConstants.sectionGap,
+                          ),
+                        ],
+                        TownHubSection(
+                          title: TownFeatureConstants.exploreSectionTitle,
+                          description:
+                              TownFeatureConstants.exploreSectionDescription,
+                          icon: Icons.storefront_rounded,
+                          accentColor: const Color(
+                            TownFeatureConstants.exploreAccent,
+                          ),
+                          child: _buildFeatureGrid(context, viewModel, town),
+                        ),
+                        if (viewModel.showTownMedia || town.isFlyersEnabled) ...[
+                          const SizedBox(
+                            height: TownFeatureConstants.sectionGap,
+                          ),
+                          TownHubSection(
+                            title: TownFeatureConstants.aroundTownSectionTitle,
+                            description: TownFeatureConstants
+                                .aroundTownSectionDescription,
+                            icon: Icons.headphones_rounded,
+                            accentColor: const Color(
+                              TownFeatureConstants.aroundTownAccent,
+                            ),
+                            initiallyExpanded: false,
+                            child: _buildAroundTown(viewModel, town),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -269,49 +296,65 @@ class _TownFeatureSelectionScreenContentState
     const gap = SizedBox(height: TownFeatureConstants.gridGap);
     const hGap = SizedBox(width: TownFeatureConstants.gridGap);
 
+    final features = <FeatureData>[
+      businesses,
+      services,
+      events,
+      whatToDo,
+      properties,
+      equipmentRentals,
+      creativeSpaces,
+      if (town.isParcelBoardEnabled) parcels,
+      if (town.isForumEnabled) forum,
+    ];
+
+    final rows = <Widget>[];
+    for (var i = 0; i < features.length; i += 2) {
+      if (rows.isNotEmpty) rows.add(gap);
+      final left = features[i];
+      final right = i + 1 < features.length ? features[i + 1] : null;
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: FeatureGridCard(feature: left)),
+              hGap,
+              Expanded(
+                child: right == null
+                    ? const SizedBox.shrink()
+                    : FeatureGridCard(feature: right),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(children: rows);
+  }
+
+  Widget _buildAroundTown(
+    TownFeatureViewModel viewModel,
+    TownDto town,
+  ) {
     return Column(
       children: [
-        FeatureHeroCard(feature: creativeSpaces),
-        gap,
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: FeatureGridCard(feature: businesses)),
-              hGap,
-              Expanded(child: FeatureGridCard(feature: services)),
-            ],
+        if (viewModel.showTownMedia)
+          TownMediaStrip(
+            town: town,
+            media: viewModel.townMedia!,
           ),
-        ),
-        gap,
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: FeatureGridCard(feature: events)),
-              hGap,
-              Expanded(child: FeatureGridCard(feature: whatToDo)),
-            ],
+        if (town.isFlyersEnabled) ...[
+          if (viewModel.showTownMedia)
+            const SizedBox(height: TownFeatureConstants.hubActionGap),
+          TownFlyerStrip(
+            townName: town.name,
+            flyers: viewModel.townFlyers,
+            loading: viewModel.flyersLoading,
+            onOpenGallery: (index) =>
+                viewModel.openFlyerGallery(context, index),
           ),
-        ),
-        gap,
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: FeatureGridCard(feature: properties)),
-              hGap,
-              Expanded(child: FeatureGridCard(feature: equipmentRentals)),
-            ],
-          ),
-        ),
-        if (town.isParcelBoardEnabled) ...[
-          gap,
-          FeatureHeroCard(feature: parcels),
-        ],
-        if (town.isForumEnabled) ...[
-          gap,
-          FeatureHeroCard(feature: forum),
         ],
       ],
     );

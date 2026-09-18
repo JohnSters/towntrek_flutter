@@ -2,6 +2,7 @@
 export 'business_repository.dart';
 export 'discovery_repository.dart';
 export 'town_request_repository.dart';
+export 'town_flyer_repository.dart';
 export 'member_repository.dart';
 export 'mobile_auth_repository.dart';
 export 'parcel_repository.dart';

@@ -45,125 +45,140 @@ class _LandingScreenContent extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => context.read<LandingViewModel>().loadStats(),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(
-                    LandingScreenConstants.horizontalPadding,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 8),
-                      const AppLogo(),
-                      const SizedBox(height: 16),
-                      Text(
-                        LandingScreenConstants.subtitleText,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                          height: 1.3,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        LandingScreenConstants.descriptionText,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      _buildLandingBanners(viewModel.state),
-                      const SizedBox(height: 20),
-                      ActionButton(
-                        onPressed: () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const TownLoaderScreen(),
-                            ),
-                          );
-                        },
-                        buttonText: 'Explore Now!',
-                        compact: true,
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          final town = await Navigator.of(context).push<TownDto>(
-                            MaterialPageRoute(
-                              builder: (context) => const TownSelectionScreen(),
-                            ),
-                          );
-                          if (town == null || !context.mounted) return;
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  TownFeatureSelectionScreen(town: town),
-                            ),
-                          );
-                        },
-                        child: const Text(RequestTownConstants.landingCta),
-                      ),
-                      const SizedBox(height: 10),
-                      BusinessOwnerCTA(
-                        onTap: () => viewModel.launchOwnerUrl(context),
-                        buttonText: 'Add your business!',
-                        compact: true,
-                      ),
-                      ValueListenableBuilder<TownDto?>(
-                        valueListenable:
-                            FavouriteTownStorage.favouriteTownNotifier,
-                        builder: (context, favouriteTown, _) {
-                          if (favouriteTown == null) {
-                            return const SizedBox.shrink();
-                          }
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Column(
+                  children: [
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () =>
+                            context.read<LandingViewModel>().loadStats(),
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(
+                            LandingScreenConstants.horizontalPadding,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 8),
+                              const AppLogo(),
+                              const SizedBox(height: 16),
+                              Text(
+                                LandingScreenConstants.subtitleText,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                  height: 1.3,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                LandingScreenConstants.descriptionText,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                  height: 1.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              _buildLandingBanners(viewModel.state),
+                              const SizedBox(height: 20),
+                              ActionButton(
+                                onPressed: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const TownLoaderScreen(),
+                                    ),
+                                  );
+                                },
+                                buttonText: 'Explore Now!',
+                                compact: true,
+                              ),
+                              const SizedBox(height: 10),
+                              BusinessOwnerCTA(
+                                onTap: () => viewModel.launchOwnerUrl(context),
+                                buttonText: 'Add your business!',
+                                compact: true,
+                              ),
+                              ValueListenableBuilder<TownDto?>(
+                                valueListenable:
+                                    FavouriteTownStorage.favouriteTownNotifier,
+                                builder: (context, favouriteTown, _) {
+                                  if (favouriteTown == null) {
+                                    return const SizedBox.shrink();
+                                  }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 10),
-                            child: ActionButton(
-                              onPressed: () async {
-                                await Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        TownFeatureSelectionScreen(
-                                          town: favouriteTown,
-                                        ),
-                                  ),
-                                );
-                              },
-                              buttonText:
-                                  'Favourite Town: ${favouriteTown.name}',
-                              leadingIcon: Icons.star_rounded,
-                              backgroundColor: const Color(0xFF1E88E5),
-                              compact: true,
-                            ),
-                          );
-                        },
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: ActionButton(
+                                      onPressed: () async {
+                                        await Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                TownFeatureSelectionScreen(
+                                                  town: favouriteTown,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                      buttonText:
+                                          'Favourite Town: ${favouriteTown.name}',
+                                      leadingIcon: Icons.star_rounded,
+                                      backgroundColor: const Color(0xFF1E88E5),
+                                      compact: true,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        LandingScreenConstants.horizontalPadding,
+                        10,
+                        LandingScreenConstants.horizontalPadding,
+                        8,
+                      ),
+                      child: _buildPlatformStats(viewModel.state),
+                    ),
+                    _LandingFooter(
+                      onSendFeedback: () =>
+                          viewModel.launchFeedbackEmail(context),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                LandingScreenConstants.horizontalPadding,
-                10,
-                LandingScreenConstants.horizontalPadding,
-                8,
-              ),
-              child: _buildPlatformStats(viewModel.state),
-            ),
-            _LandingFooter(
-              onSendFeedback: () => viewModel.launchFeedbackEmail(context),
-            ),
-          ],
+                TownAvailabilityFab(
+                  bounds: constraints.biggest,
+                  onPressed: () async {
+                    await _openTownAvailability(context);
+                  },
+                ),
+              ],
+            );
+          },
         ),
+      ),
+    );
+  }
+
+  Future<void> _openTownAvailability(BuildContext context) async {
+    final town = await Navigator.of(context).push<TownDto>(
+      MaterialPageRoute(
+        builder: (context) => const TownSelectionScreen(),
+      ),
+    );
+    if (town == null || !context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => TownFeatureSelectionScreen(town: town),
       ),
     );
   }

@@ -4,3 +4,7 @@ export 'town_pulse_card.dart';
 export 'town_admin_banner.dart';
 export 'town_admin_detail_sheet.dart';
 export 'town_notice_board.dart';
+export 'town_hub_action_tile.dart';
+export 'town_hub_section.dart';
+export 'town_flyer_strip.dart';
+export 'town_media_strip.dart';

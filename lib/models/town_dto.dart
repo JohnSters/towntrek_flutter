@@ -12,6 +12,9 @@ class TownDto {
   final double? longitude;
   final bool isParcelBoardEnabled;
   final bool isForumEnabled;
+  final bool isFlyersEnabled;
+  final bool isMediaEnabled;
+  final String? mediaShowTitle;
   final int businessCount;
   final int servicesCount;
   final int eventsCount;
@@ -30,6 +33,9 @@ class TownDto {
     this.longitude,
     this.isParcelBoardEnabled = false,
     this.isForumEnabled = true,
+    this.isFlyersEnabled = true,
+    this.isMediaEnabled = false,
+    this.mediaShowTitle,
     required this.businessCount,
     this.servicesCount = 0,
     this.eventsCount = 0,
@@ -51,6 +57,15 @@ class TownDto {
       longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
       isParcelBoardEnabled: (json['isParcelBoardEnabled'] as bool?) ?? false,
       isForumEnabled: (json['isForumEnabled'] as bool?) ?? true,
+      isFlyersEnabled: (json['isFlyersEnabled'] as bool?) ?? true,
+      isMediaEnabled: JsonHelpers.readBool(
+        json['isMediaEnabled'] ?? json['IsMediaEnabled'],
+      ),
+      mediaShowTitle: JsonHelpers.dualString(
+        json,
+        'mediaShowTitle',
+        'MediaShowTitle',
+      ),
       businessCount: json['businessCount'] as int,
       servicesCount: (json['serviceCount'] as int?) ?? 0,
       eventsCount: (json['eventCount'] as int?) ?? 0,
@@ -84,6 +99,10 @@ class TownDto {
       'latitude': latitude,
       'longitude': longitude,
       'isParcelBoardEnabled': isParcelBoardEnabled,
+      'isForumEnabled': isForumEnabled,
+      'isFlyersEnabled': isFlyersEnabled,
+      'isMediaEnabled': isMediaEnabled,
+      'mediaShowTitle': mediaShowTitle,
       'businessCount': businessCount,
       'serviceCount': servicesCount,
       'eventCount': eventsCount,
@@ -104,6 +123,10 @@ class TownDto {
     double? latitude,
     double? longitude,
     bool? isParcelBoardEnabled,
+    bool? isForumEnabled,
+    bool? isFlyersEnabled,
+    bool? isMediaEnabled,
+    String? mediaShowTitle,
     int? businessCount,
     int? servicesCount,
     int? eventsCount,
@@ -121,6 +144,10 @@ class TownDto {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       isParcelBoardEnabled: isParcelBoardEnabled ?? this.isParcelBoardEnabled,
+      isForumEnabled: isForumEnabled ?? this.isForumEnabled,
+      isFlyersEnabled: isFlyersEnabled ?? this.isFlyersEnabled,
+      isMediaEnabled: isMediaEnabled ?? this.isMediaEnabled,
+      mediaShowTitle: mediaShowTitle ?? this.mediaShowTitle,
       businessCount: businessCount ?? this.businessCount,
       servicesCount: servicesCount ?? this.servicesCount,
       eventsCount: eventsCount ?? this.eventsCount,

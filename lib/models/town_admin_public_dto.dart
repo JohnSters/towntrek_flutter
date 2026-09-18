@@ -1,12 +1,16 @@
+import '../core/json/json_helpers.dart';
+
 /// DTOs for public town admin banner and notice board (camelCase JSON from ASP.NET).
 class PublicTownAdminProfileDto {
   const PublicTownAdminProfileDto({
+    required this.id,
     required this.displayName,
     required this.title,
     this.email,
     this.phone,
   });
 
+  final int id;
   final String displayName;
   final String title;
   final String? email;
@@ -14,11 +18,35 @@ class PublicTownAdminProfileDto {
 
   factory PublicTownAdminProfileDto.fromJson(Map<String, dynamic> json) {
     return PublicTownAdminProfileDto(
+      id: JsonHelpers.dualInt(json, 'id', 'Id'),
       displayName: json['displayName'] as String? ?? 'Town Admin',
       title: json['title'] as String? ?? 'Town Admin',
       email: json['email'] as String?,
       phone: json['phone'] as String?,
     );
+  }
+}
+
+class PublicTownAdminListDto {
+  const PublicTownAdminListDto({required this.items});
+
+  final List<PublicTownAdminProfileDto> items;
+
+  factory PublicTownAdminListDto.fromJson(Map<String, dynamic> json) {
+    final raw = json['items'];
+    final list = <PublicTownAdminProfileDto>[];
+    if (raw is List) {
+      for (final e in raw) {
+        if (e is Map<String, dynamic>) {
+          list.add(PublicTownAdminProfileDto.fromJson(e));
+        } else if (e is Map) {
+          list.add(
+            PublicTownAdminProfileDto.fromJson(Map<String, dynamic>.from(e)),
+          );
+        }
+      }
+    }
+    return PublicTownAdminListDto(items: list);
   }
 }
 

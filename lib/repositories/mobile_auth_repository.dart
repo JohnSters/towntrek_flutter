@@ -13,6 +13,27 @@ abstract class MobileAuthRepository {
   });
 
   Future<void> disconnect();
+
+  Future<MobileAuthResponseDto> registerMember({
+    required String fullName,
+    required String email,
+    required String password,
+    String? phone,
+    required bool acceptTerms,
+    required String deviceName,
+    required String installId,
+  });
+
+  Future<MobileAuthResponseDto> login({
+    required String email,
+    required String password,
+    required String deviceName,
+    required String installId,
+  });
+
+  Future<MobileAuthResponseDto> upgradeFreeBasic();
+
+  Future<void> deactivateAccount({required bool confirm});
 }
 
 class MobileAuthRepositoryImpl implements MobileAuthRepository {
@@ -43,5 +64,51 @@ class MobileAuthRepositoryImpl implements MobileAuthRepository {
   @override
   Future<void> disconnect() async {
     await _apiService.disconnect();
+  }
+
+  @override
+  Future<MobileAuthResponseDto> registerMember({
+    required String fullName,
+    required String email,
+    required String password,
+    String? phone,
+    required bool acceptTerms,
+    required String deviceName,
+    required String installId,
+  }) {
+    return _apiService.registerMember(
+      fullName: fullName,
+      email: email,
+      password: password,
+      phone: phone,
+      acceptTerms: acceptTerms,
+      deviceName: deviceName,
+      installId: installId,
+    );
+  }
+
+  @override
+  Future<MobileAuthResponseDto> login({
+    required String email,
+    required String password,
+    required String deviceName,
+    required String installId,
+  }) {
+    return _apiService.login(
+      email: email,
+      password: password,
+      deviceName: deviceName,
+      installId: installId,
+    );
+  }
+
+  @override
+  Future<MobileAuthResponseDto> upgradeFreeBasic() {
+    return _apiService.upgradeFreeBasic();
+  }
+
+  @override
+  Future<void> deactivateAccount({required bool confirm}) {
+    return _apiService.deactivateAccount(confirm: confirm);
   }
 }

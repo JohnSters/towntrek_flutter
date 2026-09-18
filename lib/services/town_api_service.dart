@@ -2,6 +2,7 @@ import '../core/network/api_client.dart';
 import '../core/config/api_config.dart';
 import '../models/town_admin_public_dto.dart';
 import '../models/town_dto.dart';
+import '../models/town_media_dto.dart';
 
 /// Service class for town-related API operations
 class TownApiService {
@@ -37,6 +38,21 @@ class TownApiService {
     }
   }
 
+  /// Active Town Admin public profiles for a town (empty if none).
+  Future<List<PublicTownAdminProfileDto>> getTownAdminProfiles(int townId) async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        ApiEndpoints.townAdminsUrl(townId),
+      );
+      final data = response.data;
+      if (data == null) return [];
+      return PublicTownAdminListDto.fromJson(data).items;
+    } catch (_) {
+      final fallback = await getTownAdminProfile(townId);
+      return fallback == null ? const [] : [fallback];
+    }
+  }
+
   /// Active Town Admin public profile, or `null` if none (404 / error).
   Future<PublicTownAdminProfileDto?> getTownAdminProfile(int townId) async {
     try {
@@ -66,6 +82,20 @@ class TownApiService {
       return PublicTownNoticeListDto.fromJson(data).items;
     } catch (_) {
       return [];
+    }
+  }
+
+  /// Live town recordings for the mobile hub, or `null` when disabled/unavailable.
+  Future<TownMediaDto?> getTownMedia(int townId) async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        ApiEndpoints.townMediaUrl(townId),
+      );
+      final data = response.data;
+      if (data == null) return null;
+      return TownMediaDto.fromJson(data);
+    } catch (_) {
+      return null;
     }
   }
 }

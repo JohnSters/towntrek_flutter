@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:towntrek_flutter/core/network/api_client.dart';
-import 'package:towntrek_flutter/core/network/api_exception.dart';
+
 
 void main() {
   test('401 triggers a single refresh and replays the request', () async {

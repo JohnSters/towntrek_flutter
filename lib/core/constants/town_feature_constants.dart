@@ -6,6 +6,16 @@ abstract final class TownFeatureConstants {
   static const double pagePadding = 16.0;
   static const double gridGap = 12.0;
   static const double sectionGap = 16.0;
+  static const double hubActionGap = 10.0;
+  static const double hubActionHeight = 72.0;
+  static const double hubActionPreviewWidth = 80.0;
+  static const double hubActionRadius = 12.0;
+  static const double hubActionIconSize = 42.0;
+  static const double hubActionTintStrength = 0.12;
+  static const double hubActionNoticeTintStrength = 0.18;
+  static const double hubActionCollapsedTintStrength = 0.05;
+  static const double hubActionExpandedTintBoost = 0.08;
+  static const double hubActionCollapsedLeadDim = 0.34;
 
   /// Bottom inset for town hub / parcel board FABs above the safe area (lower = closer to the bottom edge).
   static const double floatingHubActionBottomInset = 40.0;
@@ -31,6 +41,10 @@ abstract final class TownFeatureConstants {
   static const int equipmentRentalsColor = 0xFFFF9800; // Amber / equipment pillar
   static const int parcelsColor = 0xFF6D4C41; // Brown 600
   static const int forumColor = 0xFF33658A; // TownTrek lapis
+  static const int noticesAccent = 0xFF1565C0;
+  static const int adminAccent = 0xFF546E7A;
+  static const int exploreAccent = 0xFF2E7D32;
+  static const int aroundTownAccent = 0xFF6A1B9A;
 
   /// Business category key from server seed (matches web `?category=equipment-rentals`).
   static const String equipmentRentalsCategoryKey = 'equipment-rentals';
@@ -68,4 +82,15 @@ abstract final class TownFeatureConstants {
   static const String forumDescription =
       'Local conversations, updates, and neighbourly help';
   static const String changeTownTooltip = 'Wrong Town?';
+
+  static const String exploreSectionTitle = 'Explore town';
+  static const String exploreSectionDescription =
+      'Shops, food, services, and things to do';
+  static const String aroundTownSectionTitle = 'Around town';
+  static const String aroundTownSectionDescription =
+      'Recordings, videos, and town adverts';
+  static const String noticesTitle = 'Town Notices';
+
+  static String noticesSubtitle(int count) =>
+      count == 1 ? '1 update' : '$count updates';
 }

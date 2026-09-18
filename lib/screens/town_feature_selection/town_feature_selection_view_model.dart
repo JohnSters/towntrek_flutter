@@ -14,6 +14,7 @@ import '../what_to_do/what_to_do_screen.dart';
 import '../property_list/property_list_screen.dart';
 import '../member_hub.dart';
 import '../forum/forum_list_screen.dart';
+import '../town_flyers/town_flyer_gallery_screen.dart';
 import 'town_feature_selection_screen.dart';
 import 'town_feature_selection_state.dart';
 
@@ -36,11 +37,22 @@ class TownFeatureViewModel extends ChangeNotifier {
   bool isFavouriteActionRunning = false;
 
   PublicTownAdminProfileDto? townAdminProfile;
+  List<PublicTownAdminProfileDto> townAdminProfiles = const [];
   List<PublicTownNoticeDto> townNotices = const [];
+  List<TownFlyerDto> townFlyers = const [];
+  bool flyersLoading = false;
+  TownMediaDto? townMedia;
+  bool mediaLoading = false;
 
-  /// Shown when there is an assigned admin and/or published notices.
-  bool get showTownAdminHub =>
-      townAdminProfile != null || townNotices.isNotEmpty;
+  /// Shown when the town is opted in and at least one Live recording exists.
+  bool get showTownMedia =>
+      town.isMediaEnabled && townMedia != null && townMedia!.hasContent;
+
+  void selectTownAdmin(PublicTownAdminProfileDto profile) {
+    if (townAdminProfile?.id == profile.id) return;
+    townAdminProfile = profile;
+    notifyListeners();
+  }
 
   bool _alive = true;
 
@@ -52,6 +64,7 @@ class TownFeatureViewModel extends ChangeNotifier {
   final CreativeSpaceRepository _creativeSpaceRepository;
   final PropertyRepository _propertyRepository;
   final DiscoveryRepository _discoveryRepository;
+  final TownFlyerRepository _townFlyerRepository;
   final BusinessRepository _businessRepository;
   final TownRepository _townRepository;
   final WeatherService _weatherService;
@@ -63,6 +76,7 @@ class TownFeatureViewModel extends ChangeNotifier {
     required CreativeSpaceRepository creativeSpaceRepository,
     required PropertyRepository propertyRepository,
     required DiscoveryRepository discoveryRepository,
+    required TownFlyerRepository townFlyerRepository,
     required BusinessRepository businessRepository,
     required TownRepository townRepository,
     required WeatherService weatherService,
@@ -72,6 +86,7 @@ class TownFeatureViewModel extends ChangeNotifier {
        _creativeSpaceRepository = creativeSpaceRepository,
        _propertyRepository = propertyRepository,
        _discoveryRepository = discoveryRepository,
+       _townFlyerRepository = townFlyerRepository,
        _businessRepository = businessRepository,
        _townRepository = townRepository,
        _weatherService = weatherService,
@@ -97,6 +112,8 @@ class TownFeatureViewModel extends ChangeNotifier {
       _fetchEquipmentTotal(town),
       _fetchDiscoveriesCount(town),
       _fetchTownAdminHub(town),
+      _fetchTownMedia(town),
+      _fetchTownFlyers(town),
     ]);
 
     if (!_alive) return;
@@ -186,10 +203,15 @@ class TownFeatureViewModel extends ChangeNotifier {
 
   Future<void> _fetchTownAdminHub(TownDto town) async {
     try {
-      final profile = await _townRepository.getTownAdminProfile(town.id);
+      final profiles = await _townRepository.getTownAdminProfiles(town.id);
       if (!_alive) return;
-      townAdminProfile = profile;
-    } catch (_) {}
+      townAdminProfiles = profiles;
+      townAdminProfile = profiles.isEmpty ? null : profiles.first;
+    } catch (_) {
+      if (!_alive) return;
+      townAdminProfiles = const [];
+      townAdminProfile = null;
+    }
 
     try {
       final list = await _townRepository.getPublishedTownNotices(
@@ -201,6 +223,62 @@ class TownFeatureViewModel extends ChangeNotifier {
     } catch (_) {
       if (!_alive) return;
       townNotices = const [];
+    }
+  }
+
+  Future<void> _fetchTownMedia(TownDto town) async {
+    if (!town.isMediaEnabled) {
+      townMedia = null;
+      mediaLoading = false;
+      return;
+    }
+    mediaLoading = true;
+    notifyListeners();
+    try {
+      final dto = await _townRepository.getTownMedia(town.id);
+      if (!_alive) return;
+      townMedia = dto != null && dto.isMediaEnabled && dto.hasContent ? dto : null;
+    } catch (_) {
+      if (!_alive) return;
+      townMedia = null;
+    } finally {
+      if (_alive) mediaLoading = false;
+    }
+  }
+
+  Future<void> _fetchTownFlyers(TownDto town) async {
+    if (!town.isFlyersEnabled) {
+      townFlyers = const [];
+      flyersLoading = false;
+      return;
+    }
+    flyersLoading = true;
+    notifyListeners();
+    try {
+      final list = await _townFlyerRepository.getLive(town.id);
+      if (!_alive) return;
+      townFlyers = list;
+    } catch (_) {
+      if (!_alive) return;
+      townFlyers = const [];
+    } finally {
+      if (_alive) flyersLoading = false;
+    }
+  }
+
+  Future<void> openFlyerGallery(BuildContext context, int index) async {
+    final refreshed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => TownFlyerGalleryScreen(
+          town: town,
+          flyers: townFlyers,
+          initialIndex: index,
+        ),
+      ),
+    );
+    if (refreshed == true) {
+      await _fetchTownFlyers(town);
+      notifyListeners();
     }
   }
 

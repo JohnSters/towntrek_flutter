@@ -25,6 +25,9 @@ class MemberProfileDto {
   final int completedDeliveries;
   final TownDto? primaryTown;
   final List<TownDto> secondaryTowns;
+  final String? phoneNumber;
+  final List<String> roles;
+  final bool isClient;
 
   const MemberProfileDto({
     required this.userId,
@@ -36,6 +39,9 @@ class MemberProfileDto {
     required this.completedDeliveries,
     required this.primaryTown,
     required this.secondaryTowns,
+    this.phoneNumber,
+    this.roles = const [],
+    this.isClient = false,
   });
 
   factory MemberProfileDto.fromJson(Map<String, dynamic> json) {
@@ -54,6 +60,11 @@ class MemberProfileDto {
       secondaryTowns: secondary
           .map((item) => TownDto.fromJson(item as Map<String, dynamic>))
           .toList(),
+      phoneNumber: json['phoneNumber'] as String?,
+      roles: (json['roles'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
+      isClient: json['isClient'] as bool? ?? false,
     );
   }
 }

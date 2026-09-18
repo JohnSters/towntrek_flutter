@@ -4,13 +4,10 @@ import 'package:intl/intl.dart';
 import '../../../core/core.dart';
 import '../../../core/utils/url_utils.dart';
 import '../../../models/models.dart';
+import 'town_hub_action_tile.dart';
 
 class _NoticeConstants {
-  static const double outerRadius = 12.0;
-  static const double headerPaddingH = 12.0;
-  static const double headerPaddingV = 8.0;
-  static const double dividerWidth = 1.0;
-  static const double borderOpacity = 0.14;
+  static const Duration pulseDuration = Duration(milliseconds: 2000);
 }
 
 String _formatNoticeTimestamp(DateTime publishedAtUtc) {
@@ -50,6 +47,16 @@ String _excerpt(String body, {int maxLen = 140}) {
   return '${t.substring(0, maxLen).trim()}…';
 }
 
+String _noticeSubtitle(List<PublicTownNoticeDto> notices) {
+  if (notices.length == 1) {
+    final title = notices.first.title.trim();
+    return title.isEmpty
+        ? TownFeatureConstants.noticesSubtitle(1)
+        : title;
+  }
+  return TownFeatureConstants.noticesSubtitle(notices.length);
+}
+
 /// Read-only list of published town notices for the hub.
 class TownNoticeBoard extends StatefulWidget {
   const TownNoticeBoard({super.key, required this.notices});
@@ -74,7 +81,7 @@ class _TownNoticeBoardState extends State<TownNoticeBoard>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: _NoticeConstants.pulseDuration,
     );
     if (_shouldPulse) {
       _pulseController.repeat(reverse: true);
@@ -118,151 +125,57 @@ class _TownNoticeBoardState extends State<TownNoticeBoard>
   Widget build(BuildContext context) {
     if (widget.notices.isEmpty) return const SizedBox.shrink();
 
+    final accent = const Color(TownFeatureConstants.noticesAccent);
     final colorScheme = Theme.of(context).colorScheme;
-    final dividerColor = colorScheme.outline.withValues(
-      alpha: _NoticeConstants.borderOpacity,
-    );
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(_NoticeConstants.outerRadius),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: dividerColor),
-          borderRadius: BorderRadius.circular(_NoticeConstants.outerRadius),
-          color: colorScheme.surfaceContainerLow,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _NoticeHeader(
-              count: widget.notices.length,
-              expanded: _expanded,
-              pulseController: _pulseController,
-              shouldPulse: _shouldPulse,
-              onTap: _toggleExpanded,
-            ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeInOut,
-              alignment: Alignment.topCenter,
-              child: _expanded
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          height: _NoticeConstants.dividerWidth,
-                          color: dividerColor,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            children: [
-                              for (final notice in widget.notices)
-                                _NoticeCard(notice: notice),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NoticeHeader extends StatelessWidget {
-  const _NoticeHeader({
-    required this.count,
-    required this.expanded,
-    required this.pulseController,
-    required this.shouldPulse,
-    required this.onTap,
-  });
-
-  final int count;
-  final bool expanded;
-  final AnimationController pulseController;
-  final bool shouldPulse;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return AnimatedBuilder(
-      animation: pulseController,
-      builder: (context, child) {
-        final t = shouldPulse
-            ? CurvedAnimation(
-                parent: pulseController,
-                curve: Curves.easeInOut,
-              ).value
-            : 0.0;
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            boxShadow: [
-              if (shouldPulse)
-                BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.10 + 0.10 * t),
-                  blurRadius: 8 + 8 * t,
-                  spreadRadius: 0.5 * t,
-                ),
-            ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TownHubActionTile(
+          title: TownFeatureConstants.noticesTitle,
+          subtitle: _noticeSubtitle(widget.notices),
+          onTap: _toggleExpanded,
+          accentColor: accent,
+          tintColor: accent,
+          tintStrength: TownFeatureConstants.hubActionNoticeTintStrength,
+          pulse: _shouldPulse ? _pulseController : null,
+          expanded: _expanded,
+          leading: TownHubIconLead(
+            icon: Icons.campaign_rounded,
+            accentColor: accent,
           ),
-          child: child,
-        );
-      },
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: _NoticeConstants.headerPaddingH,
-              vertical: _NoticeConstants.headerPaddingV,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.campaign_rounded,
-                  size: 15,
-                  color: colorScheme.primary,
+          showChevron: false,
+          trailing: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Center(
+              child: AnimatedRotation(
+                turns: _expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(width: 5),
-                Text(
-                  'Town Notices',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.15,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '$count',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const Spacer(),
-                AnimatedRotation(
-                  turns: expanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 180),
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 20,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: _expanded
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Column(
+                    children: [
+                      for (final notice in widget.notices)
+                        _NoticeCard(notice: notice),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 }
