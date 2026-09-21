@@ -181,6 +181,7 @@ class _TownFeatureSelectionScreenContentState
                           description:
                               TownFeatureConstants.exploreSectionDescription,
                           icon: Icons.storefront_rounded,
+                          emphasized: true,
                           accentColor: const Color(
                             TownFeatureConstants.exploreAccent,
                           ),

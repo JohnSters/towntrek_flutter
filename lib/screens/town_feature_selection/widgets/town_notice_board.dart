@@ -135,6 +135,7 @@ class _TownNoticeBoardState extends State<TownNoticeBoard>
           title: TownFeatureConstants.noticesTitle,
           subtitle: _noticeSubtitle(widget.notices),
           onTap: _toggleExpanded,
+          compact: true,
           accentColor: accent,
           tintColor: accent,
           tintStrength: TownFeatureConstants.hubActionNoticeTintStrength,
@@ -143,6 +144,7 @@ class _TownNoticeBoardState extends State<TownNoticeBoard>
           leading: TownHubIconLead(
             icon: Icons.campaign_rounded,
             accentColor: accent,
+            iconSize: TownFeatureConstants.hubActionUtilityIconSize,
           ),
           showChevron: false,
           trailing: Padding(

@@ -12,6 +12,7 @@ class TownHubSection extends StatefulWidget {
     required this.child,
     required this.accentColor,
     this.initiallyExpanded = true,
+    this.emphasized = false,
     this.icon = Icons.explore_rounded,
   });
 
@@ -20,6 +21,7 @@ class TownHubSection extends StatefulWidget {
   final Widget child;
   final Color accentColor;
   final bool initiallyExpanded;
+  final bool emphasized;
   final IconData icon;
 
   static Key headerKey(String title) => Key('town-hub-section-$title');
@@ -48,8 +50,12 @@ class _TownHubSectionState extends State<TownHubSection> {
           subtitle: widget.description,
           onTap: _toggle,
           expanded: _expanded,
+          emphasized: widget.emphasized,
           accentColor: widget.accentColor,
           tintColor: widget.accentColor,
+          tintStrength: widget.emphasized
+              ? TownFeatureConstants.hubActionExploreTintStrength
+              : TownFeatureConstants.hubActionTintStrength,
           leading: TownHubIconLead(
             icon: widget.icon,
             accentColor: widget.accentColor,

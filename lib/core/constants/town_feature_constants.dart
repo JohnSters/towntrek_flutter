@@ -8,10 +8,14 @@ abstract final class TownFeatureConstants {
   static const double sectionGap = 16.0;
   static const double hubActionGap = 10.0;
   static const double hubActionHeight = 72.0;
+  /// Notices / Town Admin — slightly shorter so they read as tools, not destinations.
+  static const double hubActionUtilityHeight = 60.0;
   static const double hubActionPreviewWidth = 80.0;
   static const double hubActionRadius = 12.0;
   static const double hubActionIconSize = 42.0;
+  static const double hubActionUtilityIconSize = 34.0;
   static const double hubActionTintStrength = 0.12;
+  static const double hubActionExploreTintStrength = 0.22;
   static const double hubActionNoticeTintStrength = 0.18;
   static const double hubActionCollapsedTintStrength = 0.05;
   static const double hubActionExpandedTintBoost = 0.08;
@@ -43,7 +47,8 @@ abstract final class TownFeatureConstants {
   static const int forumColor = 0xFF33658A; // TownTrek lapis
   static const int noticesAccent = 0xFF1565C0;
   static const int adminAccent = 0xFF546E7A;
-  static const int exploreAccent = 0xFF2E7D32;
+  /// Warm gold — unique on the hub so Explore town is the entry point.
+  static const int exploreAccent = 0xFFC67C14;
   static const int aroundTownAccent = 0xFF6A1B9A;
 
   /// Business category key from server seed (matches web `?category=equipment-rentals`).

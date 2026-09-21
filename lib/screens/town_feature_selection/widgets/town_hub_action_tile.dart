@@ -17,6 +17,9 @@ class TownHubActionTile extends StatelessWidget {
     this.accentColor = const Color(0xFF0175C2),
     this.tintColor,
     this.tintStrength = TownFeatureConstants.hubActionTintStrength,
+    this.height,
+    this.compact = false,
+    this.emphasized = false,
     this.pulse,
     this.expanded,
     this.imageUrl,
@@ -33,6 +36,9 @@ class TownHubActionTile extends StatelessWidget {
   final Color accentColor;
   final Color? tintColor;
   final double tintStrength;
+  final double? height;
+  final bool compact;
+  final bool emphasized;
   final Animation<double>? pulse;
 
   /// Fold state for collapsible rows. `null` means a destination row (always open).
@@ -84,15 +90,22 @@ class TownHubActionTile extends StatelessWidget {
     final listing = context.entityListing;
     final tint = tintColor ?? accentColor;
     final open = _isOpen;
+    final tileHeight = height ??
+        (compact
+            ? TownFeatureConstants.hubActionUtilityHeight
+            : TownFeatureConstants.hubActionHeight);
+    final baseTint = emphasized
+        ? TownFeatureConstants.hubActionExploreTintStrength
+        : tintStrength;
     final strength = open
-        ? tintStrength + TownFeatureConstants.hubActionExpandedTintBoost
+        ? baseTint + TownFeatureConstants.hubActionExpandedTintBoost
         : TownFeatureConstants.hubActionCollapsedTintStrength;
     final bg = Color.alphaBlend(
       tint.withValues(alpha: strength),
       colorScheme.surfaceContainerLow,
     );
     final border = Color.alphaBlend(
-      tint.withValues(alpha: open ? 0.36 : 0.14),
+      tint.withValues(alpha: open ? (emphasized ? 0.52 : 0.36) : 0.14),
       colorScheme.outline.withValues(alpha: open ? 0.16 : 0.10),
     );
     final resolved = (imageUrl ?? '').trim();
@@ -105,7 +118,7 @@ class TownHubActionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           TownFeatureConstants.hubActionRadius,
         ),
-        border: Border.all(color: border),
+        border: Border.all(color: border, width: emphasized && open ? 1.4 : 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: Material(
@@ -116,13 +129,13 @@ class TownHubActionTile extends StatelessWidget {
             TownFeatureConstants.hubActionRadius,
           ),
           child: SizedBox(
-            height: TownFeatureConstants.hubActionHeight,
+            height: tileHeight,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
                   width: TownFeatureConstants.hubActionPreviewWidth,
-                  height: TownFeatureConstants.hubActionHeight,
+                  height: tileHeight,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -148,7 +161,7 @@ class TownHubActionTile extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+                    padding: EdgeInsets.fromLTRB(12, compact ? 6 : 10, 8, compact ? 6 : 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -160,12 +173,13 @@ class TownHubActionTile extends StatelessWidget {
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: listing.textTitle,
+                            fontSize: compact ? 14 : null,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
-                          maxLines: 2,
+                          maxLines: compact ? 1 : 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: listing.footerHint,
@@ -204,10 +218,12 @@ class TownHubIconLead extends StatelessWidget {
     super.key,
     required this.icon,
     required this.accentColor,
+    this.iconSize = TownFeatureConstants.hubActionIconSize,
   });
 
   final IconData icon;
   final Color accentColor;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +242,7 @@ class TownHubIconLead extends StatelessWidget {
         child: Icon(
           icon,
           color: Colors.white,
-          size: TownFeatureConstants.hubActionIconSize,
+          size: iconSize,
         ),
       ),
     );

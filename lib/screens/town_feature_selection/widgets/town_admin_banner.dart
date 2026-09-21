@@ -52,6 +52,7 @@ class TownAdminBanner extends StatelessWidget {
       title: profile.displayName,
       subtitle: profile.title,
       onTap: _hasPicker ? null : onOpenDetail,
+      compact: true,
       accentColor: accent,
       tintColor: accent,
       leading: _AdminLeading(
@@ -94,7 +95,7 @@ class _AdminLeading extends StatelessWidget {
       child: Center(
         child: Text(
           initials,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
             color: Colors.white,
             letterSpacing: 0.6,
