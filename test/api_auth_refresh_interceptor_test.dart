@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:towntrek_flutter/core/network/api_client.dart';
 
-
 void main() {
   test('401 triggers a single refresh and replays the request', () async {
     var adapterCalls = 0;

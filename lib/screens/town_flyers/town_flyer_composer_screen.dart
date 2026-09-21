@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart' as image_picker;
 import 'package:provider/provider.dart';
@@ -67,28 +69,43 @@ class _ComposerForm extends StatelessWidget {
         child: vm.loading
             ? const Center(child: CircularProgressIndicator())
             : ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
                 children: [
-                  Text(
-                    TownFlyerConstants.composerHint,
-                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
-                  ),
-                  const SizedBox(height: 16),
-                  if (quota?.needsUpgrade == true) ...[
-                    _InfoBanner(
+                  if (quota?.needsUpgrade == true)
+                    _ComposerNotice(
+                      icon: Icons.schedule_rounded,
+                      title: TownFlyerConstants.upgradeNoticeTitle,
                       body: TownFlyerConstants.upgradeBody,
+                      accent: const Color(0xFFEF6C00),
+                      countdownUntil: quota?.communityAvailableAtUtc,
+                      onCountdownElapsed: () => vm.loadQuota(showLoading: false),
                       actionLabel: TownFlyerConstants.upgradeCta,
                       busy: vm.upgrading,
                       onAction: () => vm.upgrade(),
+                    )
+                  else if (quota?.townCapFull == true)
+                    const _ComposerNotice(
+                      icon: Icons.inventory_2_outlined,
+                      title: TownFlyerConstants.capNoticeTitle,
+                      body: TownFlyerConstants.capFullBody,
+                      accent: Color(0xFFC62828),
+                    )
+                  else if (quota?.poolFull == true)
+                    const _ComposerNotice(
+                      icon: Icons.photo_library_outlined,
+                      title: TownFlyerConstants.poolNoticeTitle,
+                      body: TownFlyerConstants.poolFullBody,
+                      accent: Color(0xFFEF6C00),
+                    )
+                  else
+                    Text(
+                      TownFlyerConstants.composerHint,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                  ] else if (quota?.townCapFull == true) ...[
-                    const _InfoBanner(body: TownFlyerConstants.capFullBody),
-                    const SizedBox(height: 16),
-                  ] else if (quota?.poolFull == true) ...[
-                    const _InfoBanner(body: TownFlyerConstants.poolFullBody),
-                    const SizedBox(height: 16),
-                  ],
+                  const SizedBox(height: 20),
                   Text(
                     TownFlyerConstants.imageLabel,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -197,48 +214,298 @@ class _ComposerForm extends StatelessWidget {
   }
 }
 
-class _InfoBanner extends StatelessWidget {
-  const _InfoBanner({
+class _ComposerNotice extends StatefulWidget {
+  const _ComposerNotice({
+    required this.icon,
+    required this.title,
     required this.body,
+    required this.accent,
+    this.countdownUntil,
+    this.onCountdownElapsed,
     this.actionLabel,
     this.onAction,
     this.busy = false,
   });
 
+  final IconData icon;
+  final String title;
   final String body;
+  final Color accent;
+  final DateTime? countdownUntil;
+  final VoidCallback? onCountdownElapsed;
   final String? actionLabel;
   final Future<bool> Function()? onAction;
   final bool busy;
 
   @override
+  State<_ComposerNotice> createState() => _ComposerNoticeState();
+}
+
+class _ComposerNoticeState extends State<_ComposerNotice> {
+  var _expanded = true;
+
+  void _toggle() {
+    setState(() => _expanded = !_expanded);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
+    final theme = Theme.of(context);
+    final listing = context.entityListing;
+    final bg = Color.alphaBlend(
+      widget.accent.withValues(alpha: 0.12),
+      theme.colorScheme.surface,
+    );
+    final border = widget.accent.withValues(alpha: 0.28);
+
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: border),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(body, style: Theme.of(context).textTheme.bodyMedium),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 10),
-              FilledButton(
-                onPressed: busy ? null : () => onAction!(),
-                child: busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(actionLabel!),
+            InkWell(
+              onTap: _toggle,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: widget.accent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          widget.icon,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: listing.textTitle,
+                            ),
+                          ),
+                          if (!_expanded && widget.countdownUntil != null) ...[
+                            const SizedBox(height: 4),
+                            _FlyerCountdown(
+                              untilUtc: widget.countdownUntil!,
+                              accent: widget.accent,
+                              compact: true,
+                              onElapsed: widget.onCountdownElapsed,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 180),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: listing.bodyText,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: _expanded
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (widget.countdownUntil != null) ...[
+                            _FlyerCountdown(
+                              untilUtc: widget.countdownUntil!,
+                              accent: widget.accent,
+                              onElapsed: widget.onCountdownElapsed,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          Text(
+                            widget.body,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: listing.bodyText,
+                              height: 1.4,
+                            ),
+                          ),
+                          if (widget.actionLabel != null &&
+                              widget.onAction != null) ...[
+                            const SizedBox(height: 14),
+                            FilledButton(
+                              onPressed: widget.busy
+                                  ? null
+                                  : () => widget.onAction!(),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: widget.accent,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size.fromHeight(44),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: widget.busy
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(widget.actionLabel!),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+class _FlyerCountdown extends StatefulWidget {
+  const _FlyerCountdown({
+    required this.untilUtc,
+    required this.accent,
+    this.onElapsed,
+    this.compact = false,
+  });
+
+  final DateTime untilUtc;
+  final Color accent;
+  final VoidCallback? onElapsed;
+  final bool compact;
+
+  @override
+  State<_FlyerCountdown> createState() => _FlyerCountdownState();
+}
+
+class _FlyerCountdownState extends State<_FlyerCountdown> {
+  Timer? _timer;
+  var _elapsedNotified = false;
+
+  Duration get _remaining {
+    final until = widget.untilUtc.isUtc
+        ? widget.untilUtc
+        : widget.untilUtc.toUtc();
+    return until.difference(DateTime.now().toUtc());
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {});
+      _notifyIfElapsed();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _notifyIfElapsed();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _FlyerCountdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.untilUtc != widget.untilUtc) {
+      _elapsedNotified = false;
+      _notifyIfElapsed();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _notifyIfElapsed() {
+    if (_elapsedNotified || _remaining > Duration.zero) return;
+    _elapsedNotified = true;
+    widget.onElapsed?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = _remaining;
+    final ready = remaining <= Duration.zero;
+    final listing = context.entityListing;
+    final clock = ready
+        ? TownFlyerConstants.countdownReady
+        : TownFlyerConstants.formatCountdown(remaining);
+
+    if (widget.compact) {
+      return Text(
+        clock,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w800,
+          color: widget.accent,
+          letterSpacing: 0.6,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: widget.accent.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          children: [
+            Text(
+              ready
+                  ? TownFlyerConstants.countdownReady
+                  : TownFlyerConstants.countdownLabel,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: listing.bodyText,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              TownFlyerConstants.formatCountdown(remaining),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: listing.textTitle,
+                letterSpacing: 1.2,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

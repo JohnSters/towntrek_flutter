@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -38,12 +40,56 @@ class _TownAudioPlayerScreenState extends State<TownAudioPlayerScreen> {
       setState(() => _loadError = 'This recording is unavailable.');
       return;
     }
+    final url = UrlUtils.resolveApiUrl(raw);
     try {
-      await _player.setUrl(UrlUtils.resolveApiUrl(raw));
+      await _player.setUrl(url);
       await _player.play();
-    } catch (e) {
-      if (mounted) setState(() => _loadError = e);
+    } catch (_) {
+      if (!mounted) return;
+      if (ApiConfig.environment == AppEnvironment.production) {
+        setState(() => _loadError = 'Could not start playback.');
+        return;
+      }
+      try {
+        // just_audio/ExoPlayer ignores Dart HttpOverrides, so local HTTPS
+        // (ASP.NET dev cert on the emulator) fails TLS. Play a Dart-fetched copy.
+        final path = await _downloadForLocalPlayback(url);
+        if (!mounted) return;
+        await _player.setFilePath(path);
+        await _player.play();
+      } catch (e) {
+        if (mounted) setState(() => _loadError = e);
+      }
     }
+  }
+
+  Future<String> _downloadForLocalPlayback(String url) async {
+    final uri = Uri.parse(url);
+    final client = HttpClient();
+    try {
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException('Audio HTTP ${response.statusCode}', uri: uri);
+      }
+      final ext = _audioExtension(uri.path);
+      final file = File(
+        '${Directory.systemTemp.path}/town-audio-${widget.item.id}$ext',
+      );
+      final sink = file.openWrite();
+      await response.pipe(sink);
+      return file.path;
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  static String _audioExtension(String path) {
+    final dot = path.lastIndexOf('.');
+    if (dot < 0 || dot == path.length - 1) return '.mp3';
+    final ext = path.substring(dot).toLowerCase();
+    const allowed = {'.mp3', '.m4a', '.aac', '.wav', '.ogg', '.oga'};
+    return allowed.contains(ext) ? ext : '.mp3';
   }
 
   @override

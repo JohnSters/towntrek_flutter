@@ -81,29 +81,24 @@ class _TownFlyerGalleryScreenState extends State<TownFlyerGalleryScreen> {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openComposer,
-        icon: const Icon(Icons.add_photo_alternate_outlined),
-        label: const Text(TownFlyerConstants.postAction),
-      ),
-      body: widget.flyers.isEmpty
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  TownFlyerConstants.stripEmpty,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white70,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: PageView.builder(
+      body: Column(
+        children: [
+          Expanded(
+            child: widget.flyers.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        TownFlyerConstants.stripEmpty,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  )
+                : PageView.builder(
                     controller: _pageController,
                     itemCount: widget.flyers.length,
                     onPageChanged: (value) => setState(() => _index = value),
@@ -131,85 +126,199 @@ class _TownFlyerGalleryScreenState extends State<TownFlyerGalleryScreen> {
                       );
                     },
                   ),
-                ),
-                SafeArea(
-                  top: false,
-                  child: _FlyerActionDock(flyer: flyer!),
-                ),
-              ],
-            ),
+          ),
+          _FlyerActionDock(
+            flyer: flyer,
+            onPost: _openComposer,
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _FlyerActionDock extends StatelessWidget {
-  const _FlyerActionDock({required this.flyer});
+  const _FlyerActionDock({
+    required this.flyer,
+    required this.onPost,
+  });
 
-  final TownFlyerDto flyer;
+  static const Color _call = Color(0xFF2E7D32);
+  static const Color _whatsApp = Color(0xFF128C7E);
+  static const Color _directions = Color(0xFF0277BD);
+  static const Color _post = Color(0xFF00838F);
+  static const Color _surface = Color(0xFF161616);
+
+  final TownFlyerDto? flyer;
+  final VoidCallback onPost;
 
   @override
   Widget build(BuildContext context) {
-    final phone = flyer.contactPhone?.trim();
+    final phone = flyer?.contactPhone?.trim();
     final hasPhone = phone != null && phone.isNotEmpty;
-    final wa = flyer.whatsAppDigits?.trim();
-    final remaining = flyer.expiresAtUtc.difference(DateTime.now().toUtc());
-    final hours = remaining.isNegative ? 0 : remaining.inHours;
-    final minutes = remaining.isNegative ? 0 : remaining.inMinutes.remainder(60);
+    final wa = flyer?.whatsAppDigits?.trim();
+    final hasWhatsApp = wa != null && wa.isNotEmpty;
+    final remaining = flyer?.expiresAtUtc.difference(DateTime.now().toUtc());
+    final hours = remaining == null || remaining.isNegative
+        ? 0
+        : remaining.inHours;
+    final minutes = remaining == null || remaining.isNegative
+        ? 0
+        : remaining.inMinutes.remainder(60);
+    final remainingLabel = flyer == null
+        ? null
+        : hours > 0
+        ? '${hours}h ${minutes}m left'
+        : '${minutes}m left';
 
-    return SizedBox(
-      height: TownFlyerConstants.dockHeight + 28,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: Column(
-          children: [
-            Text(
-              hours > 0 ? '${hours}h ${minutes}m left' : '${minutes}m left',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.white60,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                if (hasPhone)
-                  Expanded(
-                    child: FilledButton.tonalIcon(
-                      onPressed: () =>
-                          ExternalLinkLauncher.callPhone(context, phone),
-                      icon: const Icon(Icons.call_outlined),
-                      label: const Text(TownFlyerConstants.call),
-                    ),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: _surface,
+        border: Border(
+          top: BorderSide(color: Color(0x33FFFFFF)),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (remainingLabel != null) ...[
+                Text(
+                  remainingLabel,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
                   ),
-                if (hasPhone && wa != null && wa.isNotEmpty)
-                  const SizedBox(width: 8),
-                if (wa != null && wa.isNotEmpty)
-                  Expanded(
-                    child: FilledButton.tonalIcon(
-                      onPressed: () => ExternalLinkLauncher.openUri(
-                        context,
-                        Uri.parse('https://wa.me/$wa'),
-                      ),
-                      icon: const Icon(Icons.chat_outlined),
-                      label: const Text(TownFlyerConstants.whatsapp),
-                    ),
-                  ),
-                if (hasPhone || (wa != null && wa.isNotEmpty))
-                  const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () =>
-                        serviceLocator.navigationService.openExternalNavigation(
-                          flyer.latitude,
-                          flyer.longitude,
-                          flyer.physicalAddress ?? flyer.displayName,
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (flyer != null)
+                Row(
+                  children: [
+                    if (hasPhone)
+                      Expanded(
+                        child: _FlyerContactAction(
+                          label: TownFlyerConstants.call,
+                          icon: Icons.call_rounded,
+                          color: _call,
+                          onPressed: () =>
+                              ExternalLinkLauncher.callPhone(context, phone),
                         ),
-                    icon: const Icon(Icons.directions_rounded),
-                    label: const Text(TownFlyerConstants.directions),
+                      ),
+                    if (hasWhatsApp)
+                      Expanded(
+                        child: _FlyerContactAction(
+                          label: TownFlyerConstants.whatsapp,
+                          icon: Icons.chat_rounded,
+                          color: _whatsApp,
+                          onPressed: () => ExternalLinkLauncher.openUri(
+                            context,
+                            Uri.parse('https://wa.me/$wa'),
+                          ),
+                        ),
+                      ),
+                    Expanded(
+                      child: _FlyerContactAction(
+                        label: TownFlyerConstants.directions,
+                        icon: Icons.directions_rounded,
+                        color: _directions,
+                        onPressed: () => serviceLocator.navigationService
+                            .openExternalNavigation(
+                              flyer!.latitude,
+                              flyer!.longitude,
+                              flyer!.physicalAddress ?? flyer!.displayName,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              if (flyer != null) const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: onPost,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: const Text(TownFlyerConstants.postAction),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _post,
+                    foregroundColor: Colors.white,
+                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FlyerContactAction extends StatelessWidget {
+  const _FlyerContactAction({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 26),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

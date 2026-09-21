@@ -44,10 +44,12 @@ class TownFlyerComposerViewModel extends ChangeNotifier {
       quota!.canPostNow &&
       !quota!.townCapFull;
 
-  Future<void> loadQuota() async {
-    loading = true;
-    error = null;
-    notifyListeners();
+  Future<void> loadQuota({bool showLoading = true}) async {
+    if (showLoading) {
+      loading = true;
+      error = null;
+      notifyListeners();
+    }
     try {
       quota = await _repository.getQuota(townId: town.id);
     } catch (e) {

@@ -20,7 +20,7 @@ abstract final class TownFlyerConstants {
   static const String postAction = 'Post an advert';
   static const String composerTitle = 'Post an advert';
   static const String composerHint =
-      'Shows for 24 hours. One free flyer at a time. Extra posters use your plan’s image slots.';
+      'Live for 24 hours. One free advert at a time.';
   static const String imageLabel = 'Poster image';
   static const String pinLabel = 'Map pin';
   static const String phoneLabel = 'Phone (optional)';
@@ -30,11 +30,25 @@ abstract final class TownFlyerConstants {
   static const String pickPin = 'Drop a pin for directions';
   static const String adjustPin = 'Adjust pin';
   static const String submit = 'Post for 24 hours';
-  static const String upgradeCta = 'Continue free as a Basic business account';
+  static const String upgradeNoticeTitle = 'Free advert already used';
+  static const String upgradeCta = 'Get a free Basic account';
   static const String upgradeBody =
-      'Your free 24-hour flyer is already used. Extra posters need a free Basic business account and an image slot.';
+      'Your 24-hour flyer is live. Extra posters need a free Basic business account and an image slot.';
+  static const String countdownLabel = 'Active flyer time left';
+  static const String countdownReady = 'Free slot is ready';
+
+  static String formatCountdown(Duration remaining) {
+    final safe = remaining.isNegative ? Duration.zero : remaining;
+    final hours = safe.inHours;
+    final minutes = safe.inMinutes.remainder(60);
+    final seconds = safe.inSeconds.remainder(60);
+    String two(int value) => value.toString().padLeft(2, '0');
+    return '${two(hours)}:${two(minutes)}:${two(seconds)}';
+  }
+  static const String poolNoticeTitle = 'No image slots left';
   static const String poolFullBody =
       'Extra posters use your plan’s image slots. Remove a listing photo, or wait for a flyer to expire.';
+  static const String capNoticeTitle = 'This town’s board is full';
   static const String capFullBody =
       'You already have the maximum number of live flyers in this town.';
   static const String call = 'Call';
@@ -56,7 +70,6 @@ abstract final class TownFlyerConstants {
   static const String reportEmail = 'admin@bytecraftdigital.com';
   static const int maxImageBytes = 5 * 1024 * 1024;
   static const double galleryViewportFraction = 0.92;
-  static const double dockHeight = 72;
   static const String upgradeRequiredCode = 'UPGRADE_REQUIRED';
   static const String imagePoolFullCode = 'IMAGE_POOL_FULL';
   static const String townFlyerCapCode = 'TOWN_FLYER_CAP';

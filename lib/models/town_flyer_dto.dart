@@ -85,9 +85,9 @@ class TownFlyerQuotaDto {
     return TownFlyerQuotaDto(
       communitySlotAvailable:
           json['communitySlotAvailable'] as bool? ?? false,
-      communityAvailableAtUtc: json['communityAvailableAtUtc'] == null
-          ? null
-          : DateTime.tryParse(json['communityAvailableAtUtc'].toString())?.toUtc(),
+      communityAvailableAtUtc: _utcOrNull(
+        json['communityAvailableAtUtc'] ?? json['CommunityAvailableAtUtc'],
+      ),
       liveOrPendingCount: (json['liveOrPendingCount'] as num?)?.toInt() ?? 0,
       liveOrPendingInTownCount:
           (json['liveOrPendingInTownCount'] as num?)?.toInt() ?? 0,
@@ -99,6 +99,12 @@ class TownFlyerQuotaDto {
       imagePoolMax: (json['imagePoolMax'] as num?)?.toInt() ?? 0,
       imagePoolUnlimited: json['imagePoolUnlimited'] as bool? ?? false,
     );
+  }
+
+  static DateTime? _utcOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value.toUtc();
+    return DateTime.tryParse(value.toString())?.toUtc();
   }
 
   bool get canPostNow =>
